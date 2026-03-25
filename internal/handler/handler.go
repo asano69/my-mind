@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"fmt"
@@ -8,12 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-)
-
-const (
-	port    = ":8080"
-	mapsDir = "./maps"
-	appDir  = "."
 )
 
 var mimeTypes = map[string]string{
@@ -27,44 +21,47 @@ var mimeTypes = map[string]string{
 	".mymind": "application/json",
 }
 
-func corsHeaders(w http.ResponseWriter) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "*")
-	w.Header().Set("Access-Control-Max-Age", "86400")
+type Handler struct {
+	StaticDir string
+	MapsDir   string
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	decodedPath, err := url.QueryUnescape(r.URL.RequestURI())
+func New(staticDir, mapsDir string) *Handler {
+	return &Handler{StaticDir: staticDir, MapsDir: mapsDir}
+}
+
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	path, err := url.QueryUnescape(r.URL.RequestURI())
 	if err != nil {
-		decodedPath = r.URL.Path
+		path = r.URL.Path
 	}
 
-	fmt.Printf("[%s] %s\n", r.Method, decodedPath)
+	fmt.Printf("[%s] %s\n", r.Method, path)
 
-	corsHeaders(w)
+	setCORSHeaders(w)
 
 	switch r.Method {
 	case http.MethodOptions:
 		w.WriteHeader(http.StatusNoContent)
-
 	case http.MethodGet:
-		if strings.HasPrefix(decodedPath, "/maps/") {
-			serveMapFile(w, r, decodedPath)
+		if strings.HasPrefix(path, "/maps/") {
+			h.getMap(w, path)
 		} else {
-			serveAppFile(w, r, decodedPath)
+			h.getStatic(w, path)
 		}
-
 	case http.MethodPut:
-		saveMapFile(w, r, decodedPath)
-
+		if strings.HasPrefix(path, "/maps/") {
+			h.putMap(w, r, path)
+		} else {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+		}
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
-func serveMapFile(w http.ResponseWriter, r *http.Request, path string) {
-	fpath := filepath.Join(mapsDir, strings.TrimPrefix(path, "/maps"))
+func (h *Handler) getMap(w http.ResponseWriter, path string) {
+	fpath := filepath.Join(h.MapsDir, strings.TrimPrefix(path, "/maps"))
 	data, err := os.ReadFile(fpath)
 	if err != nil {
 		http.Error(w, "Not found", http.StatusNotFound)
@@ -75,14 +72,14 @@ func serveMapFile(w http.ResponseWriter, r *http.Request, path string) {
 	w.Write(data)
 }
 
-func serveAppFile(w http.ResponseWriter, r *http.Request, path string) {
+func (h *Handler) getStatic(w http.ResponseWriter, path string) {
 	// クエリ文字列を除去
 	path = strings.SplitN(path, "?", 2)[0]
 	if path == "/" || path == "" {
 		path = "/index.html"
 	}
 
-	fpath := filepath.Join(appDir, path)
+	fpath := filepath.Join(h.StaticDir, path)
 	data, err := os.ReadFile(fpath)
 	if err != nil {
 		http.Error(w, "Not found", http.StatusNotFound)
@@ -99,13 +96,8 @@ func serveAppFile(w http.ResponseWriter, r *http.Request, path string) {
 	w.Write(data)
 }
 
-func saveMapFile(w http.ResponseWriter, r *http.Request, path string) {
-	var fpath string
-	if strings.HasPrefix(path, "/maps/") {
-		fpath = filepath.Join(mapsDir, strings.TrimPrefix(path, "/maps"))
-	} else {
-		fpath = filepath.Join(mapsDir, path)
-	}
+func (h *Handler) putMap(w http.ResponseWriter, r *http.Request, path string) {
+	fpath := filepath.Join(h.MapsDir, strings.TrimPrefix(path, "/maps"))
 
 	if err := os.MkdirAll(filepath.Dir(fpath), 0755); err != nil {
 		http.Error(w, "Failed to create directory", http.StatusInternalServerError)
@@ -128,20 +120,9 @@ func saveMapFile(w http.ResponseWriter, r *http.Request, path string) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func main() {
-	if err := os.MkdirAll(mapsDir, 0755); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to create maps dir: %v\n", err)
-		os.Exit(1)
-	}
-
-	fmt.Println("========================================")
-	fmt.Printf("  App  : http://localhost%s/\n", port)
-	fmt.Printf("  DAV  : http://localhost%s/maps/\n", port)
-	fmt.Println("========================================")
-
-	http.HandleFunc("/", handler)
-	if err := http.ListenAndServe(port, nil); err != nil {
-		fmt.Fprintf(os.Stderr, "Server error: %v\n", err)
-		os.Exit(1)
-	}
+func setCORSHeaders(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Max-Age", "86400")
 }
