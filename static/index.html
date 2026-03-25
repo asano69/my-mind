@@ -5,68 +5,75 @@
 		<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1.0" />
 		<title>My Mind</title>
 		<link rel="icon" href="favicon.ico" />
-
 		<link rel="stylesheet" href="my-mind.css" />
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
 		<base target="_blank" />
-
 	</head>
 	<body>
+
+		<!-- ============================================================
+		     メインコンテンツ領域 (my-mind.js が SVG を描画する場所)
+		     ============================================================ -->
 		<main>
 			<div id="tip"></div>
-<!--			<div id="tip">Type <code>:screenshot --selector svg</code> in Firefox Console to save the Map as an image! For more tips/news, follow <a href="https://twitter.com/my_mind_app">@my_mind_app</a>.</div> -->
-<!--			<div id="tip">Press ‘Tab’ to Insert Child, ‘Enter’ to Insert Sibling Node. For more tips/news, follow <a href="https://twitter.com/my_mind_app">@my_mind_app</a>.</div> -->
 		</main>
 
+		<!-- ============================================================
+		     UI パネル: レイアウト・色・アイコンなどのノード設定
+		     ============================================================ -->
 		<div id="ui" class="pane">
 			<h3>My Mind</h3>
-
 			<div class="scrollable">
 
-			<p class="row">
-				<button data-command="new" title="New"><img src="img/new.png" alt="New" /></button>
-				<button data-command="load" title="Open"><img src="img/open.png" alt="Open" /></button>
-				<button data-command="save" title="Save"><img src="img/save.png" alt="Save" /></button>
-				<button data-command="save-as" title="Save as"><img src="img/save-as.png" alt="Save as" /></button>
-			</p>
+				<!-- ファイル操作ボタン -->
+				<p class="row">
+					<button data-command="new" title="New"><img src="img/new.png" alt="New" /></button>
+					<button data-command="load" title="Open"><img src="img/open.png" alt="Open" /></button>
+					<button data-command="save" title="Save"><img src="img/save.png" alt="Save" /></button>
+					<button data-command="save-as" title="Save as"><img src="img/save-as.png" alt="Save as" /></button>
+				</p>
 
-			<p>
-				<label><span>Layout</span>
-				<select id="layout">
-					<option value="">(Inherit)</option>
-				</select></label>
-			</p>
-			<p>
-				<label><span>Shape</span>
-				<select id="shape">
-					<option value="">(Automatic)</option>
-				</select></label>
-			</p>
-			<p>
-				<label><span>Value</span>
-				<select id="value">
-					<option value="">(None)</option>
-					<option value="num">Number</option>
-					<optgroup label="Formula">
-						<option value="sum">Sum</option>
-						<option value="avg">Average</option>
-						<option value="min">Minimum</option>
-						<option value="max">Maximum</option>
-					</optgroup>
-				</select></label>
-			</p>
-			<p>
-				<label><span>Status</span>
-				<select id="status">
-					<option value="">None</option>
-					<option value="yes">Yes</option>
-					<option value="no">No</option>
-					<option value="computed">Autocompute</option>
-				</select></label>
-			</p>
-			<p>
-				<span>Item color</span>
-				<span id="color" class="color-picker">
+				<!-- ノード表示設定 -->
+				<p>
+					<label><span>Layout</span>
+					<select id="layout">
+						<option value="">(Inherit)</option>
+					</select></label>
+				</p>
+				<p>
+					<label><span>Shape</span>
+					<select id="shape">
+						<option value="">(Automatic)</option>
+					</select></label>
+				</p>
+				<p>
+					<label><span>Value</span>
+					<select id="value">
+						<option value="">(None)</option>
+						<option value="num">Number</option>
+						<optgroup label="Formula">
+							<option value="sum">Sum</option>
+							<option value="avg">Average</option>
+							<option value="min">Minimum</option>
+							<option value="max">Maximum</option>
+						</optgroup>
+					</select></label>
+				</p>
+				<p>
+					<label><span>Status</span>
+					<select id="status">
+						<option value="">None</option>
+						<option value="yes">Yes</option>
+						<option value="no">No</option>
+						<option value="computed">Autocompute</option>
+					</select></label>
+				</p>
+
+				<!-- カラーピッカー: ノード背景色 / テキスト色
+				     色の追加・変更は data-color 属性を編集すること -->
+				<p>
+					<span>Item color</span>
+					<span id="color" class="color-picker">
 					<a data-color="" title="Inherit" href="#"></a>
 					<a data-color="#000" title="Black" href="#"></a>
 					<a data-color="#e33" title="Red" href="#"></a>
@@ -76,16 +83,16 @@
 					<a data-color="#bfff00" title="Light Green" href="#"></a>
 					<a data-color="#3e3" title="Green" href="#"></a>
 					<a data-color="#33e" title="Blue" href="#"></a>
-                    			<a data-color="#2980b9" title="Blue 2" href="#"></a>
+					<a data-color="#2980b9" title="Blue 2" href="#"></a>
 					<a data-color="#3dd" title="Cyan" href="#"></a>
 					<a data-color="#d3d" title="Magenta" href="#"></a>
 					<a data-color="#9b59b6" title="Magenta 2" href="#"></a>
 					<a data-color="#660066" title="Purple" href="#"></a>
-				</span>
-			</p>
-			<p>
-				<span>Text color</span>
-				<span id="text-color" class="color-picker">
+					</span>
+				</p>
+				<p>
+					<span>Text color</span>
+					<span id="text-color" class="color-picker">
 					<a data-color="" title="Inherit" href="#"></a>
 					<a data-color="#000" title="Black" href="#"></a>
 					<a data-color="#e33" title="Red" href="#"></a>
@@ -95,820 +102,33 @@
 					<a data-color="#bfff00" title="Light Green" href="#"></a>
 					<a data-color="#3e3" title="Green" href="#"></a>
 					<a data-color="#33e" title="Blue" href="#"></a>
-                    			<a data-color="#2980b9" title="Blue 2" href="#"></a>
+					<a data-color="#2980b9" title="Blue 2" href="#"></a>
 					<a data-color="#3dd" title="Cyan" href="#"></a>
 					<a data-color="#d3d" title="Magenta" href="#"></a>
 					<a data-color="#9b59b6" title="Magenta 2" href="#"></a>
 					<a data-color="#660066" title="Purple" href="#"></a>
-				</span>
-			</p>
-			<p>
-				<label><span>Icons</span>
-				<select id="icons">
-					<option value=''>None</option>
-					<option value='fa-500px'>&#xf26e; 500px</option>
-					<option value='fa-address-book'>&#xf2b9; address-book</option>
-					<option value='fa-address-book-o'>&#xf2ba; address-book-o</option>
-					<option value='fa-address-card'>&#xf2bb; address-card</option>
-					<option value='fa-address-card-o'>&#xf2bc; address-card-o</option>
-					<option value='fa-adjust'>&#xf042; adjust</option>
-					<option value='fa-adn'>&#xf170; adn</option>
-					<option value='fa-align-center'>&#xf037; align-center</option>
-					<option value='fa-align-justify'>&#xf039; align-justify</option>
-					<option value='fa-align-left'>&#xf036; align-left</option>
-					<option value='fa-align-right'>&#xf038; align-right</option>
-					<option value='fa-amazon'>&#xf270; amazon</option>
-					<option value='fa-ambulance'>&#xf0f9; ambulance</option>
-					<option value='fa-american-sign-language-interpreting'>&#xf2a3; american-sign-language-interpreting</option>
-					<option value='fa-anchor'>&#xf13d; anchor</option>
-					<option value='fa-android'>&#xf17b; android</option>
-					<option value='fa-angellist'>&#xf209; angellist</option>
-					<option value='fa-angle-double-down'>&#xf103; angle-double-down</option>
-					<option value='fa-angle-double-left'>&#xf100; angle-double-left</option>
-					<option value='fa-angle-double-right'>&#xf101; angle-double-right</option>
-					<option value='fa-angle-double-up'>&#xf102; angle-double-up</option>
-					<option value='fa-angle-down'>&#xf107; angle-down</option>
-					<option value='fa-angle-left'>&#xf104; angle-left</option>
-					<option value='fa-angle-right'>&#xf105; angle-right</option>
-					<option value='fa-angle-up'>&#xf106; angle-up</option>
-					<option value='fa-apple'>&#xf179; apple</option>
-					<option value='fa-archive'>&#xf187; archive</option>
-					<option value='fa-area-chart'>&#xf1fe; area-chart</option>
-					<option value='fa-arrow-circle-down'>&#xf0ab; arrow-circle-down</option>
-					<option value='fa-arrow-circle-left'>&#xf0a8; arrow-circle-left</option>
-					<option value='fa-arrow-circle-o-down'>&#xf01a; arrow-circle-o-down</option>
-					<option value='fa-arrow-circle-o-left'>&#xf190; arrow-circle-o-left</option>
-					<option value='fa-arrow-circle-o-right'>&#xf18e; arrow-circle-o-right</option>
-					<option value='fa-arrow-circle-o-up'>&#xf01b; arrow-circle-o-up</option>
-					<option value='fa-arrow-circle-right'>&#xf0a9; arrow-circle-right</option>
-					<option value='fa-arrow-circle-up'>&#xf0aa; arrow-circle-up</option>
-					<option value='fa-arrow-down'>&#xf063; arrow-down</option>
-					<option value='fa-arrow-left'>&#xf060; arrow-left</option>
-					<option value='fa-arrow-right'>&#xf061; arrow-right</option>
-					<option value='fa-arrow-up'>&#xf062; arrow-up</option>
-					<option value='fa-arrows'>&#xf047; arrows</option>
-					<option value='fa-arrows-alt'>&#xf0b2; arrows-alt</option>
-					<option value='fa-arrows-h'>&#xf07e; arrows-h</option>
-					<option value='fa-arrows-v'>&#xf07d; arrows-v</option>
-					<option value='fa-asl-interpreting'>&#xf2a3; asl-interpreting</option>
-					<option value='fa-assistive-listening-systems'>&#xf2a2; assistive-listening-systems</option>
-					<option value='fa-asterisk'>&#xf069; asterisk</option>
-					<option value='fa-at'>&#xf1fa; at</option>
-					<option value='fa-audio-description'>&#xf29e; audio-description</option>
-					<option value='fa-automobile'>&#xf1b9; automobile</option>
-					<option value='fa-backward'>&#xf04a; backward</option>
-					<option value='fa-balance-scale'>&#xf24e; balance-scale</option>
-					<option value='fa-ban'>&#xf05e; ban</option>
-					<option value='fa-bandcamp'>&#xf2d5; bandcamp</option>
-					<option value='fa-bank'>&#xf19c; bank</option>
-					<option value='fa-bar-chart'>&#xf080; bar-chart</option>
-					<option value='fa-bar-chart-o'>&#xf080; bar-chart-o</option>
-					<option value='fa-barcode'>&#xf02a; barcode</option>
-					<option value='fa-bars'>&#xf0c9; bars</option>
-					<option value='fa-bath'>&#xf2cd; bath</option>
-					<option value='fa-bathtub'>&#xf2cd; bathtub</option>
-					<option value='fa-battery'>&#xf240; battery</option>
-					<option value='fa-battery-0'>&#xf244; battery-0</option>
-					<option value='fa-battery-1'>&#xf243; battery-1</option>
-					<option value='fa-battery-2'>&#xf242; battery-2</option>
-					<option value='fa-battery-3'>&#xf241; battery-3</option>
-					<option value='fa-battery-4'>&#xf240; battery-4</option>
-					<option value='fa-battery-empty'>&#xf244; battery-empty</option>
-					<option value='fa-battery-full'>&#xf240; battery-full</option>
-					<option value='fa-battery-half'>&#xf242; battery-half</option>
-					<option value='fa-battery-quarter'>&#xf243; battery-quarter</option>
-					<option value='fa-battery-three-quarters'>&#xf241; battery-three-quarters</option>
-					<option value='fa-bed'>&#xf236; bed</option>
-					<option value='fa-beer'>&#xf0fc; beer</option>
-					<option value='fa-behance'>&#xf1b4; behance</option>
-					<option value='fa-behance-square'>&#xf1b5; behance-square</option>
-					<option value='fa-bell'>&#xf0f3; bell</option>
-					<option value='fa-bell-o'>&#xf0a2; bell-o</option>
-					<option value='fa-bell-slash'>&#xf1f6; bell-slash</option>
-					<option value='fa-bell-slash-o'>&#xf1f7; bell-slash-o</option>
-					<option value='fa-bicycle'>&#xf206; bicycle</option>
-					<option value='fa-binoculars'>&#xf1e5; binoculars</option>
-					<option value='fa-birthday-cake'>&#xf1fd; birthday-cake</option>
-					<option value='fa-bitbucket'>&#xf171; bitbucket</option>
-					<option value='fa-bitbucket-square'>&#xf172; bitbucket-square</option>
-					<option value='fa-bitcoin'>&#xf15a; bitcoin</option>
-					<option value='fa-black-tie'>&#xf27e; black-tie</option>
-					<option value='fa-blind'>&#xf29d; blind</option>
-					<option value='fa-bluetooth'>&#xf293; bluetooth</option>
-					<option value='fa-bluetooth-b'>&#xf294; bluetooth-b</option>
-					<option value='fa-bold'>&#xf032; bold</option>
-					<option value='fa-bolt'>&#xf0e7; bolt</option>
-					<option value='fa-bomb'>&#xf1e2; bomb</option>
-					<option value='fa-book'>&#xf02d; book</option>
-					<option value='fa-bookmark'>&#xf02e; bookmark</option>
-					<option value='fa-bookmark-o'>&#xf097; bookmark-o</option>
-					<option value='fa-braille'>&#xf2a1; braille</option>
-					<option value='fa-briefcase'>&#xf0b1; briefcase</option>
-					<option value='fa-btc'>&#xf15a; btc</option>
-					<option value='fa-bug'>&#xf188; bug</option>
-					<option value='fa-building'>&#xf1ad; building</option>
-					<option value='fa-building-o'>&#xf0f7; building-o</option>
-					<option value='fa-bullhorn'>&#xf0a1; bullhorn</option>
-					<option value='fa-bullseye'>&#xf140; bullseye</option>
-					<option value='fa-bus'>&#xf207; bus</option>
-					<option value='fa-buysellads'>&#xf20d; buysellads</option>
-					<option value='fa-cab'>&#xf1ba; cab</option>
-					<option value='fa-calculator'>&#xf1ec; calculator</option>
-					<option value='fa-calendar'>&#xf073; calendar</option>
-					<option value='fa-calendar-check-o'>&#xf274; calendar-check-o</option>
-					<option value='fa-calendar-minus-o'>&#xf272; calendar-minus-o</option>
-					<option value='fa-calendar-o'>&#xf133; calendar-o</option>
-					<option value='fa-calendar-plus-o'>&#xf271; calendar-plus-o</option>
-					<option value='fa-calendar-times-o'>&#xf273; calendar-times-o</option>
-					<option value='fa-camera'>&#xf030; camera</option>
-					<option value='fa-camera-retro'>&#xf083; camera-retro</option>
-					<option value='fa-car'>&#xf1b9; car</option>
-					<option value='fa-caret-down'>&#xf0d7; caret-down</option>
-					<option value='fa-caret-left'>&#xf0d9; caret-left</option>
-					<option value='fa-caret-right'>&#xf0da; caret-right</option>
-					<option value='fa-caret-square-o-down'>&#xf150; caret-square-o-down</option>
-					<option value='fa-caret-square-o-left'>&#xf191; caret-square-o-left</option>
-					<option value='fa-caret-square-o-right'>&#xf152; caret-square-o-right</option>
-					<option value='fa-caret-square-o-up'>&#xf151; caret-square-o-up</option>
-					<option value='fa-caret-up'>&#xf0d8; caret-up</option>
-					<option value='fa-cart-arrow-down'>&#xf218; cart-arrow-down</option>
-					<option value='fa-cart-plus'>&#xf217; cart-plus</option>
-					<option value='fa-cc'>&#xf20a; cc</option>
-					<option value='fa-cc-amex'>&#xf1f3; cc-amex</option>
-					<option value='fa-cc-diners-club'>&#xf24c; cc-diners-club</option>
-					<option value='fa-cc-discover'>&#xf1f2; cc-discover</option>
-					<option value='fa-cc-jcb'>&#xf24b; cc-jcb</option>
-					<option value='fa-cc-mastercard'>&#xf1f1; cc-mastercard</option>
-					<option value='fa-cc-paypal'>&#xf1f4; cc-paypal</option>
-					<option value='fa-cc-stripe'>&#xf1f5; cc-stripe</option>
-					<option value='fa-cc-visa'>&#xf1f0; cc-visa</option>
-					<option value='fa-certificate'>&#xf0a3; certificate</option>
-					<option value='fa-chain'>&#xf0c1; chain</option>
-					<option value='fa-chain-broken'>&#xf127; chain-broken</option>
-					<option value='fa-check'>&#xf00c; check</option>
-					<option value='fa-check-circle'>&#xf058; check-circle</option>
-					<option value='fa-check-circle-o'>&#xf05d; check-circle-o</option>
-					<option value='fa-check-square'>&#xf14a; check-square</option>
-					<option value='fa-check-square-o'>&#xf046; check-square-o</option>
-					<option value='fa-chevron-circle-down'>&#xf13a; chevron-circle-down</option>
-					<option value='fa-chevron-circle-left'>&#xf137; chevron-circle-left</option>
-					<option value='fa-chevron-circle-right'>&#xf138; chevron-circle-right</option>
-					<option value='fa-chevron-circle-up'>&#xf139; chevron-circle-up</option>
-					<option value='fa-chevron-down'>&#xf078; chevron-down</option>
-					<option value='fa-chevron-left'>&#xf053; chevron-left</option>
-					<option value='fa-chevron-right'>&#xf054; chevron-right</option>
-					<option value='fa-chevron-up'>&#xf077; chevron-up</option>
-					<option value='fa-child'>&#xf1ae; child</option>
-					<option value='fa-chrome'>&#xf268; chrome</option>
-					<option value='fa-circle'>&#xf111; circle</option>
-					<option value='fa-circle-o'>&#xf10c; circle-o</option>
-					<option value='fa-circle-o-notch'>&#xf1ce; circle-o-notch</option>
-					<option value='fa-circle-thin'>&#xf1db; circle-thin</option>
-					<option value='fa-clipboard'>&#xf0ea; clipboard</option>
-					<option value='fa-clock-o'>&#xf017; clock-o</option>
-					<option value='fa-clone'>&#xf24d; clone</option>
-					<option value='fa-close'>&#xf00d; close</option>
-					<option value='fa-cloud'>&#xf0c2; cloud</option>
-					<option value='fa-cloud-download'>&#xf0ed; cloud-download</option>
-					<option value='fa-cloud-upload'>&#xf0ee; cloud-upload</option>
-					<option value='fa-cny'>&#xf157; cny</option>
-					<option value='fa-code'>&#xf121; code</option>
-					<option value='fa-code-fork'>&#xf126; code-fork</option>
-					<option value='fa-codepen'>&#xf1cb; codepen</option>
-					<option value='fa-codiepie'>&#xf284; codiepie</option>
-					<option value='fa-coffee'>&#xf0f4; coffee</option>
-					<option value='fa-cog'>&#xf013; cog</option>
-					<option value='fa-cogs'>&#xf085; cogs</option>
-					<option value='fa-columns'>&#xf0db; columns</option>
-					<option value='fa-comment'>&#xf075; comment</option>
-					<option value='fa-comment-o'>&#xf0e5; comment-o</option>
-					<option value='fa-commenting'>&#xf27a; commenting</option>
-					<option value='fa-commenting-o'>&#xf27b; commenting-o</option>
-					<option value='fa-comments'>&#xf086; comments</option>
-					<option value='fa-comments-o'>&#xf0e6; comments-o</option>
-					<option value='fa-compass'>&#xf14e; compass</option>
-					<option value='fa-compress'>&#xf066; compress</option>
-					<option value='fa-connectdevelop'>&#xf20e; connectdevelop</option>
-					<option value='fa-contao'>&#xf26d; contao</option>
-					<option value='fa-copy'>&#xf0c5; copy</option>
-					<option value='fa-copyright'>&#xf1f9; copyright</option>
-					<option value='fa-creative-commons'>&#xf25e; creative-commons</option>
-					<option value='fa-credit-card'>&#xf09d; credit-card</option>
-					<option value='fa-credit-card-alt'>&#xf283; credit-card-alt</option>
-					<option value='fa-crop'>&#xf125; crop</option>
-					<option value='fa-crosshairs'>&#xf05b; crosshairs</option>
-					<option value='fa-css3'>&#xf13c; css3</option>
-					<option value='fa-cube'>&#xf1b2; cube</option>
-					<option value='fa-cubes'>&#xf1b3; cubes</option>
-					<option value='fa-cut'>&#xf0c4; cut</option>
-					<option value='fa-cutlery'>&#xf0f5; cutlery</option>
-					<option value='fa-dashboard'>&#xf0e4; dashboard</option>
-					<option value='fa-dashcube'>&#xf210; dashcube</option>
-					<option value='fa-database'>&#xf1c0; database</option>
-					<option value='fa-deaf'>&#xf2a4; deaf</option>
-					<option value='fa-deafness'>&#xf2a4; deafness</option>
-					<option value='fa-dedent'>&#xf03b; dedent</option>
-					<option value='fa-delicious'>&#xf1a5; delicious</option>
-					<option value='fa-desktop'>&#xf108; desktop</option>
-					<option value='fa-deviantart'>&#xf1bd; deviantart</option>
-					<option value='fa-diamond'>&#xf219; diamond</option>
-					<option value='fa-digg'>&#xf1a6; digg</option>
-					<option value='fa-dollar'>&#xf155; dollar</option>
-					<option value='fa-dot-circle-o'>&#xf192; dot-circle-o</option>
-					<option value='fa-download'>&#xf019; download</option>
-					<option value='fa-dribbble'>&#xf17d; dribbble</option>
-					<option value='fa-drivers-license'>&#xf2c2; drivers-license</option>
-					<option value='fa-drivers-license-o'>&#xf2c3; drivers-license-o</option>
-					<option value='fa-dropbox'>&#xf16b; dropbox</option>
-					<option value='fa-drupal'>&#xf1a9; drupal</option>
-					<option value='fa-edge'>&#xf282; edge</option>
-					<option value='fa-edit'>&#xf044; edit</option>
-					<option value='fa-eercast'>&#xf2da; eercast</option>
-					<option value='fa-eject'>&#xf052; eject</option>
-					<option value='fa-ellipsis-h'>&#xf141; ellipsis-h</option>
-					<option value='fa-ellipsis-v'>&#xf142; ellipsis-v</option>
-					<option value='fa-empire'>&#xf1d1; empire</option>
-					<option value='fa-envelope'>&#xf0e0; envelope</option>
-					<option value='fa-envelope-o'>&#xf003; envelope-o</option>
-					<option value='fa-envelope-open'>&#xf2b6; envelope-open</option>
-					<option value='fa-envelope-open-o'>&#xf2b7; envelope-open-o</option>
-					<option value='fa-envelope-square'>&#xf199; envelope-square</option>
-					<option value='fa-envira'>&#xf299; envira</option>
-					<option value='fa-eraser'>&#xf12d; eraser</option>
-					<option value='fa-etsy'>&#xf2d7; etsy</option>
-					<option value='fa-eur'>&#xf153; eur</option>
-					<option value='fa-euro'>&#xf153; euro</option>
-					<option value='fa-exchange'>&#xf0ec; exchange</option>
-					<option value='fa-exclamation'>&#xf12a; exclamation</option>
-					<option value='fa-exclamation-circle'>&#xf06a; exclamation-circle</option>
-					<option value='fa-exclamation-triangle'>&#xf071; exclamation-triangle</option>
-					<option value='fa-expand'>&#xf065; expand</option>
-					<option value='fa-expeditedssl'>&#xf23e; expeditedssl</option>
-					<option value='fa-external-link'>&#xf08e; external-link</option>
-					<option value='fa-external-link-square'>&#xf14c; external-link-square</option>
-					<option value='fa-eye'>&#xf06e; eye</option>
-					<option value='fa-eye-slash'>&#xf070; eye-slash</option>
-					<option value='fa-eyedropper'>&#xf1fb; eyedropper</option>
-					<option value='fa-fa'>&#xf2b4; fa</option>
-					<option value='fa-facebook'>&#xf09a; facebook</option>
-					<option value='fa-facebook-f'>&#xf09a; facebook-f</option>
-					<option value='fa-facebook-official'>&#xf230; facebook-official</option>
-					<option value='fa-facebook-square'>&#xf082; facebook-square</option>
-					<option value='fa-fast-backward'>&#xf049; fast-backward</option>
-					<option value='fa-fast-forward'>&#xf050; fast-forward</option>
-					<option value='fa-fax'>&#xf1ac; fax</option>
-					<option value='fa-feed'>&#xf09e; feed</option>
-					<option value='fa-female'>&#xf182; female</option>
-					<option value='fa-fighter-jet'>&#xf0fb; fighter-jet</option>
-					<option value='fa-file'>&#xf15b; file</option>
-					<option value='fa-file-archive-o'>&#xf1c6; file-archive-o</option>
-					<option value='fa-file-audio-o'>&#xf1c7; file-audio-o</option>
-					<option value='fa-file-code-o'>&#xf1c9; file-code-o</option>
-					<option value='fa-file-excel-o'>&#xf1c3; file-excel-o</option>
-					<option value='fa-file-image-o'>&#xf1c5; file-image-o</option>
-					<option value='fa-file-movie-o'>&#xf1c8; file-movie-o</option>
-					<option value='fa-file-o'>&#xf016; file-o</option>
-					<option value='fa-file-pdf-o'>&#xf1c1; file-pdf-o</option>
-					<option value='fa-file-photo-o'>&#xf1c5; file-photo-o</option>
-					<option value='fa-file-picture-o'>&#xf1c5; file-picture-o</option>
-					<option value='fa-file-powerpoint-o'>&#xf1c4; file-powerpoint-o</option>
-					<option value='fa-file-sound-o'>&#xf1c7; file-sound-o</option>
-					<option value='fa-file-text'>&#xf15c; file-text</option>
-					<option value='fa-file-text-o'>&#xf0f6; file-text-o</option>
-					<option value='fa-file-video-o'>&#xf1c8; file-video-o</option>
-					<option value='fa-file-word-o'>&#xf1c2; file-word-o</option>
-					<option value='fa-file-zip-o'>&#xf1c6; file-zip-o</option>
-					<option value='fa-files-o'>&#xf0c5; files-o</option>
-					<option value='fa-film'>&#xf008; film</option>
-					<option value='fa-filter'>&#xf0b0; filter</option>
-					<option value='fa-fire'>&#xf06d; fire</option>
-					<option value='fa-fire-extinguisher'>&#xf134; fire-extinguisher</option>
-					<option value='fa-firefox'>&#xf269; firefox</option>
-					<option value='fa-first-order'>&#xf2b0; first-order</option>
-					<option value='fa-flag'>&#xf024; flag</option>
-					<option value='fa-flag-checkered'>&#xf11e; flag-checkered</option>
-					<option value='fa-flag-o'>&#xf11d; flag-o</option>
-					<option value='fa-flash'>&#xf0e7; flash</option>
-					<option value='fa-flask'>&#xf0c3; flask</option>
-					<option value='fa-flickr'>&#xf16e; flickr</option>
-					<option value='fa-floppy-o'>&#xf0c7; floppy-o</option>
-					<option value='fa-folder'>&#xf07b; folder</option>
-					<option value='fa-folder-o'>&#xf114; folder-o</option>
-					<option value='fa-folder-open'>&#xf07c; folder-open</option>
-					<option value='fa-folder-open-o'>&#xf115; folder-open-o</option>
-					<option value='fa-font'>&#xf031; font</option>
-					<option value='fa-font-awesome'>&#xf2b4; font-awesome</option>
-					<option value='fa-fonticons'>&#xf280; fonticons</option>
-					<option value='fa-fort-awesome'>&#xf286; fort-awesome</option>
-					<option value='fa-forumbee'>&#xf211; forumbee</option>
-					<option value='fa-forward'>&#xf04e; forward</option>
-					<option value='fa-foursquare'>&#xf180; foursquare</option>
-					<option value='fa-free-code-camp'>&#xf2c5; free-code-camp</option>
-					<option value='fa-frown-o'>&#xf119; frown-o</option>
-					<option value='fa-futbol-o'>&#xf1e3; futbol-o</option>
-					<option value='fa-gamepad'>&#xf11b; gamepad</option>
-					<option value='fa-gavel'>&#xf0e3; gavel</option>
-					<option value='fa-gbp'>&#xf154; gbp</option>
-					<option value='fa-ge'>&#xf1d1; ge</option>
-					<option value='fa-gear'>&#xf013; gear</option>
-					<option value='fa-gears'>&#xf085; gears</option>
-					<option value='fa-genderless'>&#xf22d; genderless</option>
-					<option value='fa-get-pocket'>&#xf265; get-pocket</option>
-					<option value='fa-gg'>&#xf260; gg</option>
-					<option value='fa-gg-circle'>&#xf261; gg-circle</option>
-					<option value='fa-gift'>&#xf06b; gift</option>
-					<option value='fa-git'>&#xf1d3; git</option>
-					<option value='fa-git-square'>&#xf1d2; git-square</option>
-					<option value='fa-github'>&#xf09b; github</option>
-					<option value='fa-github-alt'>&#xf113; github-alt</option>
-					<option value='fa-github-square'>&#xf092; github-square</option>
-					<option value='fa-gitlab'>&#xf296; gitlab</option>
-					<option value='fa-gittip'>&#xf184; gittip</option>
-					<option value='fa-glass'>&#xf000; glass</option>
-					<option value='fa-glide'>&#xf2a5; glide</option>
-					<option value='fa-glide-g'>&#xf2a6; glide-g</option>
-					<option value='fa-globe'>&#xf0ac; globe</option>
-					<option value='fa-google'>&#xf1a0; google</option>
-					<option value='fa-google-plus'>&#xf0d5; google-plus</option>
-					<option value='fa-google-plus-circle'>&#xf2b3; google-plus-circle</option>
-					<option value='fa-google-plus-official'>&#xf2b3; google-plus-official</option>
-					<option value='fa-google-plus-square'>&#xf0d4; google-plus-square</option>
-					<option value='fa-google-wallet'>&#xf1ee; google-wallet</option>
-					<option value='fa-graduation-cap'>&#xf19d; graduation-cap</option>
-					<option value='fa-gratipay'>&#xf184; gratipay</option>
-					<option value='fa-grav'>&#xf2d6; grav</option>
-					<option value='fa-group'>&#xf0c0; group</option>
-					<option value='fa-h-square'>&#xf0fd; h-square</option>
-					<option value='fa-hacker-news'>&#xf1d4; hacker-news</option>
-					<option value='fa-hand-grab-o'>&#xf255; hand-grab-o</option>
-					<option value='fa-hand-lizard-o'>&#xf258; hand-lizard-o</option>
-					<option value='fa-hand-o-down'>&#xf0a7; hand-o-down</option>
-					<option value='fa-hand-o-left'>&#xf0a5; hand-o-left</option>
-					<option value='fa-hand-o-right'>&#xf0a4; hand-o-right</option>
-					<option value='fa-hand-o-up'>&#xf0a6; hand-o-up</option>
-					<option value='fa-hand-paper-o'>&#xf256; hand-paper-o</option>
-					<option value='fa-hand-peace-o'>&#xf25b; hand-peace-o</option>
-					<option value='fa-hand-pointer-o'>&#xf25a; hand-pointer-o</option>
-					<option value='fa-hand-rock-o'>&#xf255; hand-rock-o</option>
-					<option value='fa-hand-scissors-o'>&#xf257; hand-scissors-o</option>
-					<option value='fa-hand-spock-o'>&#xf259; hand-spock-o</option>
-					<option value='fa-hand-stop-o'>&#xf256; hand-stop-o</option>
-					<option value='fa-handshake-o'>&#xf2b5; handshake-o</option>
-					<option value='fa-hard-of-hearing'>&#xf2a4; hard-of-hearing</option>
-					<option value='fa-hashtag'>&#xf292; hashtag</option>
-					<option value='fa-hdd-o'>&#xf0a0; hdd-o</option>
-					<option value='fa-header'>&#xf1dc; header</option>
-					<option value='fa-headphones'>&#xf025; headphones</option>
-					<option value='fa-heart'>&#xf004; heart</option>
-					<option value='fa-heart-o'>&#xf08a; heart-o</option>
-					<option value='fa-heartbeat'>&#xf21e; heartbeat</option>
-					<option value='fa-history'>&#xf1da; history</option>
-					<option value='fa-home'>&#xf015; home</option>
-					<option value='fa-hospital-o'>&#xf0f8; hospital-o</option>
-					<option value='fa-hotel'>&#xf236; hotel</option>
-					<option value='fa-hourglass'>&#xf254; hourglass</option>
-					<option value='fa-hourglass-1'>&#xf251; hourglass-1</option>
-					<option value='fa-hourglass-2'>&#xf252; hourglass-2</option>
-					<option value='fa-hourglass-3'>&#xf253; hourglass-3</option>
-					<option value='fa-hourglass-end'>&#xf253; hourglass-end</option>
-					<option value='fa-hourglass-half'>&#xf252; hourglass-half</option>
-					<option value='fa-hourglass-o'>&#xf250; hourglass-o</option>
-					<option value='fa-hourglass-start'>&#xf251; hourglass-start</option>
-					<option value='fa-houzz'>&#xf27c; houzz</option>
-					<option value='fa-html5'>&#xf13b; html5</option>
-					<option value='fa-i-cursor'>&#xf246; i-cursor</option>
-					<option value='fa-id-badge'>&#xf2c1; id-badge</option>
-					<option value='fa-id-card'>&#xf2c2; id-card</option>
-					<option value='fa-id-card-o'>&#xf2c3; id-card-o</option>
-					<option value='fa-ils'>&#xf20b; ils</option>
-					<option value='fa-image'>&#xf03e; image</option>
-					<option value='fa-imdb'>&#xf2d8; imdb</option>
-					<option value='fa-inbox'>&#xf01c; inbox</option>
-					<option value='fa-indent'>&#xf03c; indent</option>
-					<option value='fa-industry'>&#xf275; industry</option>
-					<option value='fa-info'>&#xf129; info</option>
-					<option value='fa-info-circle'>&#xf05a; info-circle</option>
-					<option value='fa-inr'>&#xf156; inr</option>
-					<option value='fa-instagram'>&#xf16d; instagram</option>
-					<option value='fa-institution'>&#xf19c; institution</option>
-					<option value='fa-internet-explorer'>&#xf26b; internet-explorer</option>
-					<option value='fa-intersex'>&#xf224; intersex</option>
-					<option value='fa-ioxhost'>&#xf208; ioxhost</option>
-					<option value='fa-italic'>&#xf033; italic</option>
-					<option value='fa-joomla'>&#xf1aa; joomla</option>
-					<option value='fa-jpy'>&#xf157; jpy</option>
-					<option value='fa-jsfiddle'>&#xf1cc; jsfiddle</option>
-					<option value='fa-key'>&#xf084; key</option>
-					<option value='fa-keyboard-o'>&#xf11c; keyboard-o</option>
-					<option value='fa-krw'>&#xf159; krw</option>
-					<option value='fa-language'>&#xf1ab; language</option>
-					<option value='fa-laptop'>&#xf109; laptop</option>
-					<option value='fa-lastfm'>&#xf202; lastfm</option>
-					<option value='fa-lastfm-square'>&#xf203; lastfm-square</option>
-					<option value='fa-leaf'>&#xf06c; leaf</option>
-					<option value='fa-leanpub'>&#xf212; leanpub</option>
-					<option value='fa-legal'>&#xf0e3; legal</option>
-					<option value='fa-lemon-o'>&#xf094; lemon-o</option>
-					<option value='fa-level-down'>&#xf149; level-down</option>
-					<option value='fa-level-up'>&#xf148; level-up</option>
-					<option value='fa-life-bouy'>&#xf1cd; life-bouy</option>
-					<option value='fa-life-buoy'>&#xf1cd; life-buoy</option>
-					<option value='fa-life-ring'>&#xf1cd; life-ring</option>
-					<option value='fa-life-saver'>&#xf1cd; life-saver</option>
-					<option value='fa-lightbulb-o'>&#xf0eb; lightbulb-o</option>
-					<option value='fa-line-chart'>&#xf201; line-chart</option>
-					<option value='fa-link'>&#xf0c1; link</option>
-					<option value='fa-linkedin'>&#xf0e1; linkedin</option>
-					<option value='fa-linkedin-square'>&#xf08c; linkedin-square</option>
-					<option value='fa-linode'>&#xf2b8; linode</option>
-					<option value='fa-linux'>&#xf17c; linux</option>
-					<option value='fa-list'>&#xf03a; list</option>
-					<option value='fa-list-alt'>&#xf022; list-alt</option>
-					<option value='fa-list-ol'>&#xf0cb; list-ol</option>
-					<option value='fa-list-ul'>&#xf0ca; list-ul</option>
-					<option value='fa-location-arrow'>&#xf124; location-arrow</option>
-					<option value='fa-lock'>&#xf023; lock</option>
-					<option value='fa-long-arrow-down'>&#xf175; long-arrow-down</option>
-					<option value='fa-long-arrow-left'>&#xf177; long-arrow-left</option>
-					<option value='fa-long-arrow-right'>&#xf178; long-arrow-right</option>
-					<option value='fa-long-arrow-up'>&#xf176; long-arrow-up</option>
-					<option value='fa-low-vision'>&#xf2a8; low-vision</option>
-					<option value='fa-magic'>&#xf0d0; magic</option>
-					<option value='fa-magnet'>&#xf076; magnet</option>
-					<option value='fa-mail-forward'>&#xf064; mail-forward</option>
-					<option value='fa-mail-reply'>&#xf112; mail-reply</option>
-					<option value='fa-mail-reply-all'>&#xf122; mail-reply-all</option>
-					<option value='fa-male'>&#xf183; male</option>
-					<option value='fa-map'>&#xf279; map</option>
-					<option value='fa-map-marker'>&#xf041; map-marker</option>
-					<option value='fa-map-o'>&#xf278; map-o</option>
-					<option value='fa-map-pin'>&#xf276; map-pin</option>
-					<option value='fa-map-signs'>&#xf277; map-signs</option>
-					<option value='fa-mars'>&#xf222; mars</option>
-					<option value='fa-mars-double'>&#xf227; mars-double</option>
-					<option value='fa-mars-stroke'>&#xf229; mars-stroke</option>
-					<option value='fa-mars-stroke-h'>&#xf22b; mars-stroke-h</option>
-					<option value='fa-mars-stroke-v'>&#xf22a; mars-stroke-v</option>
-					<option value='fa-maxcdn'>&#xf136; maxcdn</option>
-					<option value='fa-meanpath'>&#xf20c; meanpath</option>
-					<option value='fa-medium'>&#xf23a; medium</option>
-					<option value='fa-medkit'>&#xf0fa; medkit</option>
-					<option value='fa-meetup'>&#xf2e0; meetup</option>
-					<option value='fa-meh-o'>&#xf11a; meh-o</option>
-					<option value='fa-mercury'>&#xf223; mercury</option>
-					<option value='fa-microchip'>&#xf2db; microchip</option>
-					<option value='fa-microphone'>&#xf130; microphone</option>
-					<option value='fa-microphone-slash'>&#xf131; microphone-slash</option>
-					<option value='fa-minus'>&#xf068; minus</option>
-					<option value='fa-minus-circle'>&#xf056; minus-circle</option>
-					<option value='fa-minus-square'>&#xf146; minus-square</option>
-					<option value='fa-minus-square-o'>&#xf147; minus-square-o</option>
-					<option value='fa-mixcloud'>&#xf289; mixcloud</option>
-					<option value='fa-mobile'>&#xf10b; mobile</option>
-					<option value='fa-mobile-phone'>&#xf10b; mobile-phone</option>
-					<option value='fa-modx'>&#xf285; modx</option>
-					<option value='fa-money'>&#xf0d6; money</option>
-					<option value='fa-moon-o'>&#xf186; moon-o</option>
-					<option value='fa-mortar-board'>&#xf19d; mortar-board</option>
-					<option value='fa-motorcycle'>&#xf21c; motorcycle</option>
-					<option value='fa-mouse-pointer'>&#xf245; mouse-pointer</option>
-					<option value='fa-music'>&#xf001; music</option>
-					<option value='fa-navicon'>&#xf0c9; navicon</option>
-					<option value='fa-neuter'>&#xf22c; neuter</option>
-					<option value='fa-newspaper-o'>&#xf1ea; newspaper-o</option>
-					<option value='fa-object-group'>&#xf247; object-group</option>
-					<option value='fa-object-ungroup'>&#xf248; object-ungroup</option>
-					<option value='fa-odnoklassniki'>&#xf263; odnoklassniki</option>
-					<option value='fa-odnoklassniki-square'>&#xf264; odnoklassniki-square</option>
-					<option value='fa-opencart'>&#xf23d; opencart</option>
-					<option value='fa-openid'>&#xf19b; openid</option>
-					<option value='fa-opera'>&#xf26a; opera</option>
-					<option value='fa-optin-monster'>&#xf23c; optin-monster</option>
-					<option value='fa-outdent'>&#xf03b; outdent</option>
-					<option value='fa-pagelines'>&#xf18c; pagelines</option>
-					<option value='fa-paint-brush'>&#xf1fc; paint-brush</option>
-					<option value='fa-paper-plane'>&#xf1d8; paper-plane</option>
-					<option value='fa-paper-plane-o'>&#xf1d9; paper-plane-o</option>
-					<option value='fa-paperclip'>&#xf0c6; paperclip</option>
-					<option value='fa-paragraph'>&#xf1dd; paragraph</option>
-					<option value='fa-paste'>&#xf0ea; paste</option>
-					<option value='fa-pause'>&#xf04c; pause</option>
-					<option value='fa-pause-circle'>&#xf28b; pause-circle</option>
-					<option value='fa-pause-circle-o'>&#xf28c; pause-circle-o</option>
-					<option value='fa-paw'>&#xf1b0; paw</option>
-					<option value='fa-paypal'>&#xf1ed; paypal</option>
-					<option value='fa-pencil'>&#xf040; pencil</option>
-					<option value='fa-pencil-square'>&#xf14b; pencil-square</option>
-					<option value='fa-pencil-square-o'>&#xf044; pencil-square-o</option>
-					<option value='fa-percent'>&#xf295; percent</option>
-					<option value='fa-phone'>&#xf095; phone</option>
-					<option value='fa-phone-square'>&#xf098; phone-square</option>
-					<option value='fa-photo'>&#xf03e; photo</option>
-					<option value='fa-picture-o'>&#xf03e; picture-o</option>
-					<option value='fa-pie-chart'>&#xf200; pie-chart</option>
-					<option value='fa-pied-piper'>&#xf2ae; pied-piper</option>
-					<option value='fa-pied-piper-alt'>&#xf1a8; pied-piper-alt</option>
-					<option value='fa-pied-piper-pp'>&#xf1a7; pied-piper-pp</option>
-					<option value='fa-pinterest'>&#xf0d2; pinterest</option>
-					<option value='fa-pinterest-p'>&#xf231; pinterest-p</option>
-					<option value='fa-pinterest-square'>&#xf0d3; pinterest-square</option>
-					<option value='fa-plane'>&#xf072; plane</option>
-					<option value='fa-play'>&#xf04b; play</option>
-					<option value='fa-play-circle'>&#xf144; play-circle</option>
-					<option value='fa-play-circle-o'>&#xf01d; play-circle-o</option>
-					<option value='fa-plug'>&#xf1e6; plug</option>
-					<option value='fa-plus'>&#xf067; plus</option>
-					<option value='fa-plus-circle'>&#xf055; plus-circle</option>
-					<option value='fa-plus-square'>&#xf0fe; plus-square</option>
-					<option value='fa-plus-square-o'>&#xf196; plus-square-o</option>
-					<option value='fa-podcast'>&#xf2ce; podcast</option>
-					<option value='fa-power-off'>&#xf011; power-off</option>
-					<option value='fa-print'>&#xf02f; print</option>
-					<option value='fa-product-hunt'>&#xf288; product-hunt</option>
-					<option value='fa-puzzle-piece'>&#xf12e; puzzle-piece</option>
-					<option value='fa-qq'>&#xf1d6; qq</option>
-					<option value='fa-qrcode'>&#xf029; qrcode</option>
-					<option value='fa-question'>&#xf128; question</option>
-					<option value='fa-question-circle'>&#xf059; question-circle</option>
-					<option value='fa-question-circle-o'>&#xf29c; question-circle-o</option>
-					<option value='fa-quora'>&#xf2c4; quora</option>
-					<option value='fa-quote-left'>&#xf10d; quote-left</option>
-					<option value='fa-quote-right'>&#xf10e; quote-right</option>
-					<option value='fa-ra'>&#xf1d0; ra</option>
-					<option value='fa-random'>&#xf074; random</option>
-					<option value='fa-ravelry'>&#xf2d9; ravelry</option>
-					<option value='fa-rebel'>&#xf1d0; rebel</option>
-					<option value='fa-recycle'>&#xf1b8; recycle</option>
-					<option value='fa-reddit'>&#xf1a1; reddit</option>
-					<option value='fa-reddit-alien'>&#xf281; reddit-alien</option>
-					<option value='fa-reddit-square'>&#xf1a2; reddit-square</option>
-					<option value='fa-refresh'>&#xf021; refresh</option>
-					<option value='fa-registered'>&#xf25d; registered</option>
-					<option value='fa-remove'>&#xf00d; remove</option>
-					<option value='fa-renren'>&#xf18b; renren</option>
-					<option value='fa-reorder'>&#xf0c9; reorder</option>
-					<option value='fa-repeat'>&#xf01e; repeat</option>
-					<option value='fa-reply'>&#xf112; reply</option>
-					<option value='fa-reply-all'>&#xf122; reply-all</option>
-					<option value='fa-resistance'>&#xf1d0; resistance</option>
-					<option value='fa-retweet'>&#xf079; retweet</option>
-					<option value='fa-rmb'>&#xf157; rmb</option>
-					<option value='fa-road'>&#xf018; road</option>
-					<option value='fa-rocket'>&#xf135; rocket</option>
-					<option value='fa-rotate-left'>&#xf0e2; rotate-left</option>
-					<option value='fa-rotate-right'>&#xf01e; rotate-right</option>
-					<option value='fa-rouble'>&#xf158; rouble</option>
-					<option value='fa-rss'>&#xf09e; rss</option>
-					<option value='fa-rss-square'>&#xf143; rss-square</option>
-					<option value='fa-rub'>&#xf158; rub</option>
-					<option value='fa-ruble'>&#xf158; ruble</option>
-					<option value='fa-rupee'>&#xf156; rupee</option>
-					<option value='fa-s15'>&#xf2cd; s15</option>
-					<option value='fa-safari'>&#xf267; safari</option>
-					<option value='fa-save'>&#xf0c7; save</option>
-					<option value='fa-scissors'>&#xf0c4; scissors</option>
-					<option value='fa-scribd'>&#xf28a; scribd</option>
-					<option value='fa-search'>&#xf002; search</option>
-					<option value='fa-search-minus'>&#xf010; search-minus</option>
-					<option value='fa-search-plus'>&#xf00e; search-plus</option>
-					<option value='fa-sellsy'>&#xf213; sellsy</option>
-					<option value='fa-send'>&#xf1d8; send</option>
-					<option value='fa-send-o'>&#xf1d9; send-o</option>
-					<option value='fa-server'>&#xf233; server</option>
-					<option value='fa-share'>&#xf064; share</option>
-					<option value='fa-share-alt'>&#xf1e0; share-alt</option>
-					<option value='fa-share-alt-square'>&#xf1e1; share-alt-square</option>
-					<option value='fa-share-square'>&#xf14d; share-square</option>
-					<option value='fa-share-square-o'>&#xf045; share-square-o</option>
-					<option value='fa-shekel'>&#xf20b; shekel</option>
-					<option value='fa-sheqel'>&#xf20b; sheqel</option>
-					<option value='fa-shield'>&#xf132; shield</option>
-					<option value='fa-ship'>&#xf21a; ship</option>
-					<option value='fa-shirtsinbulk'>&#xf214; shirtsinbulk</option>
-					<option value='fa-shopping-bag'>&#xf290; shopping-bag</option>
-					<option value='fa-shopping-basket'>&#xf291; shopping-basket</option>
-					<option value='fa-shopping-cart'>&#xf07a; shopping-cart</option>
-					<option value='fa-shower'>&#xf2cc; shower</option>
-					<option value='fa-sign-in'>&#xf090; sign-in</option>
-					<option value='fa-sign-language'>&#xf2a7; sign-language</option>
-					<option value='fa-sign-out'>&#xf08b; sign-out</option>
-					<option value='fa-signal'>&#xf012; signal</option>
-					<option value='fa-signing'>&#xf2a7; signing</option>
-					<option value='fa-simplybuilt'>&#xf215; simplybuilt</option>
-					<option value='fa-sitemap'>&#xf0e8; sitemap</option>
-					<option value='fa-skyatlas'>&#xf216; skyatlas</option>
-					<option value='fa-skype'>&#xf17e; skype</option>
-					<option value='fa-slack'>&#xf198; slack</option>
-					<option value='fa-sliders'>&#xf1de; sliders</option>
-					<option value='fa-slideshare'>&#xf1e7; slideshare</option>
-					<option value='fa-smile-o'>&#xf118; smile-o</option>
-					<option value='fa-snapchat'>&#xf2ab; snapchat</option>
-					<option value='fa-snapchat-ghost'>&#xf2ac; snapchat-ghost</option>
-					<option value='fa-snapchat-square'>&#xf2ad; snapchat-square</option>
-					<option value='fa-snowflake-o'>&#xf2dc; snowflake-o</option>
-					<option value='fa-soccer-ball-o'>&#xf1e3; soccer-ball-o</option>
-					<option value='fa-sort'>&#xf0dc; sort</option>
-					<option value='fa-sort-alpha-asc'>&#xf15d; sort-alpha-asc</option>
-					<option value='fa-sort-alpha-desc'>&#xf15e; sort-alpha-desc</option>
-					<option value='fa-sort-amount-asc'>&#xf160; sort-amount-asc</option>
-					<option value='fa-sort-amount-desc'>&#xf161; sort-amount-desc</option>
-					<option value='fa-sort-asc'>&#xf0de; sort-asc</option>
-					<option value='fa-sort-desc'>&#xf0dd; sort-desc</option>
-					<option value='fa-sort-down'>&#xf0dd; sort-down</option>
-					<option value='fa-sort-numeric-asc'>&#xf162; sort-numeric-asc</option>
-					<option value='fa-sort-numeric-desc'>&#xf163; sort-numeric-desc</option>
-					<option value='fa-sort-up'>&#xf0de; sort-up</option>
-					<option value='fa-soundcloud'>&#xf1be; soundcloud</option>
-					<option value='fa-space-shuttle'>&#xf197; space-shuttle</option>
-					<option value='fa-spinner'>&#xf110; spinner</option>
-					<option value='fa-spoon'>&#xf1b1; spoon</option>
-					<option value='fa-spotify'>&#xf1bc; spotify</option>
-					<option value='fa-square'>&#xf0c8; square</option>
-					<option value='fa-square-o'>&#xf096; square-o</option>
-					<option value='fa-stack-exchange'>&#xf18d; stack-exchange</option>
-					<option value='fa-stack-overflow'>&#xf16c; stack-overflow</option>
-					<option value='fa-star'>&#xf005; star</option>
-					<option value='fa-star-half'>&#xf089; star-half</option>
-					<option value='fa-star-half-empty'>&#xf123; star-half-empty</option>
-					<option value='fa-star-half-full'>&#xf123; star-half-full</option>
-					<option value='fa-star-half-o'>&#xf123; star-half-o</option>
-					<option value='fa-star-o'>&#xf006; star-o</option>
-					<option value='fa-steam'>&#xf1b6; steam</option>
-					<option value='fa-steam-square'>&#xf1b7; steam-square</option>
-					<option value='fa-step-backward'>&#xf048; step-backward</option>
-					<option value='fa-step-forward'>&#xf051; step-forward</option>
-					<option value='fa-stethoscope'>&#xf0f1; stethoscope</option>
-					<option value='fa-sticky-note'>&#xf249; sticky-note</option>
-					<option value='fa-sticky-note-o'>&#xf24a; sticky-note-o</option>
-					<option value='fa-stop'>&#xf04d; stop</option>
-					<option value='fa-stop-circle'>&#xf28d; stop-circle</option>
-					<option value='fa-stop-circle-o'>&#xf28e; stop-circle-o</option>
-					<option value='fa-street-view'>&#xf21d; street-view</option>
-					<option value='fa-strikethrough'>&#xf0cc; strikethrough</option>
-					<option value='fa-stumbleupon'>&#xf1a4; stumbleupon</option>
-					<option value='fa-stumbleupon-circle'>&#xf1a3; stumbleupon-circle</option>
-					<option value='fa-subscript'>&#xf12c; subscript</option>
-					<option value='fa-subway'>&#xf239; subway</option>
-					<option value='fa-suitcase'>&#xf0f2; suitcase</option>
-					<option value='fa-sun-o'>&#xf185; sun-o</option>
-					<option value='fa-superpowers'>&#xf2dd; superpowers</option>
-					<option value='fa-superscript'>&#xf12b; superscript</option>
-					<option value='fa-support'>&#xf1cd; support</option>
-					<option value='fa-table'>&#xf0ce; table</option>
-					<option value='fa-tablet'>&#xf10a; tablet</option>
-					<option value='fa-tachometer'>&#xf0e4; tachometer</option>
-					<option value='fa-tag'>&#xf02b; tag</option>
-					<option value='fa-tags'>&#xf02c; tags</option>
-					<option value='fa-tasks'>&#xf0ae; tasks</option>
-					<option value='fa-taxi'>&#xf1ba; taxi</option>
-					<option value='fa-telegram'>&#xf2c6; telegram</option>
-					<option value='fa-television'>&#xf26c; television</option>
-					<option value='fa-tencent-weibo'>&#xf1d5; tencent-weibo</option>
-					<option value='fa-terminal'>&#xf120; terminal</option>
-					<option value='fa-text-height'>&#xf034; text-height</option>
-					<option value='fa-text-width'>&#xf035; text-width</option>
-					<option value='fa-th'>&#xf00a; th</option>
-					<option value='fa-th-large'>&#xf009; th-large</option>
-					<option value='fa-th-list'>&#xf00b; th-list</option>
-					<option value='fa-themeisle'>&#xf2b2; themeisle</option>
-					<option value='fa-thermometer'>&#xf2c7; thermometer</option>
-					<option value='fa-thermometer-0'>&#xf2cb; thermometer-0</option>
-					<option value='fa-thermometer-1'>&#xf2ca; thermometer-1</option>
-					<option value='fa-thermometer-2'>&#xf2c9; thermometer-2</option>
-					<option value='fa-thermometer-3'>&#xf2c8; thermometer-3</option>
-					<option value='fa-thermometer-4'>&#xf2c7; thermometer-4</option>
-					<option value='fa-thermometer-empty'>&#xf2cb; thermometer-empty</option>
-					<option value='fa-thermometer-full'>&#xf2c7; thermometer-full</option>
-					<option value='fa-thermometer-half'>&#xf2c9; thermometer-half</option>
-					<option value='fa-thermometer-quarter'>&#xf2ca; thermometer-quarter</option>
-					<option value='fa-thermometer-three-quarters'>&#xf2c8; thermometer-three-quarters</option>
-					<option value='fa-thumb-tack'>&#xf08d; thumb-tack</option>
-					<option value='fa-thumbs-down'>&#xf165; thumbs-down</option>
-					<option value='fa-thumbs-o-down'>&#xf088; thumbs-o-down</option>
-					<option value='fa-thumbs-o-up'>&#xf087; thumbs-o-up</option>
-					<option value='fa-thumbs-up'>&#xf164; thumbs-up</option>
-					<option value='fa-ticket'>&#xf145; ticket</option>
-					<option value='fa-times'>&#xf00d; times</option>
-					<option value='fa-times-circle'>&#xf057; times-circle</option>
-					<option value='fa-times-circle-o'>&#xf05c; times-circle-o</option>
-					<option value='fa-times-rectangle'>&#xf2d3; times-rectangle</option>
-					<option value='fa-times-rectangle-o'>&#xf2d4; times-rectangle-o</option>
-					<option value='fa-tint'>&#xf043; tint</option>
-					<option value='fa-toggle-down'>&#xf150; toggle-down</option>
-					<option value='fa-toggle-left'>&#xf191; toggle-left</option>
-					<option value='fa-toggle-off'>&#xf204; toggle-off</option>
-					<option value='fa-toggle-on'>&#xf205; toggle-on</option>
-					<option value='fa-toggle-right'>&#xf152; toggle-right</option>
-					<option value='fa-toggle-up'>&#xf151; toggle-up</option>
-					<option value='fa-trademark'>&#xf25c; trademark</option>
-					<option value='fa-train'>&#xf238; train</option>
-					<option value='fa-transgender'>&#xf224; transgender</option>
-					<option value='fa-transgender-alt'>&#xf225; transgender-alt</option>
-					<option value='fa-trash'>&#xf1f8; trash</option>
-					<option value='fa-trash-o'>&#xf014; trash-o</option>
-					<option value='fa-tree'>&#xf1bb; tree</option>
-					<option value='fa-trello'>&#xf181; trello</option>
-					<option value='fa-tripadvisor'>&#xf262; tripadvisor</option>
-					<option value='fa-trophy'>&#xf091; trophy</option>
-					<option value='fa-truck'>&#xf0d1; truck</option>
-					<option value='fa-try'>&#xf195; try</option>
-					<option value='fa-tty'>&#xf1e4; tty</option>
-					<option value='fa-tumblr'>&#xf173; tumblr</option>
-					<option value='fa-tumblr-square'>&#xf174; tumblr-square</option>
-					<option value='fa-turkish-lira'>&#xf195; turkish-lira</option>
-					<option value='fa-tv'>&#xf26c; tv</option>
-					<option value='fa-twitch'>&#xf1e8; twitch</option>
-					<option value='fa-twitter'>&#xf099; twitter</option>
-					<option value='fa-twitter-square'>&#xf081; twitter-square</option>
-					<option value='fa-umbrella'>&#xf0e9; umbrella</option>
-					<option value='fa-underline'>&#xf0cd; underline</option>
-					<option value='fa-undo'>&#xf0e2; undo</option>
-					<option value='fa-universal-access'>&#xf29a; universal-access</option>
-					<option value='fa-university'>&#xf19c; university</option>
-					<option value='fa-unlink'>&#xf127; unlink</option>
-					<option value='fa-unlock'>&#xf09c; unlock</option>
-					<option value='fa-unlock-alt'>&#xf13e; unlock-alt</option>
-					<option value='fa-unsorted'>&#xf0dc; unsorted</option>
-					<option value='fa-upload'>&#xf093; upload</option>
-					<option value='fa-usb'>&#xf287; usb</option>
-					<option value='fa-usd'>&#xf155; usd</option>
-					<option value='fa-user'>&#xf007; user</option>
-					<option value='fa-user-circle'>&#xf2bd; user-circle</option>
-					<option value='fa-user-circle-o'>&#xf2be; user-circle-o</option>
-					<option value='fa-user-md'>&#xf0f0; user-md</option>
-					<option value='fa-user-o'>&#xf2c0; user-o</option>
-					<option value='fa-user-plus'>&#xf234; user-plus</option>
-					<option value='fa-user-secret'>&#xf21b; user-secret</option>
-					<option value='fa-user-times'>&#xf235; user-times</option>
-					<option value='fa-users'>&#xf0c0; users</option>
-					<option value='fa-vcard'>&#xf2bb; vcard</option>
-					<option value='fa-vcard-o'>&#xf2bc; vcard-o</option>
-					<option value='fa-venus'>&#xf221; venus</option>
-					<option value='fa-venus-double'>&#xf226; venus-double</option>
-					<option value='fa-venus-mars'>&#xf228; venus-mars</option>
-					<option value='fa-viacoin'>&#xf237; viacoin</option>
-					<option value='fa-viadeo'>&#xf2a9; viadeo</option>
-					<option value='fa-viadeo-square'>&#xf2aa; viadeo-square</option>
-					<option value='fa-video-camera'>&#xf03d; video-camera</option>
-					<option value='fa-vimeo'>&#xf27d; vimeo</option>
-					<option value='fa-vimeo-square'>&#xf194; vimeo-square</option>
-					<option value='fa-vine'>&#xf1ca; vine</option>
-					<option value='fa-vk'>&#xf189; vk</option>
-					<option value='fa-volume-control-phone'>&#xf2a0; volume-control-phone</option>
-					<option value='fa-volume-down'>&#xf027; volume-down</option>
-					<option value='fa-volume-off'>&#xf026; volume-off</option>
-					<option value='fa-volume-up'>&#xf028; volume-up</option>
-					<option value='fa-warning'>&#xf071; warning</option>
-					<option value='fa-wechat'>&#xf1d7; wechat</option>
-					<option value='fa-weibo'>&#xf18a; weibo</option>
-					<option value='fa-weixin'>&#xf1d7; weixin</option>
-					<option value='fa-whatsapp'>&#xf232; whatsapp</option>
-					<option value='fa-wheelchair'>&#xf193; wheelchair</option>
-					<option value='fa-wheelchair-alt'>&#xf29b; wheelchair-alt</option>
-					<option value='fa-wifi'>&#xf1eb; wifi</option>
-					<option value='fa-wikipedia-w'>&#xf266; wikipedia-w</option>
-					<option value='fa-window-close'>&#xf2d3; window-close</option>
-					<option value='fa-window-close-o'>&#xf2d4; window-close-o</option>
-					<option value='fa-window-maximize'>&#xf2d0; window-maximize</option>
-					<option value='fa-window-minimize'>&#xf2d1; window-minimize</option>
-					<option value='fa-window-restore'>&#xf2d2; window-restore</option>
-					<option value='fa-windows'>&#xf17a; windows</option>
-					<option value='fa-won'>&#xf159; won</option>
-					<option value='fa-wordpress'>&#xf19a; wordpress</option>
-					<option value='fa-wpbeginner'>&#xf297; wpbeginner</option>
-					<option value='fa-wpexplorer'>&#xf2de; wpexplorer</option>
-					<option value='fa-wpforms'>&#xf298; wpforms</option>
-					<option value='fa-wrench'>&#xf0ad; wrench</option>
-					<option value='fa-xing'>&#xf168; xing</option>
-					<option value='fa-xing-square'>&#xf169; xing-square</option>
-					<option value='fa-y-combinator'>&#xf23b; y-combinator</option>
-					<option value='fa-y-combinator-square'>&#xf1d4; y-combinator-square</option>
-					<option value='fa-yahoo'>&#xf19e; yahoo</option>
-					<option value='fa-yc'>&#xf23b; yc</option>
-					<option value='fa-yc-square'>&#xf1d4; yc-square</option>
-					<option value='fa-yelp'>&#xf1e9; yelp</option>
-					<option value='fa-yen'>&#xf157; yen</option>
-					<option value='fa-yoast'>&#xf2b1; yoast</option>
-					<option value='fa-youtube'>&#xf167; youtube</option>
-					<option value='fa-youtube-play'>&#xf16a; youtube-play</option>
-					<option value='fa-youtube-square'>&#xf166; youtube-square</option>
-				</select></label>
-			</p>
+					</span>
+				</p>
 
-			</div>
+				<!-- アイコン選択: option は下部インラインスクリプトで動的生成 -->
+				<p>
+					<label><span>Icons</span>
+					<select id="icons">
+						<option value=''>None</option>
+					</select></label>
+				</p>
 
-			<footer>
-
-
-			</footer>
-
+			</div><!-- /.scrollable -->
+			<footer></footer>
 			<button id="toggle" title="Toggle UI"></button>
 			<button data-command="help" title="Help"><img src="img/help.png" alt="Help" /></button>
 			<button data-command="notes" title="Notes"><img src="img/notes.png" alt="Notes" /></button>
 			<img id="throbber" src="img/throbber.gif" />
-		</div>
+		</div><!-- /#ui -->
 
-
+		<!-- ============================================================
+		     I/O パネル: ファイル保存・読み込み・クラウド同期
+		     ============================================================ -->
 		<div id="io" class="pane" hidden>
 			<h3></h3>
 			<p>
@@ -916,6 +136,7 @@
 				<select id="backend"></select></label>
 			</p>
 
+			<!-- ローカルファイル (MM / JSON 形式) -->
 			<div id="file">
 				<p class="desc">Local files are suitable for loading/saving files from other mindmapping applications.</p>
 				<p data-for="save">
@@ -927,6 +148,7 @@
 				</p>
 			</div>
 
+			<!-- 画像エクスポート -->
 			<div id="image">
 				<p class="desc">Export your design as an image.</p>
 				<p data-for="save">
@@ -941,6 +163,7 @@
 				</p>
 			</div>
 
+			<!-- ブラウザ localStorage -->
 			<div id="local">
 				<p class="desc">Your browser's localStorage can handle many mind maps and creates a permalink, but this URL cannot be shared.</p>
 				<p data-for="load">
@@ -955,6 +178,7 @@
 				</p>
 			</div>
 
+			<!-- Firebase リアルタイム同期 -->
 			<div id="firebase">
 				<p class="desc">Firebase offers real-time synchronization for true multi-user collaboration.</p>
 				<p data-for="save load">
@@ -983,6 +207,7 @@
 				</p>
 			</div>
 
+			<!-- WebDAV / REST API -->
 			<div id="webdav">
 				<p class="desc">Use this to access a generic DAV-like REST API.</p>
 				<p data-for="save load">
@@ -994,6 +219,7 @@
 				</p>
 			</div>
 
+			<!-- Google Drive -->
 			<div id="gdrive">
 				<p class="desc">Maps stored in Google Drive have a permalink URL and can be shared with other users, if you allow this by setting proper permissions (inside Google Drive itself).</p>
 				<p data-for="save">
@@ -1004,29 +230,34 @@
 					<button class="go"></button><button class="cancel">Cancel</button>
 				</p>
 			</div>
-		</div>
+		</div><!-- /#io -->
 
+		<!-- ============================================================
+		     ヘルプパネル: キーボードショートカット一覧 (my-mind.js が動的生成)
+		     ============================================================ -->
 		<div id="help" class="pane" hidden>
 			<h3>Help</h3>
-
 			<p>Navigation</p>
 			<table class="navigation"></table>
-
 			<p>Manipulation</p>
 			<table class="manipulation"></table>
-
 			<p>Editing</p>
 			<table class="editing"></table>
-
 			<p>Other</p>
 			<table class="other"></table>
-		</div>
+		</div><!-- /#help -->
 
+		<!-- ============================================================
+		     ノートパネル: 選択ノードのリッチテキストメモ
+		     ============================================================ -->
 		<div id="notes" class="pane" hidden>
 			<h3>Topic Notes</h3>
 			<iframe sandbox="allow-scripts" src="editor.html"></iframe>
-		</div>
+		</div><!-- /#notes -->
 
+		<!-- ============================================================
+		     右クリックコンテキストメニュー
+		     ============================================================ -->
 		<div id="context-menu">
 			<button data-command="notes"></button>
 			<span></span>
@@ -1040,14 +271,829 @@
 			<button data-command="undo"></button>
 			<button data-command="redo"></button>
 			<button data-command="center"></button>
-		</div>
+		</div><!-- /#context-menu -->
 
+		<!-- ============================================================
+		     スクリプト読み込み
+		     ============================================================ -->
+
+		<!-- Firebase SDK (リアルタイム同期機能に必要) -->
 		<script src="https://www.gstatic.com/firebasejs/5.5.2/firebase-app.js"></script>
 		<script src="https://www.gstatic.com/firebasejs/5.5.2/firebase-database.js"></script>
 		<script src="https://www.gstatic.com/firebasejs/5.5.2/firebase-auth.js"></script>
 
+		<!-- ============================================================
+		     Font Awesome アイコン一覧
+		     各エントリ: [CSSクラス名, Unicodeコードポイント, 表示ラベル]
+		     アイコンの追加・削除は FONT_AWESOME_ICONS 配列を編集すること。
+		     my-mind.js より前に配置し、select#icons に option を注入する。
+		     ============================================================ -->
+		<script>
+		(function () {
+			/** @type {Array<[string, number, string]>} */
+			var FONT_AWESOME_ICONS = [
+				['fa-500px', 0xf26e, '500px'],
+				['fa-address-book', 0xf2b9, 'address-book'],
+				['fa-address-book-o', 0xf2ba, 'address-book-o'],
+				['fa-address-card', 0xf2bb, 'address-card'],
+				['fa-address-card-o', 0xf2bc, 'address-card-o'],
+				['fa-adjust', 0xf042, 'adjust'],
+				['fa-adn', 0xf170, 'adn'],
+				['fa-align-center', 0xf037, 'align-center'],
+				['fa-align-justify', 0xf039, 'align-justify'],
+				['fa-align-left', 0xf036, 'align-left'],
+				['fa-align-right', 0xf038, 'align-right'],
+				['fa-amazon', 0xf270, 'amazon'],
+				['fa-ambulance', 0xf0f9, 'ambulance'],
+				['fa-american-sign-language-interpreting', 0xf2a3, 'american-sign-language-interpreting'],
+				['fa-anchor', 0xf13d, 'anchor'],
+				['fa-android', 0xf17b, 'android'],
+				['fa-angellist', 0xf209, 'angellist'],
+				['fa-angle-double-down', 0xf103, 'angle-double-down'],
+				['fa-angle-double-left', 0xf100, 'angle-double-left'],
+				['fa-angle-double-right', 0xf101, 'angle-double-right'],
+				['fa-angle-double-up', 0xf102, 'angle-double-up'],
+				['fa-angle-down', 0xf107, 'angle-down'],
+				['fa-angle-left', 0xf104, 'angle-left'],
+				['fa-angle-right', 0xf105, 'angle-right'],
+				['fa-angle-up', 0xf106, 'angle-up'],
+				['fa-apple', 0xf179, 'apple'],
+				['fa-archive', 0xf187, 'archive'],
+				['fa-area-chart', 0xf1fe, 'area-chart'],
+				['fa-arrow-circle-down', 0xf0ab, 'arrow-circle-down'],
+				['fa-arrow-circle-left', 0xf0a8, 'arrow-circle-left'],
+				['fa-arrow-circle-o-down', 0xf01a, 'arrow-circle-o-down'],
+				['fa-arrow-circle-o-left', 0xf190, 'arrow-circle-o-left'],
+				['fa-arrow-circle-o-right', 0xf18e, 'arrow-circle-o-right'],
+				['fa-arrow-circle-o-up', 0xf01b, 'arrow-circle-o-up'],
+				['fa-arrow-circle-right', 0xf0a9, 'arrow-circle-right'],
+				['fa-arrow-circle-up', 0xf0aa, 'arrow-circle-up'],
+				['fa-arrow-down', 0xf063, 'arrow-down'],
+				['fa-arrow-left', 0xf060, 'arrow-left'],
+				['fa-arrow-right', 0xf061, 'arrow-right'],
+				['fa-arrow-up', 0xf062, 'arrow-up'],
+				['fa-arrows', 0xf047, 'arrows'],
+				['fa-arrows-alt', 0xf0b2, 'arrows-alt'],
+				['fa-arrows-h', 0xf07e, 'arrows-h'],
+				['fa-arrows-v', 0xf07d, 'arrows-v'],
+				['fa-asl-interpreting', 0xf2a3, 'asl-interpreting'],
+				['fa-assistive-listening-systems', 0xf2a2, 'assistive-listening-systems'],
+				['fa-asterisk', 0xf069, 'asterisk'],
+				['fa-at', 0xf1fa, 'at'],
+				['fa-audio-description', 0xf29e, 'audio-description'],
+				['fa-automobile', 0xf1b9, 'automobile'],
+				['fa-backward', 0xf04a, 'backward'],
+				['fa-balance-scale', 0xf24e, 'balance-scale'],
+				['fa-ban', 0xf05e, 'ban'],
+				['fa-bandcamp', 0xf2d5, 'bandcamp'],
+				['fa-bank', 0xf19c, 'bank'],
+				['fa-bar-chart', 0xf080, 'bar-chart'],
+				['fa-bar-chart-o', 0xf080, 'bar-chart-o'],
+				['fa-barcode', 0xf02a, 'barcode'],
+				['fa-bars', 0xf0c9, 'bars'],
+				['fa-bath', 0xf2cd, 'bath'],
+				['fa-bathtub', 0xf2cd, 'bathtub'],
+				['fa-battery', 0xf240, 'battery'],
+				['fa-battery-0', 0xf244, 'battery-0'],
+				['fa-battery-1', 0xf243, 'battery-1'],
+				['fa-battery-2', 0xf242, 'battery-2'],
+				['fa-battery-3', 0xf241, 'battery-3'],
+				['fa-battery-4', 0xf240, 'battery-4'],
+				['fa-battery-empty', 0xf244, 'battery-empty'],
+				['fa-battery-full', 0xf240, 'battery-full'],
+				['fa-battery-half', 0xf242, 'battery-half'],
+				['fa-battery-quarter', 0xf243, 'battery-quarter'],
+				['fa-battery-three-quarters', 0xf241, 'battery-three-quarters'],
+				['fa-bed', 0xf236, 'bed'],
+				['fa-beer', 0xf0fc, 'beer'],
+				['fa-behance', 0xf1b4, 'behance'],
+				['fa-behance-square', 0xf1b5, 'behance-square'],
+				['fa-bell', 0xf0f3, 'bell'],
+				['fa-bell-o', 0xf0a2, 'bell-o'],
+				['fa-bell-slash', 0xf1f6, 'bell-slash'],
+				['fa-bell-slash-o', 0xf1f7, 'bell-slash-o'],
+				['fa-bicycle', 0xf206, 'bicycle'],
+				['fa-binoculars', 0xf1e5, 'binoculars'],
+				['fa-birthday-cake', 0xf1fd, 'birthday-cake'],
+				['fa-bitbucket', 0xf171, 'bitbucket'],
+				['fa-bitbucket-square', 0xf172, 'bitbucket-square'],
+				['fa-bitcoin', 0xf15a, 'bitcoin'],
+				['fa-black-tie', 0xf27e, 'black-tie'],
+				['fa-blind', 0xf29d, 'blind'],
+				['fa-bluetooth', 0xf293, 'bluetooth'],
+				['fa-bluetooth-b', 0xf294, 'bluetooth-b'],
+				['fa-bold', 0xf032, 'bold'],
+				['fa-bolt', 0xf0e7, 'bolt'],
+				['fa-bomb', 0xf1e2, 'bomb'],
+				['fa-book', 0xf02d, 'book'],
+				['fa-bookmark', 0xf02e, 'bookmark'],
+				['fa-bookmark-o', 0xf097, 'bookmark-o'],
+				['fa-braille', 0xf2a1, 'braille'],
+				['fa-briefcase', 0xf0b1, 'briefcase'],
+				['fa-btc', 0xf15a, 'btc'],
+				['fa-bug', 0xf188, 'bug'],
+				['fa-building', 0xf1ad, 'building'],
+				['fa-building-o', 0xf0f7, 'building-o'],
+				['fa-bullhorn', 0xf0a1, 'bullhorn'],
+				['fa-bullseye', 0xf140, 'bullseye'],
+				['fa-bus', 0xf207, 'bus'],
+				['fa-buysellads', 0xf20d, 'buysellads'],
+				['fa-cab', 0xf1ba, 'cab'],
+				['fa-calculator', 0xf1ec, 'calculator'],
+				['fa-calendar', 0xf073, 'calendar'],
+				['fa-calendar-check-o', 0xf274, 'calendar-check-o'],
+				['fa-calendar-minus-o', 0xf272, 'calendar-minus-o'],
+				['fa-calendar-o', 0xf133, 'calendar-o'],
+				['fa-calendar-plus-o', 0xf271, 'calendar-plus-o'],
+				['fa-calendar-times-o', 0xf273, 'calendar-times-o'],
+				['fa-camera', 0xf030, 'camera'],
+				['fa-camera-retro', 0xf083, 'camera-retro'],
+				['fa-car', 0xf1b9, 'car'],
+				['fa-caret-down', 0xf0d7, 'caret-down'],
+				['fa-caret-left', 0xf0d9, 'caret-left'],
+				['fa-caret-right', 0xf0da, 'caret-right'],
+				['fa-caret-square-o-down', 0xf150, 'caret-square-o-down'],
+				['fa-caret-square-o-left', 0xf191, 'caret-square-o-left'],
+				['fa-caret-square-o-right', 0xf152, 'caret-square-o-right'],
+				['fa-caret-square-o-up', 0xf151, 'caret-square-o-up'],
+				['fa-caret-up', 0xf0d8, 'caret-up'],
+				['fa-cart-arrow-down', 0xf218, 'cart-arrow-down'],
+				['fa-cart-plus', 0xf217, 'cart-plus'],
+				['fa-cc', 0xf20a, 'cc'],
+				['fa-cc-amex', 0xf1f3, 'cc-amex'],
+				['fa-cc-diners-club', 0xf24c, 'cc-diners-club'],
+				['fa-cc-discover', 0xf1f2, 'cc-discover'],
+				['fa-cc-jcb', 0xf24b, 'cc-jcb'],
+				['fa-cc-mastercard', 0xf1f1, 'cc-mastercard'],
+				['fa-cc-paypal', 0xf1f4, 'cc-paypal'],
+				['fa-cc-stripe', 0xf1f5, 'cc-stripe'],
+				['fa-cc-visa', 0xf1f0, 'cc-visa'],
+				['fa-certificate', 0xf0a3, 'certificate'],
+				['fa-chain', 0xf0c1, 'chain'],
+				['fa-chain-broken', 0xf127, 'chain-broken'],
+				['fa-check', 0xf00c, 'check'],
+				['fa-check-circle', 0xf058, 'check-circle'],
+				['fa-check-circle-o', 0xf05d, 'check-circle-o'],
+				['fa-check-square', 0xf14a, 'check-square'],
+				['fa-check-square-o', 0xf046, 'check-square-o'],
+				['fa-chevron-circle-down', 0xf13a, 'chevron-circle-down'],
+				['fa-chevron-circle-left', 0xf137, 'chevron-circle-left'],
+				['fa-chevron-circle-right', 0xf138, 'chevron-circle-right'],
+				['fa-chevron-circle-up', 0xf139, 'chevron-circle-up'],
+				['fa-chevron-down', 0xf078, 'chevron-down'],
+				['fa-chevron-left', 0xf053, 'chevron-left'],
+				['fa-chevron-right', 0xf054, 'chevron-right'],
+				['fa-chevron-up', 0xf077, 'chevron-up'],
+				['fa-child', 0xf1ae, 'child'],
+				['fa-chrome', 0xf268, 'chrome'],
+				['fa-circle', 0xf111, 'circle'],
+				['fa-circle-o', 0xf10c, 'circle-o'],
+				['fa-circle-o-notch', 0xf1ce, 'circle-o-notch'],
+				['fa-circle-thin', 0xf1db, 'circle-thin'],
+				['fa-clipboard', 0xf0ea, 'clipboard'],
+				['fa-clock-o', 0xf017, 'clock-o'],
+				['fa-clone', 0xf24d, 'clone'],
+				['fa-close', 0xf00d, 'close'],
+				['fa-cloud', 0xf0c2, 'cloud'],
+				['fa-cloud-download', 0xf0ed, 'cloud-download'],
+				['fa-cloud-upload', 0xf0ee, 'cloud-upload'],
+				['fa-cny', 0xf157, 'cny'],
+				['fa-code', 0xf121, 'code'],
+				['fa-code-fork', 0xf126, 'code-fork'],
+				['fa-codepen', 0xf1cb, 'codepen'],
+				['fa-codiepie', 0xf284, 'codiepie'],
+				['fa-coffee', 0xf0f4, 'coffee'],
+				['fa-cog', 0xf013, 'cog'],
+				['fa-cogs', 0xf085, 'cogs'],
+				['fa-columns', 0xf0db, 'columns'],
+				['fa-comment', 0xf075, 'comment'],
+				['fa-comment-o', 0xf0e5, 'comment-o'],
+				['fa-commenting', 0xf27a, 'commenting'],
+				['fa-commenting-o', 0xf27b, 'commenting-o'],
+				['fa-comments', 0xf086, 'comments'],
+				['fa-comments-o', 0xf0e6, 'comments-o'],
+				['fa-compass', 0xf14e, 'compass'],
+				['fa-compress', 0xf066, 'compress'],
+				['fa-connectdevelop', 0xf20e, 'connectdevelop'],
+				['fa-contao', 0xf26d, 'contao'],
+				['fa-copy', 0xf0c5, 'copy'],
+				['fa-copyright', 0xf1f9, 'copyright'],
+				['fa-creative-commons', 0xf25e, 'creative-commons'],
+				['fa-credit-card', 0xf09d, 'credit-card'],
+				['fa-credit-card-alt', 0xf283, 'credit-card-alt'],
+				['fa-crop', 0xf125, 'crop'],
+				['fa-crosshairs', 0xf05b, 'crosshairs'],
+				['fa-css3', 0xf13c, 'css3'],
+				['fa-cube', 0xf1b2, 'cube'],
+				['fa-cubes', 0xf1b3, 'cubes'],
+				['fa-cut', 0xf0c4, 'cut'],
+				['fa-cutlery', 0xf0f5, 'cutlery'],
+				['fa-dashboard', 0xf0e4, 'dashboard'],
+				['fa-dashcube', 0xf210, 'dashcube'],
+				['fa-database', 0xf1c0, 'database'],
+				['fa-deaf', 0xf2a4, 'deaf'],
+				['fa-deafness', 0xf2a4, 'deafness'],
+				['fa-dedent', 0xf03b, 'dedent'],
+				['fa-delicious', 0xf1a5, 'delicious'],
+				['fa-desktop', 0xf108, 'desktop'],
+				['fa-deviantart', 0xf1bd, 'deviantart'],
+				['fa-diamond', 0xf219, 'diamond'],
+				['fa-digg', 0xf1a6, 'digg'],
+				['fa-dollar', 0xf155, 'dollar'],
+				['fa-dot-circle-o', 0xf192, 'dot-circle-o'],
+				['fa-download', 0xf019, 'download'],
+				['fa-dribbble', 0xf17d, 'dribbble'],
+				['fa-drivers-license', 0xf2c2, 'drivers-license'],
+				['fa-drivers-license-o', 0xf2c3, 'drivers-license-o'],
+				['fa-dropbox', 0xf16b, 'dropbox'],
+				['fa-drupal', 0xf1a9, 'drupal'],
+				['fa-edge', 0xf282, 'edge'],
+				['fa-edit', 0xf044, 'edit'],
+				['fa-eercast', 0xf2da, 'eercast'],
+				['fa-eject', 0xf052, 'eject'],
+				['fa-ellipsis-h', 0xf141, 'ellipsis-h'],
+				['fa-ellipsis-v', 0xf142, 'ellipsis-v'],
+				['fa-empire', 0xf1d1, 'empire'],
+				['fa-envelope', 0xf0e0, 'envelope'],
+				['fa-envelope-o', 0xf003, 'envelope-o'],
+				['fa-envelope-open', 0xf2b6, 'envelope-open'],
+				['fa-envelope-open-o', 0xf2b7, 'envelope-open-o'],
+				['fa-envelope-square', 0xf199, 'envelope-square'],
+				['fa-envira', 0xf299, 'envira'],
+				['fa-eraser', 0xf12d, 'eraser'],
+				['fa-etsy', 0xf2d7, 'etsy'],
+				['fa-eur', 0xf153, 'eur'],
+				['fa-euro', 0xf153, 'euro'],
+				['fa-exchange', 0xf0ec, 'exchange'],
+				['fa-exclamation', 0xf12a, 'exclamation'],
+				['fa-exclamation-circle', 0xf06a, 'exclamation-circle'],
+				['fa-exclamation-triangle', 0xf071, 'exclamation-triangle'],
+				['fa-expand', 0xf065, 'expand'],
+				['fa-expeditedssl', 0xf23e, 'expeditedssl'],
+				['fa-external-link', 0xf08e, 'external-link'],
+				['fa-external-link-square', 0xf14c, 'external-link-square'],
+				['fa-eye', 0xf06e, 'eye'],
+				['fa-eye-slash', 0xf070, 'eye-slash'],
+				['fa-eyedropper', 0xf1fb, 'eyedropper'],
+				['fa-fa', 0xf2b4, 'fa'],
+				['fa-facebook', 0xf09a, 'facebook'],
+				['fa-facebook-f', 0xf09a, 'facebook-f'],
+				['fa-facebook-official', 0xf230, 'facebook-official'],
+				['fa-facebook-square', 0xf082, 'facebook-square'],
+				['fa-fast-backward', 0xf049, 'fast-backward'],
+				['fa-fast-forward', 0xf050, 'fast-forward'],
+				['fa-fax', 0xf1ac, 'fax'],
+				['fa-feed', 0xf09e, 'feed'],
+				['fa-female', 0xf182, 'female'],
+				['fa-fighter-jet', 0xf0fb, 'fighter-jet'],
+				['fa-file', 0xf15b, 'file'],
+				['fa-file-archive-o', 0xf1c6, 'file-archive-o'],
+				['fa-file-audio-o', 0xf1c7, 'file-audio-o'],
+				['fa-file-code-o', 0xf1c9, 'file-code-o'],
+				['fa-file-excel-o', 0xf1c3, 'file-excel-o'],
+				['fa-file-image-o', 0xf1c5, 'file-image-o'],
+				['fa-file-movie-o', 0xf1c8, 'file-movie-o'],
+				['fa-file-o', 0xf016, 'file-o'],
+				['fa-file-pdf-o', 0xf1c1, 'file-pdf-o'],
+				['fa-file-photo-o', 0xf1c5, 'file-photo-o'],
+				['fa-file-picture-o', 0xf1c5, 'file-picture-o'],
+				['fa-file-powerpoint-o', 0xf1c4, 'file-powerpoint-o'],
+				['fa-file-sound-o', 0xf1c7, 'file-sound-o'],
+				['fa-file-text', 0xf15c, 'file-text'],
+				['fa-file-text-o', 0xf0f6, 'file-text-o'],
+				['fa-file-video-o', 0xf1c8, 'file-video-o'],
+				['fa-file-word-o', 0xf1c2, 'file-word-o'],
+				['fa-file-zip-o', 0xf1c6, 'file-zip-o'],
+				['fa-files-o', 0xf0c5, 'files-o'],
+				['fa-film', 0xf008, 'film'],
+				['fa-filter', 0xf0b0, 'filter'],
+				['fa-fire', 0xf06d, 'fire'],
+				['fa-fire-extinguisher', 0xf134, 'fire-extinguisher'],
+				['fa-firefox', 0xf269, 'firefox'],
+				['fa-first-order', 0xf2b0, 'first-order'],
+				['fa-flag', 0xf024, 'flag'],
+				['fa-flag-checkered', 0xf11e, 'flag-checkered'],
+				['fa-flag-o', 0xf11d, 'flag-o'],
+				['fa-flash', 0xf0e7, 'flash'],
+				['fa-flask', 0xf0c3, 'flask'],
+				['fa-flickr', 0xf16e, 'flickr'],
+				['fa-floppy-o', 0xf0c7, 'floppy-o'],
+				['fa-folder', 0xf07b, 'folder'],
+				['fa-folder-o', 0xf114, 'folder-o'],
+				['fa-folder-open', 0xf07c, 'folder-open'],
+				['fa-folder-open-o', 0xf115, 'folder-open-o'],
+				['fa-font', 0xf031, 'font'],
+				['fa-font-awesome', 0xf2b4, 'font-awesome'],
+				['fa-fonticons', 0xf280, 'fonticons'],
+				['fa-fort-awesome', 0xf286, 'fort-awesome'],
+				['fa-forumbee', 0xf211, 'forumbee'],
+				['fa-forward', 0xf04e, 'forward'],
+				['fa-foursquare', 0xf180, 'foursquare'],
+				['fa-free-code-camp', 0xf2c5, 'free-code-camp'],
+				['fa-frown-o', 0xf119, 'frown-o'],
+				['fa-futbol-o', 0xf1e3, 'futbol-o'],
+				['fa-gamepad', 0xf11b, 'gamepad'],
+				['fa-gavel', 0xf0e3, 'gavel'],
+				['fa-gbp', 0xf154, 'gbp'],
+				['fa-ge', 0xf1d1, 'ge'],
+				['fa-gear', 0xf013, 'gear'],
+				['fa-gears', 0xf085, 'gears'],
+				['fa-genderless', 0xf22d, 'genderless'],
+				['fa-get-pocket', 0xf265, 'get-pocket'],
+				['fa-gg', 0xf260, 'gg'],
+				['fa-gg-circle', 0xf261, 'gg-circle'],
+				['fa-gift', 0xf06b, 'gift'],
+				['fa-git', 0xf1d3, 'git'],
+				['fa-git-square', 0xf1d2, 'git-square'],
+				['fa-github', 0xf09b, 'github'],
+				['fa-github-alt', 0xf113, 'github-alt'],
+				['fa-github-square', 0xf092, 'github-square'],
+				['fa-gitlab', 0xf296, 'gitlab'],
+				['fa-gittip', 0xf184, 'gittip'],
+				['fa-glass', 0xf000, 'glass'],
+				['fa-glide', 0xf2a5, 'glide'],
+				['fa-glide-g', 0xf2a6, 'glide-g'],
+				['fa-globe', 0xf0ac, 'globe'],
+				['fa-google', 0xf1a0, 'google'],
+				['fa-google-plus', 0xf0d5, 'google-plus'],
+				['fa-google-plus-circle', 0xf2b3, 'google-plus-circle'],
+				['fa-google-plus-official', 0xf2b3, 'google-plus-official'],
+				['fa-google-plus-square', 0xf0d4, 'google-plus-square'],
+				['fa-google-wallet', 0xf1ee, 'google-wallet'],
+				['fa-graduation-cap', 0xf19d, 'graduation-cap'],
+				['fa-gratipay', 0xf184, 'gratipay'],
+				['fa-grav', 0xf2d6, 'grav'],
+				['fa-group', 0xf0c0, 'group'],
+				['fa-h-square', 0xf0fd, 'h-square'],
+				['fa-hacker-news', 0xf1d4, 'hacker-news'],
+				['fa-hand-grab-o', 0xf255, 'hand-grab-o'],
+				['fa-hand-lizard-o', 0xf258, 'hand-lizard-o'],
+				['fa-hand-o-down', 0xf0a7, 'hand-o-down'],
+				['fa-hand-o-left', 0xf0a5, 'hand-o-left'],
+				['fa-hand-o-right', 0xf0a4, 'hand-o-right'],
+				['fa-hand-o-up', 0xf0a6, 'hand-o-up'],
+				['fa-hand-paper-o', 0xf256, 'hand-paper-o'],
+				['fa-hand-peace-o', 0xf25b, 'hand-peace-o'],
+				['fa-hand-pointer-o', 0xf25a, 'hand-pointer-o'],
+				['fa-hand-rock-o', 0xf255, 'hand-rock-o'],
+				['fa-hand-scissors-o', 0xf257, 'hand-scissors-o'],
+				['fa-hand-spock-o', 0xf259, 'hand-spock-o'],
+				['fa-hand-stop-o', 0xf256, 'hand-stop-o'],
+				['fa-handshake-o', 0xf2b5, 'handshake-o'],
+				['fa-hard-of-hearing', 0xf2a4, 'hard-of-hearing'],
+				['fa-hashtag', 0xf292, 'hashtag'],
+				['fa-hdd-o', 0xf0a0, 'hdd-o'],
+				['fa-header', 0xf1dc, 'header'],
+				['fa-headphones', 0xf025, 'headphones'],
+				['fa-heart', 0xf004, 'heart'],
+				['fa-heart-o', 0xf08a, 'heart-o'],
+				['fa-heartbeat', 0xf21e, 'heartbeat'],
+				['fa-history', 0xf1da, 'history'],
+				['fa-home', 0xf015, 'home'],
+				['fa-hospital-o', 0xf0f8, 'hospital-o'],
+				['fa-hotel', 0xf236, 'hotel'],
+				['fa-hourglass', 0xf254, 'hourglass'],
+				['fa-hourglass-1', 0xf251, 'hourglass-1'],
+				['fa-hourglass-2', 0xf252, 'hourglass-2'],
+				['fa-hourglass-3', 0xf253, 'hourglass-3'],
+				['fa-hourglass-end', 0xf253, 'hourglass-end'],
+				['fa-hourglass-half', 0xf252, 'hourglass-half'],
+				['fa-hourglass-o', 0xf250, 'hourglass-o'],
+				['fa-hourglass-start', 0xf251, 'hourglass-start'],
+				['fa-houzz', 0xf27c, 'houzz'],
+				['fa-html5', 0xf13b, 'html5'],
+				['fa-i-cursor', 0xf246, 'i-cursor'],
+				['fa-id-badge', 0xf2c1, 'id-badge'],
+				['fa-id-card', 0xf2c2, 'id-card'],
+				['fa-id-card-o', 0xf2c3, 'id-card-o'],
+				['fa-ils', 0xf20b, 'ils'],
+				['fa-image', 0xf03e, 'image'],
+				['fa-imdb', 0xf2d8, 'imdb'],
+				['fa-inbox', 0xf01c, 'inbox'],
+				['fa-indent', 0xf03c, 'indent'],
+				['fa-industry', 0xf275, 'industry'],
+				['fa-info', 0xf129, 'info'],
+				['fa-info-circle', 0xf05a, 'info-circle'],
+				['fa-inr', 0xf156, 'inr'],
+				['fa-instagram', 0xf16d, 'instagram'],
+				['fa-institution', 0xf19c, 'institution'],
+				['fa-internet-explorer', 0xf26b, 'internet-explorer'],
+				['fa-intersex', 0xf224, 'intersex'],
+				['fa-ioxhost', 0xf208, 'ioxhost'],
+				['fa-italic', 0xf033, 'italic'],
+				['fa-joomla', 0xf1aa, 'joomla'],
+				['fa-jpy', 0xf157, 'jpy'],
+				['fa-jsfiddle', 0xf1cc, 'jsfiddle'],
+				['fa-key', 0xf084, 'key'],
+				['fa-keyboard-o', 0xf11c, 'keyboard-o'],
+				['fa-krw', 0xf159, 'krw'],
+				['fa-language', 0xf1ab, 'language'],
+				['fa-laptop', 0xf109, 'laptop'],
+				['fa-lastfm', 0xf202, 'lastfm'],
+				['fa-lastfm-square', 0xf203, 'lastfm-square'],
+				['fa-leaf', 0xf06c, 'leaf'],
+				['fa-leanpub', 0xf212, 'leanpub'],
+				['fa-legal', 0xf0e3, 'legal'],
+				['fa-lemon-o', 0xf094, 'lemon-o'],
+				['fa-level-down', 0xf149, 'level-down'],
+				['fa-level-up', 0xf148, 'level-up'],
+				['fa-life-bouy', 0xf1cd, 'life-bouy'],
+				['fa-life-buoy', 0xf1cd, 'life-buoy'],
+				['fa-life-ring', 0xf1cd, 'life-ring'],
+				['fa-life-saver', 0xf1cd, 'life-saver'],
+				['fa-lightbulb-o', 0xf0eb, 'lightbulb-o'],
+				['fa-line-chart', 0xf201, 'line-chart'],
+				['fa-link', 0xf0c1, 'link'],
+				['fa-linkedin', 0xf0e1, 'linkedin'],
+				['fa-linkedin-square', 0xf08c, 'linkedin-square'],
+				['fa-linode', 0xf2b8, 'linode'],
+				['fa-linux', 0xf17c, 'linux'],
+				['fa-list', 0xf03a, 'list'],
+				['fa-list-alt', 0xf022, 'list-alt'],
+				['fa-list-ol', 0xf0cb, 'list-ol'],
+				['fa-list-ul', 0xf0ca, 'list-ul'],
+				['fa-location-arrow', 0xf124, 'location-arrow'],
+				['fa-lock', 0xf023, 'lock'],
+				['fa-long-arrow-down', 0xf175, 'long-arrow-down'],
+				['fa-long-arrow-left', 0xf177, 'long-arrow-left'],
+				['fa-long-arrow-right', 0xf178, 'long-arrow-right'],
+				['fa-long-arrow-up', 0xf176, 'long-arrow-up'],
+				['fa-low-vision', 0xf2a8, 'low-vision'],
+				['fa-magic', 0xf0d0, 'magic'],
+				['fa-magnet', 0xf076, 'magnet'],
+				['fa-mail-forward', 0xf064, 'mail-forward'],
+				['fa-mail-reply', 0xf112, 'mail-reply'],
+				['fa-mail-reply-all', 0xf122, 'mail-reply-all'],
+				['fa-male', 0xf183, 'male'],
+				['fa-map', 0xf279, 'map'],
+				['fa-map-marker', 0xf041, 'map-marker'],
+				['fa-map-o', 0xf278, 'map-o'],
+				['fa-map-pin', 0xf276, 'map-pin'],
+				['fa-map-signs', 0xf277, 'map-signs'],
+				['fa-mars', 0xf222, 'mars'],
+				['fa-mars-double', 0xf227, 'mars-double'],
+				['fa-mars-stroke', 0xf229, 'mars-stroke'],
+				['fa-mars-stroke-h', 0xf22b, 'mars-stroke-h'],
+				['fa-mars-stroke-v', 0xf22a, 'mars-stroke-v'],
+				['fa-maxcdn', 0xf136, 'maxcdn'],
+				['fa-meanpath', 0xf20c, 'meanpath'],
+				['fa-medium', 0xf23a, 'medium'],
+				['fa-medkit', 0xf0fa, 'medkit'],
+				['fa-meetup', 0xf2e0, 'meetup'],
+				['fa-meh-o', 0xf11a, 'meh-o'],
+				['fa-mercury', 0xf223, 'mercury'],
+				['fa-microchip', 0xf2db, 'microchip'],
+				['fa-microphone', 0xf130, 'microphone'],
+				['fa-microphone-slash', 0xf131, 'microphone-slash'],
+				['fa-minus', 0xf068, 'minus'],
+				['fa-minus-circle', 0xf056, 'minus-circle'],
+				['fa-minus-square', 0xf146, 'minus-square'],
+				['fa-minus-square-o', 0xf147, 'minus-square-o'],
+				['fa-mixcloud', 0xf289, 'mixcloud'],
+				['fa-mobile', 0xf10b, 'mobile'],
+				['fa-mobile-phone', 0xf10b, 'mobile-phone'],
+				['fa-modx', 0xf285, 'modx'],
+				['fa-money', 0xf0d6, 'money'],
+				['fa-moon-o', 0xf186, 'moon-o'],
+				['fa-mortar-board', 0xf19d, 'mortar-board'],
+				['fa-motorcycle', 0xf21c, 'motorcycle'],
+				['fa-mouse-pointer', 0xf245, 'mouse-pointer'],
+				['fa-music', 0xf001, 'music'],
+				['fa-navicon', 0xf0c9, 'navicon'],
+				['fa-neuter', 0xf22c, 'neuter'],
+				['fa-newspaper-o', 0xf1ea, 'newspaper-o'],
+				['fa-object-group', 0xf247, 'object-group'],
+				['fa-object-ungroup', 0xf248, 'object-ungroup'],
+				['fa-odnoklassniki', 0xf263, 'odnoklassniki'],
+				['fa-odnoklassniki-square', 0xf264, 'odnoklassniki-square'],
+				['fa-opencart', 0xf23d, 'opencart'],
+				['fa-openid', 0xf19b, 'openid'],
+				['fa-opera', 0xf26a, 'opera'],
+				['fa-optin-monster', 0xf23c, 'optin-monster'],
+				['fa-outdent', 0xf03b, 'outdent'],
+				['fa-pagelines', 0xf18c, 'pagelines'],
+				['fa-paint-brush', 0xf1fc, 'paint-brush'],
+				['fa-paper-plane', 0xf1d8, 'paper-plane'],
+				['fa-paper-plane-o', 0xf1d9, 'paper-plane-o'],
+				['fa-paperclip', 0xf0c6, 'paperclip'],
+				['fa-paragraph', 0xf1dd, 'paragraph'],
+				['fa-paste', 0xf0ea, 'paste'],
+				['fa-pause', 0xf04c, 'pause'],
+				['fa-pause-circle', 0xf28b, 'pause-circle'],
+				['fa-pause-circle-o', 0xf28c, 'pause-circle-o'],
+				['fa-paw', 0xf1b0, 'paw'],
+				['fa-paypal', 0xf1ed, 'paypal'],
+				['fa-pencil', 0xf040, 'pencil'],
+				['fa-pencil-square', 0xf14b, 'pencil-square'],
+				['fa-pencil-square-o', 0xf044, 'pencil-square-o'],
+				['fa-percent', 0xf295, 'percent'],
+				['fa-phone', 0xf095, 'phone'],
+				['fa-phone-square', 0xf098, 'phone-square'],
+				['fa-photo', 0xf03e, 'photo'],
+				['fa-picture-o', 0xf03e, 'picture-o'],
+				['fa-pie-chart', 0xf200, 'pie-chart'],
+				['fa-pied-piper', 0xf2ae, 'pied-piper'],
+				['fa-pied-piper-alt', 0xf1a8, 'pied-piper-alt'],
+				['fa-pied-piper-pp', 0xf1a7, 'pied-piper-pp'],
+				['fa-pinterest', 0xf0d2, 'pinterest'],
+				['fa-pinterest-p', 0xf231, 'pinterest-p'],
+				['fa-pinterest-square', 0xf0d3, 'pinterest-square'],
+				['fa-plane', 0xf072, 'plane'],
+				['fa-play', 0xf04b, 'play'],
+				['fa-play-circle', 0xf144, 'play-circle'],
+				['fa-play-circle-o', 0xf01d, 'play-circle-o'],
+				['fa-plug', 0xf1e6, 'plug'],
+				['fa-plus', 0xf067, 'plus'],
+				['fa-plus-circle', 0xf055, 'plus-circle'],
+				['fa-plus-square', 0xf0fe, 'plus-square'],
+				['fa-plus-square-o', 0xf196, 'plus-square-o'],
+				['fa-podcast', 0xf2ce, 'podcast'],
+				['fa-power-off', 0xf011, 'power-off'],
+				['fa-print', 0xf02f, 'print'],
+				['fa-product-hunt', 0xf288, 'product-hunt'],
+				['fa-puzzle-piece', 0xf12e, 'puzzle-piece'],
+				['fa-qq', 0xf1d6, 'qq'],
+				['fa-qrcode', 0xf029, 'qrcode'],
+				['fa-question', 0xf128, 'question'],
+				['fa-question-circle', 0xf059, 'question-circle'],
+				['fa-question-circle-o', 0xf29c, 'question-circle-o'],
+				['fa-quora', 0xf2c4, 'quora'],
+				['fa-quote-left', 0xf10d, 'quote-left'],
+				['fa-quote-right', 0xf10e, 'quote-right'],
+				['fa-ra', 0xf1d0, 'ra'],
+				['fa-random', 0xf074, 'random'],
+				['fa-ravelry', 0xf2d9, 'ravelry'],
+				['fa-rebel', 0xf1d0, 'rebel'],
+				['fa-recycle', 0xf1b8, 'recycle'],
+				['fa-reddit', 0xf1a1, 'reddit'],
+				['fa-reddit-alien', 0xf281, 'reddit-alien'],
+				['fa-reddit-square', 0xf1a2, 'reddit-square'],
+				['fa-refresh', 0xf021, 'refresh'],
+				['fa-registered', 0xf25d, 'registered'],
+				['fa-remove', 0xf00d, 'remove'],
+				['fa-renren', 0xf18b, 'renren'],
+				['fa-reorder', 0xf0c9, 'reorder'],
+				['fa-repeat', 0xf01e, 'repeat'],
+				['fa-reply', 0xf112, 'reply'],
+				['fa-reply-all', 0xf122, 'reply-all'],
+				['fa-resistance', 0xf1d0, 'resistance'],
+				['fa-retweet', 0xf079, 'retweet'],
+				['fa-rmb', 0xf157, 'rmb'],
+				['fa-road', 0xf018, 'road'],
+				['fa-rocket', 0xf135, 'rocket'],
+				['fa-rotate-left', 0xf0e2, 'rotate-left'],
+				['fa-rotate-right', 0xf01e, 'rotate-right'],
+				['fa-rouble', 0xf158, 'rouble'],
+				['fa-rss', 0xf09e, 'rss'],
+				['fa-rss-square', 0xf143, 'rss-square'],
+				['fa-rub', 0xf158, 'rub'],
+				['fa-ruble', 0xf158, 'ruble'],
+				['fa-rupee', 0xf156, 'rupee'],
+				['fa-s15', 0xf2cd, 's15'],
+				['fa-safari', 0xf267, 'safari'],
+				['fa-save', 0xf0c7, 'save'],
+				['fa-scissors', 0xf0c4, 'scissors'],
+				['fa-scribd', 0xf28a, 'scribd'],
+				['fa-search', 0xf002, 'search'],
+				['fa-search-minus', 0xf010, 'search-minus'],
+				['fa-search-plus', 0xf00e, 'search-plus'],
+				['fa-sellsy', 0xf213, 'sellsy'],
+				['fa-send', 0xf1d8, 'send'],
+				['fa-send-o', 0xf1d9, 'send-o'],
+				['fa-server', 0xf233, 'server'],
+				['fa-share', 0xf064, 'share'],
+				['fa-share-alt', 0xf1e0, 'share-alt'],
+				['fa-share-alt-square', 0xf1e1, 'share-alt-square'],
+				['fa-share-square', 0xf14d, 'share-square'],
+				['fa-share-square-o', 0xf045, 'share-square-o'],
+				['fa-shekel', 0xf20b, 'shekel'],
+				['fa-sheqel', 0xf20b, 'sheqel'],
+				['fa-shield', 0xf132, 'shield'],
+				['fa-ship', 0xf21a, 'ship'],
+				['fa-shirtsinbulk', 0xf214, 'shirtsinbulk'],
+				['fa-shopping-bag', 0xf290, 'shopping-bag'],
+				['fa-shopping-basket', 0xf291, 'shopping-basket'],
+				['fa-shopping-cart', 0xf07a, 'shopping-cart'],
+				['fa-shower', 0xf2cc, 'shower'],
+				['fa-sign-in', 0xf090, 'sign-in'],
+				['fa-sign-language', 0xf2a7, 'sign-language'],
+				['fa-sign-out', 0xf08b, 'sign-out'],
+				['fa-signal', 0xf012, 'signal'],
+				['fa-signing', 0xf2a7, 'signing'],
+				['fa-simplybuilt', 0xf215, 'simplybuilt'],
+				['fa-sitemap', 0xf0e8, 'sitemap'],
+				['fa-skyatlas', 0xf216, 'skyatlas'],
+				['fa-skype', 0xf17e, 'skype'],
+				['fa-slack', 0xf198, 'slack'],
+				['fa-sliders', 0xf1de, 'sliders'],
+				['fa-slideshare', 0xf1e7, 'slideshare'],
+				['fa-smile-o', 0xf118, 'smile-o'],
+				['fa-snapchat', 0xf2ab, 'snapchat'],
+				['fa-snapchat-ghost', 0xf2ac, 'snapchat-ghost'],
+				['fa-snapchat-square', 0xf2ad, 'snapchat-square'],
+				['fa-snowflake-o', 0xf2dc, 'snowflake-o'],
+				['fa-soccer-ball-o', 0xf1e3, 'soccer-ball-o'],
+				['fa-sort', 0xf0dc, 'sort'],
+				['fa-sort-alpha-asc', 0xf15d, 'sort-alpha-asc'],
+				['fa-sort-alpha-desc', 0xf15e, 'sort-alpha-desc'],
+				['fa-sort-amount-asc', 0xf160, 'sort-amount-asc'],
+				['fa-sort-amount-desc', 0xf161, 'sort-amount-desc'],
+				['fa-sort-asc', 0xf0de, 'sort-asc'],
+				['fa-sort-desc', 0xf0dd, 'sort-desc'],
+				['fa-sort-down', 0xf0dd, 'sort-down'],
+				['fa-sort-numeric-asc', 0xf162, 'sort-numeric-asc'],
+				['fa-sort-numeric-desc', 0xf163, 'sort-numeric-desc'],
+				['fa-sort-up', 0xf0de, 'sort-up'],
+				['fa-soundcloud', 0xf1be, 'soundcloud'],
+				['fa-space-shuttle', 0xf197, 'space-shuttle'],
+				['fa-spinner', 0xf110, 'spinner'],
+				['fa-spoon', 0xf1b1, 'spoon'],
+				['fa-spotify', 0xf1bc, 'spotify'],
+				['fa-square', 0xf0c8, 'square'],
+				['fa-square-o', 0xf096, 'square-o'],
+				['fa-stack-exchange', 0xf18d, 'stack-exchange'],
+				['fa-stack-overflow', 0xf16c, 'stack-overflow'],
+				['fa-star', 0xf005, 'star'],
+				['fa-star-half', 0xf089, 'star-half'],
+				['fa-star-half-empty', 0xf123, 'star-half-empty'],
+				['fa-star-half-full', 0xf123, 'star-half-full'],
+				['fa-star-half-o', 0xf123, 'star-half-o'],
+				['fa-star-o', 0xf006, 'star-o'],
+				['fa-steam', 0xf1b6, 'steam'],
+				['fa-steam-square', 0xf1b7, 'steam-square'],
+				['fa-step-backward', 0xf048, 'step-backward'],
+				['fa-step-forward', 0xf051, 'step-forward'],
+				['fa-stethoscope', 0xf0f1, 'stethoscope'],
+				['fa-sticky-note', 0xf249, 'sticky-note'],
+				['fa-sticky-note-o', 0xf24a, 'sticky-note-o'],
+				['fa-stop', 0xf04d, 'stop'],
+				['fa-stop-circle', 0xf28d, 'stop-circle'],
+				['fa-stop-circle-o', 0xf28e, 'stop-circle-o'],
+				['fa-street-view', 0xf21d, 'street-view'],
+				['fa-strikethrough', 0xf0cc, 'strikethrough'],
+				['fa-stumbleupon', 0xf1a4, 'stumbleupon'],
+				['fa-stumbleupon-circle', 0xf1a3, 'stumbleupon-circle'],
+				['fa-subscript', 0xf12c, 'subscript'],
+				['fa-subway', 0xf239, 'subway'],
+				['fa-suitcase', 0xf0f2, 'suitcase'],
+				['fa-sun-o', 0xf185, 'sun-o'],
+				['fa-superpowers', 0xf2dd, 'superpowers'],
+				['fa-superscript', 0xf12b, 'superscript'],
+				['fa-support', 0xf1cd, 'support'],
+				['fa-table', 0xf0ce, 'table'],
+				['fa-tablet', 0xf10a, 'tablet'],
+				['fa-tachometer', 0xf0e4, 'tachometer'],
+				['fa-tag', 0xf02b, 'tag'],
+				['fa-tags', 0xf02c, 'tags'],
+				['fa-tasks', 0xf0ae, 'tasks'],
+				['fa-taxi', 0xf1ba, 'taxi'],
+				['fa-telegram', 0xf2c6, 'telegram'],
+				['fa-television', 0xf26c, 'television'],
+				['fa-tencent-weibo', 0xf1d5, 'tencent-weibo'],
+				['fa-terminal', 0xf120, 'terminal'],
+				['fa-text-height', 0xf034, 'text-height'],
+				['fa-text-width', 0xf035, 'text-width'],
+				['fa-th', 0xf00a, 'th'],
+				['fa-th-large', 0xf009, 'th-large'],
+				['fa-th-list', 0xf00b, 'th-list'],
+				['fa-themeisle', 0xf2b2, 'themeisle'],
+				['fa-thermometer', 0xf2c7, 'thermometer'],
+				['fa-thermometer-0', 0xf2cb, 'thermometer-0'],
+				['fa-thermometer-1', 0xf2ca, 'thermometer-1'],
+				['fa-thermometer-2', 0xf2c9, 'thermometer-2'],
+				['fa-thermometer-3', 0xf2c8, 'thermometer-3'],
+				['fa-thermometer-4', 0xf2c7, 'thermometer-4'],
+				['fa-thermometer-empty', 0xf2cb, 'thermometer-empty'],
+				['fa-thermometer-full', 0xf2c7, 'thermometer-full'],
+				['fa-thermometer-half', 0xf2c9, 'thermometer-half'],
+				['fa-thermometer-quarter', 0xf2ca, 'thermometer-quarter'],
+				['fa-thermometer-three-quarters', 0xf2c8, 'thermometer-three-quarters'],
+				['fa-thumb-tack', 0xf08d, 'thumb-tack'],
+				['fa-thumbs-down', 0xf165, 'thumbs-down'],
+				['fa-thumbs-o-down', 0xf088, 'thumbs-o-down'],
+				['fa-thumbs-o-up', 0xf087, 'thumbs-o-up'],
+				['fa-thumbs-up', 0xf164, 'thumbs-up'],
+				['fa-ticket', 0xf145, 'ticket'],
+				['fa-times', 0xf00d, 'times'],
+				['fa-times-circle', 0xf057, 'times-circle'],
+				['fa-times-circle-o', 0xf05c, 'times-circle-o'],
+				['fa-times-rectangle', 0xf2d3, 'times-rectangle'],
+				['fa-times-rectangle-o', 0xf2d4, 'times-rectangle-o'],
+				['fa-tint', 0xf043, 'tint'],
+				['fa-toggle-down', 0xf150, 'toggle-down'],
+				['fa-toggle-left', 0xf191, 'toggle-left'],
+				['fa-toggle-off', 0xf204, 'toggle-off'],
+				['fa-toggle-on', 0xf205, 'toggle-on'],
+				['fa-toggle-right', 0xf152, 'toggle-right'],
+				['fa-toggle-up', 0xf151, 'toggle-up'],
+				['fa-trademark', 0xf25c, 'trademark'],
+				['fa-train', 0xf238, 'train'],
+				['fa-transgender', 0xf224, 'transgender'],
+				['fa-transgender-alt', 0xf225, 'transgender-alt'],
+				['fa-trash', 0xf1f8, 'trash'],
+				['fa-trash-o', 0xf014, 'trash-o'],
+				['fa-tree', 0xf1bb, 'tree'],
+				['fa-trello', 0xf181, 'trello'],
+				['fa-tripadvisor', 0xf262, 'tripadvisor'],
+				['fa-trophy', 0xf091, 'trophy'],
+				['fa-truck', 0xf0d1, 'truck'],
+				['fa-try', 0xf195, 'try'],
+				['fa-tty', 0xf1e4, 'tty'],
+				['fa-tumblr', 0xf173, 'tumblr'],
+				['fa-tumblr-square', 0xf174, 'tumblr-square'],
+				['fa-turkish-lira', 0xf195, 'turkish-lira'],
+				['fa-tv', 0xf26c, 'tv'],
+				['fa-twitch', 0xf1e8, 'twitch'],
+				['fa-twitter', 0xf099, 'twitter'],
+				['fa-twitter-square', 0xf081, 'twitter-square'],
+				['fa-umbrella', 0xf0e9, 'umbrella'],
+				['fa-underline', 0xf0cd, 'underline'],
+				['fa-undo', 0xf0e2, 'undo'],
+				['fa-universal-access', 0xf29a, 'universal-access'],
+				['fa-university', 0xf19c, 'university'],
+				['fa-unlink', 0xf127, 'unlink'],
+				['fa-unlock', 0xf09c, 'unlock'],
+				['fa-unlock-alt', 0xf13e, 'unlock-alt'],
+				['fa-unsorted', 0xf0dc, 'unsorted'],
+				['fa-upload', 0xf093, 'upload'],
+				['fa-usb', 0xf287, 'usb'],
+				['fa-usd', 0xf155, 'usd'],
+				['fa-user', 0xf007, 'user'],
+				['fa-user-circle', 0xf2bd, 'user-circle'],
+				['fa-user-circle-o', 0xf2be, 'user-circle-o'],
+				['fa-user-md', 0xf0f0, 'user-md'],
+				['fa-user-o', 0xf2c0, 'user-o'],
+				['fa-user-plus', 0xf234, 'user-plus'],
+				['fa-user-secret', 0xf21b, 'user-secret'],
+				['fa-user-times', 0xf235, 'user-times'],
+				['fa-users', 0xf0c0, 'users'],
+				['fa-vcard', 0xf2bb, 'vcard'],
+				['fa-vcard-o', 0xf2bc, 'vcard-o'],
+				['fa-venus', 0xf221, 'venus'],
+				['fa-venus-double', 0xf226, 'venus-double'],
+				['fa-venus-mars', 0xf228, 'venus-mars'],
+				['fa-viacoin', 0xf237, 'viacoin'],
+				['fa-viadeo', 0xf2a9, 'viadeo'],
+				['fa-viadeo-square', 0xf2aa, 'viadeo-square'],
+				['fa-video-camera', 0xf03d, 'video-camera'],
+				['fa-vimeo', 0xf27d, 'vimeo'],
+				['fa-vimeo-square', 0xf194, 'vimeo-square'],
+				['fa-vine', 0xf1ca, 'vine'],
+				['fa-vk', 0xf189, 'vk'],
+				['fa-volume-control-phone', 0xf2a0, 'volume-control-phone'],
+				['fa-volume-down', 0xf027, 'volume-down'],
+				['fa-volume-off', 0xf026, 'volume-off'],
+				['fa-volume-up', 0xf028, 'volume-up'],
+				['fa-warning', 0xf071, 'warning'],
+				['fa-wechat', 0xf1d7, 'wechat'],
+				['fa-weibo', 0xf18a, 'weibo'],
+				['fa-weixin', 0xf1d7, 'weixin'],
+				['fa-whatsapp', 0xf232, 'whatsapp'],
+				['fa-wheelchair', 0xf193, 'wheelchair'],
+				['fa-wheelchair-alt', 0xf29b, 'wheelchair-alt'],
+				['fa-wifi', 0xf1eb, 'wifi'],
+				['fa-wikipedia-w', 0xf266, 'wikipedia-w'],
+				['fa-window-close', 0xf2d3, 'window-close'],
+				['fa-window-close-o', 0xf2d4, 'window-close-o'],
+				['fa-window-maximize', 0xf2d0, 'window-maximize'],
+				['fa-window-minimize', 0xf2d1, 'window-minimize'],
+				['fa-window-restore', 0xf2d2, 'window-restore'],
+				['fa-windows', 0xf17a, 'windows'],
+				['fa-won', 0xf159, 'won'],
+				['fa-wordpress', 0xf19a, 'wordpress'],
+				['fa-wpbeginner', 0xf297, 'wpbeginner'],
+				['fa-wpexplorer', 0xf2de, 'wpexplorer'],
+				['fa-wpforms', 0xf298, 'wpforms'],
+				['fa-wrench', 0xf0ad, 'wrench'],
+				['fa-xing', 0xf168, 'xing'],
+				['fa-xing-square', 0xf169, 'xing-square'],
+				['fa-y-combinator', 0xf23b, 'y-combinator'],
+				['fa-y-combinator-square', 0xf1d4, 'y-combinator-square'],
+				['fa-yahoo', 0xf19e, 'yahoo'],
+				['fa-yc', 0xf23b, 'yc'],
+				['fa-yc-square', 0xf1d4, 'yc-square'],
+				['fa-yelp', 0xf1e9, 'yelp'],
+				['fa-yen', 0xf157, 'yen'],
+				['fa-yoast', 0xf2b1, 'yoast'],
+				['fa-youtube', 0xf167, 'youtube'],
+				['fa-youtube-play', 0xf16a, 'youtube-play'],
+				['fa-youtube-square', 0xf166, 'youtube-square']
+			];
+
+			var select = document.getElementById('icons');
+			FONT_AWESOME_ICONS.forEach(function (icon) {
+				var opt = document.createElement('option');
+				opt.value    = icon[0];
+				opt.textContent = String.fromCodePoint(icon[1]) + '\u00a0' + icon[2];
+				select.appendChild(opt);
+			});
+		})();
+		</script>
+
+		<!-- アプリ本体 -->
 		<script src="my-mind.js"></script>
 
+		<!-- Google Analytics -->
 		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-383250-18"></script>
 		<script>
 		  window.dataLayer = window.dataLayer || [];
@@ -1055,6 +1101,6 @@
 		  gtag("js", new Date());
 		  gtag("config", "UA-383250-18");
 		</script>
+
 	</body>
 </html>
-
