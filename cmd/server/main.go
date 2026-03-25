@@ -2,15 +2,22 @@ package main
 
 import (
 	"fmt"
+	"my-mind/internal/handler"
 	"net/http"
 	"os"
-
-	"my-mind/internal/handler"
 )
 
-const port = ":8080"
-
 func main() {
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "127.0.0.1"
+	}
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000"
+	}
+	addr := host + ":" + port
+
 	staticDir := "./static"
 	mapsDir := "./maps"
 
@@ -20,14 +27,14 @@ func main() {
 	}
 
 	fmt.Println("========================================")
-	fmt.Printf("  App  : http://localhost%s/\n", port)
-	fmt.Printf("  DAV  : http://localhost%s/maps/\n", port)
+	fmt.Printf("  App  : http://%s/\n", addr)
+	fmt.Printf("  DAV  : http://%s/maps/\n", addr)
 	fmt.Println("========================================")
 
 	h := handler.New(staticDir, mapsDir)
 	http.Handle("/", h)
 
-	if err := http.ListenAndServe(port, nil); err != nil {
+	if err := http.ListenAndServe(addr, nil); err != nil {
 		fmt.Fprintf(os.Stderr, "Server error: %v\n", err)
 		os.Exit(1)
 	}
