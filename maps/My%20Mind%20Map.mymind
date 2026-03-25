@@ -1,0 +1,34 @@
+{
+	"root": {
+		"id": "ifywzoue",
+		"text": "My Mind Map",
+		"notes": "",
+		"layout": "map",
+		"children": [
+			{
+				"id": "gmujicdy",
+				"text": "あああ",
+				"notes": "",
+				"side": "right",
+				"collapsed": true,
+				"children": [
+					{
+						"id": "nunfkdds",
+						"text": "日本語",
+						"notes": ""
+					},
+					{
+						"id": "jdezxoef",
+						"text": "ああああ",
+						"notes": ""
+					},
+					{
+						"id": "eixegfqk",
+						"text": "これはテスト",
+						"notes": ""
+					}
+				]
+			}
+		]
+	}
+}
