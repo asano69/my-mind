@@ -1,0 +1,22 @@
+{
+	"root": {
+		"id": "pnbfbrjr",
+		"text": "My Mind Map",
+		"notes": "",
+		"layout": "map",
+		"children": [
+			{
+				"id": "whovmttr",
+				"text": "aa",
+				"notes": "",
+				"side": "right"
+			},
+			{
+				"id": "oijvoury",
+				"text": "aaa",
+				"notes": "",
+				"side": "right"
+			}
+		]
+	}
+}
