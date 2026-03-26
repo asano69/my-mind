@@ -24,7 +24,13 @@ run-server: ## Go サーバーを起動
 	go run cmd/server/main.go
 
 docker-up: ## Docker Compose でビルド＆起動
-	docker compose up --build --force-recreate
+	docker compose -f docker-compose.dev.yaml up --build --force-recreate
+
+docker-build: ## dockerでビルド
+	docker build -t registry.internal/my-mind:latest .
+
+docker-push: ## dockerでプッシュ
+  docker push registry.internal/my-mind:latest
 
 clean: ## ビルド成果物を削除
 	rm -rf $(JS)
@@ -34,4 +40,4 @@ help: ## 利用可能なターゲット一覧を表示
 	@echo "Usage: make [target]"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS=":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
 
-.PHONY: all clean watch run-server docker-up help
+.PHONY: all clean watch run-server docker-up docker-build docker-push help
