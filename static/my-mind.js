@@ -1883,11 +1883,10 @@ ${text}`);
         this.load(data.url);
         return;
       }
-      const base = this.url.value;
-      if (!base) {
-        console.warn("WebDAV base URL not set; cannot restore state");
-        return;
-      }
+      const base = this.url.value || (() => {
+        const { protocol, host } = window.location;
+        return `${protocol}//${host}/maps`;
+      })();
       const fullUrl = (base.endsWith("/") ? base : base + "/") + data.url;
       this.load(fullUrl);
     }
