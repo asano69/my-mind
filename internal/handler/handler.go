@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,10 +30,7 @@ func New(staticDir, mapsDir string) *Handler {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path, err := url.QueryUnescape(r.URL.RequestURI())
-	if err != nil {
-		path = r.URL.Path
-	}
+	path := r.URL.Path
 
 	fmt.Printf("[%s] %s\n", r.Method, path)
 
@@ -43,43 +39,72 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodOptions:
 		w.WriteHeader(http.StatusNoContent)
+
 	case http.MethodGet:
 		if strings.HasPrefix(path, "/maps/") {
 			h.getMap(w, path)
 		} else {
 			h.getStatic(w, path)
 		}
+
 	case http.MethodPut:
 		if strings.HasPrefix(path, "/maps/") {
 			h.putMap(w, r, path)
 		} else {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 		}
+
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
+func safeJoin(base, reqPath string) (string, error) {
+	// 先頭の / を除去
+	reqPath = strings.TrimPrefix(reqPath, "/")
+
+	// 正規化
+	clean := filepath.Clean(reqPath)
+
+	// ../ を防ぐ
+	if strings.HasPrefix(clean, "..") {
+		return "", fmt.Errorf("invalid path")
+	}
+
+	return filepath.Join(base, clean), nil
+}
+
 func (h *Handler) getMap(w http.ResponseWriter, path string) {
-	fpath := filepath.Join(h.MapsDir, strings.TrimPrefix(path, "/maps"))
+	fpath, err := safeJoin(h.MapsDir, strings.TrimPrefix(path, "/maps"))
+	if err != nil {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
 	data, err := os.ReadFile(fpath)
 	if err != nil {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 }
 
 func (h *Handler) getStatic(w http.ResponseWriter, path string) {
-	// クエリ文字列を除去
 	path = strings.SplitN(path, "?", 2)[0]
+
 	if path == "/" || path == "" {
 		path = "/index.html"
 	}
 
-	fpath := filepath.Join(h.StaticDir, path)
+	fpath, err := safeJoin(h.StaticDir, path)
+	if err != nil {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
 	data, err := os.ReadFile(fpath)
 	if err != nil {
 		http.Error(w, "Not found", http.StatusNotFound)
@@ -91,13 +116,18 @@ func (h *Handler) getStatic(w http.ResponseWriter, path string) {
 	if !ok {
 		mime = "application/octet-stream"
 	}
+
 	w.Header().Set("Content-Type", mime)
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 }
 
 func (h *Handler) putMap(w http.ResponseWriter, r *http.Request, path string) {
-	fpath := filepath.Join(h.MapsDir, strings.TrimPrefix(path, "/maps"))
+	fpath, err := safeJoin(h.MapsDir, strings.TrimPrefix(path, "/maps"))
+	if err != nil {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
 
 	if err := os.MkdirAll(filepath.Dir(fpath), 0755); err != nil {
 		http.Error(w, "Failed to create directory", http.StatusInternalServerError)
