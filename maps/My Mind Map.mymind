@@ -1,27 +1,24 @@
 {
 	"root": {
-		"id": "uiauhnll",
+		"id": "sralekwd",
 		"text": "My Mind Map",
 		"notes": "",
+		"status": "computed",
 		"layout": "map",
 		"children": [
 			{
-				"id": "wbnhujet",
+				"id": "ukfpgfxc",
 				"text": "test",
 				"notes": "",
-				"side": "right"
-			},
-			{
-				"id": "uagfslmm",
-				"text": "aasfsa",
-				"notes": "",
-				"side": "left"
-			},
-			{
-				"id": "oijgyajj",
-				"text": "ssfdfsdfsd",
-				"notes": "",
-				"side": "right"
+				"side": "right",
+				"children": [
+					{
+						"id": "ljtvabzn",
+						"text": "sfsf",
+						"notes": "",
+						"status": true
+					}
+				]
 			}
 		]
 	}
