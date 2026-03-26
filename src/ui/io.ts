@@ -45,27 +45,30 @@ function onDone(_message: string, publisher?: any) {
 
 export function restore() {
 	let parts: Record<string, string> = {};
-	location.search.substring(1).split("&").forEach(item => {
-		let keyvalue = item.split("=").map(decodeURIComponent);
-		parts[keyvalue[0]] = keyvalue[1];
-	});
 
-	// backwards compatibility
-	if ("map" in parts) { parts.url = parts.map; }
-
-	// just URL means webdav backend
-	if ("url" in parts && !("b" in parts)) { parts.b = "webdav"; }
+	// /m/filename.mymind パス形式を処理
+	const pathMatch = location.pathname.match(/^\/m\/(.+)$/);
+	if (pathMatch) {
+		parts.url = decodeURIComponent(pathMatch[1]);
+		parts.b = "webdav";
+	} else {
+		// クエリパラメータを処理（?f= を優先、?url= は後方互換）
+		location.search.substring(1).split("&").forEach(item => {
+			let keyvalue = item.split("=").map(decodeURIComponent);
+			parts[keyvalue[0]] = keyvalue[1];
+		});
+		if ("map" in parts) { parts.url = parts.map; }
+		if ("f" in parts) { parts.url = parts.f; }           // ?f= 対応
+		if ("url" in parts && !("b" in parts)) { parts.b = "webdav"; }
+	}
 
 	let backend = repo.get(parts.b);
-	if (backend) { // saved backend info
+	if (backend) {
 		backend.setState(parts);
 		return;
 	}
-
-
 	app.setThrobber(false);
 }
-
 export function show(mode: Mode) {
 	currentMode = mode;
 	node.hidden = false;
@@ -104,10 +107,17 @@ function setCurrentBackend(backend: BUI | null) {
 
 function updateURL() {
 	let data = currentBackend && currentBackend.getState() as Record<string, string>;
-	if (!data) {
-		history.replaceState(null, "", ".");
+	if (!data || !data.url) {
+		history.replaceState(null, "", "/");
 	} else {
-		let arr = Object.entries(data).map(pair => pair.map(encodeURIComponent).join("="));
-		history.replaceState(null, "", "?" + arr.join("&"));
+		// /m/filename.mymind 形式で表現できる場合はパスベースURLに
+		const filename = data.url;
+		if (filename && !filename.includes("/") && filename.endsWith(".mymind")) {
+			history.replaceState(null, "", `/m/${encodeURIComponent(filename)}`);
+		} else {
+			// サブディレクトリ付きなどはフォールバック
+			let arr = Object.entries(data).map(pair => pair.map(encodeURIComponent).join("="));
+			history.replaceState(null, "", "?" + arr.join("&"));
+		}
 	}
 }
