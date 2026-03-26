@@ -1,24 +1,127 @@
 {
 	"root": {
-		"id": "sralekwd",
+		"id": "byzmtwsh",
 		"text": "My Mind Map",
 		"notes": "",
-		"status": "computed",
 		"layout": "map",
 		"children": [
 			{
-				"id": "ukfpgfxc",
-				"text": "test",
+				"id": "ytuzbirz",
+				"text": "aaa",
+				"notes": "",
+				"side": "right"
+			},
+			{
+				"id": "mgxiospg",
+				"text": "asfsdfds",
+				"notes": "",
+				"side": "left"
+			},
+			{
+				"id": "wfmmpjly",
+				"text": "sfaasfasdf",
+				"notes": "",
+				"side": "right"
+			},
+			{
+				"id": "goymecty",
+				"text": "sdfsdfsd",
+				"notes": "",
+				"side": "left"
+			},
+			{
+				"id": "vjkrcfdh",
+				"text": "これはテスト",
 				"notes": "",
 				"side": "right",
 				"children": [
 					{
-						"id": "ljtvabzn",
-						"text": "sfsf",
-						"notes": "",
-						"status": true
+						"id": "nodbpqsz",
+						"text": "ああああ",
+						"notes": ""
+					},
+					{
+						"id": "drukphuw",
+						"text": "っっっｔ",
+						"notes": ""
+					},
+					{
+						"id": "dewdlrna",
+						"text": "ここがテスト",
+						"notes": ""
+					},
+					{
+						"id": "bnlvjmgn",
+						"text": "がががが",
+						"notes": ""
+					},
+					{
+						"id": "rhujorud",
+						"text": "ぞぞっぞぞ",
+						"notes": ""
 					}
 				]
+			},
+			{
+				"id": "evnhncna",
+				"text": "test",
+				"notes": "",
+				"side": "left",
+				"children": [
+					{
+						"id": "fjpdzdxb",
+						"text": "sdfsdffsds",
+						"notes": ""
+					}
+				]
+			},
+			{
+				"id": "marohdui",
+				"text": "afasf",
+				"notes": "",
+				"side": "right"
+			},
+			{
+				"id": "vkcakjbz",
+				"text": "fsdfsd",
+				"notes": "",
+				"side": "left"
+			},
+			{
+				"id": "zvgscpbx",
+				"text": "dfsdfsd",
+				"notes": "",
+				"side": "right"
+			},
+			{
+				"id": "uvcidjxp",
+				"text": "sfsdfsd",
+				"notes": "",
+				"side": "left"
+			},
+			{
+				"id": "htxzvxtd",
+				"text": "ssdffsd",
+				"notes": "",
+				"side": "right"
+			},
+			{
+				"id": "rgobowgw",
+				"text": "sdfsdf",
+				"notes": "",
+				"side": "left"
+			},
+			{
+				"id": "swylgodd",
+				"text": "sfsdfsdf",
+				"notes": "",
+				"side": "right"
+			},
+			{
+				"id": "rblhllqn",
+				"text": "sfsdfsdfsd",
+				"notes": "",
+				"side": "left"
 			}
 		]
 	}
