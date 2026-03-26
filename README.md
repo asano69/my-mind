@@ -1,5 +1,6 @@
 # My Mind
-- もとのアプリ https://github.com/ondras/my-mind
+- 驚くべきことに、自分が求めているWebで動作するマインドマップアプリがGithubにまったくなかった。
+- もとのアプリ https://github.com/ondras/my-mind をリバースエンジニアリングして改造するしかない。
 
 ## 概要
 - Generic Web DAVで、FQDN/mapsを登録。https://my-mind.app.internal/maps
