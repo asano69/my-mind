@@ -1869,11 +1869,26 @@ ${text}`);
       return this.node.querySelector(".url");
     }
     getState() {
-      let data = { url: this.current };
-      return data;
+      if (!this.current)
+        return { url: "" };
+      const base = this.url.value ? this.url.value.endsWith("/") ? this.url.value : this.url.value + "/" : null;
+      const relative = base && this.current.startsWith(base) ? this.current.slice(base.length) : this.current;
+      return { url: relative };
     }
     setState(data) {
-      this.load(data.url);
+      if (!data.url)
+        return;
+      const isAbsolute = /^https?:\/\//.test(data.url);
+      if (isAbsolute) {
+        this.load(data.url);
+        return;
+      }
+      const base = this.url.value || (() => {
+        const { protocol, host } = window.location;
+        return `${protocol}//${host}/maps`;
+      })();
+      const fullUrl = (base.endsWith("/") ? base : base + "/") + data.url;
+      this.load(fullUrl);
     }
     async save() {
       setThrobber(true);
