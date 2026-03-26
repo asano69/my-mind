@@ -19,14 +19,40 @@ export default class WebDAVUI extends BackendUI<WebDAV> {
 
 	get url() { return this.node.querySelector<HTMLInputElement>(".url")!; }
 
-	getState(): State {
-		let data = { url: this.current };
-		return data;
-	}
+  getState(): State {
+      if (!this.current) return { url: "" };
 
-	setState(data: State) {
-		this.load(data.url);
-	}
+      const base = this.url.value
+          ? (this.url.value.endsWith("/") ? this.url.value : this.url.value + "/")
+          : null;
+
+      const relative = base && this.current.startsWith(base)
+          ? this.current.slice(base.length)
+          : this.current; // base 不明 → フルURL のまま保存
+
+      return { url: relative };
+  }
+
+  setState(data: State) {
+      if (!data.url) return;
+
+      const isAbsolute = /^https?:\/\//.test(data.url);
+      if (isAbsolute) {
+          this.load(data.url);
+          return;
+      }
+
+      // 相対パス：ベースURLが必須
+      const base = this.url.value;
+      if (!base) {
+          // ベースURLが不明 → UIを表示してユーザーに入力させる
+          console.warn("WebDAV base URL not set; cannot restore state");
+          return;
+      }
+
+      const fullUrl = (base.endsWith("/") ? base : base + "/") + data.url;
+      this.load(fullUrl);
+  }
 
 	async save() {
 		app.setThrobber(true);
