@@ -30,7 +30,7 @@ docker-build: ## dockerでビルド
 	docker build -t registry.internal/my-mind:latest .
 
 docker-push: ## dockerでプッシュ
-  docker push registry.internal/my-mind:latest
+	docker push registry.internal/my-mind:latest
 
 clean: ## ビルド成果物を削除
 	rm -rf $(JS)
