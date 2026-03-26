@@ -38,8 +38,8 @@ svg > .item > .item > foreignObject > .content {
 .item .text {
   text-align: center;
   min-width: 0.5em;
-  min-height: 1.3em;
-  line-height: 1.3em;
+  min-height: 1.8em; /*調整*/
+  line-height: 1.8em; /*調整*/
   outline: none;
 }
 .item .value {
