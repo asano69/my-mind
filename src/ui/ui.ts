@@ -11,7 +11,7 @@ import * as status from "./status.js";
 
 import * as help from "./help.js";
 import * as notes from "./notes.js";
-import * as tip from "./tip.js";
+
 import * as io from "./io.js";
 import * as menu from "./context-menu.js";
 import { repo as commandRepo } from "../command/command.js";
@@ -61,7 +61,7 @@ function onClick(e: MouseEvent) {
 
 export function init(port: HTMLElement) {
 	[layout, shape, value, status, color, textColor,
-	help, tip, notes, io].forEach(ui => ui.init());
+	help, notes, io].forEach(ui => ui.init());
 	menu.init(port);
 
 	pubsub.subscribe("item-select", update);
