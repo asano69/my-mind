@@ -243,9 +243,6 @@ button:not(:disabled) {
 @media print {
   .pane,
   #toggle,
-  #tip {
-    display: none;
-  }
   main > .item {
     position: static;
   }
