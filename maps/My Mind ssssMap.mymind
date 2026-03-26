@@ -1,0 +1,28 @@
+{
+	"root": {
+		"id": "uiauhnll",
+		"text": "My Mind ssssMap",
+		"notes": "",
+		"layout": "map",
+		"children": [
+			{
+				"id": "wbnhujet",
+				"text": "test",
+				"notes": "",
+				"side": "right"
+			},
+			{
+				"id": "uagfslmm",
+				"text": "aasfsa",
+				"notes": "",
+				"side": "left"
+			},
+			{
+				"id": "oijgyajj",
+				"text": "ssfdfsdfsd",
+				"notes": "",
+				"side": "right"
+			}
+		]
+	}
+}

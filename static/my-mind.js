@@ -1,27 +1,25 @@
 (() => {
   var __defProp = Object.defineProperty;
-  var __markAsModule = (target) => __defProp(target, "__esModule", { value: true });
   var __export = (target, all2) => {
-    __markAsModule(target);
     for (var name in all2)
       __defProp(target, name, { get: all2[name], enumerable: true });
   };
 
   // .js/html.js
   function node(name, attrs) {
-    let node11 = document.createElement(name);
-    Object.assign(node11, attrs);
-    return node11;
+    let node10 = document.createElement(name);
+    Object.assign(node10, attrs);
+    return node10;
   }
 
   // .js/svg.js
   var NS = "http://www.w3.org/2000/svg";
   function node2(name, attrs) {
-    let node11 = document.createElementNS(NS, name);
+    let node10 = document.createElementNS(NS, name);
     for (let attr in attrs) {
-      node11.setAttribute(attr, attrs[attr]);
+      node10.setAttribute(attr, attrs[attr]);
     }
-    return node11;
+    return node10;
   }
   function group() {
     return node2("g");
@@ -34,7 +32,7 @@
   }
 
   // .js/pubsub.js
-  var subscribers = new Map();
+  var subscribers = /* @__PURE__ */ new Map();
   function publish(message, publisher, data) {
     let subs = subscribers.get(message) || [];
     subs.forEach((sub) => {
@@ -53,13 +51,6 @@
     let index2 = subs.indexOf(subscriber);
     if (index2 == -1) {
       subs.push(subscriber);
-    }
-  }
-  function unsubscribe(message, subscriber) {
-    let subs = subscribers.get(message) || [];
-    let index2 = subs.indexOf(subscriber);
-    if (index2 > -1) {
-      subs.splice(index2, 1);
     }
   }
 
@@ -243,9 +234,9 @@
     }
   };
   var Multi = class extends Action {
-    constructor(actions13) {
+    constructor(actions2) {
       super();
-      this.actions = actions13;
+      this.actions = actions2;
     }
     do() {
       this.actions.forEach((action2) => action2.do());
@@ -451,20 +442,6 @@
       this.item.status = this.oldStatus;
     }
   };
-  var SetIcon = class extends Action {
-    constructor(item, icon) {
-      super();
-      this.item = item;
-      this.icon = icon;
-      this.oldIcon = item.icon;
-    }
-    do() {
-      this.item.icon = this.icon;
-    }
-    undo() {
-      this.item.icon = this.oldIcon;
-    }
-  };
   var SetSide = class extends Action {
     constructor(item, side) {
       super();
@@ -571,6 +548,9 @@
     get option() {
       return new Option(this.label, this.id);
     }
+    /**
+     * @param child Child node (its parent uses this layout)
+     */
     getChildDirection(_child) {
       return this.childDirection;
     }
@@ -647,7 +627,7 @@
       return bbox;
     }
   };
-  var repo2 = new Map();
+  var repo2 = /* @__PURE__ */ new Map();
 
   // .js/layout/graph.js
   var SPACING_RANK = 16;
@@ -661,6 +641,9 @@
         this.drawLinesVertical(item, this.childDirection, totalHeight);
       }
     }
+    /**
+     * Generic graph child layout routine. Updates item's orthogonal size according to the sum of its children.
+     */
     layoutItem(item, rankDirection) {
       const { contentSize, children } = item;
       let rankIndex = rankDirection == "left" || rankDirection == "right" ? 0 : 1;
@@ -1046,35 +1029,17 @@
     return select2.querySelector(`option[value="${value}"]`);
   }
   function buildGroup(label) {
-    let node11 = document.createElement("optgroup");
-    node11.label = label;
-    select2.append(node11);
-    return node11;
-  }
-
-  // .js/ui/icon.js
-  var icon_exports = {};
-  __export(icon_exports, {
-    init: () => init7,
-    update: () => update3
-  });
-  var select3 = document.querySelector("#icons");
-  function init7() {
-    select3.addEventListener("change", onChange3);
-  }
-  function update3() {
-    select3.value = currentItem.icon || "";
-  }
-  function onChange3() {
-    let action2 = new SetIcon(currentItem, select3.value);
-    action(action2);
+    let node10 = document.createElement("optgroup");
+    node10.label = label;
+    select2.append(node10);
+    return node10;
   }
 
   // .js/ui/shape.js
   var shape_exports = {};
   __export(shape_exports, {
-    init: () => init8,
-    update: () => update4
+    init: () => init7,
+    update: () => update3
   });
 
   // .js/shape/shape.js
@@ -1100,7 +1065,7 @@
       return contentPosition[1] + Math.round(contentSize[1] * VERTICAL_OFFSET) + 0.5;
     }
   };
-  var repo3 = new Map();
+  var repo3 = /* @__PURE__ */ new Map();
 
   // .js/shape/box.js
   var Box = class extends Shape {
@@ -1144,21 +1109,21 @@
   new Underline();
 
   // .js/ui/shape.js
-  var select4 = document.querySelector("#shape");
-  function init8() {
-    repo3.forEach((shape) => select4.append(shape.option));
-    select4.addEventListener("change", onChange4);
+  var select3 = document.querySelector("#shape");
+  function init7() {
+    repo3.forEach((shape) => select3.append(shape.option));
+    select3.addEventListener("change", onChange3);
   }
-  function update4() {
+  function update3() {
     let value = "";
     let shape = currentItem.shape;
     if (shape) {
       value = shape.id;
     }
-    select4.value = value;
+    select3.value = value;
   }
-  function onChange4() {
-    let shape = repo3.get(select4.value);
+  function onChange3() {
+    let shape = repo3.get(select3.value);
     let action2 = new SetShape(currentItem, shape);
     action(action2);
   }
@@ -1166,10 +1131,10 @@
   // .js/ui/status.js
   var status_exports = {};
   __export(status_exports, {
-    init: () => init9,
-    update: () => update5
+    init: () => init8,
+    update: () => update4
   });
-  var select5 = document.querySelector("#status");
+  var select4 = document.querySelector("#status");
   var STATUS_MAP = {
     "yes": true,
     "no": false,
@@ -1186,41 +1151,23 @@
   function stringToStatus(str) {
     return str in STATUS_MAP ? STATUS_MAP[str] : str;
   }
-  function init9() {
-    select5.addEventListener("change", onChange5);
+  function init8() {
+    select4.addEventListener("change", onChange4);
   }
-  function update5() {
-    select5.value = statusToString(currentItem.status);
+  function update4() {
+    select4.value = statusToString(currentItem.status);
   }
-  function onChange5() {
-    let status = stringToStatus(select5.value);
+  function onChange4() {
+    let status = stringToStatus(select4.value);
     let action2 = new SetStatus(currentItem, status);
     action(action2);
-  }
-
-  // .js/ui/tip.js
-  var tip_exports = {};
-  __export(tip_exports, {
-    init: () => init10
-  });
-  var node7 = document.querySelector("#tip");
-  function init10() {
-    node7.addEventListener("click", hide);
-    subscribe("command-child", hide);
-    subscribe("command-sibling", hide);
-  }
-  function hide() {
-    unsubscribe("command-child", hide);
-    unsubscribe("command-sibling", hide);
-    node7.removeEventListener("click", hide);
-    node7.hidden = true;
   }
 
   // .js/ui/io.js
   var io_exports = {};
   __export(io_exports, {
-    hide: () => hide2,
-    init: () => init11,
+    hide: () => hide,
+    init: () => init9,
     isActive: () => isActive,
     quickSave: () => quickSave,
     restore: () => restore,
@@ -1236,7 +1183,7 @@
       repo4.set(this.id, this);
       this.prefix = `mm.app.${this.id}`;
       const { go, cancel } = this;
-      cancel.addEventListener("click", (_) => hide2());
+      cancel.addEventListener("click", (_) => hide());
       go.addEventListener("click", (_) => this.submit());
     }
     get id() {
@@ -1259,15 +1206,16 @@
     }
     setState(_data) {
     }
+    // fixme any?
     getState() {
       return {};
     }
     show(mode2) {
       this.mode = mode2;
-      const { go, node: node11 } = this;
+      const { go, node: node10 } = this;
       go.textContent = mode2.charAt(0).toUpperCase() + mode2.substring(1);
-      [...node11.querySelectorAll("[data-for]")].forEach((node12) => node12.hidden = true);
-      [...node11.querySelectorAll(`[data-for~=${mode2}]`)].forEach((node12) => node12.hidden = false);
+      [...node10.querySelectorAll("[data-for]")].forEach((node11) => node11.hidden = true);
+      [...node10.querySelectorAll(`[data-for~=${mode2}]`)].forEach((node11) => node11.hidden = false);
       go.focus();
     }
     saveDone() {
@@ -1299,15 +1247,15 @@
       }
     }
   };
-  var repo4 = new Map();
-  function buildList(list, select7) {
+  var repo4 = /* @__PURE__ */ new Map();
+  function buildList(list, select6) {
     let data = [];
     for (let id in list) {
       data.push({ id, name: list[id] });
     }
     data.sort((a, b) => a.name.localeCompare(b.name));
     let options = data.map((item) => new Option(item.name, item.id));
-    select7.append(...options);
+    select6.append(...options);
   }
 
   // .js/backend/backend.js
@@ -1319,7 +1267,7 @@
     reset() {
     }
   };
-  var repo5 = new Map();
+  var repo5 = /* @__PURE__ */ new Map();
 
   // .js/backend/local.js
   var Local = class extends Backend {
@@ -1367,7 +1315,7 @@
       return new Option(this.label, this.id);
     }
   };
-  var repo6 = new Map();
+  var repo6 = /* @__PURE__ */ new Map();
   function getByProperty(property, value) {
     let filtered = [...repo6.values()].filter((format) => format[property] == value);
     return filtered[0] || null;
@@ -1379,9 +1327,6 @@
     }
     let extension = name.substring(index2 + 1).toLowerCase();
     return getByProperty("extension", extension);
-  }
-  function getByMime(mime) {
-    return getByProperty("mime", mime);
   }
   function nl2br(str) {
     return str.replace(/\n/g, "<br/>");
@@ -1573,36 +1518,36 @@
       }
       return elm;
     }
-    parseNode(node11, parent) {
-      var json = this.parseAttributes(node11, parent);
-      for (var i = 0; i < node11.childNodes.length; i++) {
-        var child = node11.childNodes[i];
+    parseNode(node10, parent) {
+      var json = this.parseAttributes(node10, parent);
+      for (var i = 0; i < node10.childNodes.length; i++) {
+        var child = node10.childNodes[i];
         if (child instanceof Element && child.nodeName.toLowerCase() == "node") {
           json.children.push(this.parseNode(child, json));
         }
       }
       return json;
     }
-    parseAttributes(node11, parent) {
+    parseAttributes(node10, parent) {
       var json = {
         children: [],
-        text: nl2br(node11.getAttribute("TEXT") || ""),
-        id: node11.getAttribute("ID")
+        text: nl2br(node10.getAttribute("TEXT") || ""),
+        id: node10.getAttribute("ID")
       };
-      var position = node11.getAttribute("POSITION");
+      var position = node10.getAttribute("POSITION");
       if (position) {
         json.side = position;
       }
-      var style = node11.getAttribute("STYLE");
+      var style = node10.getAttribute("STYLE");
       if (style == "bubble") {
         json.shape = "box";
       } else {
         json.shape = parent.shape;
       }
-      if (node11.getAttribute("FOLDED") == "true") {
+      if (node10.getAttribute("FOLDED") == "true") {
         json.collapsed = 1;
       }
-      var children = node11.children;
+      var children = node10.children;
       for (var i = 0; i < children.length; i++) {
         var child = children[i];
         switch (child.nodeName.toLowerCase()) {
@@ -1654,23 +1599,23 @@
         return elm;
       };
     }
-    parseAttributes(node11, parent) {
+    parseAttributes(node10, parent) {
       var json = {
         children: [],
-        text: nl2br(node11.getAttribute("title") || ""),
+        text: nl2br(node10.getAttribute("title") || ""),
         shape: "box"
       };
-      if (node11.getAttribute("expand") == "false") {
+      if (node10.getAttribute("expand") == "false") {
         json.collapsed = 1;
       }
-      var direction = node11.getAttribute("direction");
+      var direction = node10.getAttribute("direction");
       if (direction == "0") {
         json.side = "left";
       }
       if (direction == "1") {
         json.side = "right";
       }
-      var color = node11.getAttribute("color");
+      var color = node10.getAttribute("color");
       if (color) {
         var re = color.match(/^#(....)(....)(....)$/);
         if (re) {
@@ -1678,7 +1623,7 @@
           json.color = "#" + parts.join("");
         }
       }
-      json.icon = node11.getAttribute("icon") || "";
+      json.icon = node10.getAttribute("icon") || "";
       return json;
     }
   };
@@ -1835,9 +1780,9 @@
 
   // .js/ui/format-select.js
   var all = [Native, Native2, MMA, Native3, Plaintext].map((ctor) => new ctor());
-  function fill(select7) {
+  function fill(select6) {
     let nodes = all.map((bui) => bui.option);
-    select7.append(...nodes);
+    select6.append(...nodes);
   }
 
   // .js/ui/backend/file.js
@@ -1894,14 +1839,14 @@
       return this.request("GET", url);
     }
     async request(method, url, data) {
-      let init20 = {
+      let init18 = {
         method,
         credentials: "include"
       };
       if (data) {
-        init20.body = data;
+        init18.body = data;
       }
-      let response = await fetch(url, init20);
+      let response = await fetch(url, init18);
       let text = await response.text();
       if (response.ok) {
         return text;
@@ -1990,8 +1935,14 @@ ${text}`);
           canvas.width = img.width;
           canvas.height = img.height;
           canvas.getContext("2d").drawImage(img, 0, 0);
-          return new Promise((resolve) => {
-            canvas.toBlob((blob) => resolve(URL.createObjectURL(blob)), "image/png");
+          return new Promise((resolve, reject) => {
+            canvas.toBlob((blob) => {
+              if (!blob) {
+                reject(new Error("Failed to create PNG blob"));
+                return;
+              }
+              resolve(URL.createObjectURL(blob));
+            }, "image/png");
           });
           break;
       }
@@ -2027,549 +1978,28 @@ ${text}`);
     }
   };
 
-  // .js/backend/gdrive.js
-  var SCOPE = "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.install";
-  var CLIENT_ID = "767837575056-h87qmlhmhb3djhaaqta5gv2v3koa9hii.apps.googleusercontent.com";
-  var API_KEY = "AIzaSyCzu1qVxlgufneOYpBgDJXN6Z9SNVcHYWM";
-  var GDrive = class extends Backend {
-    constructor() {
-      super("gdrive");
-      this.fileId = null;
-    }
-    reset() {
-      this.fileId = null;
-    }
-    async save(data, name, mime) {
-      await connect();
-      this.fileId = await this.send(data, name, mime);
-    }
-    send(data, name, mime) {
-      var path = "/upload/drive/v2/files";
-      var method = "POST";
-      if (this.fileId) {
-        path += "/" + this.fileId;
-        method = "PUT";
-      }
-      var boundary = "b" + Math.random();
-      var delimiter = "--" + boundary;
-      var body = [
-        delimiter,
-        "Content-Type: application/json",
-        "",
-        JSON.stringify({ title: name }),
-        delimiter,
-        "Content-Type: " + mime,
-        "",
-        data,
-        delimiter + "--"
-      ].join("\r\n");
-      var request = gapi.client.request({
-        path,
-        method,
-        headers: {
-          "Content-Type": "multipart/mixed; boundary='" + boundary + "'"
-        },
-        body
-      });
-      return new Promise((resolve, reject) => {
-        request.execute((response) => {
-          if (!response) {
-            reject(new Error("Failed to upload to Google Drive"));
-          } else if (response.error) {
-            reject(response.error);
-          } else {
-            resolve(response.id);
-          }
-        });
-      });
-    }
-    async load(id) {
-      await connect();
-      this.fileId = id;
-      var request = gapi.client.request({
-        path: "/drive/v2/files/" + this.fileId,
-        method: "GET"
-      });
-      return new Promise((resolve, reject) => {
-        request.execute(async (response) => {
-          if (!response || !response.id) {
-            return reject(response && response.error || new Error("Failed to download file"));
-          }
-          let headers = { "Authentication": "Bearer " + gapi.auth.getToken().access_token };
-          let r = await fetch(`https://www.googleapis.com/drive/v2/files/${response.id}?alt=media`, { headers });
-          let data = await r.text();
-          if (r.status != 200) {
-            return reject(data);
-          }
-          resolve({ data, name: response.title, mime: response.mimeType });
-        });
-      });
-    }
-    async pick() {
-      await connect();
-      var token = gapi.auth.getToken();
-      var mimeTypes = ["application/json; charset=UTF-8", "application/json"];
-      [...repo6.values()].forEach((format) => {
-        if (format.mime) {
-          mimeTypes.unshift(format.mime);
-        }
-      });
-      var view = new google.picker.DocsView(google.picker.ViewId.DOCS).setMimeTypes(mimeTypes.join(",")).setMode(google.picker.DocsViewMode.LIST);
-      return new Promise((resolve) => {
-        let picker = new google.picker.PickerBuilder().enableFeature(google.picker.Feature.NAV_HIDDEN).addView(view).setOAuthToken(token.access_token).setDeveloperKey(API_KEY).setCallback((data) => {
-          switch (data[google.picker.Response.ACTION]) {
-            case google.picker.Action.PICKED:
-              var doc = data[google.picker.Response.DOCUMENTS][0];
-              resolve(doc.id);
-              break;
-            case google.picker.Action.CANCEL:
-              resolve(null);
-              break;
-          }
-        }).build();
-        picker.setVisible(true);
-      });
-    }
-  };
-  async function connect() {
-    if ("gapi" in window && gapi.auth.getToken()) {
-      return;
-    } else {
-      await loadGapi();
-      return auth();
-    }
-  }
-  function loadGapi() {
-    if ("gapi" in window) {
-      return;
-    }
-    let script = document.createElement("script");
-    let name = ("cb" + Math.random()).replace(".", "");
-    script.src = "https://apis.google.com/js/client:picker.js?onload=" + name;
-    document.body.append(script);
-    return new Promise((resolve) => window[name] = resolve);
-  }
-  async function auth(forceUI = false) {
-    return new Promise((resolve, reject) => {
-      gapi.auth.authorize({
-        "client_id": CLIENT_ID,
-        "scope": SCOPE,
-        "immediate": !forceUI
-      }, async (token) => {
-        if (token && !token.error) {
-          resolve();
-        } else if (!forceUI) {
-          try {
-            await auth(true);
-            resolve();
-          } catch (e) {
-            reject(e);
-          }
-        } else {
-          reject(token && token.error || new Error("Failed to authorize with Google"));
-        }
-      });
-    });
-  }
-
-  // .js/ui/backend/gdrive.js
-  var GDriveUI = class extends BackendUI {
-    constructor() {
-      super(new GDrive(), "Google Drive");
-      fill(this.format);
-      this.format.value = localStorage.getItem(`${this.prefix}.format`) || "native";
-    }
-    get format() {
-      return this.node.querySelector(".format");
-    }
-    async save() {
-      setThrobber(true);
-      let format = repo6.get(this.format.value);
-      let json = currentMap.toJSON();
-      let data = format.to(json);
-      let name = currentMap.name;
-      let mime = "text/plain";
-      if (format.mime) {
-        mime = format.mime;
-      } else {
-        name += "." + format.extension;
-      }
-      try {
-        await this.backend.save(data, name, mime);
-        this.saveDone();
-      } catch (e) {
-        this.error(e);
-      }
-    }
-    async load() {
-      setThrobber(true);
-      try {
-        let id = await this.backend.pick();
-        this.picked(id);
-      } catch (e) {
-        this.error(e);
-      }
-    }
-    async picked(id) {
-      setThrobber(false);
-      if (!id) {
-        return;
-      }
-      setThrobber(true);
-      try {
-        let data = await this.backend.load(id);
-        let format = getByMime(data.mime) || getByName(data.name) || repo6.get("native");
-        let json = format.from(data.data);
-        this.loadDone(json);
-      } catch (e) {
-        this.error(e);
-      }
-    }
-    setState(data) {
-      this.picked(data.id);
-    }
-    getState() {
-      let data = {
-        b: this.id,
-        id: this.backend.fileId
-      };
-      return data;
-    }
-  };
-
-  // .js/backend/firebase.js
-  var Firebase = class extends Backend {
-    constructor() {
-      super("firebase");
-      this.current = {
-        id: null,
-        name: null,
-        data: null
-      };
-    }
-    connect(server, auth2) {
-      var config = {
-        apiKey: "AIzaSyBO_6uCK8pHjoz1c9htVwZi6Skpm8o4LtQ",
-        authDomain: "my-mind.firebaseapp.com",
-        databaseURL: "https://" + server + ".firebaseio.com",
-        projectId: "firebase-my-mind",
-        storageBucket: "firebase-my-mind.appspot.com",
-        messagingSenderId: "666556281676"
-      };
-      firebase.initializeApp(config);
-      this.ref = firebase.database().ref();
-      this.ref.child("names").on("value", (snap) => {
-        publish("firebase-list", this, snap.val() || {});
-      }, this);
-      if (auth2) {
-        return this.login(auth2);
-      }
-    }
-    save(data, id, name) {
-      this.ref.child("names/" + id).set(name);
-      return new Promise((resolve, reject) => {
-        this.ref.child("data/" + id).set(data, (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-            this.listenStart(data, id);
-          }
-        });
-      });
-    }
-    load(id) {
-      return new Promise((resolve, reject) => {
-        this.ref.child("data/" + id).once("value", (snap) => {
-          var data = snap.val();
-          if (data) {
-            resolve(data);
-            this.listenStart(data, id);
-          } else {
-            reject(new Error("There is no such saved map"));
-          }
-        });
-      });
-    }
-    remove(id) {
-      this.ref.child("names/" + id).remove();
-      return new Promise((resolve, reject) => {
-        this.ref.child("data/" + id).remove((err) => {
-          err ? reject(err) : resolve();
-        });
-      });
-    }
-    reset() {
-      this.listenStop();
-    }
-    mergeWith(data, name) {
-      let id = this.current.id;
-      if (name != this.current.name) {
-        this.current.name = name;
-        this.ref.child("names/" + id).set(name);
-      }
-      var dataRef = this.ref.child("data/" + id);
-      var oldData = this.current.data;
-      this.listenStop();
-      this.recursiveRefMerge(dataRef, oldData, data);
-      this.listenStart(data, id);
-    }
-    recursiveRefMerge(ref, oldData, newData) {
-      let updateObject = {};
-      if (newData instanceof Array) {
-        for (var i = 0; i < newData.length; i++) {
-          var newValue = newData[i];
-          if (!(i in oldData)) {
-            updateObject[i] = newValue;
-          } else if (typeof newValue == "object") {
-            this.recursiveRefMerge(ref.child(i), oldData[i], newValue);
-          } else if (newValue !== oldData[i]) {
-            updateObject[i] = newValue;
-          }
-        }
-        for (var i = newData.length; i < oldData.length; i++) {
-          updateObject[i] = null;
-        }
-      } else {
-        for (var p in newData) {
-          var newValue = newData[p];
-          if (!(p in oldData)) {
-            updateObject[p] = newValue;
-          } else if (typeof newValue == "object") {
-            this.recursiveRefMerge(ref.child(p), oldData[p], newValue);
-          } else if (newValue !== oldData[p]) {
-            updateObject[p] = newValue;
-          }
-        }
-        for (var p in oldData) {
-          if (!(p in newData)) {
-            updateObject[p] = null;
-          }
-        }
-      }
-      if (Object.keys(updateObject).length) {
-        ref.update(updateObject);
-      }
-    }
-    listenStart(data, id) {
-      if (this.current.id && this.current.id == id) {
-        return;
-      }
-      this.listenStop();
-      this.current.id = id;
-      this.current.data = data;
-      this.ref.child("data/" + id).on("value", this.onValueChange, this);
-    }
-    listenStop() {
-      if (!this.current.id) {
-        return;
-      }
-      this.ref.child("data/" + this.current.id).off("value");
-      this.current.id = null;
-      this.current.name = null;
-      this.current.data = null;
-    }
-    onValueChange(snap) {
-      this.current.data = snap.val();
-      clearTimeout(this.changeTimeout);
-      this.changeTimeout = setTimeout(() => {
-        publish("firebase-change", this, this.current.data);
-      }, 200);
-    }
-    async login(type) {
-      var provider;
-      switch (type) {
-        case "github":
-          provider = new firebase.auth.GithubAuthProvider();
-          break;
-        case "facebook":
-          provider = new firebase.auth.FacebookAuthProvider();
-          break;
-        case "twitter":
-          provider = new firebase.auth.TwitterAuthProvider();
-          break;
-        case "google":
-          provider = new firebase.auth.GoogleAuthProvider();
-          break;
-      }
-      let result = await firebase.auth().signInWithPopup(provider);
-      return result.user;
-    }
-  };
-
-  // .js/ui/backend/firebase.js
-  var FirebaseUI = class extends BackendUI {
-    constructor() {
-      super(new Firebase(), "Firebase");
-      this.online = false;
-      const { server, auth: auth2, remove, go } = this;
-      server.value = localStorage.getItem(`${this.prefix}.server`) || "my-mind";
-      auth2.value = localStorage.getItem(`${this.prefix}.auth`) || "";
-      go.disabled = false;
-      remove.addEventListener("click", async (_) => {
-        var id = this.list.value;
-        if (!id) {
-          return;
-        }
-        setThrobber(true);
-        try {
-          await this.backend.remove(id);
-          setThrobber(false);
-        } catch (e) {
-          this.error(e);
-        }
-      });
-      subscribe("firebase-list", this);
-      subscribe("firebase-change", this);
-    }
-    get auth() {
-      return this.node.querySelector(".auth");
-    }
-    get server() {
-      return this.node.querySelector(".server");
-    }
-    get remove() {
-      return this.node.querySelector(".remove");
-    }
-    get list() {
-      return this.node.querySelector(".list");
-    }
-    async setState(data) {
-      try {
-        await this.connect(data.s, data.a);
-        this.load(data.id);
-      } catch (e) {
-        this.error(e);
-      }
-    }
-    getState() {
-      var data = {
-        id: currentMap.id,
-        b: this.id,
-        s: this.server.value
-      };
-      if (this.auth.value) {
-        data.a = this.auth.value;
-      }
-      return data;
-    }
-    show(mode2) {
-      super.show(mode2);
-      this.sync();
-    }
-    handleMessage(message, _publisher, data) {
-      switch (message) {
-        case "firebase-list":
-          this.list.innerHTML = "";
-          if (Object.keys(data).length) {
-            buildList(data, this.list);
-          } else {
-            var o = document.createElement("option");
-            o.innerHTML = "(no maps saved)";
-            this.list.appendChild(o);
-          }
-          this.sync();
-          break;
-        case "firebase-change":
-          if (data) {
-            unsubscribe("item-change", this);
-            currentMap.mergeWith(data);
-            subscribe("item-change", this);
-          } else {
-            console.log("remote data disappeared");
-          }
-          break;
-        case "item-change":
-          clearTimeout(this.itemChangeTimeout);
-          this.itemChangeTimeout = setTimeout(() => this.onItemChange(), 200);
-          break;
-      }
-    }
-    reset() {
-      this.backend.reset();
-      unsubscribe("item-change", this);
-    }
-    onItemChange() {
-      var map = currentMap;
-      this.backend.mergeWith(map.toJSON(), map.name);
-    }
-    submit() {
-      if (!this.online) {
-        this.connect(this.server.value, this.auth.value);
-        return;
-      }
-      super.submit();
-    }
-    async save() {
-      setThrobber(true);
-      var map = currentMap;
-      try {
-        await this.backend.save(map.toJSON(), map.id, map.name);
-        this.saveDone();
-        subscribe("item-change", this);
-      } catch (e) {
-        this.error(e);
-      }
-    }
-    async load(id = this.list.value) {
-      setThrobber(true);
-      try {
-        let data = await this.backend.load(id);
-        this.loadDone(data);
-        subscribe("item-change", this);
-      } catch (e) {
-        this.error(e);
-      }
-    }
-    async connect(server, auth2) {
-      this.server.value = server;
-      this.auth.value = auth2 || "";
-      this.server.disabled = true;
-      this.auth.disabled = true;
-      localStorage.setItem(`${this.prefix}.server`, server);
-      localStorage.setItem(`${this.prefix}.auth`, auth2 || "");
-      this.go.disabled = true;
-      setThrobber(true);
-      await this.backend.connect(server, auth2);
-      setThrobber(false);
-      this.online = true;
-      this.sync();
-    }
-    sync() {
-      if (!this.online) {
-        this.go.textContent = "Connect";
-        return;
-      }
-      this.go.disabled = false;
-      if (this.mode == "load" && !this.list.value) {
-        this.go.disabled = true;
-      }
-      this.go.textContent = this.mode.charAt(0).toUpperCase() + this.mode.substring(1);
-    }
-  };
-
   // .js/ui/io.js
   var currentMode = "load";
   var currentBackend = null;
-  var node8 = document.querySelector("#io");
-  var select6 = node8.querySelector("#backend");
+  var node7 = document.querySelector("#io");
+  var select5 = node7.querySelector("#backend");
   var PREFIX = "mm.app";
   function isActive() {
-    return node8.contains(document.activeElement);
+    return node7.contains(document.activeElement);
   }
-  function init11() {
-    [LocalUI, FirebaseUI, GDriveUI, FileUI, WebDAVUI, ImageUI].forEach((ctor) => {
+  function init9() {
+    [LocalUI, FileUI, WebDAVUI, ImageUI].forEach((ctor) => {
       let bui = new ctor();
-      select6.append(bui.option);
+      select5.append(bui.option);
     });
-    select6.value = localStorage.getItem(`${PREFIX}.backend`) || "file";
-    select6.addEventListener("change", syncBackend);
+    select5.value = localStorage.getItem(`${PREFIX}.backend`) || "file";
+    select5.addEventListener("change", syncBackend);
     subscribe("map-new", (_) => setCurrentBackend(null));
     subscribe("save-done", onDone);
     subscribe("load-done", onDone);
   }
   function onDone(_message, publisher) {
-    hide2();
+    hide();
     setCurrentBackend(publisher);
   }
   function restore() {
@@ -2589,32 +2019,16 @@ ${text}`);
       backend.setState(parts);
       return;
     }
-    if (parts.state) {
-      try {
-        var state = JSON.parse(parts.state);
-        if (state.action == "open") {
-          state = {
-            b: "gdrive",
-            id: state.ids[0]
-          };
-          repo4.get("gdrive").setState(state);
-        } else {
-          history.replaceState(null, "", ".");
-        }
-      } catch (e) {
-      }
-      return;
-    }
     setThrobber(false);
   }
   function show(mode2) {
     currentMode = mode2;
-    node8.hidden = false;
-    node8.querySelector("h3").textContent = mode2;
+    node7.hidden = false;
+    node7.querySelector("h3").textContent = mode2;
     syncBackend();
   }
-  function hide2() {
-    node8.hidden = true;
+  function hide() {
+    node7.hidden = true;
   }
   function quickSave() {
     if (currentBackend) {
@@ -2624,9 +2038,9 @@ ${text}`);
     }
   }
   function syncBackend() {
-    [...node8.querySelectorAll("div[id]")].forEach((node11) => node11.hidden = true);
-    node8.querySelector(`#${select6.value}`).hidden = false;
-    repo4.get(select6.value).show(currentMode);
+    [...node7.querySelectorAll("div[id]")].forEach((node10) => node10.hidden = true);
+    node7.querySelector(`#${select5.value}`).hidden = false;
+    repo4.get(select5.value).show(currentMode);
   }
   function setCurrentBackend(backend) {
     if (currentBackend && currentBackend != backend) {
@@ -2652,22 +2066,22 @@ ${text}`);
   }
 
   // .js/ui/context-menu.js
-  var node9 = document.querySelector("#context-menu");
+  var node8 = document.querySelector("#context-menu");
   var port;
-  function init12(port_) {
+  function init10(port_) {
     port = port_;
-    [...node9.querySelectorAll("[data-command]")].forEach((button) => {
+    [...node8.querySelectorAll("[data-command]")].forEach((button) => {
       let commandName = button.dataset.command;
       button.textContent = repo.get(commandName).label;
     });
     port.addEventListener("mousedown", handleEvent);
-    node9.addEventListener("mousedown", handleEvent);
+    node8.addEventListener("mousedown", handleEvent);
     close3();
   }
   function open(point) {
-    node9.hidden = false;
-    let w = node9.offsetWidth;
-    let h = node9.offsetHeight;
+    node8.hidden = false;
+    let w = node8.offsetWidth;
+    let h = node8.offsetHeight;
     let left = point[0];
     let top = point[1];
     if (left > port.offsetWidth / 2) {
@@ -2676,11 +2090,11 @@ ${text}`);
     if (top > port.offsetHeight / 2) {
       top -= h;
     }
-    node9.style.left = `${left}px`;
-    node9.style.top = `${top}px`;
+    node8.style.left = `${left}px`;
+    node8.style.top = `${top}px`;
   }
   function handleEvent(e) {
-    if (e.currentTarget != node9) {
+    if (e.currentTarget != node8) {
       close3();
       return;
     }
@@ -2698,27 +2112,27 @@ ${text}`);
     close3();
   }
   function close3() {
-    node9.hidden = true;
+    node8.hidden = true;
   }
 
   // .js/ui/ui.js
-  var node10 = document.querySelector("#ui");
+  var node9 = document.querySelector("#ui");
   function isActive2() {
-    return node10.contains(document.activeElement) || isActive();
+    return node9.contains(document.activeElement) || isActive();
   }
   function toggle3() {
-    node10.hidden = !node10.hidden;
+    node9.hidden = !node9.hidden;
     publish("ui-change");
   }
   function getWidth() {
-    return node10.hidden ? 0 : node10.offsetWidth;
+    return node9.hidden ? 0 : node9.offsetWidth;
   }
-  function update6() {
-    [layout_exports, shape_exports, icon_exports, value_exports, status_exports].forEach((ui5) => ui5.update());
+  function update5() {
+    [layout_exports, shape_exports, value_exports, status_exports].forEach((ui) => ui.update());
   }
   function onClick3(e) {
     let target = e.target;
-    if (target == node10.querySelector("#toggle")) {
+    if (target == node9.querySelector("#toggle")) {
       toggle3();
       return;
     }
@@ -2736,28 +2150,26 @@ ${text}`);
       }
     }
   }
-  function init13(port4) {
+  function init11(port4) {
     [
       layout_exports,
       shape_exports,
-      icon_exports,
       value_exports,
       status_exports,
       color_exports,
       text_color_exports,
       help_exports,
-      tip_exports,
       notes_exports,
       io_exports
-    ].forEach((ui5) => ui5.init());
-    init12(port4);
-    subscribe("item-select", update6);
+    ].forEach((ui) => ui.init());
+    init10(port4);
+    subscribe("item-select", update5);
     subscribe("item-change", (_message, publisher) => {
       if (publisher == currentItem) {
-        update6();
+        update5();
       }
     });
-    node10.addEventListener("click", onClick3);
+    node9.addEventListener("click", onClick3);
     restore();
   }
 
@@ -2766,7 +2178,7 @@ ${text}`);
   function isMac() {
     return !!navigator.platform.match(/mac/i);
   }
-  var repo = new Map();
+  var repo = /* @__PURE__ */ new Map();
   var Command = class {
     constructor(id, label) {
       this.label = label;
@@ -3048,7 +2460,10 @@ ${text}`);
     parent: true,
     children: false
   };
-  var Item = class {
+  var Item = class _Item {
+    static fromJSON(data) {
+      return new this().fromJSON(data);
+    }
     constructor() {
       this._id = generateId();
       this._parent = null;
@@ -3095,9 +2510,6 @@ ${text}`);
       });
       this.updateToggle();
     }
-    static fromJSON(data) {
-      return new this().fromJSON(data);
-    }
     get id() {
       return this._id;
     }
@@ -3113,14 +2525,14 @@ ${text}`);
       return [bbox.width, bbox.height];
     }
     get position() {
-      const { node: node11 } = this.dom;
-      const transform = node11.getAttribute("transform");
+      const { node: node10 } = this.dom;
+      const transform = node10.getAttribute("transform");
       return transform.match(/\d+/g).map(Number);
     }
     set position(position) {
-      const { node: node11 } = this.dom;
+      const { node: node10 } = this.dom;
       const transform = `translate(${position.join(" ")})`;
-      node11.setAttribute("transform", transform);
+      node10.setAttribute("transform", transform);
     }
     get contentSize() {
       const { content } = this.dom;
@@ -3176,6 +2588,9 @@ ${text}`);
       }
       return data;
     }
+    /**
+     * Only when creating a new item. To merge existing items, use .mergeWith().
+     */
     fromJSON(data) {
       this.text = data.text;
       if (data.id) {
@@ -3218,7 +2633,7 @@ ${text}`);
         this.shape = repo3.get(data.shape);
       }
       (data.children || []).forEach((child) => {
-        this.insertChild(Item.fromJSON(child));
+        this.insertChild(_Item.fromJSON(child));
       });
       return this;
     }
@@ -3266,14 +2681,14 @@ ${text}`);
       }
       (data.children || []).forEach((child, index2) => {
         if (index2 >= this.children.length) {
-          this.insertChild(Item.fromJSON(child));
+          this.insertChild(_Item.fromJSON(child));
         } else {
           var myChild = this.children[index2];
           if (myChild.id == child.id) {
             myChild.mergeWith(child);
           } else {
             this.removeChild(this.children[index2]);
-            this.insertChild(Item.fromJSON(child), index2);
+            this.insertChild(_Item.fromJSON(child), index2);
           }
         }
       });
@@ -3295,7 +2710,7 @@ ${text}`);
         obj.children && obj.children.forEach(removeId);
       };
       removeId(data);
-      return Item.fromJSON(data);
+      return _Item.fromJSON(data);
     }
     select() {
       this.dom.node.classList.add("current");
@@ -3304,6 +2719,12 @@ ${text}`);
     deselect() {
       this.dom.node.classList.remove("current");
     }
+    /*
+     * This item changed in some way (typically one of its attributes has been changed).
+     * We need to re-render its immediate DOM and also prehaps recurse upwards/downwards.
+     *
+     * Nothing happens if not part of a map (or the map is not visible).
+     */
     update(options = {}) {
       options = Object.assign({}, UPDATE_OPTIONS, options);
       const { map, children, parent } = this;
@@ -3319,10 +2740,10 @@ ${text}`);
       this.updateIcon();
       this.updateValue();
       const { resolvedLayout, resolvedShape, dom } = this;
-      const { content, node: node11, connectors } = dom;
+      const { content, node: node10, connectors } = dom;
       dom.text.style.color = this.resolvedTextColor;
-      node11.dataset.shape = resolvedShape.id;
-      node11.dataset.align = resolvedLayout.computeAlignment(this);
+      node10.dataset.shape = resolvedShape.id;
+      node10.dataset.align = resolvedLayout.computeAlignment(this);
       let fo = content.parentNode;
       let size = [
         Math.max(content.offsetWidth, content.scrollWidth),
@@ -3348,9 +2769,9 @@ ${text}`);
     get notes() {
       return this._notes;
     }
-    set notes(notes3) {
-      this._notes = notes3;
-      this.dom.notes.hidden = !notes3;
+    set notes(notes) {
+      this._notes = notes;
+      this.dom.notes.hidden = !notes;
     }
     get collapsed() {
       return this._collapsed;
@@ -3435,7 +2856,7 @@ ${text}`);
         return this._color;
       }
       const { parent } = this;
-      if (parent instanceof Item) {
+      if (parent instanceof _Item) {
         return parent.resolvedColor;
       }
       return COLOR;
@@ -3452,7 +2873,7 @@ ${text}`);
         return this._textColor;
       }
       const { parent } = this;
-      if (parent instanceof Item) {
+      if (parent instanceof _Item) {
         return parent.resolvedTextColor;
       }
       return "";
@@ -3469,7 +2890,7 @@ ${text}`);
         return this._layout;
       }
       const { parent } = this;
-      if (!(parent instanceof Item)) {
+      if (!(parent instanceof _Item)) {
         throw new Error("Non-connected item does not have layout");
       }
       return parent.resolvedLayout;
@@ -3486,10 +2907,10 @@ ${text}`);
         return this._shape;
       }
       let depth = 0;
-      let node11 = this;
-      while (!node11.isRoot) {
+      let node10 = this;
+      while (!node10.isRoot) {
         depth++;
-        node11 = node11.parent;
+        node10 = node10.parent;
       }
       switch (depth) {
         case 0:
@@ -3515,8 +2936,8 @@ ${text}`);
     }
     insertChild(child, index2) {
       if (!child) {
-        child = new Item();
-      } else if (child.parent && child.parent instanceof Item) {
+        child = new _Item();
+      } else if (child.parent && child.parent instanceof _Item) {
         child.parent.removeChild(child);
       }
       if (!this.children.length) {
@@ -3618,13 +3039,13 @@ ${text}`);
       }
     }
     updateToggle() {
-      const { node: node11, toggle: toggle4 } = this.dom;
-      node11.classList.toggle("collapsed", this._collapsed);
+      const { node: node10, toggle: toggle4 } = this.dom;
+      node10.classList.toggle("collapsed", this._collapsed);
       toggle4.querySelector("path").setAttribute("d", this._collapsed ? D_PLUS : D_MINUS);
     }
   };
-  function findLinks(node11) {
-    let children = [...node11.childNodes];
+  function findLinks(node10) {
+    let children = [...node10.childNodes];
     for (let i = 0; i < children.length; i++) {
       let child = children[i];
       if (child instanceof Element) {
@@ -3644,9 +3065,9 @@ ${text}`);
         var link = document.createElement("a");
         link.innerHTML = link.href = result[0];
         if (before) {
-          node11.insertBefore(document.createTextNode(before), child);
+          node10.insertBefore(document.createTextNode(before), child);
         }
-        node11.insertBefore(link, child);
+        node10.insertBefore(link, child);
         if (after) {
           child.nodeValue = after;
           i--;
@@ -3715,10 +3136,10 @@ ${text}`);
       return this._root;
     }
     set root(root) {
-      const { node: node11, style } = this;
+      const { node: node10, style } = this;
       this._root = root;
-      node11.innerHTML = "";
-      node11.append(root.dom.node, style);
+      node10.innerHTML = "";
+      node10.append(root.dom.node, style);
       root.parent = this;
     }
     adjustFontSize(diff) {
@@ -3730,24 +3151,24 @@ ${text}`);
     mergeWith(data) {
       let ids = [];
       var current2 = currentItem;
-      var node11 = current2;
+      var node10 = current2;
       while (true) {
-        ids.push(node11.id);
-        if (node11.parent == this) {
+        ids.push(node10.id);
+        if (node10.parent == this) {
           break;
         }
-        node11 = node11.parent;
+        node10 = node10.parent;
       }
       this._root.mergeWith(data.root);
       if (current2.map) {
-        let node12 = current2;
+        let node11 = current2;
         let hidden = false;
         while (true) {
-          if (node12.parent == this) {
+          if (node11.parent == this) {
             break;
           }
-          node12 = node12.parent;
-          if (node12.collapsed) {
+          node11 = node11.parent;
+          if (node11.collapsed) {
             hidden = true;
           }
         }
@@ -3776,10 +3197,10 @@ ${text}`);
     update(options) {
       options = Object.assign({}, UPDATE_OPTIONS2, options);
       options.children && this._root.update({ parent: false, children: true });
-      const { node: node11 } = this;
+      const { node: node10 } = this;
       const { size } = this._root;
-      node11.setAttribute("width", String(size[0]));
-      node11.setAttribute("height", String(size[1]));
+      node10.setAttribute("width", String(size[0]));
+      node10.setAttribute("height", String(size[1]));
     }
     show(where) {
       where.append(this.node);
@@ -3819,8 +3240,8 @@ ${text}`);
       all2.sort((a, b) => a.distance - b.distance);
       return all2[0];
     }
-    getItemFor(node11) {
-      let content = node11.closest(".content");
+    getItemFor(node10) {
+      let content = node10.closest(".content");
       if (!content) {
         return;
       }
@@ -3885,8 +3306,8 @@ ${text}`);
           this.getPickCandidates(currentRect, child, direction, candidates);
         });
       }
-      var node11 = item.dom.content;
-      var rect = node11.getBoundingClientRect();
+      var node10 = item.dom.content;
+      var rect = node10.getBoundingClientRect();
       if (direction == "left" || direction == "right") {
         var x1 = currentRect.left + currentRect.width / 2;
         var x2 = rect.left + rect.width / 2;
@@ -3927,7 +3348,7 @@ ${text}`);
       this.node.style.top = `${point[1]}px`;
     }
   };
-  async function init14() {
+  async function init12() {
     let response = await fetch("map.css");
     css = await response.text();
   }
@@ -3948,7 +3369,7 @@ ${text}`);
       command.execute(e);
     }
   }
-  function init15() {
+  function init13() {
     window.addEventListener("keydown", handleEvent2);
   }
   function keyOK(key, e) {
@@ -3968,7 +3389,7 @@ ${text}`);
     previousDragState: null
   };
   var port2;
-  function init16(port_) {
+  function init14(port_) {
     port2 = port_;
     port2.addEventListener("touchstart", onDragStart);
     port2.addEventListener("mousedown", onDragStart);
@@ -4195,7 +3616,7 @@ ${text}`);
   // .js/clipboard.js
   var storedItem = null;
   var mode = "";
-  function init17() {
+  function init15() {
     document.body.addEventListener("cut", onCopyCut);
     document.body.addEventListener("copy", onCopyCut);
     document.body.addEventListener("paste", onPaste);
@@ -4292,7 +3713,7 @@ ${text}`);
       document.title = currentMap.name + " :: My Mind";
     }
   }
-  function init18() {
+  function init16() {
     subscribe("item-change", onItemChange);
   }
 
@@ -4412,7 +3833,7 @@ ${text}`);
       } else {
         close2();
         close();
-        hide2();
+        hide();
       }
     }
   }();
@@ -4559,19 +3980,19 @@ ${text}`);
     editing = false;
     return currentItem.stopEditing();
   }
-  async function init19() {
-    await init14();
+  async function init17() {
+    await init12();
     subscribe("ui-change", syncPort);
     window.addEventListener("resize", syncPort);
     window.addEventListener("beforeunload", (e) => {
       e.preventDefault();
       return "";
     });
-    init17();
     init15();
-    init16(port3);
-    init18();
-    init13(port3);
+    init13();
+    init14(port3);
+    init16();
+    init11(port3);
     syncPort();
     showMap(new Map2());
   }
@@ -4581,5 +4002,5 @@ ${text}`);
     port3.style.height = portSize[1] + "px";
     currentMap && currentMap.ensureItemVisibility(currentItem);
   }
-  init19();
+  init17();
 })();
