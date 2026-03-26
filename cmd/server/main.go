@@ -8,15 +8,33 @@ import (
 )
 
 func main() {
-	host := os.Getenv("HOST")
-	if host == "" {
-		host = "localhost"
+	// bind用（コンテナ内部）
+	bind := os.Getenv("BIND")
+	if bind == "" {
+		bind = "0.0.0.0"
 	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "3000"
 	}
-	addr := host + ":" + port
+
+	addr := bind + ":" + port
+
+	// 表示用URL
+	publicHost := os.Getenv("PUBLIC_HOST")
+	if publicHost == "" {
+		publicHost = "localhost"
+	}
+
+	useTLS := os.Getenv("TLS") == "1"
+
+	scheme := "http"
+	if useTLS {
+		scheme = "https"
+	}
+
+	publicAddr := publicHost + ":" + port
 
 	staticDir := "./static"
 	mapsDir := "./maps"
@@ -27,16 +45,24 @@ func main() {
 	}
 
 	fmt.Println("========================================")
-	fmt.Printf("  App  : http://%s/\n", addr)
-	fmt.Printf("  DAV  : http://%s/maps/\n", addr)
+	fmt.Printf("  App  : %s://%s/\n", scheme, publicAddr)
+	fmt.Printf("  DAV  : %s://%s/maps/\n", scheme, publicAddr)
 	fmt.Println("========================================")
 
 	h := handler.New(staticDir, mapsDir)
 	http.Handle("/", h)
 
-	if err := http.ListenAndServe(addr, nil); err != nil {
+	var err error
+	if useTLS {
+		cert := os.Getenv("TLS_CERT")
+		key := os.Getenv("TLS_KEY")
+		err = http.ListenAndServeTLS(addr, cert, key, nil)
+	} else {
+		err = http.ListenAndServe(addr, nil)
+	}
+
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "Server error: %v\n", err)
 		os.Exit(1)
 	}
 }
-
