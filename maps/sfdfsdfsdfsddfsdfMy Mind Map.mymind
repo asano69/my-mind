@@ -1,0 +1,29 @@
+{
+	"root": {
+		"id": "jlicpcbd",
+		"text": "sfdfsdfsdfsddfsdfMy Mind Map",
+		"notes": "",
+		"layout": "map",
+		"children": [
+			{
+				"id": "znolygem",
+				"text": "tete",
+				"notes": "",
+				"side": "right",
+				"children": [
+					{
+						"id": "mqvukkij",
+						"text": "estes",
+						"notes": ""
+					}
+				]
+			},
+			{
+				"id": "gmvyzggl",
+				"text": "asfasf",
+				"notes": "",
+				"side": "right"
+			}
+		]
+	}
+}
