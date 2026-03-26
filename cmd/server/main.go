@@ -10,7 +10,7 @@ import (
 func main() {
 	host := os.Getenv("HOST")
 	if host == "" {
-		host = "127.0.0.1"
+		host = "localhost"
 	}
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -39,3 +39,4 @@ func main() {
 		os.Exit(1)
 	}
 }
+
