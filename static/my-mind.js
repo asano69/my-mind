@@ -3109,7 +3109,13 @@ ${text}`);
       this.position = [0, 0];
       this.fontSize = 15;
       let resolvedOptions = Object.assign({
-        root: "My Mind Map",
+        root: (() => {
+          const d = /* @__PURE__ */ new Date();
+          const yy = String(d.getFullYear()).slice(-2);
+          const mm = String(d.getMonth() + 1).padStart(2, "0");
+          const dd = String(d.getDate()).padStart(2, "0");
+          return `${yy}${mm}${dd}`;
+        })(),
         layout: repo2.get("map")
       }, options);
       this.style.textContent = css;
