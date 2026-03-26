@@ -7,8 +7,8 @@ import Local from "./backend/local.js";
 import File from "./backend/file.js";
 import WebDAV from "./backend/webdav.js";
 import Image from "./backend/image.js";
-import GDrive from "./backend/gdrive.js";
-import Firebase from "./backend/firebase.js";
+
+
 
 
 type BUI = BackendUI<any>;
@@ -25,7 +25,7 @@ export function isActive() {
 }
 
 export function init() {
-	[Local, Firebase, GDrive, File, WebDAV, Image].forEach(ctor => {
+	[Local, File, WebDAV, Image].forEach(ctor => {
 		let bui = new ctor();
 		select.append(bui.option);
 	});
@@ -62,21 +62,6 @@ export function restore() {
 		return;
 	}
 
-	if (parts.state) { // opened from gdrive
-		try {
-			var state = JSON.parse(parts.state);
-			if (state.action == "open") {
-				state = {
-					b: "gdrive",
-					id: state.ids[0]
-				};
-				repo.get("gdrive")!.setState(state);
-			} else {
-				history.replaceState(null, "", ".");
-			}
-		} catch (e) { }
-		return;
-	}
 
 	app.setThrobber(false);
 }
