@@ -8,15 +8,10 @@ import (
 )
 
 func main() {
-	host := os.Getenv("HOST")
-	if host == "" {
-		host = "127.0.0.1"
-	}
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "3000"
 	}
-	addr := host + ":" + port
 
 	staticDir := "./static"
 	mapsDir := "./maps"
@@ -26,15 +21,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println("========================================")
-	fmt.Printf("  App  : http://%s/\n", addr)
-	fmt.Printf("  DAV  : http://%s/maps/\n", addr)
-	fmt.Println("========================================")
+	fmt.Printf("Listening on :%s\n", port)
 
 	h := handler.New(staticDir, mapsDir)
-	http.Handle("/", h)
-
-	if err := http.ListenAndServe(addr, nil); err != nil {
+	if err := http.ListenAndServe(":"+port, h); err != nil {
 		fmt.Fprintf(os.Stderr, "Server error: %v\n", err)
 		os.Exit(1)
 	}

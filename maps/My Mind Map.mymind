@@ -1,15 +1,24 @@
 {
 	"root": {
-		"id": "bxzwmjqw",
+		"id": "sralekwd",
 		"text": "My Mind Map",
 		"notes": "",
+		"status": "computed",
 		"layout": "map",
 		"children": [
 			{
-				"id": "xhlsrews",
-				"text": "aaa",
+				"id": "ukfpgfxc",
+				"text": "test",
 				"notes": "",
-				"side": "right"
+				"side": "right",
+				"children": [
+					{
+						"id": "ljtvabzn",
+						"text": "sfsf",
+						"notes": "",
+						"status": true
+					}
+				]
 			}
 		]
 	}

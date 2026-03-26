@@ -18,5 +18,5 @@ COPY --from=go-builder /build/my-mind /usr/local/bin/my-mind
 COPY static/ /app/static/
 
 WORKDIR /app
-EXPOSE 8080
+EXPOSE 3000
 ENTRYPOINT ["my-mind"]
