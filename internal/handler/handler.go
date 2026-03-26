@@ -39,6 +39,18 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		if strings.HasPrefix(path, "/maps/") {
 			h.getMap(w, path)
+		} else if strings.HasPrefix(path, "/m/") {
+			ext := strings.ToLower(filepath.Ext(path))
+			if ext == "" {
+				// 拡張子なし → .mymind を補完してリダイレクト
+				http.Redirect(w, r, path+".mymind", http.StatusMovedPermanently)
+			} else if ext == ".mymind" {
+				h.serveIndex(w)
+			} else {
+				// /m/my-mind.js → /my-mind.js にパスを書き換えて静的ファイルを返す
+				stripped := strings.TrimPrefix(path, "/m")
+				h.serveStatic(w, stripped)
+			}
 		} else {
 			h.serveStatic(w, path)
 		}
@@ -51,6 +63,19 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
+}
+
+// 追加
+func (h *Handler) serveIndex(w http.ResponseWriter) {
+	fpath := filepath.Join(h.StaticDir, "index.html")
+	data, err := os.ReadFile(fpath)
+	if err != nil {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
 }
 
 func safeJoin(base, reqPath string) (string, error) {
