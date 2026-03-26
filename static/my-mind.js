@@ -1851,14 +1851,35 @@
       if (response.ok) {
         return text;
       } else {
-        throw new Error(`HTTP/${response.status}
-
-${text}`);
+        throw { status: response.status, text };
       }
     }
   };
 
   // .js/ui/backend/webdav.js
+  function showToast(message) {
+    const el = document.createElement("div");
+    el.textContent = message;
+    el.style.cssText = `
+        position: fixed;
+        bottom: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: #fff;
+        padding: 0.6rem 1.2rem;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        opacity: 1;
+        transition: opacity 1s ease 2s;
+        z-index: 9999;
+    `;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => {
+      el.style.opacity = "0";
+      el.addEventListener("transitionend", () => el.remove());
+    });
+  }
   var WebDAVUI = class extends BackendUI {
     constructor() {
       super(new WebDAV(), "Generic WebDAV");
@@ -1923,7 +1944,22 @@ ${text}`);
         let json = repo6.get("native").from(data);
         this.loadDone(json);
       } catch (e) {
-        this.error(e);
+        if (e && e.status === 404) {
+          const filename = url.split("/").pop().replace(/\.mymind$/, "");
+          const id = Math.random().toString(36).slice(2, 10).replace(/[0-9]/g, (c) => String.fromCharCode(97 + parseInt(c)));
+          const emptyJson = {
+            root: {
+              id,
+              text: filename,
+              notes: "",
+              layout: "map"
+            }
+          };
+          showToast(`New Map: ${filename}.mymind`);
+          this.loadDone(emptyJson);
+        } else {
+          this.error(e);
+        }
       }
     }
   };
@@ -2019,15 +2055,24 @@ ${text}`);
   }
   function restore() {
     let parts = {};
-    location.search.substring(1).split("&").forEach((item) => {
-      let keyvalue = item.split("=").map(decodeURIComponent);
-      parts[keyvalue[0]] = keyvalue[1];
-    });
-    if ("map" in parts) {
-      parts.url = parts.map;
-    }
-    if ("url" in parts && !("b" in parts)) {
+    const pathMatch = location.pathname.match(/^\/m\/(.+)$/);
+    if (pathMatch) {
+      parts.url = decodeURIComponent(pathMatch[1]);
       parts.b = "webdav";
+    } else {
+      location.search.substring(1).split("&").forEach((item) => {
+        let keyvalue = item.split("=").map(decodeURIComponent);
+        parts[keyvalue[0]] = keyvalue[1];
+      });
+      if ("map" in parts) {
+        parts.url = parts.map;
+      }
+      if ("f" in parts) {
+        parts.url = parts.f;
+      }
+      if ("url" in parts && !("b" in parts)) {
+        parts.b = "webdav";
+      }
     }
     let backend = repo4.get(parts.b);
     if (backend) {
@@ -2072,11 +2117,16 @@ ${text}`);
   }
   function updateURL() {
     let data = currentBackend && currentBackend.getState();
-    if (!data) {
-      history.replaceState(null, "", ".");
+    if (!data || !data.url) {
+      history.replaceState(null, "", "/");
     } else {
-      let arr = Object.entries(data).map((pair) => pair.map(encodeURIComponent).join("="));
-      history.replaceState(null, "", "?" + arr.join("&"));
+      const filename = data.url;
+      if (filename && !filename.includes("/") && filename.endsWith(".mymind")) {
+        history.replaceState(null, "", `/m/${encodeURIComponent(filename)}`);
+      } else {
+        let arr = Object.entries(data).map((pair) => pair.map(encodeURIComponent).join("="));
+        history.replaceState(null, "", "?" + arr.join("&"));
+      }
     }
   }
 
@@ -3129,6 +3179,8 @@ ${text}`);
           const yy = String(d.getFullYear()).slice(-2);
           const mm = String(d.getMonth() + 1).padStart(2, "0");
           const dd = String(d.getDate()).padStart(2, "0");
+          const hh = String(d.getHours()).padStart(2, "0");
+          const mi = String(d.getMinutes()).padStart(2, "0");
           return `${yy}${mm}${dd}`;
         })(),
         layout: repo2.get("map")
