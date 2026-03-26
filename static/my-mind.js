@@ -449,20 +449,6 @@
       this.item.status = this.oldStatus;
     }
   };
-  var SetIcon = class extends Action {
-    constructor(item, icon) {
-      super();
-      this.item = item;
-      this.icon = icon;
-      this.oldIcon = item.icon;
-    }
-    do() {
-      this.item.icon = this.icon;
-    }
-    undo() {
-      this.item.icon = this.oldIcon;
-    }
-  };
   var SetSide = class extends Action {
     constructor(item, side) {
       super();
@@ -1056,29 +1042,11 @@
     return node11;
   }
 
-  // .js/ui/icon.js
-  var icon_exports = {};
-  __export(icon_exports, {
-    init: () => init7,
-    update: () => update3
-  });
-  var select3 = document.querySelector("#icons");
-  function init7() {
-    select3.addEventListener("change", onChange3);
-  }
-  function update3() {
-    select3.value = currentItem.icon || "";
-  }
-  function onChange3() {
-    let action2 = new SetIcon(currentItem, select3.value);
-    action(action2);
-  }
-
   // .js/ui/shape.js
   var shape_exports = {};
   __export(shape_exports, {
-    init: () => init8,
-    update: () => update4
+    init: () => init7,
+    update: () => update3
   });
 
   // .js/shape/shape.js
@@ -1148,21 +1116,21 @@
   new Underline();
 
   // .js/ui/shape.js
-  var select4 = document.querySelector("#shape");
-  function init8() {
-    repo3.forEach((shape) => select4.append(shape.option));
-    select4.addEventListener("change", onChange4);
+  var select3 = document.querySelector("#shape");
+  function init7() {
+    repo3.forEach((shape) => select3.append(shape.option));
+    select3.addEventListener("change", onChange3);
   }
-  function update4() {
+  function update3() {
     let value = "";
     let shape = currentItem.shape;
     if (shape) {
       value = shape.id;
     }
-    select4.value = value;
+    select3.value = value;
   }
-  function onChange4() {
-    let shape = repo3.get(select4.value);
+  function onChange3() {
+    let shape = repo3.get(select3.value);
     let action2 = new SetShape(currentItem, shape);
     action(action2);
   }
@@ -1170,10 +1138,10 @@
   // .js/ui/status.js
   var status_exports = {};
   __export(status_exports, {
-    init: () => init9,
-    update: () => update5
+    init: () => init8,
+    update: () => update4
   });
-  var select5 = document.querySelector("#status");
+  var select4 = document.querySelector("#status");
   var STATUS_MAP = {
     "yes": true,
     "no": false,
@@ -1190,14 +1158,14 @@
   function stringToStatus(str) {
     return str in STATUS_MAP ? STATUS_MAP[str] : str;
   }
-  function init9() {
-    select5.addEventListener("change", onChange5);
+  function init8() {
+    select4.addEventListener("change", onChange4);
   }
-  function update5() {
-    select5.value = statusToString(currentItem.status);
+  function update4() {
+    select4.value = statusToString(currentItem.status);
   }
-  function onChange5() {
-    let status = stringToStatus(select5.value);
+  function onChange4() {
+    let status = stringToStatus(select4.value);
     let action2 = new SetStatus(currentItem, status);
     action(action2);
   }
@@ -1205,10 +1173,10 @@
   // .js/ui/tip.js
   var tip_exports = {};
   __export(tip_exports, {
-    init: () => init10
+    init: () => init9
   });
   var node7 = document.querySelector("#tip");
-  function init10() {
+  function init9() {
     node7.addEventListener("click", hide);
     subscribe("command-child", hide);
     subscribe("command-sibling", hide);
@@ -1224,7 +1192,7 @@
   var io_exports = {};
   __export(io_exports, {
     hide: () => hide2,
-    init: () => init11,
+    init: () => init10,
     isActive: () => isActive,
     quickSave: () => quickSave,
     restore: () => restore,
@@ -1305,14 +1273,14 @@
     }
   };
   var repo4 = /* @__PURE__ */ new Map();
-  function buildList(list, select7) {
+  function buildList(list, select6) {
     let data = [];
     for (let id in list) {
       data.push({ id, name: list[id] });
     }
     data.sort((a, b) => a.name.localeCompare(b.name));
     let options = data.map((item) => new Option(item.name, item.id));
-    select7.append(...options);
+    select6.append(...options);
   }
 
   // .js/backend/backend.js
@@ -1840,9 +1808,9 @@
 
   // .js/ui/format-select.js
   var all = [Native, Native2, MMA, Native3, Plaintext].map((ctor) => new ctor());
-  function fill(select7) {
+  function fill(select6) {
     let nodes = all.map((bui) => bui.option);
-    select7.append(...nodes);
+    select6.append(...nodes);
   }
 
   // .js/ui/backend/file.js
@@ -1899,14 +1867,14 @@
       return this.request("GET", url);
     }
     async request(method, url, data) {
-      let init20 = {
+      let init19 = {
         method,
         credentials: "include"
       };
       if (data) {
-        init20.body = data;
+        init19.body = data;
       }
-      let response = await fetch(url, init20);
+      let response = await fetch(url, init19);
       let text = await response.text();
       if (response.ok) {
         return text;
@@ -2575,18 +2543,18 @@ ${text}`);
   var currentMode = "load";
   var currentBackend = null;
   var node8 = document.querySelector("#io");
-  var select6 = node8.querySelector("#backend");
+  var select5 = node8.querySelector("#backend");
   var PREFIX = "mm.app";
   function isActive() {
     return node8.contains(document.activeElement);
   }
-  function init11() {
+  function init10() {
     [LocalUI, FirebaseUI, GDriveUI, FileUI, WebDAVUI, ImageUI].forEach((ctor) => {
       let bui = new ctor();
-      select6.append(bui.option);
+      select5.append(bui.option);
     });
-    select6.value = localStorage.getItem(`${PREFIX}.backend`) || "file";
-    select6.addEventListener("change", syncBackend);
+    select5.value = localStorage.getItem(`${PREFIX}.backend`) || "file";
+    select5.addEventListener("change", syncBackend);
     subscribe("map-new", (_) => setCurrentBackend(null));
     subscribe("save-done", onDone);
     subscribe("load-done", onDone);
@@ -2648,8 +2616,8 @@ ${text}`);
   }
   function syncBackend() {
     [...node8.querySelectorAll("div[id]")].forEach((node11) => node11.hidden = true);
-    node8.querySelector(`#${select6.value}`).hidden = false;
-    repo4.get(select6.value).show(currentMode);
+    node8.querySelector(`#${select5.value}`).hidden = false;
+    repo4.get(select5.value).show(currentMode);
   }
   function setCurrentBackend(backend) {
     if (currentBackend && currentBackend != backend) {
@@ -2677,7 +2645,7 @@ ${text}`);
   // .js/ui/context-menu.js
   var node9 = document.querySelector("#context-menu");
   var port;
-  function init12(port_) {
+  function init11(port_) {
     port = port_;
     [...node9.querySelectorAll("[data-command]")].forEach((button) => {
       let commandName = button.dataset.command;
@@ -2736,8 +2704,8 @@ ${text}`);
   function getWidth() {
     return node10.hidden ? 0 : node10.offsetWidth;
   }
-  function update6() {
-    [layout_exports, shape_exports, icon_exports, value_exports, status_exports].forEach((ui) => ui.update());
+  function update5() {
+    [layout_exports, shape_exports, value_exports, status_exports].forEach((ui) => ui.update());
   }
   function onClick3(e) {
     let target = e.target;
@@ -2759,11 +2727,10 @@ ${text}`);
       }
     }
   }
-  function init13(port4) {
+  function init12(port4) {
     [
       layout_exports,
       shape_exports,
-      icon_exports,
       value_exports,
       status_exports,
       color_exports,
@@ -2773,11 +2740,11 @@ ${text}`);
       notes_exports,
       io_exports
     ].forEach((ui) => ui.init());
-    init12(port4);
-    subscribe("item-select", update6);
+    init11(port4);
+    subscribe("item-select", update5);
     subscribe("item-change", (_message, publisher) => {
       if (publisher == currentItem) {
-        update6();
+        update5();
       }
     });
     node10.addEventListener("click", onClick3);
@@ -3959,7 +3926,7 @@ ${text}`);
       this.node.style.top = `${point[1]}px`;
     }
   };
-  async function init14() {
+  async function init13() {
     let response = await fetch("map.css");
     css = await response.text();
   }
@@ -3980,7 +3947,7 @@ ${text}`);
       command.execute(e);
     }
   }
-  function init15() {
+  function init14() {
     window.addEventListener("keydown", handleEvent2);
   }
   function keyOK(key, e) {
@@ -4000,7 +3967,7 @@ ${text}`);
     previousDragState: null
   };
   var port2;
-  function init16(port_) {
+  function init15(port_) {
     port2 = port_;
     port2.addEventListener("touchstart", onDragStart);
     port2.addEventListener("mousedown", onDragStart);
@@ -4227,7 +4194,7 @@ ${text}`);
   // .js/clipboard.js
   var storedItem = null;
   var mode = "";
-  function init17() {
+  function init16() {
     document.body.addEventListener("cut", onCopyCut);
     document.body.addEventListener("copy", onCopyCut);
     document.body.addEventListener("paste", onPaste);
@@ -4324,7 +4291,7 @@ ${text}`);
       document.title = currentMap.name + " :: My Mind";
     }
   }
-  function init18() {
+  function init17() {
     subscribe("item-change", onItemChange);
   }
 
@@ -4591,19 +4558,19 @@ ${text}`);
     editing = false;
     return currentItem.stopEditing();
   }
-  async function init19() {
-    await init14();
+  async function init18() {
+    await init13();
     subscribe("ui-change", syncPort);
     window.addEventListener("resize", syncPort);
     window.addEventListener("beforeunload", (e) => {
       e.preventDefault();
       return "";
     });
+    init16();
+    init14();
+    init15(port3);
     init17();
-    init15();
-    init16(port3);
-    init18();
-    init13(port3);
+    init12(port3);
     syncPort();
     showMap(new Map2());
   }
@@ -4613,5 +4580,5 @@ ${text}`);
     port3.style.height = portSize[1] + "px";
     currentMap && currentMap.ensureItemVisibility(currentItem);
   }
-  init19();
+  init18();
 })();
