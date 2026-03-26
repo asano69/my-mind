@@ -5,7 +5,7 @@ import * as color from "./color.js";
 import * as textColor from "./text-color.js";
 import * as value from "./value.js";
 import * as layout from "./layout.js";
-import * as icon from "./icon.js";
+
 import * as shape from "./shape.js";
 import * as status from "./status.js";
 
@@ -33,7 +33,7 @@ export function getWidth() {
 }
 
 function update() {
-	[layout, shape, icon, value, status].forEach(ui => ui.update());
+	[layout, shape, value, status].forEach(ui => ui.update());
 }
 
 function onClick(e: MouseEvent) {
@@ -60,7 +60,7 @@ function onClick(e: MouseEvent) {
 }
 
 export function init(port: HTMLElement) {
-	[layout, shape, icon, value, status, color, textColor,
+	[layout, shape, value, status, color, textColor,
 	help, tip, notes, io].forEach(ui => ui.init());
 	menu.init(port);
 
