@@ -6,14 +6,12 @@
     for (var name in all2)
       __defProp(target, name, { get: all2[name], enumerable: true });
   };
-
   // .js/html.js
   function node(name, attrs) {
     let node11 = document.createElement(name);
     Object.assign(node11, attrs);
     return node11;
   }
-
   // .js/svg.js
   var NS = "http://www.w3.org/2000/svg";
   function node2(name, attrs) {
@@ -32,7 +30,6 @@
     fo.setAttribute("height", "1");
     return fo;
   }
-
   // .js/pubsub.js
   var subscribers = new Map();
   function publish(message, publisher, data) {
@@ -62,7 +59,6 @@
       subs.splice(index2, 1);
     }
   }
-
   // .js/history.js
   var index = 0;
   var actions = [];
@@ -89,7 +85,6 @@
   function canForward() {
     return index != actions.length;
   }
-
   // .js/ui/help.js
   var help_exports = {};
   __export(help_exports, {
@@ -187,7 +182,6 @@
   function close() {
     node3.hidden = true;
   }
-
   // .js/ui/notes.js
   var notes_exports = {};
   __export(notes_exports, {
@@ -228,13 +222,11 @@
     });
     window.addEventListener("message", onMessage);
   }
-
   // .js/ui/color.js
   var color_exports = {};
   __export(color_exports, {
     init: () => init3
   });
-
   // .js/action.js
   var Action = class {
     do() {
@@ -451,20 +443,7 @@
       this.item.status = this.oldStatus;
     }
   };
-  var SetIcon = class extends Action {
-    constructor(item, icon) {
-      super();
-      this.item = item;
-      this.icon = icon;
-      this.oldIcon = item.icon;
-    }
-    do() {
-      this.item.icon = this.icon;
-    }
-    undo() {
-      this.item.icon = this.oldIcon;
-    }
-  };
+  // [REMOVED] SetIcon class
   var SetSide = class extends Action {
     constructor(item, side) {
       super();
@@ -481,7 +460,6 @@
       this.item.update({ children: true });
     }
   };
-
   // .js/ui/color.js
   var node5 = document.querySelector("#color");
   function init3() {
@@ -496,7 +474,6 @@
     let action2 = new SetColor(currentItem, color);
     action(action2);
   }
-
   // .js/ui/text-color.js
   var text_color_exports = {};
   __export(text_color_exports, {
@@ -515,7 +492,6 @@
     let action2 = new SetTextColor(currentItem, color);
     action(action2);
   }
-
   // .js/ui/value.js
   var value_exports = {};
   __export(value_exports, {
@@ -545,14 +521,12 @@
       action(action2);
     }
   }
-
   // .js/ui/layout.js
   var layout_exports = {};
   __export(layout_exports, {
     init: () => init6,
     update: () => update2
   });
-
   // .js/layout/layout.js
   var OPPOSITE = {
     left: "right",
@@ -648,7 +622,6 @@
     }
   };
   var repo2 = new Map();
-
   // .js/layout/graph.js
   var SPACING_RANK = 16;
   var R = SPACING_RANK / 2;
@@ -823,7 +796,6 @@
   new GraphLayout("graph-top", "Top", "top");
   new GraphLayout("graph-left", "Left", "left");
   new GraphLayout("graph-right", "Right", "right");
-
   // .js/layout/tree.js
   var SPACING_RANK2 = 32;
   var R2 = SPACING_RANK2 / 4;
@@ -894,7 +866,6 @@
   };
   new TreeLayout("tree-left", "Left", "left");
   new TreeLayout("tree-right", "Right", "right");
-
   // .js/layout/map.js
   var MapLayout = class extends GraphLayout {
     constructor() {
@@ -1009,7 +980,6 @@
     }
   };
   new MapLayout("map", "Map");
-
   // .js/ui/layout.js
   var select2 = document.querySelector("#layout");
   function init6() {
@@ -1051,32 +1021,13 @@
     select2.append(node11);
     return node11;
   }
-
-  // .js/ui/icon.js
-  var icon_exports = {};
-  __export(icon_exports, {
-    init: () => init7,
-    update: () => update3
-  });
-  var select3 = document.querySelector("#icons");
-  function init7() {
-    select3.addEventListener("change", onChange3);
-  }
-  function update3() {
-    select3.value = currentItem.icon || "";
-  }
-  function onChange3() {
-    let action2 = new SetIcon(currentItem, select3.value);
-    action(action2);
-  }
-
+  // [REMOVED] .js/ui/icon.js (icon_exports, select3, init7, update3, onChange3)
   // .js/ui/shape.js
   var shape_exports = {};
   __export(shape_exports, {
     init: () => init8,
     update: () => update4
   });
-
   // .js/shape/shape.js
   var VERTICAL_OFFSET = 0.5;
   var Shape = class {
@@ -1101,7 +1052,6 @@
     }
   };
   var repo3 = new Map();
-
   // .js/shape/box.js
   var Box = class extends Shape {
     constructor() {
@@ -1109,7 +1059,6 @@
     }
   };
   new Box();
-
   // .js/shape/ellipse.js
   var Ellipse = class extends Shape {
     constructor() {
@@ -1117,7 +1066,6 @@
     }
   };
   new Ellipse();
-
   // .js/shape/underline.js
   var VERTICAL_OFFSET2 = -4;
   var Underline = class extends Shape {
@@ -1142,7 +1090,6 @@
     }
   };
   new Underline();
-
   // .js/ui/shape.js
   var select4 = document.querySelector("#shape");
   function init8() {
@@ -1162,7 +1109,6 @@
     let action2 = new SetShape(currentItem, shape);
     action(action2);
   }
-
   // .js/ui/status.js
   var status_exports = {};
   __export(status_exports, {
@@ -1197,7 +1143,6 @@
     let action2 = new SetStatus(currentItem, status);
     action(action2);
   }
-
   // .js/ui/tip.js
   var tip_exports = {};
   __export(tip_exports, {
@@ -1215,7 +1160,6 @@
     node7.removeEventListener("click", hide);
     node7.hidden = true;
   }
-
   // .js/ui/io.js
   var io_exports = {};
   __export(io_exports, {
@@ -1226,7 +1170,6 @@
     restore: () => restore,
     show: () => show
   });
-
   // .js/ui/backend/backend.js
   var BackendUI = class {
     constructor(backend, label) {
@@ -1309,7 +1252,6 @@
     let options = data.map((item) => new Option(item.name, item.id));
     select7.append(...options);
   }
-
   // .js/backend/backend.js
   var Backend = class {
     constructor(id) {
@@ -1320,7 +1262,6 @@
     }
   };
   var repo5 = new Map();
-
   // .js/backend/local.js
   var Local = class extends Backend {
     constructor() {
@@ -1355,7 +1296,6 @@
       }
     }
   };
-
   // .js/format/format.js
   var Format = class {
     constructor(id, label) {
@@ -1389,7 +1329,6 @@
   function br2nl(str) {
     return str.replace(/<br\s*\/?>/g, "\n");
   }
-
   // .js/ui/backend/local.js
   var LocalUI = class extends BackendUI {
     constructor() {
@@ -1459,7 +1398,6 @@
       }
     }
   };
-
   // .js/backend/file.js
   var File = class extends Backend {
     constructor() {
@@ -1496,7 +1434,6 @@
       });
     }
   };
-
   // .js/format/native.js
   var Native = class extends Format {
     constructor() {
@@ -1511,7 +1448,6 @@
       return JSON.parse(data);
     }
   };
-
   // .js/format/freemind.js
   var Native2 = class extends Format {
     constructor(id = "freemind", label = "FreeMind") {
@@ -1628,7 +1564,6 @@
       return json;
     }
   };
-
   // .js/format/mma.js
   var MMA = class extends Native2 {
     constructor() {
@@ -1682,7 +1617,6 @@
       return json;
     }
   };
-
   // .js/format/mup.js
   var Native3 = class extends Format {
     constructor() {
@@ -1758,7 +1692,6 @@
     }
     return result;
   }
-
   // .js/format/plaintext.js
   var Plaintext = class extends Format {
     constructor() {
@@ -1832,14 +1765,12 @@
   function parsePrefix(line) {
     return line.match(/^\s*/)[0];
   }
-
   // .js/ui/format-select.js
   var all = [Native, Native2, MMA, Native3, Plaintext].map((ctor) => new ctor());
   function fill(select7) {
     let nodes = all.map((bui) => bui.option);
     select7.append(...nodes);
   }
-
   // .js/ui/backend/file.js
   var FileUI = class extends BackendUI {
     constructor() {
@@ -1881,7 +1812,6 @@
       super.submit();
     }
   };
-
   // .js/backend/webdav.js
   var WebDAV = class extends Backend {
     constructor() {
@@ -1907,12 +1837,10 @@
         return text;
       } else {
         throw new Error(`HTTP/${response.status}
-
 ${text}`);
       }
     }
   };
-
   // .js/ui/backend/webdav.js
   var WebDAVUI = class extends BackendUI {
     constructor() {
@@ -1967,7 +1895,6 @@ ${text}`);
       }
     }
   };
-
   // .js/backend/image.js
   var ImageBackend = class extends Backend {
     constructor() {
@@ -2010,7 +1937,6 @@ ${text}`);
       img.onload = () => resolve(img);
     });
   }
-
   // .js/ui/backend/image.js
   var ImageUI = class extends BackendUI {
     constructor() {
@@ -2026,7 +1952,6 @@ ${text}`);
     load() {
     }
   };
-
   // .js/backend/gdrive.js
   var SCOPE = "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.install";
   var CLIENT_ID = "767837575056-h87qmlhmhb3djhaaqta5gv2v3koa9hii.apps.googleusercontent.com";
@@ -2171,7 +2096,6 @@ ${text}`);
       });
     });
   }
-
   // .js/ui/backend/gdrive.js
   var GDriveUI = class extends BackendUI {
     constructor() {
@@ -2236,7 +2160,6 @@ ${text}`);
       return data;
     }
   };
-
   // .js/backend/firebase.js
   var Firebase = class extends Backend {
     constructor() {
@@ -2396,7 +2319,6 @@ ${text}`);
       return result.user;
     }
   };
-
   // .js/ui/backend/firebase.js
   var FirebaseUI = class extends BackendUI {
     constructor() {
@@ -2547,7 +2469,6 @@ ${text}`);
       this.go.textContent = this.mode.charAt(0).toUpperCase() + this.mode.substring(1);
     }
   };
-
   // .js/ui/io.js
   var currentMode = "load";
   var currentBackend = null;
@@ -2650,7 +2571,6 @@ ${text}`);
       history.replaceState(null, "", "?" + arr.join("&"));
     }
   }
-
   // .js/ui/context-menu.js
   var node9 = document.querySelector("#context-menu");
   var port;
@@ -2700,7 +2620,6 @@ ${text}`);
   function close3() {
     node9.hidden = true;
   }
-
   // .js/ui/ui.js
   var node10 = document.querySelector("#ui");
   function isActive2() {
@@ -2714,7 +2633,7 @@ ${text}`);
     return node10.hidden ? 0 : node10.offsetWidth;
   }
   function update6() {
-    [layout_exports, shape_exports, icon_exports, value_exports, status_exports].forEach((ui5) => ui5.update());
+    [layout_exports, shape_exports, value_exports, status_exports].forEach((ui5) => ui5.update());
   }
   function onClick3(e) {
     let target = e.target;
@@ -2740,7 +2659,6 @@ ${text}`);
     [
       layout_exports,
       shape_exports,
-      icon_exports,
       value_exports,
       status_exports,
       color_exports,
@@ -2760,7 +2678,6 @@ ${text}`);
     node10.addEventListener("click", onClick3);
     restore();
   }
-
   // .js/command/command.js
   var PAN_AMOUNT = 15;
   function isMac() {
@@ -3041,7 +2958,6 @@ ${text}`);
       currentMap.ensureItemVisibility(item);
     }
   }();
-
   // .js/item.js
   var TOGGLE_SIZE = 6;
   var UPDATE_OPTIONS = {
@@ -3053,7 +2969,6 @@ ${text}`);
       this._id = generateId();
       this._parent = null;
       this._collapsed = false;
-      this._icon = "";
       this._notes = "";
       this._color = "";
       this._textColor = "";
@@ -3069,7 +2984,6 @@ ${text}`);
         content: node("div"),
         notes: node("div"),
         status: node("span"),
-        icon: node("span"),
         value: node("span"),
         text: node("div"),
         toggle: buildToggle()
@@ -3080,15 +2994,13 @@ ${text}`);
       dom.content.classList.add("content");
       dom.notes.classList.add("notes");
       dom.status.classList.add("status");
-      dom.icon.classList.add("icon");
       dom.value.classList.add("value");
       dom.text.classList.add("text");
-      dom.icon.classList.add("icon");
       this.notes = "";
       let fo = foreignObject();
       dom.node.append(dom.connectors, fo);
       fo.append(dom.content);
-      dom.content.append(dom.status, dom.value, dom.icon, dom.text, dom.notes);
+      dom.content.append(dom.status, dom.value, dom.text, dom.notes);
       dom.toggle.addEventListener("click", (_) => {
         this.collapsed = !this.collapsed;
         selectItem(this);
@@ -3153,9 +3065,6 @@ ${text}`);
       if (this._textColor) {
         data.textColor = this._textColor;
       }
-      if (this._icon) {
-        data.icon = this._icon;
-      }
       if (this._value !== null) {
         data.value = this._value;
       }
@@ -3192,9 +3101,6 @@ ${text}`);
       }
       if (data.textColor) {
         this._textColor = data.textColor;
-      }
-      if (data.icon) {
-        this._icon = data.icon;
       }
       if (data.value !== void 0) {
         this._value = data.value;
@@ -3238,10 +3144,6 @@ ${text}`);
       if (this._textColor != data.textColor) {
         this._textColor = data.textColor || "";
         dirty = 2;
-      }
-      if (this._icon != data.icon) {
-        this._icon = data.icon || "";
-        dirty = 1;
       }
       if (this._value != data.value) {
         this._value = data.value || null;
@@ -3316,7 +3218,6 @@ ${text}`);
       }
       publish("item-change", this);
       this.updateStatus();
-      this.updateIcon();
       this.updateValue();
       const { resolvedLayout, resolvedShape, dom } = this;
       const { content, node: node11, connectors } = dom;
@@ -3409,13 +3310,6 @@ ${text}`);
       } else {
         return status;
       }
-    }
-    get icon() {
-      return this._icon;
-    }
-    set icon(icon) {
-      this._icon = icon;
-      this.update();
     }
     get side() {
       return this._side;
@@ -3594,15 +3488,6 @@ ${text}`);
           break;
       }
     }
-    updateIcon() {
-      var icon = this._icon;
-      this.dom.icon.className = "icon";
-      this.dom.icon.hidden = !icon;
-      if (icon) {
-        this.dom.icon.classList.add("fa");
-        this.dom.icon.classList.add(icon);
-      }
-    }
     updateValue() {
       const { dom, _value } = this;
       if (_value === null) {
@@ -3675,7 +3560,6 @@ ${text}`);
   }
   var COLOR = "#999";
   var RE = /\b(([a-z][\w-]+:\/\/\w)|(([\w-]+\.){2,}[a-z][\w-]+)|([\w-]+\.[a-z][\w-]+\/))[^\s]*([^\s,.;:?!<>\(\)\[\]'"])?($|\b)/i;
-
   // .js/map.js
   var css = "";
   var UPDATE_OPTIONS2 = {
@@ -3931,7 +3815,6 @@ ${text}`);
     let response = await fetch("map.css");
     css = await response.text();
   }
-
   // .js/keyboard.js
   function handleEvent2(e) {
     if (isActive2()) {
@@ -3954,7 +3837,6 @@ ${text}`);
   function keyOK(key, e) {
     return Object.entries(key).every(([key2, value]) => e[key2] == value);
   }
-
   // .js/mouse.js
   var TOUCH_DELAY = 500;
   var SHADOW_OFFSET = 5;
@@ -4191,7 +4073,6 @@ ${text}`);
       return [e.clientX, e.clientY];
     }
   }
-
   // .js/clipboard.js
   var storedItem = null;
   var mode = "";
@@ -4285,7 +4166,6 @@ ${text}`);
     storedItem = null;
     mode = "";
   }
-
   // .js/title.js
   function onItemChange(_message, publisher) {
     if (publisher.isRoot && publisher.map == currentMap) {
@@ -4295,7 +4175,6 @@ ${text}`);
   function init18() {
     subscribe("item-change", onItemChange);
   }
-
   // .js/command/select.js
   new class Select extends Command {
     constructor() {
@@ -4347,7 +4226,6 @@ ${text}`);
       }
     }();
   }
-
   // .js/command/edit.js
   new class Edit extends Command {
     constructor() {
@@ -4520,7 +4398,6 @@ ${text}`);
       action(action2);
     }
   }();
-
   // .js/my-mind.js
   var port3 = document.querySelector("main");
   var throbber = document.querySelector("#throbber");
