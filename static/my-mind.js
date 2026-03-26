@@ -2019,15 +2019,24 @@ ${text}`);
   }
   function restore() {
     let parts = {};
-    location.search.substring(1).split("&").forEach((item) => {
-      let keyvalue = item.split("=").map(decodeURIComponent);
-      parts[keyvalue[0]] = keyvalue[1];
-    });
-    if ("map" in parts) {
-      parts.url = parts.map;
-    }
-    if ("url" in parts && !("b" in parts)) {
+    const pathMatch = location.pathname.match(/^\/m\/(.+)$/);
+    if (pathMatch) {
+      parts.url = decodeURIComponent(pathMatch[1]);
       parts.b = "webdav";
+    } else {
+      location.search.substring(1).split("&").forEach((item) => {
+        let keyvalue = item.split("=").map(decodeURIComponent);
+        parts[keyvalue[0]] = keyvalue[1];
+      });
+      if ("map" in parts) {
+        parts.url = parts.map;
+      }
+      if ("f" in parts) {
+        parts.url = parts.f;
+      }
+      if ("url" in parts && !("b" in parts)) {
+        parts.b = "webdav";
+      }
     }
     let backend = repo4.get(parts.b);
     if (backend) {
@@ -2072,11 +2081,16 @@ ${text}`);
   }
   function updateURL() {
     let data = currentBackend && currentBackend.getState();
-    if (!data) {
-      history.replaceState(null, "", ".");
+    if (!data || !data.url) {
+      history.replaceState(null, "", "/");
     } else {
-      let arr = Object.entries(data).map((pair) => pair.map(encodeURIComponent).join("="));
-      history.replaceState(null, "", "?" + arr.join("&"));
+      const filename = data.url;
+      if (filename && !filename.includes("/") && filename.endsWith(".mymind")) {
+        history.replaceState(null, "", `/m/${encodeURIComponent(filename)}`);
+      } else {
+        let arr = Object.entries(data).map((pair) => pair.map(encodeURIComponent).join("="));
+        history.replaceState(null, "", "?" + arr.join("&"));
+      }
     }
   }
 
