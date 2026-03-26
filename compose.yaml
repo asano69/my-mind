@@ -8,7 +8,9 @@ services:
     restart: unless-stopped
     environment:
       PORT: 3000
-      HOST: my-mind.app.internal
+      #BIND:
+      TLS: 1
+      PUBLIC_HOST: my-mind.app.internal
     container_name: my-mind
     networks:
       - traefik_br
