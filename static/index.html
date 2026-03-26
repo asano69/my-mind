@@ -142,33 +142,6 @@
 					<button class="remove">Delete</button>
 				</p>
 			</div>
-			<div id="firebase">
-				<p class="desc">Firebase offers real-time synchronization for true multi-user collaboration.</p>
-				<p data-for="save load">
-					<label><span>Server</span>
-					<input type="text" class="server" /></label>
-				</p>
-				<p data-for="save load">
-					<label><span>Auth</span>
-					<select class="auth">
-						<option value="">(None)</option>
-						<option value="facebook">Facebook</option>
-						<option value="twitter">Twitter</option>
-						<option value="github">GitHub</option>
-						<option value="google">Google</option>
-					</select></label>
-				</p>
-				<p data-for="load">
-					<label><span>Saved maps</span>
-					<select class="list"></select></label>
-				</p>
-				<p class="row" data-for="save load">
-					<button class="go"></button><button class="cancel">Cancel</button>
-				</p>
-				<p class="row" data-for="load">
-					<button class="remove">Delete</button>
-				</p>
-			</div>
 			<div id="webdav">
 				<p class="desc">Use this to access a generic DAV-like REST API.</p>
 				<p data-for="save load">
@@ -179,16 +152,7 @@
 					<button class="go"></button><button class="cancel">Cancel</button>
 				</p>
 			</div>
-			<div id="gdrive">
-				<p class="desc">Maps stored in Google Drive have a permalink URL and can be shared with other users, if you allow this by setting proper permissions (inside Google Drive itself).</p>
-				<p data-for="save">
-					<label><span>Format</span>
-					<select class="format"></select></label>
-				</p>
-				<p class="row" data-for="save load">
-					<button class="go"></button><button class="cancel">Cancel</button>
-				</p>
-			</div>
+
 		</div>
 		<div id="help" class="pane" hidden>
 			<h3>Help</h3>
@@ -219,9 +183,6 @@
 			<button data-command="redo"></button>
 			<button data-command="center"></button>
 		</div>
-		<script src="https://www.gstatic.com/firebasejs/5.5.2/firebase-app.js"></script>
-		<script src="https://www.gstatic.com/firebasejs/5.5.2/firebase-database.js"></script>
-		<script src="https://www.gstatic.com/firebasejs/5.5.2/firebase-auth.js"></script>
 		<script src="my-mind.js"></script>
 
 		<script>
