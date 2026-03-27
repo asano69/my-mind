@@ -2431,11 +2431,7 @@
       if (!confirm("Throw away your current map and start a new one?")) {
         return;
       }
-      const now = /* @__PURE__ */ new Date();
-      const yy = String(now.getFullYear()).slice(2);
-      const mm = String(now.getMonth() + 1).padStart(2, "0");
-      const dd = String(now.getDate()).padStart(2, "0");
-      const filename = `${yy}${mm}${dd}.mymind`;
+      const filename = `${Math.floor(Date.now() / 1e3)}.mymind`;
       window.history.pushState(null, "", `/m/${filename}`);
       restore();
     }
