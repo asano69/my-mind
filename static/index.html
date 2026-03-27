@@ -186,6 +186,13 @@
 			<button data-command="redo"></button>
 			<button data-command="center"></button>
 		</div>
+		<script>
+		  document.addEventListener("keydown", function(e) {
+		    if (e.ctrlKey && e.key === "s") {
+		      e.preventDefault();
+		    }
+		  }, { capture: true });
+		</script>
 		<script src="my-mind.js"></script>
 
 	</body>
