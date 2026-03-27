@@ -405,7 +405,7 @@
     do() {
       this.item.text = this.text;
       let numText = Number(this.text);
-      if (String(numText) == this.text) {
+      if (!this.item.isRoot && String(numText) == this.text) {
         this.item.value = numText;
       }
     }
