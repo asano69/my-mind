@@ -2566,7 +2566,7 @@
   }();
 
   // .js/item.js
-  var TOGGLE_SIZE = 6;
+  var TOGGLE_SIZE = 7;
   var UPDATE_OPTIONS = {
     parent: true,
     children: false
