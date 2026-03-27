@@ -34,12 +34,12 @@ function showToast(message: string) {
 export default class WebDAVUI extends BackendUI<WebDAV> {
 	protected current = "";
 
-	constructor() {
-		super(new WebDAV(), "Generic WebDAV");
-
-		this.url.value = localStorage.getItem(`${this.prefix}.url`) || "";
-	}
-
+  constructor() {
+      super(new WebDAV(), "Generic WebDAV");
+      const { protocol, host } = window.location;
+      this.url.value = `${protocol}//${host}/maps`;
+      localStorage.setItem(`${this.prefix}.url`, this.url.value);
+  }
 
 	get url() { return this.node.querySelector<HTMLInputElement>(".url")!; }
 
