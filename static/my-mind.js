@@ -1928,6 +1928,8 @@
       let data = repo6.get("native").to(json);
       try {
         await this.backend.save(data, url);
+        const filename = url.split("/").pop().replace(/\.mymind$/, "");
+        showToast(`Saved: ${filename}`);
         this.saveDone();
       } catch (e) {
         this.error(e);
