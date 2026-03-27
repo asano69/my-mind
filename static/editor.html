@@ -4,96 +4,87 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1.0" />
     <title></title>
-    <link rel="stylesheet" type="text/css" href="https://unpkg.com/pell/dist/pell.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/vditor/dist/index.css">
     <style>
+        * { box-sizing: border-box; }
         body {
             margin: 0;
             padding: 0;
-        }
-
-        main {
             height: 100vh;
-            display: flex;
-            flex-direction: column;
+            overflow: hidden;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         }
-
-        .pell-content {
-            flex: auto;
+        #editor {
+            height: 100vh;
         }
-
+        /* ツールバーを小さく */
+        .vditor-toolbar {
+            padding: 2px 4px !important;
+        }
+        .vditor-toolbar__item button {
+            height: 26px !important;
+            width: 26px !important;
+        }
     </style>
 </head>
 <body>
-    <main></main>
-    <script src="https://unpkg.com/pell"></script>
+    <div id="editor"></div>
+    <script src="https://unpkg.com/vditor/dist/index.min.js"></script>
     <script>
+        function sendMessage(action, value) {
+            window.parent.postMessage({ action: action, value: value }, '*');
+        }
 
-        var sendMessage = function(action, value) {
-            window.parent.postMessage({
-                action: action,
-                value: value
-            }, '*');
-        };
-
-        window.addEventListener("message", function(e) {
-            if (e.data && e.data.action) {
-                switch (e.data.action) {
-                    case "setContent":
-                        window.editor.content.innerHTML = e.data.value;
-                        break;
-
-                    case "getContent":
-                        sendMessage('setContent', window.editor.content.innerHTML);
-                        break;
+        var vditor = new Vditor('editor', {
+            height: window.innerHeight,
+            mode: 'wysiwyg',
+            theme: 'classic',
+            toolbar: [
+                'headings', 'bold', 'italic', 'strike', '|',
+                'line', 'quote', 'list', 'ordered-list', 'code', 'inline-code', '|',
+                'link', 'upload', 'table', '|',
+                {
+                    name: 'close',
+                    tip: 'ノートを閉じる',
+                    icon: '<svg viewBox="0 0 16 16" width="16" height="16"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+                    click: function() { sendMessage('closeEditor', true); }
                 }
+            ],
+            toolbarConfig: { pin: true },
+            cache: { enable: false },
+            preview: {
+                markdown: {
+                    toc: false,
+                    autoSpace: false,
+                }
+            },
+            after: function() {
+                // 親からの初期コンテンツ受信に備えて準備完了を通知
+                sendMessage('editorReady', true);
+            },
+            input: function(value) {
+                sendMessage('setContent', value);
             }
-        }, false);
+        });
 
-            window.editor = window.pell.init({
-                element: document.querySelector("main"),
-                onChange(html) {
-                    sendMessage("setContent", html);
-                },
-                defaultParagraphSeparator: 'div',
-                styleWithCSS: false,
-                actions: [
-                    'bold',
-                    'italic',
-                    'underline',
-                    'strikethrough',
-                    'heading1',
-                    'heading2',
-                    'paragraph',
-                    'quote',
-                    'olist',
-                    'ulist',
-                    'code',
-                    'line',
-                    {
-                        name: 'link',
-                        result: function() {
-                            const url = window.prompt('Enter the link URL');
-                            if (url) {
-                                window.pell.exec('createLink', url);
-                            }
-                        }
-                    },
-                    {
-                        name: 'close',
-                        icon: 'Close',
-                        title: 'Close Notes',
-                        result: function() {
-                            sendMessage('closeEditor', true);
-                        }
+        window.addEventListener('message', function(e) {
+            if (!e.data || !e.data.action) { return; }
+            switch (e.data.action) {
+                case 'setContent':
+                    var val = e.data.value || '';
+                    if (vditor.getValue() !== val) {
+                        vditor.setValue(val);
                     }
-                ],
-                classes: {
-                    actionbar: 'pell-actionbar',
-                    button: 'pell-button',
-                    content: 'pell-content',
-                    selected: 'pell-button-selected'
-                }
-            })
+                    break;
+                case 'getContent':
+                    sendMessage('setContent', vditor.getValue());
+                    break;
+            }
+        });
+
+        window.addEventListener('resize', function() {
+            vditor.destroy();
+        });
     </script>
 </body>
 </html>
