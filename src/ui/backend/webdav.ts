@@ -92,33 +92,31 @@ export default class WebDAVUI extends BackendUI<WebDAV> {
   	}
   }
   async load(url = this.url.value) {
-        this.current = url;
-        app.setThrobber(true);
-        var lastIndex = url.lastIndexOf("/");
-        this.url.value = url.substring(0, lastIndex);
-        localStorage.setItem(`${this.prefix}.url`, this.url.value);
-        try {
-            let data = await this.backend.load(url);
-            let json = formatRepo.get("native")!.from(data);
-            this.loadDone(json);
-        } catch (e: any) {
-            if (e && e.status === 404) {
-                const filename = url.split("/").pop()!.replace(/\.mymind$/, "");
-                const id = Math.random().toString(36).slice(2, 10).replace(/[0-9]/g, c =>
-                            String.fromCharCode(97 + parseInt(c)));
-                const emptyJson = {
-                    root: {
-                        id,
-                        text: filename,
-                        notes: "",
-                        layout: "map"
-                    }
-                };
-                showToast(`New Map: ${filename}.mymind`);
-                this.loadDone(emptyJson);
-            } else {
-                this.error(e);
-            }
-        }
-    }
+      // urlがベースURL（ファイル名なし）の場合はそのまま返す
+      if (url === this.url.value || !url.match(/\.mymind$/)) {
+          app.setThrobber(false);
+          return;
+      }
+      this.current = url;
+      app.setThrobber(true);
+      // url.valueは固定なので書き換えない
+      try {
+          let data = await this.backend.load(url);
+          let json = formatRepo.get("native")!.from(data);
+          this.loadDone(json);
+      } catch (e: any) {
+          if (e && e.status === 404) {
+              const filename = url.split("/").pop()!.replace(/\.mymind$/, "");
+              const id = Math.random().toString(36).slice(2, 10).replace(/[0-9]/g, c =>
+                  String.fromCharCode(97 + parseInt(c)));
+              const emptyJson = {
+                  root: { id, text: filename, notes: "", layout: "map" }
+              };
+              showToast(`New Map: ${filename}`);
+              this.loadDone(emptyJson);
+          } else {
+              this.error(e);
+          }
+      }
+  }
 }
