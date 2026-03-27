@@ -1884,7 +1884,9 @@
     constructor() {
       super(new WebDAV(), "Generic WebDAV");
       this.current = "";
-      this.url.value = localStorage.getItem(`${this.prefix}.url`) || "";
+      const { protocol, host } = window.location;
+      this.url.value = `${protocol}//${host}/maps`;
+      localStorage.setItem(`${this.prefix}.url`, this.url.value);
     }
     get url() {
       return this.node.querySelector(".url");
@@ -2045,7 +2047,7 @@
       let bui = new ctor();
       select5.append(bui.option);
     });
-    select5.value = localStorage.getItem(`${PREFIX}.backend`) || "file";
+    select5.value = localStorage.getItem(`${PREFIX}.backend`) || "webdav";
     select5.addEventListener("change", syncBackend);
     subscribe("map-new", (_) => setCurrentBackend(null));
     subscribe("save-done", onDone);
