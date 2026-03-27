@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"embed"
 	"fmt"
 	"html/template"
 	"io"
@@ -11,6 +12,12 @@ import (
 	"strings"
 	"time"
 )
+
+// catalog.html をバイナリに埋め込みます
+// パスはプロジェクト構成に合わせて調整してください
+//
+//go:embed catalog.html
+var embeddedFiles embed.FS
 
 var mimeTypes = map[string]string{
 	".html":   "text/html; charset=utf-8",
@@ -36,11 +43,14 @@ type Handler struct {
 }
 
 func New(staticDir, mapsDir string) *Handler {
-	tmplPath := filepath.Join(filepath.Dir(staticDir), "internal/handler/catalog.html")
-	tmpl := template.Must(template.ParseFiles(tmplPath))
-	return &Handler{StaticDir: staticDir, MapsDir: mapsDir, listTmpl: tmpl}
-}
+	tmpl := template.Must(template.ParseFS(embeddedFiles, "catalog.html"))
 
+	return &Handler{
+		StaticDir: staticDir,
+		MapsDir:   mapsDir,
+		listTmpl:  tmpl,
+	}
+}
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 	fmt.Printf("[%s] %s\n", r.Method, path)
@@ -68,6 +78,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		case path == "/" || path == "":
 			now := time.Now()
+			// YYMMDD.mymind 形式のファイル名を作成
 			filename := fmt.Sprintf("%02d%02d%02d.mymind", now.Year()%100, now.Month(), now.Day())
 			http.Redirect(w, r, "/m/"+filename, http.StatusFound)
 		default:
