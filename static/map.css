@@ -89,8 +89,16 @@ svg > .item > .item > foreignObject > .content {
 .item:not(.current):not(.collapsed) > .toggle {
   display: none;
 }
-.item.current > foreignObject > .content {
-  background-color: rgba(255, 255, 187, 0.9);
+
+/* 選択ノード：黄色ハイライト（box・ellipse両対応） */
+.item.current > foreignObject > .content,
+[data-shape=box].item.current > foreignObject > .content,
+[data-shape=ellipse].item.current > foreignObject > .content {
+  background: rgba(255, 255, 187, 0.9) !important;
+  box-shadow:
+    0 0 0 2px rgba(200, 180, 0, 0.5),
+    0 2px 6px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 /* ボックス：影・グラデ・ホバー */
