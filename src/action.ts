@@ -216,7 +216,9 @@ export class SetText extends Action {
 	do() {
 		this.item.text = this.text;
 		let numText = Number(this.text);
-		if (String(numText) == this.text) { this.item.value = numText; }
+		// ルートノードは数値自動設定しない
+		if (!this.item.isRoot && String(numText) == this.text) { this.item.value = numText; }
+
 	}
 
 	undo() {
