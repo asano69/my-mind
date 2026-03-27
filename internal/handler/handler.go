@@ -36,7 +36,7 @@ type Handler struct {
 }
 
 func New(staticDir, mapsDir string) *Handler {
-	tmplPath := filepath.Join(filepath.Dir(staticDir), "internal/handler/list.html")
+	tmplPath := filepath.Join(filepath.Dir(staticDir), "internal/handler/catalog.html")
 	tmpl := template.Must(template.ParseFiles(tmplPath))
 	return &Handler{StaticDir: staticDir, MapsDir: mapsDir, listTmpl: tmpl}
 }
@@ -52,7 +52,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	case http.MethodGet:
 		switch {
-		case path == "/list":
+		case path == "/catalog":
 			h.listMaps(w)
 		case strings.HasPrefix(path, "/maps/"):
 			h.getMap(w, path)
