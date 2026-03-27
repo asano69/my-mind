@@ -6,20 +6,27 @@
   <title>Maps</title>
   <style>
     * { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; }
-
     html, body {
       margin: 0;
       height: 100%;
       background-color: #f5ede4;
       color: #2c2015;
     }
-
+    body {
+      position: relative;
+    }
+    .catalog-link {
+      position: fixed;
+      top: 8px;
+      left: 8px;
+      z-index: 10;
+      display: block;
+    }
     main {
       max-width: 480px;
       margin: 3rem auto;
       padding: 0 1.5rem;
     }
-
     h1 {
       font-size: 13px;
       text-transform: uppercase;
@@ -27,7 +34,37 @@
       color: #000;
       margin: 0 0 1rem 0;
     }
-
+    .search-wrap {
+      position: relative;
+      margin-bottom: 1rem;
+    }
+    .search-wrap::before {
+      content: "⌕";
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      color: rgba(0,0,0,0.3);
+      pointer-events: none;
+    }
+    input[type="search"] {
+      width: 100%;
+      box-sizing: border-box;
+      background-color: #faf7f4;
+      border: 1px solid rgba(44,32,21,0.15);
+      font-size: 13px;
+      letter-spacing: 0.03em;
+      border-radius: 6px;
+      padding: 8px 10px 8px 30px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.10);
+      transition: border-color 200ms, box-shadow 200ms;
+      -webkit-appearance: none;
+    }
+    input[type="search"]:focus {
+      border-color: rgba(90,74,58,0.45);
+      outline: none;
+    }
     ul {
       list-style: none;
       padding: 0;
@@ -37,14 +74,12 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.10);
       overflow: hidden;
     }
-
     li {
       border-bottom: 1px solid rgba(0,0,0,0.07);
     }
     li:last-child {
       border-bottom: none;
     }
-
     li a {
       display: flex;
       justify-content: space-between;
@@ -61,16 +96,12 @@
     li a:hover .date {
       color: rgba(255,255,255,0.6);
     }
-
-    .name {
-      font-size: 14px;
-    }
+    .name { font-size: 14px; }
     .date {
       font-size: 12px;
       color: rgba(0,0,0,0.4);
       letter-spacing: 0.03em;
     }
-
     .empty {
       background-color: #ede0d4;
       border-radius: 6px;
@@ -79,15 +110,22 @@
       color: rgba(0,0,0,0.4);
       box-shadow: 0 4px 12px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.10);
     }
+    li[hidden] { display: none; }
   </style>
 </head>
 <body>
+  <a href="/catalog" target="_self" class="catalog-link">
+    <img src="img/catalog.png" alt="Catalog" />
+  </a>
   <main>
-    <h1>Maps</h1>
+    <h1>Index</h1>
     {{if .}}
-    <ul>
+    <div class="search-wrap">
+      <input type="search" id="search" placeholder="filter..." autofocus>
+    </div>
+    <ul id="list">
       {{range .}}
-      <li>
+      <li data-name="{{.Name}}">
         <a href="{{.URL}}">
           <span class="name">{{.Name}}</span>
           <span class="date">{{.ModTime.Format "2006-01-02 15:04"}}</span>
@@ -96,8 +134,19 @@
       {{end}}
     </ul>
     {{else}}
-    <p class="empty">マップがありません。</p>
+    <p class="empty">no maps found.</p>
     {{end}}
   </main>
+  <script>
+    const search = document.getElementById('search');
+    if (search) {
+      search.addEventListener('input', () => {
+        const q = search.value.toLowerCase();
+        document.querySelectorAll('#list li').forEach(li => {
+          li.hidden = !li.dataset.name.toLowerCase().includes(q);
+        });
+      });
+    }
+  </script>
 </body>
 </html>
