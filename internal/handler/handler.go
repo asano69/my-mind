@@ -92,6 +92,20 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 		}
 
+	case http.MethodPatch:
+		if strings.HasPrefix(path, "/maps/") {
+			h.renameMap(w, r, path)
+		} else {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+		}
+
+	case http.MethodDelete:
+		if strings.HasPrefix(path, "/maps/") {
+			h.deleteMap(w, path)
+		} else {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+		}
+
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
@@ -214,6 +228,84 @@ func (h *Handler) putMap(w http.ResponseWriter, r *http.Request, path string) {
 	w.WriteHeader(http.StatusCreated)
 }
 
+// renameMap は PATCH /maps/{name}.mymind を処理する。
+// リクエストボディには新しいベース名（拡張子なし）をプレーンテキストで指定する。
+func (h *Handler) renameMap(w http.ResponseWriter, r *http.Request, path string) {
+	srcRel := strings.TrimPrefix(path, "/maps")
+	srcPath, err := safeJoin(h.MapsDir, srcRel)
+	if err != nil {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	// 元ファイルの存在確認
+	if _, err := os.Stat(srcPath); err != nil {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
+	}
+
+	// 新しい名前をボディから読む
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read body", http.StatusInternalServerError)
+		return
+	}
+	defer r.Body.Close()
+
+	newName := strings.TrimSpace(string(bodyBytes))
+	if newName == "" {
+		http.Error(w, "New name is required", http.StatusBadRequest)
+		return
+	}
+	// 拡張子が付いていなければ補完する
+	if !strings.HasSuffix(newName, ".mymind") {
+		newName += ".mymind"
+	}
+	// パストラバーサル防止
+	if strings.ContainsAny(newName, `/\`) {
+		http.Error(w, "Invalid name", http.StatusBadRequest)
+		return
+	}
+
+	dstPath := filepath.Join(h.MapsDir, newName)
+
+	// 同名ファイルが既に存在する場合は拒否
+	if _, err := os.Stat(dstPath); err == nil {
+		http.Error(w, "Already exists", http.StatusConflict)
+		return
+	}
+
+	if err := os.Rename(srcPath, dstPath); err != nil {
+		http.Error(w, "Failed to rename", http.StatusInternalServerError)
+		return
+	}
+	fmt.Printf("[Renamed] %s -> %s\n", srcPath, dstPath)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// deleteMap は DELETE /maps/{name}.mymind を処理する。
+func (h *Handler) deleteMap(w http.ResponseWriter, path string) {
+	rel := strings.TrimPrefix(path, "/maps")
+	fpath, err := safeJoin(h.MapsDir, rel)
+	if err != nil {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	info, err := os.Stat(fpath)
+	if err != nil || info.IsDir() {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
+	}
+
+	if err := os.Remove(fpath); err != nil {
+		http.Error(w, "Failed to delete", http.StatusInternalServerError)
+		return
+	}
+	fmt.Printf("[Deleted] %s\n", fpath)
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func safeJoin(base, reqPath string) (string, error) {
 	reqPath = strings.TrimPrefix(reqPath, "/")
 	clean := filepath.Clean(reqPath)
@@ -225,7 +317,7 @@ func safeJoin(base, reqPath string) (string, error) {
 
 func setCORSHeaders(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, PATCH, DELETE, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
 	w.Header().Set("Access-Control-Max-Age", "86400")
 	w.Header().Set("X-Frame-Options", "SAMEORIGIN")
