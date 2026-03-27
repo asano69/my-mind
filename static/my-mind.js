@@ -2431,8 +2431,13 @@
       if (!confirm("Throw away your current map and start a new one?")) {
         return;
       }
-      showMap(new Map2());
-      publish("map-new", this);
+      const now = /* @__PURE__ */ new Date();
+      const yy = String(now.getFullYear()).slice(2);
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const dd = String(now.getDate()).padStart(2, "0");
+      const filename = `${yy}${mm}${dd}.mymind`;
+      window.history.pushState(null, "", `/m/${filename}`);
+      restore();
     }
   }();
   new class ZoomIn extends Command {
