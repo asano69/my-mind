@@ -194,33 +194,15 @@
   previewEl.innerHTML = '<div id="note-preview-inner"></div>';
   document.querySelector("main").appendChild(previewEl);
   var previewInner = previewEl.querySelector("#note-preview-inner");
-  var _md = null;
-  function renderMarkdown(md) {
-    if (!_md) {
-      const textarea = document.createElement("textarea");
-      textarea.style.display = "none";
-      document.body.appendChild(textarea);
-      _md = new EasyMDE({
-        element: textarea,
-        autoDownloadFontAwesome: false,
-        toolbar: false,
-        status: false
-      });
-      const wrap = textarea.nextElementSibling;
-      if (wrap)
-        wrap.style.display = "none";
-    }
-    return _md.markdown(md);
-  }
   function sendToEditor(content) {
     var _a;
     (_a = iframe.contentWindow) === null || _a === void 0 ? void 0 : _a.postMessage({ action: "setContent", value: content }, "*");
   }
   function updatePreview(notes) {
-    var _a;
+    var _a, _b;
     const text = (_a = notes === null || notes === void 0 ? void 0 : notes.trim()) !== null && _a !== void 0 ? _a : "";
     if (text) {
-      previewInner.innerHTML = renderMarkdown(text);
+      (_b = iframe.contentWindow) === null || _b === void 0 ? void 0 : _b.postMessage({ action: "renderMarkdown", value: text }, "*");
       previewEl.hidden = false;
     } else {
       previewEl.hidden = true;
@@ -244,6 +226,9 @@
       return;
     }
     switch (e.data.action) {
+      case "renderedMarkdown":
+        previewInner.innerHTML = e.data.value;
+        break;
       case "setContent":
         currentItem.notes = e.data.value.trim();
         updatePreview(currentItem.notes);

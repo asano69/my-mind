@@ -186,6 +186,10 @@
         if (e.data.action === 'getContent') {
             sendMessage('setContent', currentContent);
         }
+
+        if (e.data.action === 'renderMarkdown') {
+            sendMessage('renderedMarkdown', renderMarkdown(e.data.value));
+        }
     });
 
     window.addEventListener('load', function() {
