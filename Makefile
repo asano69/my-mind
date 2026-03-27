@@ -10,7 +10,7 @@ OUT      := static/$(APP)
 #  デフォルト：ビルド＆サーバー起動
 # ─────────────────────────────────────────
 .PHONY: all
-all: $(OUT) ## my-mind.js をバンドルしてサーバーを起動
+all: $(OUT) ## (*) my-mind.js をバンドルしてサーバーを起動
 	go run cmd/server/main.go
 
 # ─────────────────────────────────────────
@@ -45,8 +45,8 @@ docker-build: ## Docker イメージをビルド
 docker-push: ## Docker イメージをプッシュ
 	docker push registry.internal/my-mind:latest
 
-.PHONY: docker-deploy
-docker-deploy: docker-build docker-push ## Komodo でスタックをデプロイ
+.PHONY: deploy
+deploy: docker-build docker-push ## (*) Komodo でスタックをデプロイ
 	docker exec -it komodo km x -y destroy-stack mymind
 	docker exec -it komodo km x -y pull-stack   mymind
 	docker exec -it komodo km x -y deploy-stack mymind
