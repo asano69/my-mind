@@ -32,6 +32,9 @@ docker-build: ## dockerでビルド
 docker-push: ## dockerでプッシュ
 	docker push registry.internal/my-mind:latest
 
+komodo-deploy: ## komodoでスタックをデプロイする
+	docker exec -it komodo km x -y destroy-stack mymind && docker exec -it komodo km x -y pull-stack mymind && docker exec -it komodo km execute -y  deploy-stack mymind
+
 clean: ## ビルド成果物を削除
 	rm -rf $(JS)
 	rm -f $(OUT)
@@ -40,4 +43,4 @@ help: ## 利用可能なターゲット一覧を表示
 	@echo "Usage: make [target]"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS=":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
 
-.PHONY: all clean watch run-server docker-up docker-build docker-push help
+.PHONY: all clean watch run-server docker-up docker-build docker-push komodo-deploy help
