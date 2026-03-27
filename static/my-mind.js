@@ -188,23 +188,37 @@
   });
   var node4 = document.querySelector("#notes");
   var iframe = node4.querySelector("iframe");
-  function renderMarkdown(md) {
-    return md.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">').replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>').replace(/&(?![a-zA-Z]+;)/g, "&amp;").replace(/^### (.+)$/gm, "<h3>$1</h3>").replace(/^## (.+)$/gm, "<h2>$1</h2>").replace(/^# (.+)$/gm, "<h1>$1</h1>").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>").replace(/`(.+?)`/g, "<code>$1</code>").replace(/^\s*[-*] (.+)$/gm, "<li>$1</li>").replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>").replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br>");
-  }
   var previewEl = document.createElement("div");
   previewEl.id = "note-preview";
   previewEl.hidden = true;
   previewEl.innerHTML = '<div id="note-preview-inner"></div>';
   document.querySelector("main").appendChild(previewEl);
   var previewInner = previewEl.querySelector("#note-preview-inner");
+  var _md = null;
+  function renderMarkdown(md) {
+    if (!_md) {
+      const textarea = document.createElement("textarea");
+      textarea.style.display = "none";
+      document.body.appendChild(textarea);
+      _md = new EasyMDE({
+        element: textarea,
+        autoDownloadFontAwesome: false,
+        toolbar: false,
+        status: false
+      });
+      const wrap = textarea.nextElementSibling;
+      if (wrap)
+        wrap.style.display = "none";
+    }
+    return _md.markdown(md);
+  }
   function sendToEditor(content) {
-    iframe.contentWindow && iframe.contentWindow.postMessage({
-      action: "setContent",
-      value: content
-    }, "*");
+    var _a;
+    (_a = iframe.contentWindow) === null || _a === void 0 ? void 0 : _a.postMessage({ action: "setContent", value: content }, "*");
   }
   function updatePreview(notes) {
-    const text = notes ? notes.trim() : "";
+    var _a;
+    const text = (_a = notes === null || notes === void 0 ? void 0 : notes.trim()) !== null && _a !== void 0 ? _a : "";
     if (text) {
       previewInner.innerHTML = renderMarkdown(text);
       previewEl.hidden = false;
@@ -225,7 +239,8 @@
     node4.hidden = true;
   }
   function onMessage(e) {
-    if (!e.data || !e.data.action) {
+    var _a;
+    if (!((_a = e.data) === null || _a === void 0 ? void 0 : _a.action)) {
       return;
     }
     switch (e.data.action) {
