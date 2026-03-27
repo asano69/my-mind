@@ -2431,8 +2431,9 @@
       if (!confirm("Throw away your current map and start a new one?")) {
         return;
       }
-      showMap(new Map2());
-      publish("map-new", this);
+      const filename = `${Math.floor(Date.now() / 1e3)}.mymind`;
+      window.history.pushState(null, "", `/m/${filename}`);
+      restore();
     }
   }();
   new class ZoomIn extends Command {
