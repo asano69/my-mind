@@ -69,27 +69,28 @@ export default class WebDAVUI extends BackendUI<WebDAV> {
       const fullUrl = (base.endsWith("/") ? base : base + "/") + data.url;
       this.load(fullUrl);
   }
-	async save() {
-		app.setThrobber(true);
-		var map = app.currentMap;
-		var url = this.url.value;
-		localStorage.setItem(`${this.prefix}.url`, url);
-		if (url.match(/\.mymind$/)) { // complete file name
-		} else { // just a path
-			if (url.charAt(url.length-1) != "/") { url += "/"; }
-			url += `${map.name}.${formatRepo.get("native")!.extension}`;
-		}
-		this.current = url;
-		let json = map.toJSON();
-		let data = formatRepo.get("native")!.to(json);
-		try {
-			await this.backend.save(data, url);
-			this.saveDone();
-		} catch (e) {
-			this.error(e);
-		}
-	}
-
+  async save() {
+  	app.setThrobber(true);
+  	var map = app.currentMap;
+  	var url = this.url.value;
+  	localStorage.setItem(`${this.prefix}.url`, url);
+  	if (url.match(/\.mymind$/)) {
+  	} else {
+  		if (url.charAt(url.length-1) != "/") { url += "/"; }
+  		url += `${map.name}.${formatRepo.get("native")!.extension}`;
+  	}
+  	this.current = url;
+  	let json = map.toJSON();
+  	let data = formatRepo.get("native")!.to(json);
+  	try {
+  		await this.backend.save(data, url);
+  		const filename = url.split("/").pop()!.replace(/\.mymind$/, "");
+  		showToast(`Saved: ${filename}`);
+  		this.saveDone();
+  	} catch (e) {
+  		this.error(e);
+  	}
+  }
   async load(url = this.url.value) {
         this.current = url;
         app.setThrobber(true);
