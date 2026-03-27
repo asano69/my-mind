@@ -34,12 +34,15 @@ function showToast(message: string) {
 export default class WebDAVUI extends BackendUI<WebDAV> {
 	protected current = "";
 
-	constructor() {
-		super(new WebDAV(), "Generic WebDAV");
-
-		this.url.value = localStorage.getItem(`${this.prefix}.url`) || "";
-	}
-
+  constructor() {
+      super(new WebDAV(), "Generic WebDAV");
+      const { protocol, host } = window.location;
+      this.url.value = `${protocol}//${host}/maps`;
+      localStorage.setItem(`${this.prefix}.url`, this.url.value);
+      this.filename.addEventListener("keydown", (e: KeyboardEvent) => {
+          if (e.code === "Enter") { this.load(); }
+      });
+  }
 
 	get url() { return this.node.querySelector<HTMLInputElement>(".url")!; }
 
@@ -91,34 +94,39 @@ export default class WebDAVUI extends BackendUI<WebDAV> {
   		this.error(e);
   	}
   }
-  async load(url = this.url.value) {
-        this.current = url;
-        app.setThrobber(true);
-        var lastIndex = url.lastIndexOf("/");
-        this.url.value = url.substring(0, lastIndex);
-        localStorage.setItem(`${this.prefix}.url`, this.url.value);
-        try {
-            let data = await this.backend.load(url);
-            let json = formatRepo.get("native")!.from(data);
-            this.loadDone(json);
-        } catch (e: any) {
-            if (e && e.status === 404) {
-                const filename = url.split("/").pop()!.replace(/\.mymind$/, "");
-                const id = Math.random().toString(36).slice(2, 10).replace(/[0-9]/g, c =>
-                            String.fromCharCode(97 + parseInt(c)));
-                const emptyJson = {
-                    root: {
-                        id,
-                        text: filename,
-                        notes: "",
-                        layout: "map"
-                    }
-                };
-                showToast(`New Map: ${filename}.mymind`);
-                this.loadDone(emptyJson);
-            } else {
-                this.error(e);
-            }
-        }
-    }
+  get filename() { return this.node.querySelector<HTMLInputElement>(".filename")!; }
+
+  async load(url?: string) {
+      // urlが指定されていない場合はfilename入力欄から生成
+      if (!url) {
+          const base = this.url.value.endsWith("/") ? this.url.value : this.url.value + "/";
+          const name = this.filename.value.trim().replace(/\.mymind$/, "");
+          if (!name) { return; }
+          url = base + name + ".mymind";
+      }
+      this.current = url;
+      app.setThrobber(true);
+      // this.url.value は固定なので書き換えない
+      try {
+          let data = await this.backend.load(url);
+          let json = formatRepo.get("native")!.from(data);
+          const filename = url.split("/").pop()!.replace(/\.mymind$/, "");
+          showToast(`Loaded: ${filename}`);
+          this.loadDone(json)
+      } catch (e: any) {
+          if (e && e.status === 404) {
+              const filename = url.split("/").pop()!.replace(/\.mymind$/, "");
+              const id = Math.random().toString(36).slice(2, 10).replace(/[0-9]/g, c =>
+                  String.fromCharCode(97 + parseInt(c)));
+              const emptyJson = {
+                  root: { id, text: filename, notes: "", layout: "map" }
+              };
+              showToast(`New Map: ${filename}`);
+              this.loadDone(emptyJson);
+          } else {
+              this.error(e);
+          }
+      }
+  }
+
 }
