@@ -1938,11 +1938,12 @@
       }
     }
     async load(url = this.url.value) {
+      if (url === this.url.value || !url.match(/\.mymind$/)) {
+        setThrobber(false);
+        return;
+      }
       this.current = url;
       setThrobber(true);
-      var lastIndex = url.lastIndexOf("/");
-      this.url.value = url.substring(0, lastIndex);
-      localStorage.setItem(`${this.prefix}.url`, this.url.value);
       try {
         let data = await this.backend.load(url);
         let json = repo6.get("native").from(data);
@@ -1952,14 +1953,9 @@
           const filename = url.split("/").pop().replace(/\.mymind$/, "");
           const id = Math.random().toString(36).slice(2, 10).replace(/[0-9]/g, (c) => String.fromCharCode(97 + parseInt(c)));
           const emptyJson = {
-            root: {
-              id,
-              text: filename,
-              notes: "",
-              layout: "map"
-            }
+            root: { id, text: filename, notes: "", layout: "map" }
           };
-          showToast(`New Map: ${filename}.mymind`);
+          showToast(`New Map: ${filename}`);
           this.loadDone(emptyJson);
         } else {
           this.error(e);
