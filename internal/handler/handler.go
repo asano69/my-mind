@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 var mimeTypes = map[string]string{
@@ -42,16 +43,20 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else if strings.HasPrefix(path, "/m/") {
 			ext := strings.ToLower(filepath.Ext(path))
 			if ext == "" {
-				// 拡張子なし → .mymind を補完してリダイレクト
 				http.Redirect(w, r, path+".mymind", http.StatusMovedPermanently)
 			} else if ext == ".mymind" {
 				h.serveIndex(w)
 			} else {
-				// /m/my-mind.js → /my-mind.js にパスを書き換えて静的ファイルを返す
 				stripped := strings.TrimPrefix(path, "/m")
 				h.serveStatic(w, stripped)
 			}
 		} else {
+			if path == "/" || path == "" {
+				now := time.Now()
+				filename := fmt.Sprintf("%02d%02d%02d.mymind", now.Year()%100, now.Month(), now.Day())
+				http.Redirect(w, r, "/m/"+filename, http.StatusFound)
+				return
+			}
 			h.serveStatic(w, path)
 		}
 	case http.MethodPut:
