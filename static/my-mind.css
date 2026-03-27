@@ -27,6 +27,10 @@ button:not(:disabled) {
   opacity: 0.5;
   z-index: 1;
 }
+.pane,
+.pane * {
+  font-size: 16px
+}
 .pane {
   position: fixed;
   right: 0;
@@ -63,7 +67,7 @@ button:not(:disabled) {
 .pane input {
   background-color: #fff; /* 白背景で入力欄を浮かせる */
   border: 1px solid rgba(50, 70, 90, 0.4);
-  font-size: 13px;
+  font-size: 18px;
   border-radius: 4px;
   padding: 4px;
   box-sizing: border-box;
@@ -159,8 +163,8 @@ button:not(:disabled) {
 .pane#ui .color-picker [data-color] {
   width: 15px;
   height: 15px;
-  border-radius: 3px;
-  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 20px;
+  border: 2px solid rgba(0, 0, 0, 0);
   transition: transform 120ms ease;
 }
 .pane#ui .color-picker [data-color]:hover {
@@ -170,13 +174,7 @@ button:not(:disabled) {
 .pane#ui .color-picker [data-color]:first-child {
   border-color: #000;
 }
-.pane#ui #icons {
-  font-size: inherit;
-}
-.pane#ui #icons,
-.pane#ui #icons option {
-  font-family: FontAwesome;
-}
+
 .pane#ui footer {
   display: flex;
   flex-direction: row;

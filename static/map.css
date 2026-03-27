@@ -57,7 +57,7 @@ svg > .item > .item > foreignObject > .content {
 }
 .item .status.yes::after {
   content: "✔";
-  color: #0f0;
+  color: #2CA02C;
 }
 .item .status.no::after {
   content: "✘";
