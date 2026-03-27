@@ -1937,16 +1937,25 @@
         this.error(e);
       }
     }
-    async load(url = this.url.value) {
-      if (url === this.url.value || !url.match(/\.mymind$/)) {
-        setThrobber(false);
-        return;
+    get filename() {
+      return this.node.querySelector(".filename");
+    }
+    async load(url) {
+      if (!url) {
+        const base = this.url.value.endsWith("/") ? this.url.value : this.url.value + "/";
+        const name = this.filename.value.trim().replace(/\.mymind$/, "");
+        if (!name) {
+          return;
+        }
+        url = base + name + ".mymind";
       }
       this.current = url;
       setThrobber(true);
       try {
         let data = await this.backend.load(url);
         let json = repo6.get("native").from(data);
+        const filename = url.split("/").pop().replace(/\.mymind$/, "");
+        showToast(`Loaded: ${filename}`);
         this.loadDone(json);
       } catch (e) {
         if (e && e.status === 404) {
