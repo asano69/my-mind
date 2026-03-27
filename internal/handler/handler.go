@@ -2,10 +2,12 @@ package handler
 
 import (
 	"fmt"
+	"html/template"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 )
@@ -21,56 +23,102 @@ var mimeTypes = map[string]string{
 	".mymind": "application/json",
 }
 
+type mapEntry struct {
+	Name    string
+	URL     string
+	ModTime time.Time
+}
+
 type Handler struct {
 	StaticDir string
 	MapsDir   string
+	listTmpl  *template.Template
 }
 
 func New(staticDir, mapsDir string) *Handler {
-	return &Handler{StaticDir: staticDir, MapsDir: mapsDir}
+	tmplPath := filepath.Join(filepath.Dir(staticDir), "internal/handler/list.html")
+	tmpl := template.Must(template.ParseFiles(tmplPath))
+	return &Handler{StaticDir: staticDir, MapsDir: mapsDir, listTmpl: tmpl}
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 	fmt.Printf("[%s] %s\n", r.Method, path)
 	setCORSHeaders(w)
+
 	switch r.Method {
 	case http.MethodOptions:
 		w.WriteHeader(http.StatusNoContent)
+
 	case http.MethodGet:
-		if strings.HasPrefix(path, "/maps/") {
+		switch {
+		case path == "/list":
+			h.listMaps(w)
+		case strings.HasPrefix(path, "/maps/"):
 			h.getMap(w, path)
-		} else if strings.HasPrefix(path, "/m/") {
+		case strings.HasPrefix(path, "/m/"):
 			ext := strings.ToLower(filepath.Ext(path))
-			if ext == "" {
+			switch ext {
+			case "":
 				http.Redirect(w, r, path+".mymind", http.StatusMovedPermanently)
-			} else if ext == ".mymind" {
+			case ".mymind":
 				h.serveIndex(w)
-			} else {
-				stripped := strings.TrimPrefix(path, "/m")
-				h.serveStatic(w, stripped)
+			default:
+				h.serveStatic(w, strings.TrimPrefix(path, "/m"))
 			}
-		} else {
-			if path == "/" || path == "" {
-				now := time.Now()
-				filename := fmt.Sprintf("%02d%02d%02d.mymind", now.Year()%100, now.Month(), now.Day())
-				http.Redirect(w, r, "/m/"+filename, http.StatusFound)
-				return
-			}
+		case path == "/" || path == "":
+			now := time.Now()
+			filename := fmt.Sprintf("%02d%02d%02d.mymind", now.Year()%100, now.Month(), now.Day())
+			http.Redirect(w, r, "/m/"+filename, http.StatusFound)
+		default:
 			h.serveStatic(w, path)
 		}
+
 	case http.MethodPut:
 		if strings.HasPrefix(path, "/maps/") {
 			h.putMap(w, r, path)
 		} else {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 		}
+
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
-// 追加
+func (h *Handler) listMaps(w http.ResponseWriter) {
+	entries, err := os.ReadDir(h.MapsDir)
+	if err != nil {
+		http.Error(w, "Failed to read maps directory", http.StatusInternalServerError)
+		return
+	}
+
+	list := make([]mapEntry, 0, len(entries))
+	for _, e := range entries {
+		if e.IsDir() || strings.ToLower(filepath.Ext(e.Name())) != ".mymind" {
+			continue
+		}
+		info, err := e.Info()
+		if err != nil {
+			continue
+		}
+		list = append(list, mapEntry{
+			Name:    strings.TrimSuffix(e.Name(), ".mymind"),
+			URL:     "/m/" + e.Name(),
+			ModTime: info.ModTime(),
+		})
+	}
+
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].ModTime.After(list[j].ModTime)
+	})
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := h.listTmpl.Execute(w, list); err != nil {
+		http.Error(w, "Template error", http.StatusInternalServerError)
+	}
+}
+
 func (h *Handler) serveIndex(w http.ResponseWriter) {
 	fpath := filepath.Join(h.StaticDir, "index.html")
 	data, err := os.ReadFile(fpath)
@@ -79,17 +127,7 @@ func (h *Handler) serveIndex(w http.ResponseWriter) {
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
 	w.Write(data)
-}
-
-func safeJoin(base, reqPath string) (string, error) {
-	reqPath = strings.TrimPrefix(reqPath, "/")
-	clean := filepath.Clean(reqPath)
-	if strings.HasPrefix(clean, "..") {
-		return "", fmt.Errorf("invalid path")
-	}
-	return filepath.Join(base, clean), nil
 }
 
 func (h *Handler) getMap(w http.ResponseWriter, path string) {
@@ -98,27 +136,22 @@ func (h *Handler) getMap(w http.ResponseWriter, path string) {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
 	}
-
 	fpath, err := safeJoin(h.MapsDir, rel)
 	if err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
-
 	info, err := os.Stat(fpath)
 	if err != nil || info.IsDir() {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
 	}
-
 	data, err := os.ReadFile(fpath)
 	if err != nil {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
 	}
-
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 }
 
@@ -143,7 +176,6 @@ func (h *Handler) serveStatic(w http.ResponseWriter, path string) {
 		mime = "application/octet-stream"
 	}
 	w.Header().Set("Content-Type", mime)
-	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 }
 
@@ -169,6 +201,15 @@ func (h *Handler) putMap(w http.ResponseWriter, r *http.Request, path string) {
 	}
 	fmt.Printf("[Saved] %s\n", fpath)
 	w.WriteHeader(http.StatusCreated)
+}
+
+func safeJoin(base, reqPath string) (string, error) {
+	reqPath = strings.TrimPrefix(reqPath, "/")
+	clean := filepath.Clean(reqPath)
+	if strings.HasPrefix(clean, "..") {
+		return "", fmt.Errorf("invalid path")
+	}
+	return filepath.Join(base, clean), nil
 }
 
 func setCORSHeaders(w http.ResponseWriter) {

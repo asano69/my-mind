@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Maps</title>
+  <style>
+    * { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      background-color: #f5ede4;
+      color: #2c2015;
+    }
+
+    main {
+      max-width: 480px;
+      margin: 3rem auto;
+      padding: 0 1.5rem;
+    }
+
+    h1 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #000;
+      margin: 0 0 1rem 0;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      background-color: #ede0d4;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.10);
+      overflow: hidden;
+    }
+
+    li {
+      border-bottom: 1px solid rgba(0,0,0,0.07);
+    }
+    li:last-child {
+      border-bottom: none;
+    }
+
+    li a {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 14px;
+      text-decoration: none;
+      color: #2c2015;
+      transition: background-color 80ms ease;
+    }
+    li a:hover {
+      background-color: #5a4a3a;
+      color: #fff;
+    }
+    li a:hover .date {
+      color: rgba(255,255,255,0.6);
+    }
+
+    .name {
+      font-size: 14px;
+    }
+    .date {
+      font-size: 12px;
+      color: rgba(0,0,0,0.4);
+      letter-spacing: 0.03em;
+    }
+
+    .empty {
+      background-color: #ede0d4;
+      border-radius: 6px;
+      padding: 9px 14px;
+      font-size: 13px;
+      color: rgba(0,0,0,0.4);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.10);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Maps</h1>
+    {{if .}}
+    <ul>
+      {{range .}}
+      <li>
+        <a href="{{.URL}}">
+          <span class="name">{{.Name}}</span>
+          <span class="date">{{.ModTime.Format "2006-01-02 15:04"}}</span>
+        </a>
+      </li>
+      {{end}}
+    </ul>
+    {{else}}
+    <p class="empty">マップがありません。</p>
+    {{end}}
+  </main>
+</body>
+</html>
