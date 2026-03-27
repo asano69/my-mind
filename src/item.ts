@@ -8,7 +8,7 @@ import Layout, { repo as layoutRepo } from "./layout/layout.js";
 import Map from "./map.js";
 
 
-export const TOGGLE_SIZE = 6;
+export const TOGGLE_SIZE = 7;
 export type Value = string | number | null;
 export type Status = "computed" | boolean | null;
 export type Side = "left" | "right" | null;
