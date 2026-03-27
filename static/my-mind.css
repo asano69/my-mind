@@ -37,6 +37,7 @@ button:not(:disabled) {
   box-shadow: -3px 0 12px rgba(0, 0, 0, 0.20);
   -webkit-transition: -webkit-transform 500ms;
   transition: transform 500ms;
+  z-index: 5;
 }
 .pane[hidden] {
   display: block;
@@ -189,6 +190,7 @@ button:not(:disabled) {
   left: 0;
   background-color: #ede0d4;
   width: 250px;
+  z-index: 100;
 }
 .pane#help[hidden] {
   transform: translate(-100%, 0);
@@ -291,6 +293,15 @@ button:not(:disabled) {
 #note-preview-inner img { max-width: 200px; height: auto; opacity: 0.2; }
 #note-preview[hidden] { display: none; }
 
+/* catalog リンクを help ペインより前面に */
+#catalog-link {
+  z-index: 10;
+  transition: left 0.5s;  /* helpペインと同じ速度でシフト */
+}
+/* help ペインが開いたらcatalogを右にずらす */
+body:has(#help:not([hidden])) #catalog-link {
+  left: 258px;  /* helpペインの幅250px + 少し余白 */
+}
 
 @media print {
   .pane,
