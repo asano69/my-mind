@@ -1884,7 +1884,14 @@
     constructor() {
       super(new WebDAV(), "Generic WebDAV");
       this.current = "";
-      this.url.value = localStorage.getItem(`${this.prefix}.url`) || "";
+      const { protocol, host } = window.location;
+      this.url.value = `${protocol}//${host}/maps`;
+      localStorage.setItem(`${this.prefix}.url`, this.url.value);
+      this.filename.addEventListener("keydown", (e) => {
+        if (e.code === "Enter") {
+          this.load();
+        }
+      });
     }
     get url() {
       return this.node.querySelector(".url");
@@ -1935,29 +1942,34 @@
         this.error(e);
       }
     }
-    async load(url = this.url.value) {
+    get filename() {
+      return this.node.querySelector(".filename");
+    }
+    async load(url) {
+      if (!url) {
+        const base = this.url.value.endsWith("/") ? this.url.value : this.url.value + "/";
+        const name = this.filename.value.trim().replace(/\.mymind$/, "");
+        if (!name) {
+          return;
+        }
+        url = base + name + ".mymind";
+      }
       this.current = url;
       setThrobber(true);
-      var lastIndex = url.lastIndexOf("/");
-      this.url.value = url.substring(0, lastIndex);
-      localStorage.setItem(`${this.prefix}.url`, this.url.value);
       try {
         let data = await this.backend.load(url);
         let json = repo6.get("native").from(data);
+        const filename = url.split("/").pop().replace(/\.mymind$/, "");
+        showToast(`Loaded: ${filename}`);
         this.loadDone(json);
       } catch (e) {
         if (e && e.status === 404) {
           const filename = url.split("/").pop().replace(/\.mymind$/, "");
           const id = Math.random().toString(36).slice(2, 10).replace(/[0-9]/g, (c) => String.fromCharCode(97 + parseInt(c)));
           const emptyJson = {
-            root: {
-              id,
-              text: filename,
-              notes: "",
-              layout: "map"
-            }
+            root: { id, text: filename, notes: "", layout: "map" }
           };
-          showToast(`New Map: ${filename}.mymind`);
+          showToast(`New Map: ${filename}`);
           this.loadDone(emptyJson);
         } else {
           this.error(e);
@@ -2045,7 +2057,7 @@
       let bui = new ctor();
       select5.append(bui.option);
     });
-    select5.value = localStorage.getItem(`${PREFIX}.backend`) || "file";
+    select5.value = localStorage.getItem(`${PREFIX}.backend`) || "webdav";
     select5.addEventListener("change", syncBackend);
     subscribe("map-new", (_) => setCurrentBackend(null));
     subscribe("save-done", onDone);

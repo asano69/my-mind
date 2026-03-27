@@ -30,7 +30,7 @@ export function init() {
 		select.append(bui.option);
 	});
 
-	select.value = localStorage.getItem(`${PREFIX}.backend`) || "file";
+	select.value = localStorage.getItem(`${PREFIX}.backend`) || "webdav";
 	select.addEventListener("change", syncBackend);
 
 	pubsub.subscribe("map-new", _ => setCurrentBackend(null));
