@@ -33,7 +33,7 @@ docker-push: ## dockerでプッシュ
 	docker push registry.internal/my-mind:latest
 
 komodo-deploy: ## komodoでスタックをデプロイする
-	docker exec -it komodo km x -y destroy-stack mymind && docker exec -it komodo km x -y pull-stack mymind && docker exec -it komodo km execute -y  restart-stack mymind
+	docker exec -it komodo km x -y destroy-stack mymind && docker exec -it komodo km x -y pull-stack mymind && docker exec -it komodo km execute -y  deploy-stack mymind
 
 clean: ## ビルド成果物を削除
 	rm -rf $(JS)
