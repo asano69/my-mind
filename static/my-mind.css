@@ -258,6 +258,42 @@ button:not(:disabled) {
   border-top: 1px solid rgba(0, 0, 0, 0.12);
   margin: 3px 0;
 }
+
+#note-preview {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    pointer-events: none;
+    z-index: 10;
+}
+
+#note-preview-inner {
+    max-width: 480px;
+    max-height: 80vh;
+    overflow: hidden;
+    font-size: 1em;
+    line-height: 1.7;
+    color: rgba(90, 60, 30, 0.2);
+    padding: 1.5em;
+}
+
+#note-preview-inner a {
+    color: rgba(90, 60, 30, 0.2);
+    text-decoration: none;
+    pointer-events: none;
+}
+
+#note-preview-inner h1,
+#note-preview-inner h2,
+#note-preview-inner h3 { font-size: 1em; margin: 0.3em 0; }
+#note-preview-inner p { margin: 0.3em 0; }
+#note-preview-inner ul { margin: 0.3em 0; padding-left: 1.5em; }
+#note-preview-inner img { max-width: 200px; height: auto; opacity: 0.2; }
+#note-preview[hidden] { display: none; }
+
 @media print {
   .pane,
   #toggle,
