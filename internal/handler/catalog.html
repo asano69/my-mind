@@ -1,123 +1,167 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Maps</title>
   <style>
-    * { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; }
-    html, body {
-      margin: 0;
-      height: 100%;
-      background-color: #f5ede4;
-      color: #2c2015;
-    }
-    body {
-      position: relative;
-    }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; }
+    html, body { margin: 0; height: 100%; background-color: #f5ede4; color: #2c2015; }
+
     .catalog-link {
-      position: fixed;
-      top: 8px;
-      left: 8px;
-      z-index: 10;
-      display: block;
+      position: fixed; top: 8px; left: 8px; z-index: 10; display: block;
     }
+
     main {
-      max-width: 480px;
-      margin: 3rem auto;
-      padding: 0 1.5rem;
+      max-width: 480px; margin: 3rem auto; padding: 0 1.5rem;
     }
-    h1 {
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: #000;
-      margin: 0 0 1rem 0;
-    }
-    .search-wrap {
-      position: relative;
+
+    /* ── Header ── */
+    .header {
+      display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 1rem;
     }
+    h1 {
+      font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em;
+      color: #000; margin: 0;
+    }
+    .mode-btn {
+      font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase;
+      border: 1px solid rgba(44,32,21,0.25); border-radius: 4px;
+      padding: 4px 10px; cursor: pointer; background: transparent;
+      color: #2c2015; transition: background 80ms, color 80ms;
+    }
+    .mode-btn:hover { background: rgba(44,32,21,0.08); }
+    /* active color in edit mode */
+    body.edit-mode .mode-btn {
+      background: #5a4a3a; color: #fff; border-color: #5a4a3a;
+    }
+
+    /* ── Search ── */
+    .search-wrap { position: relative; margin-bottom: 1rem; }
     .search-wrap::before {
-      content: "⌕";
-      position: absolute;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 16px;
-      color: rgba(0,0,0,0.3);
+      content: "⌕"; position: absolute; left: 10px; top: 50%;
+      transform: translateY(-50%); font-size: 16px; color: rgba(0,0,0,0.3);
       pointer-events: none;
     }
     input[type="search"] {
-      width: 100%;
-      box-sizing: border-box;
-      background-color: #faf7f4;
-      border: 1px solid rgba(44,32,21,0.15);
-      font-size: 16px;
-      letter-spacing: 0.03em;
-      border-radius: 6px;
+      width: 100%; background-color: #faf7f4;
+      border: 1px solid rgba(44,32,21,0.15); font-size: 16px;
+      letter-spacing: 0.03em; border-radius: 6px;
       padding: 8px 10px 8px 30px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.10);
-      transition: border-color 200ms, box-shadow 200ms;
-      -webkit-appearance: none;
+      transition: border-color 200ms; -webkit-appearance: none;
     }
-    input[type="search"]:focus {
-      border-color: rgba(90,74,58,0.45);
-      outline: none;
-    }
+    input[type="search"]:focus { border-color: rgba(90,74,58,0.45); outline: none; }
+
+    /* ── List ── */
     ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      background-color: #ede0d4;
-      border-radius: 6px;
+      list-style: none; padding: 0; margin: 0;
+      background-color: #ede0d4; border-radius: 6px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.10);
       overflow: hidden;
     }
-    li {
-      border-bottom: 1px solid rgba(0,0,0,0.07);
-    }
-    li:last-child {
-      border-bottom: none;
-    }
-    li a {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 11px 14px;
-      text-decoration: none;
-      color: #2c2015;
+    li { border-bottom: 1px solid rgba(0,0,0,0.07); }
+    li:last-child { border-bottom: none; }
+    li[hidden] { display: none; }
+
+    /* ── View mode: link row ── */
+    .view-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 14px; text-decoration: none; color: #2c2015;
       transition: background-color 80ms ease;
     }
-    li a:hover {
-      background-color: #5a4a3a;
-      color: #fff;
-    }
-    li a:hover .date {
-      color: rgba(255,255,255,0.6);
-    }
+    .view-row:hover  { background-color: #5a4a3a; color: #fff; }
+    .view-row:hover .date { color: rgba(255,255,255,0.6); }
+    .view-row:focus  { outline: none; background-color: #5a4a3a; color: #fff; }
+    .view-row:focus .date { color: rgba(255,255,255,0.6); }
     .name { font-size: 16px; }
-    .date {
-      font-size: 13px;
-      color: rgba(0,0,0,0.6);
-      letter-spacing: 0.03em;
+    .date { font-size: 13px; color: rgba(0,0,0,0.6); letter-spacing: 0.03em; }
+
+    /* hide link row in edit mode */
+    body.edit-mode .view-row { display: none; }
+
+    /* ── Edit mode: edit row ── */
+    .edit-row {
+      display: none; /* hidden by default */
+      align-items: center; gap: 8px;
+      padding: 7px 10px;
     }
+    body.edit-mode .edit-row { display: flex; }
+
+    /* rows marked for deletion */
+    li.pending-delete { background-color: rgba(192,57,43,0.08); }
+    li.pending-delete .edit-row input { opacity: 0.4; text-decoration: line-through; }
+
+    /* Checkbox (delete mark) */
+    .del-check {
+      appearance: none; -webkit-appearance: none;
+      width: 18px; height: 18px; flex-shrink: 0;
+      border: 1.5px solid rgba(44,32,21,0.3); border-radius: 3px;
+      cursor: pointer; position: relative; background: #faf7f4;
+      transition: border-color 80ms, background 80ms;
+    }
+    .del-check:checked {
+      background: #c0392b; border-color: #c0392b;
+    }
+    .del-check:checked::after {
+      content: "✕";
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; color: #fff; font-weight: bold;
+    }
+
+    /* Inline name input */
+    .rename-input {
+      flex: 1; font-size: 15px; background-color: #faf7f4;
+      border: 1px solid rgba(44,32,21,0.2); border-radius: 4px;
+      padding: 4px 8px; outline: none; color: #2c2015;
+      transition: border-color 120ms;
+    }
+    .rename-input:focus { border-color: rgba(90,74,58,0.5); }
+    /* modified */
+    .rename-input.dirty { border-color: #5a4a3a; background: #fff; }
+
+    /* Date (edit mode) */
+    .edit-date {
+      font-size: 12px; color: rgba(0,0,0,0.45); white-space: nowrap; flex-shrink: 0;
+    }
+
+    /* ── Batch commit bar ── */
+    .commit-bar {
+      display: none; /* controlled by JS */
+      margin-top: 12px;
+      gap: 8px;
+      align-items: center;
+    }
+    body.edit-mode .commit-bar { display: flex; }
+    .commit-btn {
+      flex: 1; padding: 9px 0; border: none; border-radius: 6px;
+      font-size: 14px; cursor: pointer; letter-spacing: 0.03em;
+      transition: background 80ms;
+    }
+    .commit-btn.apply {
+      background: #5a4a3a; color: #fff;
+    }
+    .commit-btn.apply:hover { background: #3d3028; }
+    .commit-btn.apply:disabled { background: rgba(90,74,58,0.3); cursor: default; }
+    .commit-btn.cancel {
+      background: rgba(44,32,21,0.1); color: #2c2015;
+    }
+    .commit-btn.cancel:hover { background: rgba(44,32,21,0.18); }
+
+    /* ── Result message ── */
+    .result-msg {
+      margin-top: 10px; font-size: 13px; padding: 8px 12px;
+      border-radius: 5px; display: none;
+    }
+    .result-msg.error { background: rgba(192,57,43,0.12); color: #922b21; display: block; }
+    .result-msg.ok    { background: rgba(39,174,96,0.12);  color: #1a7a42; display: block; }
+
     .empty {
-      background-color: #ede0d4;
-      border-radius: 6px;
-      padding: 9px 14px;
-      font-size: 13px;
-      color: rgba(0,0,0,0.4);
+      background-color: #ede0d4; border-radius: 6px; padding: 9px 14px;
+      font-size: 13px; color: rgba(0,0,0,0.4);
       box-shadow: 0 4px 12px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.10);
-    }
-    li[hidden] { display: none; }
-    li a:focus {
-      outline: none;
-      background-color: #5a4a3a;
-      color: #fff;
-    }
-    li a:focus .date {
-      color: rgba(255,255,255,0.6);
     }
   </style>
 </head>
@@ -126,43 +170,219 @@
     <img src="img/catalog-open.png" alt="Catalog" />
   </a>
   <main>
-    <h1>Index</h1>
+    <div class="header">
+      <h1>Index</h1>
+      {{if .}}<button class="mode-btn" id="modeToggle">Edit</button>{{end}}
+    </div>
+
     {{if .}}
     <div class="search-wrap">
       <input type="search" id="search" placeholder="filter..." autofocus>
     </div>
     <ul id="list">
       {{range .}}
-      <li data-name="{{.Name}}">
-        <a href="{{.URL}}">
+      <li data-name="{{.Name}}" data-orig="{{.Name}}">
+        <!-- view mode -->
+        <a class="view-row" href="{{.URL}}">
           <span class="name">{{.Name}}</span>
           <span class="date" data-modtime="{{.ModTime.Unix}}"></span>
         </a>
+        <!-- edit mode -->
+        <div class="edit-row">
+          <input type="checkbox" class="del-check" title="Mark for deletion">
+          <input type="text" class="rename-input" value="{{.Name}}" spellcheck="false">
+          <span class="edit-date" data-modtime="{{.ModTime.Unix}}"></span>
+        </div>
       </li>
       {{end}}
     </ul>
+
+    <!-- batch commit bar (visible in edit mode only) -->
+    <div class="commit-bar">
+      <button class="commit-btn cancel" id="cancelBtn">Cancel</button>
+      <button class="commit-btn apply"  id="applyBtn">Apply</button>
+    </div>
+    <div class="result-msg" id="resultMsg"></div>
+
     {{else}}
     <p class="empty">no maps found.</p>
     {{end}}
   </main>
-  <script>
-    const search = document.getElementById('search');
-    const list   = document.getElementById('list');
 
+  <script>
+    /* ===== Elements ===== */
+    const body       = document.body;
+    const modeToggle = document.getElementById('modeToggle');
+    const search     = document.getElementById('search');
+    const list       = document.getElementById('list');
+    const applyBtn   = document.getElementById('applyBtn');
+    const cancelBtn  = document.getElementById('cancelBtn');
+    const resultMsg  = document.getElementById('resultMsg');
+
+    /* ===== Mode toggle ===== */
+    function enterEditMode() {
+      body.classList.add('edit-mode');
+      if (modeToggle) modeToggle.textContent = 'Browse';
+      hideResult();
+    }
+    function leaveEditMode() {
+      body.classList.remove('edit-mode');
+      if (modeToggle) modeToggle.textContent = 'Edit';
+      resetEdits();
+    }
+    function resetEdits() {
+      if (!list) return;
+      list.querySelectorAll('li').forEach(li => {
+        li.classList.remove('pending-delete');
+        const cb    = li.querySelector('.del-check');
+        const input = li.querySelector('.rename-input');
+        if (cb)    cb.checked = false;
+        if (input) {
+          input.value = li.dataset.orig;
+          input.classList.remove('dirty');
+        }
+      });
+      hideResult();
+    }
+
+    if (modeToggle) {
+      modeToggle.addEventListener('click', () => {
+        body.classList.contains('edit-mode') ? leaveEditMode() : enterEditMode();
+      });
+    }
+    if (cancelBtn) cancelBtn.addEventListener('click', leaveEditMode);
+
+    /* ===== Delete mark ===== */
+    if (list) {
+      list.addEventListener('change', (e) => {
+        if (!e.target.classList.contains('del-check')) return;
+        const li = e.target.closest('li');
+        li.classList.toggle('pending-delete', e.target.checked);
+      });
+
+      /* track name changes */
+      list.addEventListener('input', (e) => {
+        if (!e.target.classList.contains('rename-input')) return;
+        const li = e.target.closest('li');
+        const dirty = e.target.value.trim() !== li.dataset.orig;
+        e.target.classList.toggle('dirty', dirty);
+      });
+    }
+
+    /* ===== Batch commit ===== */
+    if (applyBtn) {
+      applyBtn.addEventListener('click', async () => {
+        if (!list) return;
+
+        const toDelete = [];
+        const toRename = [];
+
+        list.querySelectorAll('li:not([hidden])').forEach(li => {
+          const cb    = li.querySelector('.del-check');
+          const input = li.querySelector('.rename-input');
+          const orig  = li.dataset.orig;
+
+          if (cb && cb.checked) {
+            toDelete.push({ li, orig });
+          } else if (input) {
+            const newName = input.value.trim();
+            if (newName && newName !== orig) {
+              toRename.push({ li, orig, newName });
+            }
+          }
+        });
+
+        if (toDelete.length === 0 && toRename.length === 0) {
+          leaveEditMode();
+          return;
+        }
+
+        applyBtn.disabled = true;
+        hideResult();
+
+        const errors = [];
+
+        /* ── delete ── */
+        for (const { li, orig } of toDelete) {
+          try {
+            const res = await fetch(`/maps/${encodeURIComponent(orig)}.mymind`, { method: 'DELETE' });
+            if (res.ok) {
+              li.remove();
+            } else {
+              errors.push(`Delete failed: "${orig}" (${res.status})`);
+            }
+          } catch {
+            errors.push(`Delete error: "${orig}"`);
+          }
+        }
+
+        /* ── rename ── */
+        for (const { li, orig, newName } of toRename) {
+          try {
+            const res = await fetch(`/maps/${encodeURIComponent(orig)}.mymind`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'text/plain' },
+              body: newName,
+            });
+            if (res.ok) {
+              // update UI
+              li.dataset.name = newName;
+              li.dataset.orig = newName;
+              const viewName = li.querySelector('.view-row .name');
+              const viewLink = li.querySelector('.view-row');
+              const input    = li.querySelector('.rename-input');
+              if (viewName) viewName.textContent = newName;
+              if (viewLink) viewLink.href = `/m/${encodeURIComponent(newName)}.mymind`;
+              if (input)    { input.value = newName; input.classList.remove('dirty'); }
+            } else if (res.status === 409) {
+              errors.push(`Rename failed: "${orig}" → "${newName}" (name already exists)`);
+            } else {
+              errors.push(`Rename failed: "${orig}" → "${newName}" (${res.status})`);
+            }
+          } catch {
+            errors.push(`Rename error: "${orig}"`);
+          }
+        }
+
+        applyBtn.disabled = false;
+
+        // show empty message if list is now empty
+        if (list.querySelectorAll('li').length === 0) {
+          list.insertAdjacentHTML('afterend', '<p class="empty">no maps found.</p>');
+          list.remove();
+        }
+
+        if (errors.length > 0) {
+          showResult('error', errors.join('\n'));
+        } else {
+          leaveEditMode();
+        }
+      });
+    }
+
+    function showResult(type, msg) {
+      if (!resultMsg) return;
+      resultMsg.className = `result-msg ${type}`;
+      resultMsg.textContent = msg;
+    }
+    function hideResult() {
+      if (!resultMsg) return;
+      resultMsg.className = 'result-msg';
+      resultMsg.textContent = '';
+    }
+
+    /* ===== Search filter (view mode only) ===== */
     function visibleLinks() {
-      return Array.from(list ? list.querySelectorAll('li:not([hidden]) a') : []);
+      return Array.from(list ? list.querySelectorAll('li:not([hidden]) .view-row') : []);
     }
 
     if (search) {
-      // フィルタリング
       search.addEventListener('input', () => {
         const q = search.value.toLowerCase();
         list && list.querySelectorAll('li').forEach(li => {
           li.hidden = !li.dataset.name.toLowerCase().includes(q);
         });
       });
-
-      // 検索ボックス: ↓ で先頭アイテムへ / Tab はブラウザデフォルト
       search.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowDown') {
           e.preventDefault();
@@ -174,11 +394,11 @@
 
     if (list) {
       list.addEventListener('keydown', (e) => {
+        if (body.classList.contains('edit-mode')) return;
         const links   = visibleLinks();
         const current = document.activeElement;
         const idx     = links.indexOf(current);
         if (idx === -1) return;
-
         switch (e.key) {
           case 'ArrowDown':
             e.preventDefault();
@@ -186,27 +406,20 @@
             break;
           case 'ArrowUp':
             e.preventDefault();
-            if (idx > 0) {
-              links[idx - 1].focus();
-            } else {
-              // 先頭から ↑ → 検索ボックスへ戻る
-              search && search.focus();
-            }
+            if (idx > 0) links[idx - 1].focus();
+            else search && search.focus();
             break;
           case 'Enter':
-            // <a> の href をそのまま開く
-            e.preventDefault();
-            current.click();
-            break;
+            e.preventDefault(); current.click(); break;
           case 'Escape':
-            // Esc → 検索ボックスへ戻り全選択
-            search && (search.focus(), search.select());
-            break;
+            search && (search.focus(), search.select()); break;
         }
       });
     }
-    document.querySelectorAll('.date[data-modtime]').forEach(el => {
-      const d = new Date(parseInt(el.dataset.modtime, 10) * 1000);
+
+    /* ===== Date formatting ===== */
+    document.querySelectorAll('[data-modtime]').forEach(el => {
+      const d   = new Date(parseInt(el.dataset.modtime, 10) * 1000);
       const pad = n => String(n).padStart(2, '0');
       const yy  = String(d.getFullYear()).slice(2);
       const mm  = pad(d.getMonth() + 1);
