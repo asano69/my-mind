@@ -32,7 +32,7 @@ button:not(:disabled) {
   right: 0;
   top: 0;
   height: 100%;
-  background-color: #f2f0eb; /* 温白色：完全な白より馴染む */
+  background-color: #ede0d4; /* 温白色：完全な白より馴染む */
   width: 200px;
   box-shadow: -3px 0 12px rgba(0, 0, 0, 0.20);
   -webkit-transition: -webkit-transform 500ms;
@@ -49,15 +49,15 @@ button:not(:disabled) {
   left: -60px;
 }
 .pane h3 {
-  background-color: #303030; /* 少し深い色に */
-  color: #fff;
+  background-color: #ede0d4; /* 少し深い色に */
+  color: #000000;
   padding: 0.3em 0;
   margin: 0;
   text-transform: capitalize;
   text-align: center;
   letter-spacing: 0.06em;
   font-size: 13px;
-  border-bottom: 1px solid #303030;
+  border-bottom: 1px solid #ede0d4;
 }
 .pane select,
 .pane input {
@@ -97,7 +97,7 @@ button:not(:disabled) {
   display: block;
   text-transform: uppercase;
   font-size: 75%;
-  color: #7f8c8d;
+  color: #000000;
   letter-spacing: 0.05em;
   margin-bottom: 3px;
 }
@@ -137,7 +137,7 @@ button:not(:disabled) {
   padding: 0 0 0 2px;
   text-align: left;
   border: none;
-  background-color: #f2f0eb; /* ペイン背景と統一 */
+  background-color: #ede0d4; /* ペイン背景と統一 */
   box-shadow: -3px 0 8px rgba(0, 0, 0, 0.18);
   line-height: 8px;
   border-radius: 50%;
@@ -228,7 +228,7 @@ button:not(:disabled) {
 #context-menu {
   position: absolute;
   border: 1px solid #bbb;
-  background-color: #f2f0eb;
+  background-color: #ede0d4;
   box-shadow:
     0 4px 12px rgba(0, 0, 0, 0.18),
     0 1px 4px rgba(0, 0, 0, 0.10);

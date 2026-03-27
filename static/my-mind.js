@@ -188,8 +188,17 @@
   });
   var node4 = document.querySelector("#notes");
   var iframe = node4.querySelector("iframe");
+  function sendToEditor(content) {
+    iframe.contentWindow && iframe.contentWindow.postMessage({
+      action: "setContent",
+      value: content
+    }, "*");
+  }
   function toggle2() {
     node4.hidden = !node4.hidden;
+    if (!node4.hidden && currentItem) {
+      sendToEditor(currentItem.notes);
+    }
   }
   function close2() {
     if (node4.hidden) {
@@ -205,6 +214,11 @@
       case "setContent":
         currentItem.notes = e.data.value.trim();
         break;
+      case "getContent":
+        if (currentItem) {
+          sendToEditor(currentItem.notes);
+        }
+        break;
       case "closeEditor":
         close2();
         break;
@@ -212,10 +226,7 @@
   }
   function init2() {
     subscribe("item-select", (_message, publisher) => {
-      iframe.contentWindow && iframe.contentWindow.postMessage({
-        action: "setContent",
-        value: publisher.notes
-      }, "*");
+      sendToEditor(publisher.notes);
     });
     window.addEventListener("message", onMessage);
   }
