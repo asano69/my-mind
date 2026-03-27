@@ -188,11 +188,29 @@
   });
   var node4 = document.querySelector("#notes");
   var iframe = node4.querySelector("iframe");
+  function renderMarkdown(md) {
+    return md.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">').replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>').replace(/&(?![a-zA-Z]+;)/g, "&amp;").replace(/^### (.+)$/gm, "<h3>$1</h3>").replace(/^## (.+)$/gm, "<h2>$1</h2>").replace(/^# (.+)$/gm, "<h1>$1</h1>").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>").replace(/`(.+?)`/g, "<code>$1</code>").replace(/^\s*[-*] (.+)$/gm, "<li>$1</li>").replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>").replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br>");
+  }
+  var previewEl = document.createElement("div");
+  previewEl.id = "note-preview";
+  previewEl.hidden = true;
+  previewEl.innerHTML = '<div id="note-preview-inner"></div>';
+  document.querySelector("main").appendChild(previewEl);
+  var previewInner = previewEl.querySelector("#note-preview-inner");
   function sendToEditor(content) {
     iframe.contentWindow && iframe.contentWindow.postMessage({
       action: "setContent",
       value: content
     }, "*");
+  }
+  function updatePreview(notes) {
+    const text = notes ? notes.trim() : "";
+    if (text) {
+      previewInner.innerHTML = renderMarkdown(text);
+      previewEl.hidden = false;
+    } else {
+      previewEl.hidden = true;
+    }
   }
   function toggle2() {
     node4.hidden = !node4.hidden;
@@ -213,6 +231,7 @@
     switch (e.data.action) {
       case "setContent":
         currentItem.notes = e.data.value.trim();
+        updatePreview(currentItem.notes);
         break;
       case "getContent":
         if (currentItem) {
@@ -227,6 +246,7 @@
   function init2() {
     subscribe("item-select", (_message, publisher) => {
       sendToEditor(publisher.notes);
+      updatePreview(publisher.notes);
     });
     window.addEventListener("message", onMessage);
   }
