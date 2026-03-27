@@ -143,14 +143,18 @@
 				</p>
 			</div>
 			<div id="webdav">
-				<p class="desc">Use this to access a generic DAV-like REST API.</p>
-				<p data-for="save load">
-					<label><span>URL</span>
-					<input type="text" class="url" /></label>
-				</p>
-				<p class="row" data-for="save load">
-					<button class="go"></button><button class="cancel">Cancel</button>
-				</p>
+			    <p class="desc">Use this to access a generic DAV-like REST API.</p>
+			    <p data-for="save load">
+			        <label><span>URL</span>
+			        <input type="text" class="url" readonly /></label>
+			    </p>
+			    <p data-for="load">
+			        <label><span>File</span>
+			        <input type="text" class="filename" placeholder="260327" /></label>
+			    </p>
+			    <p class="row" data-for="save load">
+			        <button class="go"></button><button class="cancel">Cancel</button>
+			    </p>
 			</div>
 
 		</div>

@@ -91,19 +91,25 @@ export default class WebDAVUI extends BackendUI<WebDAV> {
   		this.error(e);
   	}
   }
-  async load(url = this.url.value) {
-      // urlがベースURL（ファイル名なし）の場合はそのまま返す
-      if (url === this.url.value || !url.match(/\.mymind$/)) {
-          app.setThrobber(false);
-          return;
+  get filename() { return this.node.querySelector<HTMLInputElement>(".filename")!; }
+
+  async load(url?: string) {
+      // urlが指定されていない場合はfilename入力欄から生成
+      if (!url) {
+          const base = this.url.value.endsWith("/") ? this.url.value : this.url.value + "/";
+          const name = this.filename.value.trim().replace(/\.mymind$/, "");
+          if (!name) { return; }
+          url = base + name + ".mymind";
       }
       this.current = url;
       app.setThrobber(true);
-      // url.valueは固定なので書き換えない
+      // this.url.value は固定なので書き換えない
       try {
           let data = await this.backend.load(url);
           let json = formatRepo.get("native")!.from(data);
-          this.loadDone(json);
+          const filename = url.split("/").pop()!.replace(/\.mymind$/, "");
+          showToast(`Loaded: ${filename}`);
+          this.loadDone(json)
       } catch (e: any) {
           if (e && e.status === 404) {
               const filename = url.split("/").pop()!.replace(/\.mymind$/, "");
@@ -119,4 +125,5 @@ export default class WebDAVUI extends BackendUI<WebDAV> {
           }
       }
   }
+
 }
