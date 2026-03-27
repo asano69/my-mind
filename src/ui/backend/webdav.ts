@@ -39,6 +39,9 @@ export default class WebDAVUI extends BackendUI<WebDAV> {
       const { protocol, host } = window.location;
       this.url.value = `${protocol}//${host}/maps`;
       localStorage.setItem(`${this.prefix}.url`, this.url.value);
+      this.filename.addEventListener("keydown", (e: KeyboardEvent) => {
+          if (e.code === "Enter") { this.load(); }
+      });
   }
 
 	get url() { return this.node.querySelector<HTMLInputElement>(".url")!; }
