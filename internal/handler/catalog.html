@@ -53,7 +53,7 @@
       box-sizing: border-box;
       background-color: #faf7f4;
       border: 1px solid rgba(44,32,21,0.15);
-      font-size: 13px;
+      font-size: 16px;
       letter-spacing: 0.03em;
       border-radius: 6px;
       padding: 8px 10px 8px 30px;
@@ -84,7 +84,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 9px 14px;
+      padding: 11px 14px;
       text-decoration: none;
       color: #2c2015;
       transition: background-color 80ms ease;
@@ -96,10 +96,10 @@
     li a:hover .date {
       color: rgba(255,255,255,0.6);
     }
-    .name { font-size: 14px; }
+    .name { font-size: 16px; }
     .date {
-      font-size: 12px;
-      color: rgba(0,0,0,0.4);
+      font-size: 13px;
+      color: rgba(0,0,0,0.6);
       letter-spacing: 0.03em;
     }
     .empty {
@@ -136,7 +136,7 @@
       <li data-name="{{.Name}}">
         <a href="{{.URL}}">
           <span class="name">{{.Name}}</span>
-          <span class="date">{{.ModTime.Format "2006-01-02 15:04"}}</span>
+          <span class="date" data-modtime="{{.ModTime.Unix}}"></span>
         </a>
       </li>
       {{end}}
@@ -205,6 +205,17 @@
         }
       });
     }
+    document.querySelectorAll('.date[data-modtime]').forEach(el => {
+      const d = new Date(parseInt(el.dataset.modtime, 10) * 1000);
+      const pad = n => String(n).padStart(2, '0');
+      const yy  = String(d.getFullYear()).slice(2);
+      const mm  = pad(d.getMonth() + 1);
+      const dd  = pad(d.getDate());
+      const HH  = pad(d.getHours());
+      const min = pad(d.getMinutes());
+      const ss  = pad(d.getSeconds());
+      el.textContent = `${yy}${mm}${dd}.${HH}${min}${ss}`;
+    });
   </script>
 </body>
 </html>
