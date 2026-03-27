@@ -5,16 +5,30 @@ import * as pubsub from "../pubsub.js";
 const node = document.querySelector<HTMLElement>("#notes")!;
 const iframe = node.querySelector<HTMLIFrameElement>("iframe")!;
 
+// 背景プレビュー要素を作成
+const previewEl = document.createElement('div');
+previewEl.id = 'note-preview';
+previewEl.hidden = true;
+previewEl.innerHTML = '<div id="note-preview-inner"></div>';
+document.querySelector('main')!.appendChild(previewEl);
+const previewInner = previewEl.querySelector<HTMLElement>('#note-preview-inner')!;
+
 function sendToEditor(content: string) {
-    iframe.contentWindow && iframe.contentWindow.postMessage({
-        action: "setContent",
-        value: content
-    }, "*");
+    iframe.contentWindow?.postMessage({ action: "setContent", value: content }, "*");
+}
+
+function updatePreview(notes: string) {
+    const text = notes?.trim() ?? '';
+    if (text) {
+        iframe.contentWindow?.postMessage({ action: "renderMarkdown", value: text }, "*");
+        previewEl.hidden = false;
+    } else {
+        previewEl.hidden = true;
+    }
 }
 
 export function toggle() {
     node.hidden = !node.hidden;
-    // パネルを開いたとき、現在のアイテムの内容を送る
     if (!node.hidden && app.currentItem) {
         sendToEditor(app.currentItem.notes);
     }
@@ -26,24 +40,28 @@ export function close() {
 }
 
 function onMessage(e: MessageEvent) {
-    if (!e.data || !e.data.action) { return; }
+    if (!e.data?.action) { return; }
     switch (e.data.action) {
+        case "renderedMarkdown":
+            previewInner.innerHTML = e.data.value;
+            break;
         case "setContent":
             app.currentItem.notes = e.data.value.trim();
-        break;
+            updatePreview(app.currentItem.notes);
+            break;
         case "getContent":
-            // editor.htmlからのリクエストにも応答
             if (app.currentItem) { sendToEditor(app.currentItem.notes); }
-        break;
+            break;
         case "closeEditor":
             close();
-        break;
+            break;
     }
 }
 
 export function init() {
     pubsub.subscribe("item-select", (_message: string, publisher: Item) => {
         sendToEditor(publisher.notes);
+        updatePreview(publisher.notes);
     });
     window.addEventListener("message", onMessage);
 }

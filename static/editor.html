@@ -121,7 +121,7 @@
         window.parent.postMessage({ action: action, value: value }, '*');
     }
 
-    var mode = 'view';
+    var mode = 'edit';
     var currentContent = '';
     var renderMarkdown = null;
 
@@ -137,6 +137,10 @@
             'link', 'image', 'table', 'horizontal-rule'
         ]
     });
+    // ↓ 最初に編集モードの場合はここに追加する
+    document.getElementById('view-pane').classList.add('hidden');
+    document.getElementById('edit-pane').classList.remove('hidden');
+    document.getElementById('toggle-btn').textContent = 'View';
 
     renderMarkdown = function(md) {
         return easyMDE.options.previewRender(md);
@@ -185,6 +189,10 @@
 
         if (e.data.action === 'getContent') {
             sendMessage('setContent', currentContent);
+        }
+
+        if (e.data.action === 'renderMarkdown') {
+            sendMessage('renderedMarkdown', renderMarkdown(e.data.value));
         }
     });
 

@@ -69,14 +69,16 @@ svg > .item > .item > foreignObject > .content {
 .item .toggle:not(:hover) {
   opacity: 0.7;
 }
+
 .item .toggle circle {
-  stroke: #00f;
-  fill: #88f;
+    stroke: #999999;
+    fill: #999999;
 }
 .item .toggle path {
-  stroke: #fff;
-  stroke-width: 2;
+    stroke: #fff;
+    stroke-width: 2;
 }
+
 .item .notes {
   width: 16px;
   height: 16px;
