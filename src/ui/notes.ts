@@ -2,33 +2,10 @@ import Item from "../item.js";
 import * as app from "../my-mind.js";
 import * as pubsub from "../pubsub.js";
 
+declare const EasyMDE: any;
+
 const node = document.querySelector<HTMLElement>("#notes")!;
 const iframe = node.querySelector<HTMLIFrameElement>("iframe")!;
-
-// 簡易Markdownレンダラー
-function renderMarkdown(md: string): string {
-    return md
-        // 画像・リンクを先に処理（エスケープ前）
-        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">')
-        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
-        // エスケープ（タグ以外の & < > を対象に）
-        .replace(/&(?![a-zA-Z]+;)/g, "&amp;")
-        // 見出し
-        .replace(/^### (.+)$/gm, "<h3>$1</h3>")
-        .replace(/^## (.+)$/gm, "<h2>$1</h2>")
-        .replace(/^# (.+)$/gm, "<h1>$1</h1>")
-        // 太字・斜体
-        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-        .replace(/\*(.+?)\*/g, "<em>$1</em>")
-        // インラインコード
-        .replace(/`(.+?)`/g, "<code>$1</code>")
-        // リスト
-        .replace(/^\s*[-*] (.+)$/gm, "<li>$1</li>")
-        .replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>")
-        // 改行
-        .replace(/\n{2,}/g, "</p><p>")
-        .replace(/\n/g, "<br>");
-}
 
 // 背景プレビュー要素を作成
 const previewEl = document.createElement('div');
@@ -36,18 +13,34 @@ previewEl.id = 'note-preview';
 previewEl.hidden = true;
 previewEl.innerHTML = '<div id="note-preview-inner"></div>';
 document.querySelector('main')!.appendChild(previewEl);
-
 const previewInner = previewEl.querySelector<HTMLElement>('#note-preview-inner')!;
 
+// EasyMDE 内蔵の marked でMarkdown→HTML変換
+let _md: any = null;
+
+function renderMarkdown(md: string): string {
+    if (!_md) {
+        const textarea = document.createElement('textarea');
+        textarea.style.display = 'none';
+        document.body.appendChild(textarea);
+        _md = new EasyMDE({
+            element: textarea,
+            autoDownloadFontAwesome: false,
+            toolbar: false,
+            status: false,
+        });
+        // EasyMDEが生成したエディタUIを非表示に
+        const wrap = textarea.nextElementSibling as HTMLElement | null;
+        if (wrap) wrap.style.display = 'none';
+    }
+    return _md.markdown(md);
+}
 function sendToEditor(content: string) {
-    iframe.contentWindow && iframe.contentWindow.postMessage({
-        action: "setContent",
-        value: content
-    }, "*");
+    iframe.contentWindow?.postMessage({ action: "setContent", value: content }, "*");
 }
 
 function updatePreview(notes: string) {
-    const text = notes ? notes.trim() : '';
+    const text = notes?.trim() ?? '';
     if (text) {
         previewInner.innerHTML = renderMarkdown(text);
         previewEl.hidden = false;
@@ -69,18 +62,18 @@ export function close() {
 }
 
 function onMessage(e: MessageEvent) {
-    if (!e.data || !e.data.action) { return; }
+    if (!e.data?.action) { return; }
     switch (e.data.action) {
         case "setContent":
             app.currentItem.notes = e.data.value.trim();
             updatePreview(app.currentItem.notes);
-        break;
+            break;
         case "getContent":
             if (app.currentItem) { sendToEditor(app.currentItem.notes); }
-        break;
+            break;
         case "closeEditor":
             close();
-        break;
+            break;
     }
 }
 
