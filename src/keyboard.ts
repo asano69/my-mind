@@ -5,23 +5,26 @@ import { repo as commandRepo, Key } from "./command/command.js";
 type EventProp = keyof KeyboardEvent;
 
 function handleEvent(e: KeyboardEvent) {
-	// ignore keyboard when the activeElement resides somewhere inside of the UI pane
-	if (ui.isActive()) { return; }
+    // For modifier-based shortcuts, always prevent browser interception
+    const isModifierShortcut = [...commandRepo.values()].some(command =>
+        command.keys.some(key => keyOK(key, e) && (key.ctrlKey || key.metaKey))
+    );
+    if (isModifierShortcut) { e.preventDefault(); }
 
-	let command = [...commandRepo.values()].find(command => {
-		if (!command.isValid) { return false; }
-		return command.keys.find(key => keyOK(key, e));
-	});
+    // Ignore keyboard when the activeElement resides somewhere inside of the UI pane
+    if (ui.isActive()) { return; }
 
-	if (command) {
-		e.preventDefault();
-		command.execute(e);
-	}
+    let command = [...commandRepo.values()].find(command => {
+        if (!command.isValid) { return false; }
+        return command.keys.find(key => keyOK(key, e));
+    });
+    if (command) { command.execute(e); }
 }
 
 export function init() {
-	window.addEventListener("keydown", handleEvent);
+    window.addEventListener("keydown", handleEvent);
 }
+
 
 function keyOK(key: Key, e: KeyboardEvent) {
 	return Object.entries(key).every(([key, value]) => e[key as EventProp] == value);
