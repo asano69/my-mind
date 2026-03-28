@@ -69,7 +69,7 @@ export function init(port: HTMLElement) {
 		if (publisher == app.currentItem) { update(); }
 	});
 
-	node.addEventListener("click", onClick);
+	document.addEventListener("click", onClick);
 
 	io.restore();
 }
