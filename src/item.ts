@@ -435,7 +435,7 @@ export default class Item {
 		this.update({children:true});
 	}
 	get resolvedTextColor(): string {
-		if (this._textColor) { return this._textColor; }
+		if (this._textColor && this._textColor !== '#ffffff') { return this._textColor; }
 
 		const { parent } = this;
 		if (parent instanceof Item) { return parent.resolvedTextColor; }
