@@ -73,6 +73,7 @@
       if (!list) return;
       list.querySelectorAll('li').forEach(li => {
         li.classList.remove('pending-delete');
+        li.classList.remove('pending-rename'); // Clear pending-rename state on reset
         const cb    = li.querySelector('.del-check');
         const input = li.querySelector('.rename-input');
         if (cb)    cb.checked = false;
@@ -98,7 +99,9 @@
       list.addEventListener('input', (e) => {
         if (!e.target.classList.contains('rename-input')) return;
         const li = e.target.closest('li');
-        e.target.classList.toggle('dirty', e.target.value.trim() !== li.dataset.orig);
+        const isDirty = e.target.value.trim() !== li.dataset.orig;
+        e.target.classList.toggle('dirty', isDirty);
+        li.classList.toggle('pending-rename', isDirty); // Mark the row as having a pending rename
       });
     }
 
@@ -156,6 +159,7 @@
               if (viewName) viewName.textContent = newName;
               if (viewLink) viewLink.href = `/m/${encodeURIComponent(newName)}.mymind`;
               if (input)    { input.value = newName; input.classList.remove('dirty'); }
+              li.classList.remove('pending-rename'); // Clear pending-rename after successful rename
             } else if (res.status === 409) {
               errors.push(`Rename failed: "${orig}" → "${newName}" (name already exists)`);
             } else {
