@@ -121,7 +121,8 @@ export default class MapLayout extends GraphLayout {
 			let attrs = {
 				d: d.join(" "),
 				fill: resolvedColor,
-				stroke: resolvedColor
+				stroke: resolvedColor,
+				"stroke-width": "2",
 			}
 			return svg.node("path", attrs);
 		});
