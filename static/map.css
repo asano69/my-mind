@@ -154,12 +154,12 @@ svg > .item > .item > foreignObject > .content {
 
 /* Notes indicator */
 .item .notes {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   background: url("../img/notes-indicator.png") right center no-repeat;
   position: absolute;
-  top: -12px;
-  right: -18px;
+  top: -5px;
+  right: -15px;
   opacity: 0.4;
 }
 
