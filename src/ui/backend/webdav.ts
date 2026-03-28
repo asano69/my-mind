@@ -15,20 +15,19 @@ function showToast(message: string) {
         bottom: 1.2rem;
         left: 50%;
         transform: translateX(-50%);
-        background: #5a4a3a;
-        color: #fff;
+        background: var(--color-hover);
+        color: var(--color-text);
         padding: 0.5rem 1rem;
         border-radius: 8px;
         font-size: 20px;
         letter-spacing: 0.05em;
-        font-family: "TeX Gyre Termes", "Nimbus Roman No9 L", "Times New Roman", "Times", serif;
-        box-shadow: 0 10px 28px rgba(0,0,0,0.35), 0 3px 10px rgba(0,0,0,0.2);
+        font-family: var(--font-serif);
+        box-shadow: var(--shadow-card);
         border: 1px solid rgba(255,255,255,0.08);
         opacity: 1;
         transition: opacity 700ms ease 2500ms, transform 700ms ease 2500ms;
         z-index: 9999;
     `;
-
     document.body.appendChild(el);
     requestAnimationFrame(() => {
         el.style.opacity = "0";

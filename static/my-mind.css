@@ -92,7 +92,7 @@ button:not(:disabled) {
 
 .pane h3 {
   background-color: var(--color-pane);
-  color: #000000;
+  color: #var(--color-text)
   padding: 0.3em 0;
   margin: 0;
   text-transform: capitalize;
@@ -146,7 +146,7 @@ button:not(:disabled) {
   font-family: var(--font-serif);
   text-transform: uppercase;
   font-size: 75%;
-  color: #000000;
+  color: #var(--color-text);
   letter-spacing: 0.05em;
   margin-bottom: 3px;
 }
@@ -284,10 +284,12 @@ button:not(:disabled) {
   transition: opacity 80ms ease, background-color 80ms ease;
 }
 
+
 .pane#io button:hover {
   opacity: 1;
-  background: var(--color-pane-hover);
+  background: var(--color-hover);
 }
+
 
 .pane#io button.go {
   font-weight: bold;
@@ -341,8 +343,8 @@ button:not(:disabled) {
 }
 
 #context-menu button:hover {
-  background-color: var(--color-accent);
-  color: #fff;
+  background-color: var(--color-hover);
+  color: var(--color-text);
 }
 
 #context-menu span {

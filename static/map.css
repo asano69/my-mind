@@ -9,28 +9,25 @@
    ------------------------------------------------------------- */
 :root {
   /* Node border */
-  --node-border-width: 4px;
+  --node-border-width: 2px;
 
   /* Node shadow (default) */
-  --node-shadow: 3px 5px 14px rgba(0, 0, 0, 0.45);
+  --node-shadow: 3px 5px 14px rgba(0, 0, 0, 0.20);
 
   /* Node shadow (hover) */
-  --node-shadow-hover: 4px 7px 18px rgba(0, 0, 0, 0.50);
+  --node-shadow-hover: 4px 7px 18px rgba(0, 0, 0, 0.45);
 
   /* Underline hover: outline ring */
-  --underline-hover-outline: 0 0 0 2px rgba(200, 180, 0, 0.5);
+  --underline-hover-outline: 0 0 0 1px rgba(200, 180, 0, 0.5);
 
   /* Underline hover: yellow tint background */
-  --underline-hover-bg: rgba(255, 255, 200, 0.45);
+  --underline-hover-bg: rgba(255, 255, 200, 0.40);
 
   /* Selected node (current) background */
-  --node-bg-current: rgba(255, 255, 187, 0.8);
+  --node-bg-current: rgba(255, 255, 187, 0.80);
 
   /* Selected node shadow */
-  --node-shadow-current:
-    0 0 0 2px rgba(200, 180, 0, 0.5),
-    0 3px 10px rgba(0, 0, 0, 0.30);
-
+  --node-shadow-current: 3px 5px 14px rgba(0, 0, 0, 0.20);
 
   /* Toggle button color */
   --toggle-color: #999999;
