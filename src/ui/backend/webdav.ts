@@ -12,18 +12,23 @@ function showToast(message: string) {
     el.textContent = message;
     el.style.cssText = `
         position: fixed;
-        bottom: 2rem;
+        bottom: 1.2rem;
         left: 50%;
         transform: translateX(-50%);
         background: #5a4a3a;
         color: #fff;
-        padding: 0.6rem 1.2rem;
-        border-radius: 4px;
-        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 20px;
+        letter-spacing: 0.05em;
+        font-family: "TeX Gyre Termes", "Nimbus Roman No9 L", "Times New Roman", "Times", serif;
+        box-shadow: 0 10px 28px rgba(0,0,0,0.35), 0 3px 10px rgba(0,0,0,0.2);
+        border: 1px solid rgba(255,255,255,0.08);
         opacity: 1;
-        transition: opacity 1s ease 2s;
+        transition: opacity 700ms ease 2500ms, transform 700ms ease 2500ms;
         z-index: 9999;
     `;
+
     document.body.appendChild(el);
     requestAnimationFrame(() => {
         el.style.opacity = "0";
