@@ -117,14 +117,6 @@ svg > .item > .item > foreignObject > .content {
   box-shadow: 1px 2px 4px rgba(0,0,0,0.14);
   transition: box-shadow 120ms ease, background 120ms ease;
 }
-[data-shape=box] > foreignObject > .content:hover {
-  background: linear-gradient(160deg,
-    color-mix(in srgb, var(--item-color, #e8f0ff) 40%, #e8f0ff) 0%,
-    color-mix(in srgb, var(--item-color, #d0e0ff) 50%, #d0e0ff) 100%
-  );
-  box-shadow: 2px 3px 10px rgba(0,0,0,0.24);
-  transform: translateY(-1px);
-}
 
 [data-shape=ellipse] > foreignObject > .content {
   padding: 0.4em 1.1em;
@@ -137,16 +129,26 @@ svg > .item > .item > foreignObject > .content {
   box-shadow: 1px 2px 4px rgba(0,0,0,0.14);
   transition: box-shadow 120ms ease, background 120ms ease;
 }
+
+
+/* box ホバー */
+[data-shape=box] > foreignObject > .content:hover {
+  background: rgba(255, 255, 200, 0.7);
+  box-shadow: 2px 3px 10px rgba(0,0,0,0.24);
+  transform: translateY(-1px);
+}
+
+/* ellipse ホバー */
 [data-shape=ellipse] > foreignObject > .content:hover {
-  background: linear-gradient(160deg,
-    color-mix(in srgb, var(--item-color, #e8f0ff) 40%, #e8f0ff) 0%,
-    color-mix(in srgb, var(--item-color, #d0e0ff) 50%, #d0e0ff) 100%
-  );
+  background: rgba(255, 255, 200, 0.7);
   box-shadow: 2px 3px 10px rgba(0,0,0,0.24);
 }
 
-
-
+/* underline ホバー */
+[data-shape=underline] > foreignObject > .content:hover {
+  background: rgba(255, 255, 200, 0.7);
+  border-radius: 3px;
+}
 
 
 
