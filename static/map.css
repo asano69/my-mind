@@ -29,8 +29,8 @@
   /* Selected node shadow */
   --node-shadow-current:
     0 0 0 2px rgba(200, 180, 0, 0.5),
-    0 3px 10px rgba(0, 0, 0, 0.30),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    0 3px 10px rgba(0, 0, 0, 0.30);
+
 
   /* Toggle button color */
   --toggle-color: #999999;
@@ -164,16 +164,6 @@ svg > .item > .item > foreignObject > .content {
 }
 
 
-/* -------------------------------------------------------------
-   Selected node (current) highlight
-   ------------------------------------------------------------- */
-.item.current > foreignObject > .content,
-[data-shape=box].item.current     > foreignObject > .content,
-[data-shape=ellipse].item.current > foreignObject > .content {
-  background: var(--node-bg-current) !important;
-  box-shadow: var(--node-shadow-current) !important;
-}
-
 
 /* -------------------------------------------------------------
    Shape styles — shared (box + ellipse)
@@ -215,6 +205,30 @@ svg > .item > .item > foreignObject > .content {
   transform: translateY(-2px);
   border-radius: 3px;
 }
+
+
+/* -------------------------------------------------------------
+   Selected node (current) highlight
+   ------------------------------------------------------------- */
+[data-shape=box].item.current     > foreignObject > .content,
+[data-shape=ellipse].item.current > foreignObject > .content {
+  background: var(--node-bg-current);
+  box-shadow: var(--node-shadow-current);
+}
+
+/* Hover lift is preserved for selected nodes */
+[data-shape=box].item.current     > foreignObject > .content:hover,
+[data-shape=ellipse].item.current > foreignObject > .content:hover {
+  box-shadow: var(--node-shadow-current), var(--node-shadow-hover);
+  transform: translateY(-2px);
+}
+
+/* Fallback for nodes without data-shape */
+.item.current > foreignObject > .content {
+  background: var(--node-bg-current);
+  box-shadow: var(--node-shadow-current);
+}
+
 
 
 /* -------------------------------------------------------------
