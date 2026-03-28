@@ -1,31 +1,23 @@
 /* =============================================================
-   static/my-mind.css
+   my-mind.css — layout and UI styles for the mind-map page
+   Requires: theme.css loaded first (provides font/color tokens)
    ============================================================= */
 
 /* -------------------------------------------------------------
-   Design tokens
-   Edit values here to apply changes across the whole file.
+   Page-specific design tokens
+   (shared tokens live in theme.css)
    ------------------------------------------------------------- */
 :root {
-  /* Fonts */
-  --font-sans:  system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-serif: "TeX Gyre Termes", "Nimbus Roman No9 L", "Times New Roman", "Times", serif;
+  /* Layout */
+  --help-pane-width:  250px;
 
-  /* Palette — warm parchment family */
-  --color-bg:          #f5ede4; /* page / canvas background      */
-  --color-pane:        #ede0d4; /* panel / surface background     */
-  --color-pane-hover:  #d9c9bb; /* hovered item inside a panel    */
-  --color-accent:      #5a4a3a; /* primary interactive / active   */
-  --color-border:      rgba(0, 0, 0, 0.07);  /* subtle row divider */
-  --color-border-mid:  rgba(0, 0, 0, 0.10);  /* footer / stronger divider */
-  --color-border-menu: rgba(0, 0, 0, 0.12);  /* context-menu separator */
-
-  /* Note-preview watermark color (opacity intentionally partial) */
+  /* Note-preview watermark */
   --color-preview-ink: rgba(90, 60, 30, 0.95);
 
-  /* Layout */
-  --help-pane-width:    250px;
-  --catalog-link-left:   48px; /* resting left offset of #catalog-link */
+  /* Dividers */
+  --color-border:      rgba(0, 0, 0, 0.07);
+  --color-border-mid:  rgba(0, 0, 0, 0.10);
+  --color-border-menu: rgba(0, 0, 0, 0.12);
 }
 
 
@@ -38,7 +30,7 @@
 
 /* Containers that explicitly set font-family (e.g. #note-preview-inner)
    must have that value inherited by their children,
-   otherwise the * rule above re-applies system-ui on every descendant. */
+   otherwise the * rule above re-applies sans on every descendant. */
 #note-preview-inner * {
   font-family: inherit;
 }
@@ -149,7 +141,6 @@ button:not(:disabled) {
   justify-content: space-between;
 }
 
-/* Label text: serif for an elegant small-caps feel */
 .pane label span {
   display: block;
   font-family: var(--font-serif);
@@ -278,7 +269,7 @@ button:not(:disabled) {
 
 
 /* -------------------------------------------------------------
-   Pane — #io (Close / Save)
+   Pane — #io (close / save)
    ------------------------------------------------------------- */
 .pane#io button {
   width: 45%;
@@ -327,9 +318,7 @@ button:not(:disabled) {
   position: absolute;
   border: 1px solid #bbb;
   background-color: var(--color-pane);
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.18),
-    0 1px 4px rgba(0, 0, 0, 0.10);
+  box-shadow: var(--shadow-card);
   border-radius: 6px;
   flex-direction: column;
   width: 130px;
@@ -398,7 +387,7 @@ button:not(:disabled) {
 #note-preview-inner h1 { font-size: 2em;   margin: 0.3em 0; }
 #note-preview-inner h2 { font-size: 1.5em; margin: 0.3em 0; }
 #note-preview-inner h3 { font-size: 1.2em; margin: 0.3em 0; }
-#note-preview-inner p  { font-size: 1em; margin: 0.3em 0; }
+#note-preview-inner p  { font-size: 1em;   margin: 0.3em 0; }
 #note-preview-inner ul { margin: 0.3em 0; padding-left: 1.5em; }
 #note-preview-inner img { max-width: 200px; height: auto; opacity: 0.2; }
 
@@ -408,8 +397,6 @@ button:not(:disabled) {
 /* -------------------------------------------------------------
    Toolbar buttons (#help-btn, #catalog-link)
    Both shift rightward when the help pane opens.
-   --help-pane-width drives both offsets via calc() so they
-   stay in sync if the pane width ever changes.
    ------------------------------------------------------------- */
 #help-btn {
   position: fixed;
@@ -428,6 +415,7 @@ button:not(:disabled) {
 #help-btn img {
   display: block;
 }
+
 #catalog-link {
   position: fixed;
   top: 5px;
@@ -436,17 +424,19 @@ button:not(:disabled) {
   z-index: 10;
   transition: left 0.5s;
 }
-/* Shift both buttons when the help pane is open */
+
 body:has(#help:not([hidden])) #help-btn {
   left: var(--help-pane-width);
 }
 
 
-/* Loading Spinner */
+/* -------------------------------------------------------------
+   Loading spinner
+   ------------------------------------------------------------- */
 .spinner {
   position: fixed;
   top: 50px;
-  right: 260px; /* pane width(200px) + margin */
+  right: 260px;
   width: 40px;
   height: 40px;
   z-index: 9999;
