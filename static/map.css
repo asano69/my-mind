@@ -1,27 +1,86 @@
+/* =============================================================
+   map.css
+   ============================================================= */
+
+/* -------------------------------------------------------------
+   デザイントークン
+   - ここの値を変えるだけで全体に反映される
+   ------------------------------------------------------------- */
+:root {
+  /* ノード枠線 */
+  --node-border-width: 4px;
+
+  /* ノード影（通常） */
+  --node-shadow: 2px 3px 8px rgba(0, 0, 0, 0.28);
+
+  /* ノード影（ホバー） */
+  --node-shadow-hover: 3px 4px 14px rgba(0, 0, 0, 0.38);
+
+  /* ホバー背景色 */
+  --node-bg-hover: rgba(255, 255, 200, 0.4);
+
+  /* 選択ノード（current）背景色 */
+  --node-bg-current: rgba(255, 255, 187, 0.9);
+
+  /* 選択ノード影 */
+  --node-shadow-current:
+    0 0 0 2px rgba(200, 180, 0, 0.5),
+    0 3px 10px rgba(0, 0, 0, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+  /* トグルボタン色 */
+  --toggle-color: #999999;
+
+  /* ステータス色 */
+  --status-yes-color: #2CA02C;
+  --status-no-color: #f00;
+}
+
+
+/* -------------------------------------------------------------
+   ベース
+   ------------------------------------------------------------- */
 * {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
+
+
+/* -------------------------------------------------------------
+   SVG直下のルートノード（最上位レベルのみ）
+   ------------------------------------------------------------- */
 svg > .item > foreignObject > .content {
   font-weight: bold;
-  border-width: 2px;
   font-size: 140%;
+  /* border-width はここで指定しない。
+     [data-shape=*] の --node-border-width で一元管理する。 */
 }
+
 svg > .item > .toggle {
   display: none;
 }
+
+/* SVG直下の子ノード（第2レベル） */
 svg > .item > .item > foreignObject > .content {
-  border-width: 2px;
   font-size: 120%;
+  /* border-width はここで指定しない。同上。 */
 }
+
+
+/* -------------------------------------------------------------
+   .item 汎用スタイル
+   ------------------------------------------------------------- */
 .item .cut {
   opacity: 0.5;
 }
+
 .item .icon {
   font-size: x-large;
 }
+
 .item foreignObject {
   overflow: visible;
 }
+
 .item .content {
   position: relative;
   display: inline-flex;
@@ -29,12 +88,16 @@ svg > .item > .item > foreignObject > .content {
   white-space: nowrap;
   cursor: pointer;
 }
+
 .item .content > * {
   flex: none;
 }
+
 .item.collapsed .item {
   display: none;
 }
+
+/* テキスト編集領域 */
 .item .text {
   text-align: center;
   min-width: 0.5em;
@@ -42,43 +105,50 @@ svg > .item > .item > foreignObject > .content {
   line-height: 1.8em;
   outline: none;
 }
+
+/* 値表示（括弧付き） */
 .item .value {
   opacity: 0.7;
 }
-.item .value:not(:empty)::before {
-  content: "(";
-}
-.item .value:not(:empty)::after {
-  content: ")";
-}
+.item .value:not(:empty)::before { content: "("; }
+.item .value:not(:empty)::after  { content: ")"; }
+
+/* ステータスアイコン */
 .item .status {
   font-size: 150%;
   line-height: 1;
 }
 .item .status.yes::after {
   content: "✔";
-  color: #2CA02C;
+  color: var(--status-yes-color);
 }
 .item .status.no::after {
   content: "✘";
-  color: #f00;
+  color: var(--status-no-color);
 }
+
+/* トグルボタン */
 .item .toggle {
   cursor: pointer;
 }
 .item .toggle:not(:hover) {
   opacity: 0.7;
 }
-
 .item .toggle circle {
-    stroke: #999999;
-    fill: #999999;
+  stroke: var(--toggle-color);
+  fill:   var(--toggle-color);
 }
 .item .toggle path {
-    stroke: #fff;
-    stroke-width: 2;
+  stroke: #fff;
+  stroke-width: 2;
 }
 
+/* トグルは current か collapsed のときだけ表示 */
+.item:not(.current):not(.collapsed) > .toggle {
+  display: none;
+}
+
+/* メモインジケーター */
 .item .notes {
   width: 16px;
   height: 16px;
@@ -88,73 +158,78 @@ svg > .item > .item > foreignObject > .content {
   right: 0;
   opacity: 0.4;
 }
-.item:not(.current):not(.collapsed) > .toggle {
-  display: none;
-}
 
-/* 選択ノード：黄色ハイライト（box・ellipse両対応） */
+
+/* -------------------------------------------------------------
+   選択ノード（current）ハイライト
+   box・ellipse 両対応。!important で shape スタイルを上書き。
+   ------------------------------------------------------------- */
 .item.current > foreignObject > .content,
-[data-shape=box].item.current > foreignObject > .content,
+[data-shape=box].item.current    > foreignObject > .content,
 [data-shape=ellipse].item.current > foreignObject > .content {
-  background: rgba(255, 255, 187, 0.9) !important;
-  box-shadow:
-    0 0 0 2px rgba(200, 180, 0, 0.5),
-    0 2px 6px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  background: var(--node-bg-current) !important;
+  box-shadow: var(--node-shadow-current) !important;
 }
 
 
+/* -------------------------------------------------------------
+   シェイプ共通（box・ellipse）
+   padding と border-radius だけ各シェイプで上書きする。
+   ------------------------------------------------------------- */
+:is([data-shape=box], [data-shape=ellipse]) > foreignObject > .content {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--item-color, #ffffff) 22%, #ffffff) 0%,
+    color-mix(in srgb, var(--item-color, #ececec) 30%, #ececec) 100%
+  );
+  border: var(--node-border-width) solid
+    color-mix(in srgb, var(--item-color, transparent) 75%, #333333);
+  box-shadow: var(--node-shadow);
+  transition: box-shadow 120ms ease, background 120ms ease;
+}
 
-
+/* box 固有 */
 [data-shape=box] > foreignObject > .content {
   padding: 0.2em 0.55em;
-  background: linear-gradient(160deg,
-    color-mix(in srgb, var(--item-color, #ffffff) 22%, #ffffff) 0%,
-    color-mix(in srgb, var(--item-color, #ececec) 30%, #ececec) 100%
-  );
-  border: 2px solid color-mix(in srgb, var(--item-color, transparent) 75%, #333333);
   border-radius: 4px;
-  box-shadow: 1px 2px 4px rgba(0,0,0,0.14);
-  transition: box-shadow 120ms ease, background 120ms ease;
 }
 
+/* ellipse 固有 */
 [data-shape=ellipse] > foreignObject > .content {
   padding: 0.4em 1.1em;
-  background: linear-gradient(160deg,
-    color-mix(in srgb, var(--item-color, #ffffff) 22%, #ffffff) 0%,
-    color-mix(in srgb, var(--item-color, #ececec) 30%, #ececec) 100%
-  );
-  border: 2px solid color-mix(in srgb, var(--item-color, transparent) 75%, #333333);
   border-radius: 50%;
-  box-shadow: 1px 2px 4px rgba(0,0,0,0.14);
-  transition: box-shadow 120ms ease, background 120ms ease;
 }
 
 
-/* box ホバー */
+/* -------------------------------------------------------------
+   ホバー
+   ------------------------------------------------------------- */
+
+/* box・ellipse 共通ホバー（shadow・background） */
+:is([data-shape=box], [data-shape=ellipse]) > foreignObject > .content:hover {
+  background: var(--node-bg-hover);
+  box-shadow: var(--node-shadow-hover);
+}
+
+/* box のみ：浮き上がり効果 */
 [data-shape=box] > foreignObject > .content:hover {
-  background: rgba(255, 255, 200, 0.7);
-  box-shadow: 2px 3px 10px rgba(0,0,0,0.24);
   transform: translateY(-1px);
-}
-
-/* ellipse ホバー */
-[data-shape=ellipse] > foreignObject > .content:hover {
-  background: rgba(255, 255, 200, 0.7);
-  box-shadow: 2px 3px 10px rgba(0,0,0,0.24);
 }
 
 /* underline ホバー */
 [data-shape=underline] > foreignObject > .content:hover {
-  background: rgba(255, 255, 200, 0.7);
+  background: var(--node-bg-hover);
   border-radius: 3px;
 }
 
 
-
+/* -------------------------------------------------------------
+   テキスト配置（left / right）
+   ------------------------------------------------------------- */
 [data-align=left] > foreignObject > .content > :not(.text):not(.notes) {
   margin-right: 0.3em;
 }
+
 [data-align=right] > foreignObject > .content {
   flex-direction: row-reverse;
 }
