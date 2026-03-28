@@ -1,3 +1,4 @@
+// src/ui/help.ts
 import { repo as commandRepo, Key } from "../command/command.js";
 
 

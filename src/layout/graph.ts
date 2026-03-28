@@ -1,3 +1,4 @@
+// src/layout/graph.ts
 import Layout, { Direction } from "./layout.js";
 import Item from "../item.js";
 import * as svg from "../svg.js";

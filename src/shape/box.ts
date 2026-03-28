@@ -1,3 +1,4 @@
+// src/shape/box.ts
 // box.ts
 import Shape from "./shape.js";
 import Item from "../item.js";

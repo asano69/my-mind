@@ -1,3 +1,4 @@
+// src/command/edit.ts
 import * as app from "../my-mind.js";
 import Action, * as actions from "../action.js";
 import * as notes from "../ui/notes.js";

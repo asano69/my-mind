@@ -1,3 +1,4 @@
+// src/ui/notes.ts
 import Item from "../item.js";
 import * as app from "../my-mind.js";
 import * as pubsub from "../pubsub.js";

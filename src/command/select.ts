@@ -1,3 +1,4 @@
+// src/command/select.ts
 import * as app from "../my-mind.js";
 import Command, { isMac } from "./command.js";
 import Item, { ChildItem } from "../item.js";

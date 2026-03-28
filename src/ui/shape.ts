@@ -1,3 +1,4 @@
+// src/ui/shape.ts
 import "../shape/box.js";
 import "../shape/ellipse.js";
 import "../shape/underline.js";

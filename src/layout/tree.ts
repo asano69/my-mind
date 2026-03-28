@@ -1,3 +1,4 @@
+// src/layout/tree.ts
 import Layout, { Direction } from "./layout.js";
 import Item, { TOGGLE_SIZE } from "../item.js";
 import * as svg from "../svg.js";

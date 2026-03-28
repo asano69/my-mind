@@ -1,3 +1,4 @@
+// src/shape/underline.ts
 import Shape from "./shape.js";
 import Item from "../item.js";
 import * as svg from "../svg.js";

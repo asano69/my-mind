@@ -1,3 +1,4 @@
+// src/svg.ts
 const NS = "http://www.w3.org/2000/svg";
 
 export function node<T extends keyof SVGElementTagNameMap>(name: T, attrs?: Record<string, string>): SVGElementTagNameMap[T] {

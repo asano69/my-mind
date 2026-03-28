@@ -1,3 +1,4 @@
+// src/clipboard.ts
 import Map from "./map.js";
 import Item, { ChildItem } from "./item.js";
 import * as app from "./my-mind.js";

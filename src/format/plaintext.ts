@@ -1,3 +1,4 @@
+// src/format/plaintext.ts
 import Format from "./format.js";
 import { Jsonified as JsonifiedMap } from "../map.js";
 import { Jsonified as JsonifiedItem } from "../item.js";

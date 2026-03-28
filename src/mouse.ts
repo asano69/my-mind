@@ -1,3 +1,4 @@
+// src/mouse.ts
 import Item, { ChildItem } from "./item.js";
 import * as menu from "./ui/context-menu.js";
 import * as app from "./my-mind.js";
