@@ -419,7 +419,9 @@ export default class Item {
 		this.update({children:true});
 	}
 	get resolvedColor(): string {
-		if (this._color) { return this._color; }
+	  // 色を設定していない場合のデフォルトの色。
+	  // box.tsとellips.tsとindex.htmlのineritを設定する必要あり
+		if (this._color && this._color !== '#ffffff') { return this._color; }
 
 		const { parent } = this;
 		if (parent instanceof Item) { return parent.resolvedColor; }
@@ -433,7 +435,7 @@ export default class Item {
 		this.update({children:true});
 	}
 	get resolvedTextColor(): string {
-		if (this._textColor) { return this._textColor; }
+		if (this._textColor && this._textColor !== '#ffffff') { return this._textColor; }
 
 		const { parent } = this;
 		if (parent instanceof Item) { return parent.resolvedTextColor; }
