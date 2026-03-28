@@ -1,3 +1,4 @@
+// src/pubsub.ts
 type SubscribeFunction = (message: string, publisher: any, data?: any) => void;
 
 interface SubscriberObject {

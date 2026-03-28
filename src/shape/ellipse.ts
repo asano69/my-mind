@@ -1,3 +1,4 @@
+// src/shape/ellipse.ts
 // ellipse.ts（同様）
 import Shape from "./shape.js";
 import Item from "../item.js";

@@ -1,3 +1,4 @@
+// src/keyboard.ts
 import * as ui from "./ui/ui.js";
 import { repo as commandRepo, Key } from "./command/command.js";
 

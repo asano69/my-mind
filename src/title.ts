@@ -1,3 +1,4 @@
+// src/title.ts
 import * as pubsub from "./pubsub.js";
 import { currentMap } from "./my-mind.js";
 

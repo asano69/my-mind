@@ -1,3 +1,4 @@
+// src/ui/status.ts
 import * as actions from "../action.js";
 import * as app from "../my-mind.js";
 import { Status } from "../item.js";

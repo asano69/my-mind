@@ -1,3 +1,4 @@
+// src/format/mup.ts
 import Format, { nl2br, br2nl } from "./format.js";
 import { Jsonified as JsonifiedMap } from "../map.js";
 import { Jsonified as JsonifiedItem, Side } from "../item.js";

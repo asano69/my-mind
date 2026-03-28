@@ -1,3 +1,4 @@
+// src/layout/map.ts
 import GraphLayout, { SPACING_RANK } from "./graph.js";
 import Item, { ChildItem } from "../item.js";
 import { repo, Direction } from "./layout.js";

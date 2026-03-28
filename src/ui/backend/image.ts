@@ -1,3 +1,4 @@
+// src/ui/backend/image.ts
 import BackendUI from "./backend.js";
 import Image, { Format } from "../../backend/image.js";
 

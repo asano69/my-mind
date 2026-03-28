@@ -1,3 +1,4 @@
+// src/ui/text-color.ts
 import * as actions from "../action.js";
 import * as app from "../my-mind.js";
 

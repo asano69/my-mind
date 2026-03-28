@@ -1,3 +1,4 @@
+// src/ui/value.ts
 import * as actions from "../action.js";
 import * as app from "../my-mind.js";
 import { repo as commandRepo } from "../command/command.js";

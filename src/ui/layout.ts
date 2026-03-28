@@ -1,3 +1,4 @@
+// src/ui/layout.ts
 import "../layout/graph.js";
 import "../layout/tree.js";
 import "../layout/map.js";

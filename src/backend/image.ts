@@ -1,3 +1,4 @@
+// src/backend/image.ts
 import Backend from "./backend.js";
 import * as app from "../my-mind.js";
 

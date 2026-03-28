@@ -1,3 +1,4 @@
+// src/map.ts
 import Item, { Jsonified as JsonifiedItem } from "./item.js";
 import Layout, { repo as layoutRepo, Direction } from "./layout/layout.js";
 import { br2nl } from "./format/format.js";

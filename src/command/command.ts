@@ -1,3 +1,4 @@
+// src/command/command.ts
 import * as pubsub from "../pubsub.js";
 import * as history from "../history.js";
 import * as app from "../my-mind.js";

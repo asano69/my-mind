@@ -1,3 +1,4 @@
+// src/ui/ui.ts
 import * as pubsub from "../pubsub.js";
 import * as app from "../my-mind.js";
 

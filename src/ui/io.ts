@@ -1,3 +1,4 @@
+// src/ui/io.ts
 import * as pubsub from "../pubsub.js";
 import * as app from "../my-mind.js";
 import { Mode, repo } from "./backend/backend.js";

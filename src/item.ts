@@ -1,3 +1,4 @@
+// src/item.ts
 import * as html from "./html.js";
 import * as svg from "./svg.js";
 import * as pubsub from "./pubsub.js";

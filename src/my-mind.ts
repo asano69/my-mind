@@ -1,3 +1,4 @@
+// src/my-mind.ts
 import Map, { init as initMap } from "./map.js";
 import Item from "./item.js";
 import Action from "./action.js";
