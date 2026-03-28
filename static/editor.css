@@ -50,8 +50,9 @@ html, body {
 
 #bar button:hover {
   opacity: 1;
-  background: var(--color-pane-hover);
+  background: var(--color-hover);
 }
+
 
 #bar #toggle-btn {
   opacity: 0.85;

@@ -16,6 +16,13 @@
     <div class="search-wrap">
       <input type="search" id="search" placeholder="filter..." autofocus>
     </div>
+
+    <!-- batch commit bar (visible in edit mode only) -->
+    <div class="commit-bar">
+      <button class="commit-btn cancel" id="cancelBtn">Cancel</button>
+      <button class="commit-btn apply"  id="applyBtn">Apply</button>
+    </div>
+
     <ul id="list">
       {{range .Maps}}
       <li data-name="{{.Name}}" data-orig="{{.Name}}">
@@ -34,11 +41,6 @@
       {{end}}
     </ul>
 
-    <!-- batch commit bar (visible in edit mode only) -->
-    <div class="commit-bar">
-      <button class="commit-btn cancel" id="cancelBtn">Cancel</button>
-      <button class="commit-btn apply"  id="applyBtn">Apply</button>
-    </div>
     <div class="result-msg" id="resultMsg"></div>
 
     {{else}}
