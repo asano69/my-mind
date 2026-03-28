@@ -98,12 +98,6 @@ button:not(:disabled) {
   transform: translate(100%, 0);
 }
 
-.pane #throbber {
-  position: absolute;
-  top: 50px;
-  left: -60px;
-}
-
 .pane h3 {
   background-color: var(--color-pane);
   color: #000000;
@@ -389,7 +383,7 @@ button:not(:disabled) {
   max-height: 100vh;
   overflow: hidden;
   font-family: var(--font-serif);
-  font-size: 1.1em;
+  font-size: 17px;
   line-height: 1.7;
   color: var(--color-preview-ink);
   padding: 1.5em;
@@ -404,7 +398,7 @@ button:not(:disabled) {
 #note-preview-inner h1 { font-size: 2em;   margin: 0.3em 0; }
 #note-preview-inner h2 { font-size: 1.5em; margin: 0.3em 0; }
 #note-preview-inner h3 { font-size: 1.2em; margin: 0.3em 0; }
-#note-preview-inner p  { margin: 0.3em 0; }
+#note-preview-inner p  { font-size: 1em; margin: 0.3em 0; }
 #note-preview-inner ul { margin: 0.3em 0; padding-left: 1.5em; }
 #note-preview-inner img { max-width: 200px; height: auto; opacity: 0.2; }
 
