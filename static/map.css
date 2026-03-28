@@ -24,7 +24,7 @@
   --underline-hover-bg: rgba(255, 255, 200, 0.45);
 
   /* Selected node (current) background */
-  --node-bg-current: rgba(255, 255, 187, 0.9);
+  --node-bg-current: rgba(255, 255, 187, 0.8);
 
   /* Selected node shadow */
   --node-shadow-current:
@@ -214,6 +214,7 @@ svg > .item > .item > foreignObject > .content {
 [data-shape=ellipse].item.current > foreignObject > .content {
   background: var(--node-bg-current);
   box-shadow: var(--node-shadow-current);
+  mix-blend-mode: multiply;
 }
 
 /* Hover lift is preserved for selected nodes */
@@ -227,9 +228,8 @@ svg > .item > .item > foreignObject > .content {
 .item.current > foreignObject > .content {
   background: var(--node-bg-current);
   box-shadow: var(--node-shadow-current);
+  mix-blend-mode: multiply;
 }
-
-
 
 /* -------------------------------------------------------------
    Text alignment (left / right)
