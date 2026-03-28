@@ -1,0 +1,322 @@
+/* =============================================================
+   catalog.css — styles for the catalog (map list) page
+   Requires: theme.css loaded first
+   ============================================================= */
+
+* {
+  box-sizing: border-box;
+  font-family: var(--font-sans);
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* ── Fixed catalog icon ── */
+.catalog-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 10;
+  display: block;
+}
+
+main {
+  max-width: 640px;
+  margin: 3rem auto;
+  padding: 0 1.5rem;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+h1 {
+  font-size: 30px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: var(--font-serif);
+  color: #000;
+  margin: 0;
+}
+
+.mode-btn {
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-family: var(--font-serif);
+  border: 1px solid rgba(44, 32, 21, 0.25);
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--color-text);
+  transition: background 80ms, color 80ms;
+}
+
+.mode-btn:hover {
+  background: rgba(44, 32, 21, 0.08);
+}
+
+body.edit-mode .mode-btn {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+
+/* ── Search ── */
+.search-wrap {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.search-wrap::before {
+  content: "?";
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+input[type="search"] {
+  width: 100%;
+  background-color: #faf7f4;
+  border: 1px solid rgba(44, 32, 21, 0.15);
+  font-size: 16px;
+  letter-spacing: 0.03em;
+  border-radius: 6px;
+  padding: 8px 10px 8px 30px;
+  box-shadow: var(--shadow-card);
+  transition: border-color 200ms;
+  -webkit-appearance: none;
+}
+
+input[type="search"]:focus {
+  border-color: rgba(90, 74, 58, 0.45);
+  outline: none;
+}
+
+/* ── List ── */
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background-color: var(--color-pane);
+  border-radius: 6px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+li {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+li:last-child {
+  border-bottom: none;
+}
+
+li[hidden] {
+  display: none;
+}
+
+/* ── View mode: link row ── */
+.view-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  text-decoration: none;
+  color: var(--color-text);
+  transition: background-color 80ms ease;
+}
+
+.view-row:hover  { background-color: var(--color-accent); color: #fff; }
+.view-row:hover .date { color: rgba(255, 255, 255, 0.6); }
+.view-row:focus  { outline: none; background-color: var(--color-accent); color: #fff; }
+.view-row:focus .date { color: rgba(255, 255, 255, 0.6); }
+
+.name {
+  font-size: 18px;
+  font-family: var(--font-sans);
+}
+
+.date {
+  font-size: 16px;
+  color: rgba(0, 0, 0, 0.6);
+  letter-spacing: 0.03em;
+}
+
+body.edit-mode .view-row {
+  display: none;
+}
+
+/* ── Edit mode: edit row ── */
+.edit-row {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+}
+
+body.edit-mode .edit-row {
+  display: flex;
+}
+
+/* Rows marked for deletion */
+li.pending-delete {
+  background-color: rgba(192, 57, 43, 0.08);
+}
+
+li.pending-delete .edit-row input {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+/* Checkbox (delete mark) */
+.del-check {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(44, 32, 21, 0.3);
+  border-radius: 3px;
+  cursor: pointer;
+  position: relative;
+  background: #faf7f4;
+  transition: border-color 80ms, background 80ms;
+}
+
+.del-check:checked {
+  background: #c0392b;
+  border-color: #c0392b;
+}
+
+.del-check:checked::after {
+  content: "✕";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #fff;
+  font-weight: bold;
+}
+
+/* Inline name input */
+.rename-input {
+  flex: 1;
+  font-size: 15px;
+  background-color: #faf7f4;
+  border: 1px solid rgba(44, 32, 21, 0.2);
+  border-radius: 4px;
+  padding: 4px 8px;
+  outline: none;
+  color: var(--color-text);
+  transition: border-color 120ms;
+}
+
+.rename-input:focus {
+  border-color: rgba(90, 74, 58, 0.5);
+}
+
+.rename-input.dirty {
+  border-color: var(--color-accent);
+  background: #fff;
+}
+
+/* Date (edit mode) */
+.edit-date {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Batch commit bar ── */
+.commit-bar {
+  display: none;
+  margin-top: 12px;
+  gap: 8px;
+  align-items: center;
+}
+
+body.edit-mode .commit-bar {
+  display: flex;
+}
+
+.commit-btn {
+  flex: 1;
+  padding: 9px 0;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  font-family: var(--font-serif);
+  transition: background 80ms;
+}
+
+.commit-btn.apply {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.commit-btn.apply:hover {
+  background: #3d3028;
+}
+
+.commit-btn.apply:disabled {
+  background: rgba(90, 74, 58, 0.3);
+  cursor: default;
+}
+
+.commit-btn.cancel {
+  background: rgba(44, 32, 21, 0.1);
+  color: var(--color-text);
+}
+
+.commit-btn.cancel:hover {
+  background: rgba(44, 32, 21, 0.18);
+}
+
+/* ── Result message ── */
+.result-msg {
+  margin-top: 10px;
+  font-size: 16px;
+  padding: 8px 12px;
+  border-radius: 5px;
+  display: none;
+}
+
+.result-msg.error {
+  background: rgba(192, 57, 43, 0.12);
+  color: #922b21;
+  display: block;
+}
+
+.result-msg.ok {
+  background: rgba(39, 174, 96, 0.12);
+  color: #1a7a42;
+  display: block;
+}
+
+.empty {
+  background-color: var(--color-pane);
+  border-radius: 6px;
+  padding: 9px 14px;
+  font-size: 16px;
+  color: rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-card);
+}
