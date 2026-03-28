@@ -103,53 +103,54 @@ svg > .item > .item > foreignObject > .content {
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
-/* ボックス：影・グラデ・ホバー */
+
+
+
 [data-shape=box] > foreignObject > .content {
-  padding: 0.15em 0.4em;
-  background: linear-gradient(160deg, #ffffff 0%, #f4f4f4 100%);
-  border: 1px solid #bbb;
-  border-radius: 5px;
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.12),
-    0 2px 6px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  transition: box-shadow 150ms ease, transform 150ms ease;
-}
-[data-shape=box] > foreignObject > .content:hover {
-  box-shadow:
-    0 3px 8px rgba(0, 0, 0, 0.16),
-    0 5px 14px rgba(0, 0, 0, 0.10),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  transform: translateY(-1px);
+  padding: 0.2em 0.55em;
+  background: linear-gradient(160deg,
+    color-mix(in srgb, var(--item-color, #ffffff) 22%, #ffffff) 0%,
+    color-mix(in srgb, var(--item-color, #ececec) 30%, #ececec) 100%
+  );
+  border: 2px solid color-mix(in srgb, var(--item-color, transparent) 75%, #333333);
+  border-radius: 4px;
+  box-shadow: 1px 2px 4px rgba(0,0,0,0.14);
+  transition: box-shadow 120ms ease, background 120ms ease;
 }
 
-/* ルートノード：少し強調 */
-svg > .item > foreignObject > .content {
-  box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.18),
-    0 4px 12px rgba(0, 0, 0, 0.10),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
-
-/* 楕円：影・グラデ */
 [data-shape=ellipse] > foreignObject > .content {
-  background: linear-gradient(160deg, #ffffff 0%, #f0f0f0 100%);
-  border: 1px solid #bbb;
+  padding: 0.4em 1.1em;
+  background: linear-gradient(160deg,
+    color-mix(in srgb, var(--item-color, #ffffff) 22%, #ffffff) 0%,
+    color-mix(in srgb, var(--item-color, #ececec) 30%, #ececec) 100%
+  );
+  border: 2px solid color-mix(in srgb, var(--item-color, transparent) 75%, #333333);
   border-radius: 50%;
-  padding: 0.5em 1em;
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.12),
-    0 2px 6px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  transition: box-shadow 150ms ease, transform 150ms ease;
+  box-shadow: 1px 2px 4px rgba(0,0,0,0.14);
+  transition: box-shadow 120ms ease, background 120ms ease;
 }
-[data-shape=ellipse] > foreignObject > .content:hover {
-  box-shadow:
-    0 3px 8px rgba(0, 0, 0, 0.16),
-    0 5px 14px rgba(0, 0, 0, 0.10),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+
+/* box ホバー */
+[data-shape=box] > foreignObject > .content:hover {
+  background: rgba(255, 255, 200, 0.7);
+  box-shadow: 2px 3px 10px rgba(0,0,0,0.24);
   transform: translateY(-1px);
 }
+
+/* ellipse ホバー */
+[data-shape=ellipse] > foreignObject > .content:hover {
+  background: rgba(255, 255, 200, 0.7);
+  box-shadow: 2px 3px 10px rgba(0,0,0,0.24);
+}
+
+/* underline ホバー */
+[data-shape=underline] > foreignObject > .content:hover {
+  background: rgba(255, 255, 200, 0.7);
+  border-radius: 3px;
+}
+
+
 
 [data-align=left] > foreignObject > .content > :not(.text):not(.notes) {
   margin-right: 0.3em;
