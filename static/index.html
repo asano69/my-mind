@@ -56,27 +56,27 @@
       <p>
         <label><span>Item color</span>
         <span id="color" class="color-picker">
-          <a data-color=""        title="Inherit" href="#"></a>
-          <a data-color="#000000" title="Black"   href="#"></a>
-          <a data-color="#D62728" title="Red"     href="#"></a>
-          <a data-color="#1F77B4" title="Blue"    href="#"></a>
-          <a data-color="#2CA02C" title="Green"   href="#"></a>
-          <a data-color="#FF7F0E" title="Orange"  href="#"></a>
-          <a data-color="#9467BD" title="Purple"  href="#"></a>
-          <a data-color="#aaaaaa" title="Gray"    href="#"></a>
+          <a data-color=""     title="Inherit" href="#"></a>
+          <a data-color="#000" title="Black"   href="#"></a>
+          <a data-color="#d33" title="Red"     href="#"></a>
+          <a data-color="#33d" title="Blue"    href="#"></a>
+          <a data-color="#3d3" title="Green"   href="#"></a>
+          <a data-color="#d3d" title="Magenta" href="#"></a>
+          <a data-color="#3dd" title="Cyan"    href="#"></a>
+          <a data-color="#dd3" title="Yellow"  href="#"></a>
         </span></label>
       </p>
       <p>
         <label><span>Text color</span>
         <span id="text-color" class="color-picker">
-          <a data-color=""        title="Inherit" href="#"></a>
-          <a data-color="#000000" title="Black"   href="#"></a>
-          <a data-color="#D62728" title="Red"     href="#"></a>
-          <a data-color="#1F77B4" title="Blue"    href="#"></a>
-          <a data-color="#2CA02C" title="Green"   href="#"></a>
-          <a data-color="#FF7F0E" title="Orange"  href="#"></a>
-          <a data-color="#9467BD" title="Purple"  href="#"></a>
-          <a data-color="#aaaaaa" title="Gray"    href="#"></a>
+          <a data-color=""     title="Inherit" href="#"></a>
+          <a data-color="#000" title="Black"   href="#"></a>
+          <a data-color="#d33" title="Red"     href="#"></a>
+          <a data-color="#33d" title="Blue"    href="#"></a>
+          <a data-color="#3d3" title="Green"   href="#"></a>
+          <a data-color="#d3d" title="Magenta" href="#"></a>
+          <a data-color="#3dd" title="Cyan"    href="#"></a>
+          <a data-color="#dd3" title="Yellow"  href="#"></a>
         </span></label>
       </p>
     </div>
@@ -178,6 +178,11 @@
     <button data-command="center"></button>
   </div>
 
+  <button id="help-btn" data-command="help" title="Help">
+    <img src="img/help.png" alt="Help">
+  </button>
+
+
   <script>
     document.addEventListener("keydown", function(e) {
       if (e.ctrlKey && e.key === "s") { e.preventDefault(); }
@@ -185,8 +190,5 @@
   </script>
   <script src="my-mind.js"></script>
 
-  <button id="help-btn" data-command="help" title="Help">
-    <img src="img/help.png" alt="Help">
-  </button>
 </body>
 </html>
