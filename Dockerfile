@@ -12,7 +12,7 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" \
 
 # Stage 2: runtime
 FROM alpine:3.23
-RUN apk add --no-cache ca-certificates su-exec busybox-extras
+RUN apk add --no-cache ca-certificates su-exec busybox-extras tzdata
 
 COPY --from=go-builder /build/my-mind /usr/local/bin/my-mind
 COPY static/ /app/static/
