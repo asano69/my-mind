@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"embed"
+	//"embed"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -16,8 +16,8 @@ import (
 
 // catalog.html をバイナリに埋め込みます
 //
-//go:embed catalog.html
-var embeddedFiles embed.FS
+// 5:embed catalog.html
+//var embeddedFiles embed.FS
 
 var mimeTypes = map[string]string{
 	".html":   "text/html; charset=utf-8",
@@ -43,7 +43,11 @@ type Handler struct {
 }
 
 func New(staticDir, mapsDir string) *Handler {
-	tmpl := template.Must(template.ParseFS(embeddedFiles, "catalog.html"))
+	//tmpl := template.Must(template.ParseFS(embeddedFiles, "catalog.html"))
+
+	tmpl := template.Must(
+		template.ParseFiles(filepath.Join(staticDir, "catalog.html")),
+	)
 	return &Handler{
 		StaticDir: staticDir,
 		MapsDir:   mapsDir,
