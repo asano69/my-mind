@@ -218,6 +218,9 @@ svg > .item > .item > foreignObject > .content {
 /* -------------------------------------------------------------
    Selected node (current) highlight
    ------------------------------------------------------------- */
+/* -------------------------------------------------------------
+   Selected node (current) highlight
+   ------------------------------------------------------------- */
 [data-shape=box].item.current     > foreignObject > .content,
 [data-shape=ellipse].item.current > foreignObject > .content {
   background:
@@ -227,15 +230,42 @@ svg > .item > .item > foreignObject > .content {
       rgba(255, 255, 255, 0.72) 0%,
       rgba(255, 255, 255, 0.0)  100%
     ),
-    /* Selection tint — yellow weighted heavily regardless of token opacity */
+    /* Selection tint — yellow blended with item color.
+       Adjust the second percentage to control yellow intensity:
+       0% = item color only, 100% = solid yellow (#ffffbb) */
     color-mix(
       in srgb,
       color-mix(in srgb, var(--item-color, #f0f0f0) 18%, #ffffff) 25%,
-      rgb(255, 255, 187) 55% /*<-*/
+      rgb(255, 255, 187) 55%
     );
-  box-shadow: var(--node-shadow-current);
+
+  box-shadow:
+    var(--node-shadow-current),
+    0 3px 8px  rgba(0, 0, 0, 0.14),   /* outer lift shadow */
+    0 1px 2px  rgba(0, 0, 0, 0.08),   /* outer contact shadow */
+    /* inset top highlight intentionally omitted — avoids white line on yellow bg */
+    inset 0 -2px 6px rgba(0, 0, 0, 0.06);  /* bottom shade, very subtle */
+
   /* mix-blend-mode removed — it was flattening out the gloss */
 }
+
+/* Hover lift is preserved for selected nodes */
+[data-shape=box].item.current     > foreignObject > .content:hover,
+[data-shape=ellipse].item.current > foreignObject > .content:hover {
+  box-shadow:
+    var(--node-shadow-current), var(--node-shadow-hover),
+    0 3px 8px  rgba(0, 0, 0, 0.14),
+    0 1px 2px  rgba(0, 0, 0, 0.08),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+/* Fallback for nodes without data-shape */
+.item.current > foreignObject > .content {
+  background: var(--node-bg-current);
+  box-shadow: var(--node-shadow-current);
+}
+
 
 /* -------------------------------------------------------------
    Text alignment (left / right)
