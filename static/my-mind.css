@@ -211,15 +211,15 @@ button:not(:disabled) {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 1px;
+  gap: 2px;
   margin: 0px;
 }
 
 .pane#ui .color-picker [data-color] {
-  width: 19px;
-  height: 19px;
-  border-radius: 15px;
-  border: 1px solid rgba(0, 0, 0, 0);
+  width: 18px;
+  height: 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(30, 30, 30, 0.8);
   transition: transform 120ms ease;
 }
 
@@ -419,8 +419,9 @@ button:not(:disabled) {
    ------------------------------------------------------------- */
 #help-btn {
   position: fixed;
-  top: 5px;
+  bottom: 8px;
   left: 8px;
+  top: unset;
   border: none;
   background-color: transparent;
   padding: 0;
@@ -433,26 +434,18 @@ button:not(:disabled) {
 #help-btn img {
   display: block;
 }
-
 #catalog-link {
   position: fixed;
   top: 5px;
-  left: var(--catalog-link-left);
+  left: 8px;
   display: block;
   z-index: 10;
   transition: left 0.5s;
 }
-
 /* Shift both buttons when the help pane is open */
 body:has(#help:not([hidden])) #help-btn {
   left: var(--help-pane-width);
 }
-
-body:has(#help:not([hidden])) #catalog-link {
-  left: calc(var(--help-pane-width) + var(--catalog-link-left));
-}
-
-
 /* -------------------------------------------------------------
    Print
    ------------------------------------------------------------- */
