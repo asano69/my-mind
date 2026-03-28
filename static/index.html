@@ -184,19 +184,6 @@
 
 
   <script>
-		const shortcuts = [
-		  { ctrl: true, key: "s" },
-		  { ctrl: true, key: "o" },
-		];
-
-		document.addEventListener("keydown", (e) => {
-		  const key = e.key.toLowerCase();
-		  const ctrl = e.ctrlKey || e.metaKey;
-
-		  if (shortcuts.some(s => s.ctrl === ctrl && s.key === key)) {
-		    e.preventDefault();
-		  }
-		}, { capture: true });
 	</script>
   <script src="my-mind.js"></script>
 
