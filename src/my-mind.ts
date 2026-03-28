@@ -12,7 +12,6 @@ import { repo as commandRepo } from "./command/command.js";
 import "./command/select.js";
 import "./command/edit.js";
 const port = document.querySelector<HTMLElement>("main")!;
-const throbber = document.querySelector<HTMLElement>("#throbber")!;
 export let currentMap: Map;
 export let currentItem: Item;
 export let editing = false;
@@ -35,8 +34,9 @@ export function selectItem(item: Item) {
 	currentItem.select();
 	currentMap.ensureItemVisibility(currentItem);
 }
+// removed: throbber element query (now using .spinner div)
 export function setThrobber(visible: boolean) {
-	throbber.hidden = !visible;
+	document.querySelector<HTMLElement>(".spinner")!.hidden = !visible;
 }
 export function startEditing() {
 	editing = true;
@@ -47,11 +47,12 @@ export function stopEditing() {
 	return currentItem.stopEditing();
 }
 async function init() {
+	setThrobber(true);
 	await initMap();
 	pubsub.subscribe("ui-change", syncPort);
 	window.addEventListener("resize", syncPort);
-	// TODO: 自動保存を実装したら beforeunload を復活させてデータ保護を行う
-	// 例!: 未保存の変更がある場合のみ警告 or 保存完了を待ってからページ遷移を許可
+	// TODO: re-enable beforeunload when auto-save is implemented
+	// e.g. warn only if unsaved changes exist, or wait for save to complete before navigating away
 	// window.addEventListener("beforeunload", e => {
 	// 	e.preventDefault();
 	// 	return "";
@@ -63,8 +64,9 @@ async function init() {
 	ui.init(port);
 	syncPort();
 	showMap(new Map());
+	setThrobber(false);
 }
-function syncPort() { // fixme k cemu?
+function syncPort() {
 	let portSize = [window.innerWidth - ui.getWidth(), window.innerHeight];
 	port.style.width = portSize[0] + "px";
 	port.style.height = portSize[1] + "px";
