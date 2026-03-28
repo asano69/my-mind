@@ -111,7 +111,7 @@ export default class GraphLayout extends Layout {
 				`M ${itemAnchor}`,
 				`C ${[midX, itemAnchor[1]]} ${[midX, childAnchor[1]]} ${childAnchor}`
 			);
-			let path = svg.node("path", {d:d.join(" "), stroke:resolvedColor, fill:"none"});
+			let path = svg.node("path", {d:d.join(" "), stroke:resolvedColor, fill:"none", "stroke-width":"2"});
 			dom.connectors.append(path);
 			return;
 		}
@@ -155,7 +155,7 @@ export default class GraphLayout extends Layout {
 			d.push(`M ${lineStart}`, `L ${childAnchor}`);
 		}
 
-		let path = svg.node("path", {d:d.join(" "), stroke:resolvedColor, fill:"none"});
+		let path = svg.node("path", {d:d.join(" "), stroke:resolvedColor, fill:"none", "stroke-width":"2"});
 		dom.connectors.append(path);
 	}
 
@@ -186,7 +186,7 @@ export default class GraphLayout extends Layout {
 			let childAnchor = [cross[0], this.getChildAnchor(child, side)];
 			d.push(`M ${cross}`, `L ${childAnchor}`);
 
-			let path = svg.node("path", {d:d.join(" "), stroke:resolvedColor, fill:"none"});
+			let path = svg.node("path", {d:d.join(" "), stroke:resolvedColor, fill:"none", "stroke-width":"2"});
 			dom.connectors.append(path);
 			return;
 		}
@@ -223,7 +223,7 @@ export default class GraphLayout extends Layout {
 			d.push(`M ${lineStart}`, `L ${childAnchor}`);
 		}
 
-		let path = svg.node("path", {d:d.join(" "), stroke:resolvedColor, fill:"none"});
+		let path = svg.node("path", {d:d.join(" "), stroke:resolvedColor, fill:"none", "stroke-width":"2"});
 		dom.connectors.append(path);
 	}
 }

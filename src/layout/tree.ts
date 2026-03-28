@@ -86,7 +86,7 @@ export default class TreeLayout extends Layout {
 			);
 		});
 
-		let path = svg.node("path", {d:d.join(" "), stroke:resolvedColor, fill:"none"});
+		let path = svg.node("path", {d:d.join(" "), stroke:resolvedColor, fill:"none", "stroke-width":"2"});
 		dom.connectors.append(path);
 	}
 }

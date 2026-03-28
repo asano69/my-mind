@@ -21,7 +21,7 @@ export default class Underline extends Shape {
 			`M ${left} ${top}`,
 			`L ${right} ${top}`
 		];
-		let path = svg.node("path", {d:d.join(" "), stroke:resolvedColor, fill:"none"});
+		let path = svg.node("path", {d:d.join(" "), stroke:resolvedColor, fill:"none", "stroke-width":"2"});
 		dom.connectors.append(path);
 	}
 
