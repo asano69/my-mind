@@ -1,7 +1,7 @@
 package handler
 
 import (
-	//"embed"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -14,11 +14,6 @@ import (
 	"time"
 )
 
-// catalog.html をバイナリに埋め込みます
-//
-// 5:embed catalog.html
-//var embeddedFiles embed.FS
-
 var mimeTypes = map[string]string{
 	".html":   "text/html; charset=utf-8",
 	".js":     "application/javascript",
@@ -30,6 +25,23 @@ var mimeTypes = map[string]string{
 	".mymind": "application/json",
 }
 
+// pageMeta holds the data passed to the base template partial.
+type pageMeta struct {
+	Title   string
+	Favicon bool
+}
+
+// catalogData is the template data for catalog.html.
+type catalogData struct {
+	PageMeta pageMeta
+	Maps     []mapEntry
+}
+
+// indexData is the template data for index.html / editor.html.
+type indexData struct {
+	PageMeta pageMeta
+}
+
 type mapEntry struct {
 	Name    string
 	URL     string
@@ -37,22 +49,43 @@ type mapEntry struct {
 }
 
 type Handler struct {
-	StaticDir string
-	MapsDir   string
-	listTmpl  *template.Template
+	StaticDir   string
+	MapsDir     string
+	catalogTmpl *template.Template
+	indexTmpl   *template.Template
+	editorTmpl  *template.Template
 }
 
 func New(staticDir, mapsDir string) *Handler {
-	//tmpl := template.Must(template.ParseFS(embeddedFiles, "catalog.html"))
+	// Each child template is parsed first so it becomes the entry point for
+	// Execute(). base.html is parsed second so its {{define "base"}} block is
+	// available when the child calls {{template "base" .PageMeta}}.
+	base := filepath.Join(staticDir, "base.html")
 
-	tmpl := template.Must(
-		template.ParseFiles(filepath.Join(staticDir, "catalog.html")),
-	)
+	catalogTmpl := template.Must(template.ParseFiles(filepath.Join(staticDir, "catalog.html"), base))
+	indexTmpl := template.Must(template.ParseFiles(filepath.Join(staticDir, "index.html"), base))
+	editorTmpl := template.Must(template.ParseFiles(filepath.Join(staticDir, "editor.html"), base))
+
 	return &Handler{
-		StaticDir: staticDir,
-		MapsDir:   mapsDir,
-		listTmpl:  tmpl,
+		StaticDir:   staticDir,
+		MapsDir:     mapsDir,
+		catalogTmpl: catalogTmpl,
+		indexTmpl:   indexTmpl,
+		editorTmpl:  editorTmpl,
 	}
+}
+
+// renderTemplate buffers template execution so that a template error never
+// triggers a superfluous WriteHeader call after the response has already
+// started being written.
+func renderTemplate(w http.ResponseWriter, tmpl *template.Template, data any) {
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		http.Error(w, "Template error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Write(buf.Bytes())
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -141,21 +174,22 @@ func (h *Handler) listMaps(w http.ResponseWriter) {
 		return list[i].ModTime.After(list[j].ModTime)
 	})
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := h.listTmpl.Execute(w, list); err != nil {
-		http.Error(w, "Template error", http.StatusInternalServerError)
-	}
+	renderTemplate(w, h.catalogTmpl, catalogData{
+		PageMeta: pageMeta{Title: "Maps"},
+		Maps:     list,
+	})
 }
 
 func (h *Handler) serveIndex(w http.ResponseWriter) {
-	fpath := filepath.Join(h.StaticDir, "index.html")
-	data, err := os.ReadFile(fpath)
-	if err != nil {
-		http.Error(w, "Not found", http.StatusNotFound)
-		return
-	}
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write(data)
+	renderTemplate(w, h.indexTmpl, indexData{
+		PageMeta: pageMeta{Title: "My Mind", Favicon: true},
+	})
+}
+
+func (h *Handler) serveEditor(w http.ResponseWriter) {
+	renderTemplate(w, h.editorTmpl, indexData{
+		PageMeta: pageMeta{Title: "Editor"},
+	})
 }
 
 func (h *Handler) getMap(w http.ResponseWriter, path string) {
@@ -188,6 +222,13 @@ func (h *Handler) serveStatic(w http.ResponseWriter, path string) {
 	if path == "/" || path == "" {
 		path = "/index.html"
 	}
+
+	// editor.html is served as a template (not a raw static file).
+	if path == "/editor.html" {
+		h.serveEditor(w)
+		return
+	}
+
 	fpath, err := safeJoin(h.StaticDir, path)
 	if err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
@@ -231,9 +272,9 @@ func (h *Handler) putMap(w http.ResponseWriter, r *http.Request, path string) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-// renameMap は PATCH /maps/{name}.mymind を処理する。
-// ボディ: プレーンテキストの新しいベース名（拡張子なしでも可）。
-// ファイルのリネームに加えて、JSON 内の root.text も新しいベース名に書き換える。
+// renameMap handles PATCH /maps/{name}.mymind.
+// Body: plain-text new base name (extension optional).
+// Renames the file and rewrites root.text inside the JSON payload.
 func (h *Handler) renameMap(w http.ResponseWriter, r *http.Request, path string) {
 	srcRel := strings.TrimPrefix(path, "/maps")
 	srcPath, err := safeJoin(h.MapsDir, srcRel)
@@ -258,7 +299,6 @@ func (h *Handler) renameMap(w http.ResponseWriter, r *http.Request, path string)
 		http.Error(w, "New name is required", http.StatusBadRequest)
 		return
 	}
-	// 拡張子を正規化
 	newFileName := newBase
 	if !strings.HasSuffix(newFileName, ".mymind") {
 		newFileName += ".mymind"
@@ -267,7 +307,6 @@ func (h *Handler) renameMap(w http.ResponseWriter, r *http.Request, path string)
 		http.Error(w, "Invalid name", http.StatusBadRequest)
 		return
 	}
-	// root.text に使うベース名（拡張子なし）
 	newText := strings.TrimSuffix(newFileName, ".mymind")
 
 	dstPath := filepath.Join(h.MapsDir, newFileName)
@@ -278,7 +317,6 @@ func (h *Handler) renameMap(w http.ResponseWriter, r *http.Request, path string)
 		}
 	}
 
-	// ファイルを読み込み、root.text を書き換える
 	raw, err := os.ReadFile(srcPath)
 	if err != nil {
 		http.Error(w, "Failed to read file", http.StatusInternalServerError)
@@ -293,23 +331,20 @@ func (h *Handler) renameMap(w http.ResponseWriter, r *http.Request, path string)
 		if updated, marshalErr := json.MarshalIndent(doc, "", "\t"); marshalErr == nil {
 			raw = updated
 		}
-		// パース/マーシャル失敗時はファイル内容そのままでリネームのみ続行
 	}
 
 	if srcPath == dstPath {
-		// ファイル名変更なし・JSON 内容だけ更新
 		if err := os.WriteFile(srcPath, raw, 0644); err != nil {
 			http.Error(w, "Failed to write file", http.StatusInternalServerError)
 			return
 		}
 	} else {
-		// 新パスに書いてから旧ファイルを削除（クロスデバイスでも安全）
 		if err := os.WriteFile(dstPath, raw, 0644); err != nil {
 			http.Error(w, "Failed to write file", http.StatusInternalServerError)
 			return
 		}
 		if err := os.Remove(srcPath); err != nil {
-			os.Remove(dstPath) // ロールバック
+			os.Remove(dstPath) // rollback
 			http.Error(w, "Failed to remove old file", http.StatusInternalServerError)
 			return
 		}
@@ -319,7 +354,7 @@ func (h *Handler) renameMap(w http.ResponseWriter, r *http.Request, path string)
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// deleteMap は DELETE /maps/{name}.mymind を処理する。
+// deleteMap handles DELETE /maps/{name}.mymind.
 func (h *Handler) deleteMap(w http.ResponseWriter, path string) {
 	rel := strings.TrimPrefix(path, "/maps")
 	fpath, err := safeJoin(h.MapsDir, rel)

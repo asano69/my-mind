@@ -1,200 +1,23 @@
-
-<!DOCTYPE html>
-<!-- catalog.html -->
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Maps</title>
-  <style>
-    * { box-sizing: border-box; font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; }
-    html, body { margin: 0; height: 100%; background-color: #f5ede4; color: #2c2015; }
-
-    .catalog-link {
-      position: fixed; top: 8px; left: 8px; z-index: 10; display: block;
-    }
-
-    main {
-      max-width: 640px; margin: 3rem auto; padding: 0 1.5rem;
-    }
-
-    /* ── Header ── */
-    .header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 1rem;
-    }
-    h1 {
-      font-size: 30px; text-transform: uppercase; letter-spacing: 0.06em;
-      font-family: "TeX Gyre Termes", "Nimbus Roman No9 L", "Times New Roman", "Times", serif;
-      color: #000; margin: 0;
-    }
-    .mode-btn {
-      font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase;
-      font-family: "TeX Gyre Termes", "Nimbus Roman No9 L", "Times New Roman", "Times", serif;
-      border: 1px solid rgba(44,32,21,0.25); border-radius: 4px;
-      padding: 4px 10px; cursor: pointer; background: transparent;
-      color: #2c2015; transition: background 80ms, color 80ms;
-    }
-    .mode-btn:hover { background: rgba(44,32,21,0.08); }
-    /* active color in edit mode */
-    body.edit-mode .mode-btn {
-      background: #5a4a3a; color: #fff; border-color: #5a4a3a;
-    }
-
-    /* ── Search ── */
-    .search-wrap {
-
-      position: relative;
-      margin-bottom: 1rem;
-    }
-    .search-wrap::before {
-      content: "?"; position: absolute; left: 10px; top: 50%;
-      transform: translateY(-50%); font-size: 16px; color: rgba(0,0,0,0.3);
-      pointer-events: none;
-    }
-    input[type="search"] {
-      width: 100%; background-color: #faf7f4;
-      border: 1px solid rgba(44,32,21,0.15); font-size: 16px;
-      letter-spacing: 0.03em; border-radius: 6px;
-      padding: 8px 10px 8px 30px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.10);
-      transition: border-color 200ms; -webkit-appearance: none;
-    }
-    input[type="search"]:focus { border-color: rgba(90,74,58,0.45); outline: none; }
-
-    /* ── List ── */
-    ul {
-      list-style: none; padding: 0; margin: 0;
-      background-color: #ede0d4; border-radius: 6px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.10);
-      overflow: hidden;
-    }
-    li { border-bottom: 1px solid rgba(0,0,0,0.07); }
-    li:last-child { border-bottom: none; }
-    li[hidden] { display: none; }
-
-    /* ── View mode: link row ── */
-    .view-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 11px 14px; text-decoration: none; color: #2c2015;
-      transition: background-color 80ms ease;
-    }
-    .view-row:hover  { background-color: #5a4a3a; color: #fff; }
-    .view-row:hover .date { color: rgba(255,255,255,0.6); }
-    .view-row:focus  { outline: none; background-color: #5a4a3a; color: #fff; }
-    .view-row:focus .date { color: rgba(255,255,255,0.6); }
-
-    .name {
-      font-size: 18px;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-
-    .date { font-size: 16px; color: rgba(0,0,0,0.6); letter-spacing: 0.03em; }
-
-    /* hide link row in edit mode */
-    body.edit-mode .view-row { display: none; }
-
-    /* ── Edit mode: edit row ── */
-    .edit-row {
-      display: none; /* hidden by default */
-      align-items: center; gap: 8px;
-      padding: 7px 10px;
-    }
-    body.edit-mode .edit-row { display: flex; }
-
-    /* rows marked for deletion */
-    li.pending-delete { background-color: rgba(192,57,43,0.08); }
-    li.pending-delete .edit-row input { opacity: 0.4; text-decoration: line-through; }
-
-    /* Checkbox (delete mark) */
-    .del-check {
-      appearance: none; -webkit-appearance: none;
-      width: 18px; height: 18px; flex-shrink: 0;
-      border: 1.5px solid rgba(44,32,21,0.3); border-radius: 3px;
-      cursor: pointer; position: relative; background: #faf7f4;
-      transition: border-color 80ms, background 80ms;
-    }
-    .del-check:checked {
-      background: #c0392b; border-color: #c0392b;
-    }
-    .del-check:checked::after {
-      content: "✕";
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 11px; color: #fff; font-weight: bold;
-    }
-
-    /* Inline name input */
-    .rename-input {
-      flex: 1; font-size: 15px; background-color: #faf7f4;
-      border: 1px solid rgba(44,32,21,0.2); border-radius: 4px;
-      padding: 4px 8px; outline: none; color: #2c2015;
-      transition: border-color 120ms;
-    }
-    .rename-input:focus { border-color: rgba(90,74,58,0.5); }
-    /* modified */
-    .rename-input.dirty { border-color: #5a4a3a; background: #fff; }
-
-    /* Date (edit mode) */
-    .edit-date {
-      font-size: 12px; color: rgba(0,0,0,0.45); white-space: nowrap; flex-shrink: 0;
-    }
-
-    /* ── Batch commit bar ── */
-    .commit-bar {
-      display: none; /* controlled by JS */
-      margin-top: 12px;
-      gap: 8px;
-      align-items: center;
-    }
-    body.edit-mode .commit-bar { display: flex; }
-    .commit-btn {
-      flex: 1; padding: 9px 0; border: none; border-radius: 6px;
-      font-size: 14px; cursor: pointer; letter-spacing: 0.03em;
-      font-family: "TeX Gyre Termes", "Nimbus Roman No9 L", "Times New Roman", "Times", serif;
-      transition: background 80ms;
-    }
-    .commit-btn.apply {
-      background: #5a4a3a; color: #fff;
-    }
-    .commit-btn.apply:hover { background: #3d3028; }
-    .commit-btn.apply:disabled { background: rgba(90,74,58,0.3); cursor: default; }
-    .commit-btn.cancel {
-      background: rgba(44,32,21,0.1); color: #2c2015;
-    }
-    .commit-btn.cancel:hover { background: rgba(44,32,21,0.18); }
-
-    /* ── Result message ── */
-    .result-msg {
-      margin-top: 10px; font-size: 16px; padding: 8px 12px;
-      border-radius: 5px; display: none;
-    }
-    .result-msg.error { background: rgba(192,57,43,0.12); color: #922b21; display: block; }
-    .result-msg.ok    { background: rgba(39,174,96,0.12);  color: #1a7a42; display: block; }
-
-    .empty {
-      background-color: #ede0d4; border-radius: 6px; padding: 9px 14px;
-      font-size: 16px; color: rgba(0,0,0,0.4);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.10);
-    }
-  </style>
-</head>
+{{template "base" .PageMeta}}
+{{define "head-extra"}}
+  <link rel="stylesheet" href="catalog.css">
+{{end}}
 <body>
   <a href="/" target="_self" class="catalog-link">
-    <img src="img/catalog-open.png" alt="Catalog" />
+    <img src="img/catalog-open.png" alt="Catalog">
   </a>
   <main>
     <div class="header">
       <h1>Index</h1>
-      {{if .}}<button class="mode-btn" id="modeToggle">Edit</button>{{end}}
+      {{if .Maps}}<button class="mode-btn" id="modeToggle">Edit</button>{{end}}
     </div>
 
-    {{if .}}
+    {{if .Maps}}
     <div class="search-wrap">
       <input type="search" id="search" placeholder="filter..." autofocus>
     </div>
     <ul id="list">
-      {{range .}}
+      {{range .Maps}}
       <li data-name="{{.Name}}" data-orig="{{.Name}}">
         <!-- view mode -->
         <a class="view-row" href="{{.URL}}">
@@ -251,10 +74,7 @@
         const cb    = li.querySelector('.del-check');
         const input = li.querySelector('.rename-input');
         if (cb)    cb.checked = false;
-        if (input) {
-          input.value = li.dataset.orig;
-          input.classList.remove('dirty');
-        }
+        if (input) { input.value = li.dataset.orig; input.classList.remove('dirty'); }
       });
       hideResult();
     }
@@ -270,16 +90,13 @@
     if (list) {
       list.addEventListener('change', (e) => {
         if (!e.target.classList.contains('del-check')) return;
-        const li = e.target.closest('li');
-        li.classList.toggle('pending-delete', e.target.checked);
+        e.target.closest('li').classList.toggle('pending-delete', e.target.checked);
       });
 
-      /* track name changes */
       list.addEventListener('input', (e) => {
         if (!e.target.classList.contains('rename-input')) return;
         const li = e.target.closest('li');
-        const dirty = e.target.value.trim() !== li.dataset.orig;
-        e.target.classList.toggle('dirty', dirty);
+        e.target.classList.toggle('dirty', e.target.value.trim() !== li.dataset.orig);
       });
     }
 
@@ -300,37 +117,27 @@
             toDelete.push({ li, orig });
           } else if (input) {
             const newName = input.value.trim();
-            if (newName && newName !== orig) {
-              toRename.push({ li, orig, newName });
-            }
+            if (newName && newName !== orig) toRename.push({ li, orig, newName });
           }
         });
 
-        if (toDelete.length === 0 && toRename.length === 0) {
-          leaveEditMode();
-          return;
-        }
+        if (toDelete.length === 0 && toRename.length === 0) { leaveEditMode(); return; }
 
         applyBtn.disabled = true;
         hideResult();
 
         const errors = [];
 
-        /* ── delete ── */
+        /* -- delete -- */
         for (const { li, orig } of toDelete) {
           try {
             const res = await fetch(`/maps/${encodeURIComponent(orig)}.mymind`, { method: 'DELETE' });
-            if (res.ok) {
-              li.remove();
-            } else {
-              errors.push(`Delete failed: "${orig}" (${res.status})`);
-            }
-          } catch {
-            errors.push(`Delete error: "${orig}"`);
-          }
+            if (res.ok) { li.remove(); }
+            else { errors.push(`Delete failed: "${orig}" (${res.status})`); }
+          } catch { errors.push(`Delete error: "${orig}"`); }
         }
 
-        /* ── rename ── */
+        /* -- rename -- */
         for (const { li, orig, newName } of toRename) {
           try {
             const res = await fetch(`/maps/${encodeURIComponent(orig)}.mymind`, {
@@ -352,9 +159,7 @@
             } else {
               errors.push(`Rename failed: "${orig}" → "${newName}" (${res.status})`);
             }
-          } catch {
-            errors.push(`Rename error: "${orig}"`);
-          }
+          } catch { errors.push(`Rename error: "${orig}"`); }
         }
 
         applyBtn.disabled = false;
@@ -364,11 +169,8 @@
           list.remove();
         }
 
-        if (errors.length > 0) {
-          showResult('error', errors.join('\n'));
-        } else {
-          leaveEditMode();
-        }
+        if (errors.length > 0) { showResult('error', errors.join('\n')); }
+        else { leaveEditMode(); }
       });
     }
 
@@ -412,19 +214,10 @@
         const idx     = links.indexOf(current);
         if (idx === -1) return;
         switch (e.key) {
-          case 'ArrowDown':
-            e.preventDefault();
-            if (idx + 1 < links.length) links[idx + 1].focus();
-            break;
-          case 'ArrowUp':
-            e.preventDefault();
-            if (idx > 0) links[idx - 1].focus();
-            else search && search.focus();
-            break;
-          case 'Enter':
-            e.preventDefault(); current.click(); break;
-          case 'Escape':
-            search && (search.focus(), search.select()); break;
+          case 'ArrowDown':  e.preventDefault(); if (idx + 1 < links.length) links[idx + 1].focus(); break;
+          case 'ArrowUp':    e.preventDefault(); if (idx > 0) links[idx - 1].focus(); else search && search.focus(); break;
+          case 'Enter':      e.preventDefault(); current.click(); break;
+          case 'Escape':     search && (search.focus(), search.select()); break;
         }
       });
     }
@@ -434,12 +227,7 @@
       const d   = new Date(parseInt(el.dataset.modtime, 10) * 1000);
       const pad = n => String(n).padStart(2, '0');
       const yy  = String(d.getFullYear()).slice(2);
-      const mm  = pad(d.getMonth() + 1);
-      const dd  = pad(d.getDate());
-      const HH  = pad(d.getHours());
-      const min = pad(d.getMinutes());
-      const ss  = pad(d.getSeconds());
-      el.textContent = `${yy}${mm}${dd}.${HH}${min}${ss}`;
+      el.textContent = `${yy}${pad(d.getMonth()+1)}${pad(d.getDate())}.${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
     });
   </script>
 </body>

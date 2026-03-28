@@ -1,0 +1,20 @@
+/* =============================================================
+   theme.css — shared design tokens (loaded by every page)
+   ============================================================= */
+
+:root {
+  /* Fonts */
+  --font-sans:  system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: "TeX Gyre Termes", "Nimbus Roman No9 L", "Times New Roman", "Times", serif;
+  --font-mono:  "Menlo", "Consolas", "Monaco", monospace;
+
+  /* Palette — warm parchment family */
+  --color-bg:         #f5ede4;  /* page / canvas background   */
+  --color-pane:       #ede0d4;  /* panel / surface background */
+  --color-pane-hover: #d9c9bb;  /* hovered item inside panel  */
+  --color-accent:     #5a4a3a;  /* primary interactive/active */
+  --color-text:       #2c2015;  /* body text                  */
+
+  /* Shadows */
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.18), 0 1px 4px rgba(0, 0, 0, 0.10);
+}
