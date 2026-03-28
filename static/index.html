@@ -11,12 +11,14 @@
 	</head>
 
 	<body>
+
     <main>
-        <!--<div id="tip"></div>-->
-        <a href="/catalog" target="_self" id="catalog-link"
-           style="position:fixed;top:8px;left:8px;display:block;">
+        <a href="/catalog" target="_self" id="catalog-link">
             <img src="img/catalog.png" alt="Catalog" />
         </a>
+        <button id="help-btn" title="Help" onclick="document.querySelector('#help.pane').hidden = !document.querySelector('#help.pane').hidden">
+            <img src="img/help.png" alt="Help" />
+        </button>
 
     </main>
 		<div id="ui" class="pane">
@@ -90,7 +92,6 @@
 				</p>
 			</div>
 			<footer></footer>
-			<button data-command="help" title="Help"><img src="img/help.png" alt="Help" /></button>
 			<button data-command="notes" title="Notes"><img src="img/notes.png" alt="Notes" /></button>
 			<button id="toggle" data-command="ui" title="Toggle UI"><img src="img/menu.png" alt="Menu" /></button>
 

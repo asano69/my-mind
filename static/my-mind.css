@@ -119,11 +119,7 @@ button:not(:disabled) {
 .pane#ui button img {
   display: block;
 }
-.pane#ui button[data-command=help] {
-  position: absolute;
-  left: -50px;
-  top: 5px;
-}
+
 .pane#ui button[data-command=notes] {
   position: absolute;
   left: -90px;
@@ -131,7 +127,7 @@ button:not(:disabled) {
 }
 .pane#ui #toggle {
   position: absolute;
-  left: -130px;
+  left: -50px;
   top: 5px;
   width: 32px;
   border: none;
@@ -281,15 +277,37 @@ button:not(:disabled) {
 #note-preview-inner img { max-width: 200px; height: auto; opacity: 0.2; }
 #note-preview[hidden] { display: none; }
 
-/* catalog リンクを help ペインより前面に */
+/* catalogはシフトしない */
 #catalog-link {
+  position: fixed;
+  top: 5px;
+  left: 48px;
+  display: block;
   z-index: 10;
-  transition: left 0.5s;  /* helpペインと同じ速度でシフト */
 }
-/* help ペインが開いたらcatalogを右にずらす */
-body:has(#help:not([hidden])) #catalog-link {
-  left: 258px;  /* helpペインの幅250px + 少し余白 */
+
+/* helpボタンがhelpペイン開閉に連動してシフト */
+#help-btn {
+  position: fixed;
+  top: 5px;
+  left: 8px;
+  border: none;
+  background-color: transparent;
+  padding: 0;
+  width: 32px;
+  cursor: pointer;
+  z-index: 10;
+  transition: left 0.5s;
 }
+
+#help-btn img {
+  display: block;
+}
+
+body:has(#help:not([hidden])) #help-btn {
+  left: 250px;
+}
+
 
 @media print {
   .pane,
