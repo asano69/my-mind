@@ -131,26 +131,14 @@ button:not(:disabled) {
 }
 .pane#ui #toggle {
   position: absolute;
-  left: -20px;
-  top: 48%;
-  width: 35px;
-  height: 35px;
-  padding: 0 0 0 2px;
-  text-align: left;
+  left: -130px;
+  top: 5px;
+  width: 32px;
   border: none;
-  background-color: #ede0d4; /* ペイン背景と統一 */
-  box-shadow: -3px 0 8px rgba(0, 0, 0, 0.18);
-  line-height: 8px;
-  border-radius: 50%;
+  background-color: transparent;
+  padding: 0;
 }
-.pane#ui #toggle::after {
-  content: "→";
-  font-weight: bold;
-  font-size: 22px;
-}
-.pane#ui[hidden] #toggle::after {
-  content: "←";
-}
+
 .pane#ui .color-picker {
   display: flex;
   flex-direction: row;
