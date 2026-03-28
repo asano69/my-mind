@@ -1,6 +1,11 @@
 * {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
+/* Allow containers that explicitly set font-family (e.g. #note-preview-inner)
+   to have that value inherited by their children, overriding the * rule above. */
+#note-preview-inner * {
+  font-family: inherit;
+}
 html,
 body {
   margin: 0;
@@ -32,7 +37,7 @@ button:not(:disabled) {
   right: 0;
   top: 0;
   height: 100%;
-  background-color: #ede0d4; /* 温白色：完全な白より馴染む */
+  background-color: #ede0d4;
   width: 200px;
   box-shadow: -3px 0 12px rgba(0, 0, 0, 0.20);
   -webkit-transition: -webkit-transform 500ms;
@@ -50,7 +55,7 @@ button:not(:disabled) {
   left: -60px;
 }
 .pane h3 {
-  background-color: #ede0d4; /* 少し深い色に */
+  background-color: #ede0d4;
   color: #000000;
   padding: 0.3em 0;
   margin: 0;
@@ -62,7 +67,7 @@ button:not(:disabled) {
 }
 .pane select,
 .pane input {
-  background-color: #fff; /* 白背景で入力欄を浮かせる */
+  background-color: #fff;
   border: 1px solid rgba(50, 70, 90, 0.4);
   font-size: 18px;
   border-radius: 4px;
@@ -83,7 +88,7 @@ button:not(:disabled) {
 .pane p {
   margin: 0;
   padding: 7px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.07); /* 各行を区切る */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
 }
 .pane p.desc {
   font-size: 13px;
@@ -94,8 +99,10 @@ button:not(:disabled) {
   align-items: center;
   justify-content: space-between;
 }
+/* Label text uses an elegant serif font */
 .pane label span {
   display: block;
+  font-family: "TeX Gyre Termes", "Nimbus Roman No9 L", "Times New Roman", "Times", serif;
   text-transform: uppercase;
   font-size: 75%;
   color: #000000;
@@ -148,7 +155,6 @@ button:not(:disabled) {
   border-radius: 15px;
   border: 1px solid rgba(0, 0, 0, 0);
   transition: transform 120ms ease;
-
 }
 .pane#ui .color-picker [data-color]:hover {
   transform: scale(1.3);
@@ -157,7 +163,6 @@ button:not(:disabled) {
 .pane#ui .color-picker [data-color]:first-child {
   border-color: #000;
 }
-
 
 .pane#ui footer {
   display: flex;
@@ -197,11 +202,26 @@ button:not(:disabled) {
   text-align: right;
   padding-right: 16px;
 }
+/* Close / Save buttons — styled to match the note editor's bar buttons */
 .pane#io button {
   width: 45%;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  font-family: inherit;
+  padding: 4px 10px;
+  opacity: 0.6;
+  border-radius: 3px;
+  color: #5a4a3a;
+  transition: opacity 80ms ease, background-color 80ms ease;
+}
+.pane#io button:hover {
+  opacity: 1;
+  background: #d9c9bb;
 }
 .pane#io button.go {
   font-weight: bold;
+  opacity: 0.85;
 }
 .pane#notes {
   width: 50%;
@@ -248,47 +268,57 @@ button:not(:disabled) {
 }
 
 #note-preview {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
-    pointer-events: none;
-    z-index: 0;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  pointer-events: none;
+  z-index: 0;
 }
 #note-preview-inner {
-    max-width: 100vw;
-    max-height: 100vh;
-    overflow: hidden;
-    font-size: 1.1em;
-    line-height: 1.7;
-    color: rgba(90, 60, 30, 0.2);
-    padding: 1.5em;
+  max-width: 100vw;
+  max-height: 100vh;
+  overflow: hidden;
+  /* Serif font for an editorial, note-like feel */
+  font-family: "TeX Gyre Termes", "Nimbus Roman No9 L", "Times New Roman", "Times", serif;
+  font-size: 1.1em;
+  line-height: 1.7;
+  /* Opacity raised from 0.2 → 0.45 → 0.58 for better legibility as a watermark */
+  color: rgba(90, 60, 30, 0.58);
+  padding: 1.5em;
 }
 #note-preview-inner a {
-    color: rgba(90, 60, 30, 0.2);
-    text-decoration: none;
-    pointer-events: none;
+  color: rgba(90, 60, 30, 0.58);
+  text-decoration: none;
+  pointer-events: none;
 }
-#note-preview-inner h1 { font-size: 2em; margin: 0.3em 0; }
+#note-preview-inner h1 { font-size: 2em;   margin: 0.3em 0; }
 #note-preview-inner h2 { font-size: 1.5em; margin: 0.3em 0; }
 #note-preview-inner h3 { font-size: 1.2em; margin: 0.3em 0; }
-#note-preview-inner p { margin: 0.3em 0; }
+#note-preview-inner p  { margin: 0.3em 0; }
 #note-preview-inner ul { margin: 0.3em 0; padding-left: 1.5em; }
 #note-preview-inner img { max-width: 200px; height: auto; opacity: 0.2; }
 #note-preview[hidden] { display: none; }
 
-/* catalogはシフトしない */
+/* catalog link — position and transition align with #help-btn */
 #catalog-link {
   position: fixed;
   top: 5px;
   left: 48px;
   display: block;
   z-index: 10;
+  transition: left 0.5s;
 }
 
-/* helpボタンがhelpペイン開閉に連動してシフト */
+/* Shift catalog-link rightward when the help pane is open,
+   matching the same offset applied to #help-btn */
+body:has(#help:not([hidden])) #catalog-link {
+  left: 298px; /* 250px (help pane width) + 48px original offset */
+}
+
+/* help button shifts with the help pane */
 #help-btn {
   position: fixed;
   top: 5px;

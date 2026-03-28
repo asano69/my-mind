@@ -23,7 +23,7 @@
             background: #f5ede4;
         }
 
-        /* バー */
+        /* ツールバー — app.css の .pane#io button と同じ設計 */
         #bar {
             flex: none;
             display: flex;
@@ -43,8 +43,17 @@
             opacity: 0.6;
             border-radius: 3px;
             color: #5a4a3a;
+            transition: opacity 80ms ease, background-color 80ms ease;
         }
-        #bar button:hover { opacity: 1; background: #d9c9bb; }
+        #bar button:hover {
+            opacity: 1;
+            background: #d9c9bb;
+        }
+        /* View/Edit トグルは主アクションなので少し強調 */
+        #bar #toggle-btn {
+            opacity: 0.85;
+            font-weight: bold;
+        }
         #bar .spacer { margin-left: auto; }
 
         /* ビューペイン */
@@ -52,6 +61,8 @@
             flex: 1;
             overflow-y: auto;
             padding: 20px 24px;
+            /* Serif font — matches #note-preview-inner in app.css */
+            font-family: "TeX Gyre Termes", "Nimbus Roman No9 L", "Times New Roman", "Times", serif;
             font-size: 18px;
             line-height: 1.8;
             background: #f5ede4;
@@ -137,7 +148,6 @@
             'link', 'image', 'table', 'horizontal-rule'
         ]
     });
-    // ↓ 最初に編集モードの場合はここに追加する
     document.getElementById('view-pane').classList.add('hidden');
     document.getElementById('edit-pane').classList.remove('hidden');
     document.getElementById('toggle-btn').textContent = 'View';
