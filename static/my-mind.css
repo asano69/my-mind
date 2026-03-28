@@ -139,14 +139,16 @@ button:not(:disabled) {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 3px;
+  gap: 1px;
+  margin: 0px;
 }
 .pane#ui .color-picker [data-color] {
-  width: 15px;
-  height: 15px;
+  width: 19px;
+  height: 19px;
   border-radius: 15px;
   border: 1px solid rgba(0, 0, 0, 0);
   transition: transform 120ms ease;
+
 }
 .pane#ui .color-picker [data-color]:hover {
   transform: scale(1.3);

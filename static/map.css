@@ -104,10 +104,14 @@ svg > .item > .item > foreignObject > .content {
 }
 
 /* ボックス：影・グラデ・ホバー */
+/* ボックス */
 [data-shape=box] > foreignObject > .content {
   padding: 0.15em 0.4em;
-  background: linear-gradient(160deg, #ffffff 0%, #f4f4f4 100%);
-  border: 1px solid #bbb;
+  background: linear-gradient(160deg,
+    color-mix(in srgb, var(--item-color, #ffffff) 12%, #ffffff) 0%,
+    color-mix(in srgb, var(--item-color, #efefef) 20%, #efefef) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--item-color, #cccccc) 40%, #ffffff);
   border-radius: 5px;
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.12),
@@ -115,6 +119,7 @@ svg > .item > .item > foreignObject > .content {
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
   transition: box-shadow 150ms ease, transform 150ms ease;
 }
+
 [data-shape=box] > foreignObject > .content:hover {
   box-shadow:
     0 3px 8px rgba(0, 0, 0, 0.16),
@@ -132,9 +137,13 @@ svg > .item > foreignObject > .content {
 }
 
 /* 楕円：影・グラデ */
+/* 楕円 */
 [data-shape=ellipse] > foreignObject > .content {
-  background: linear-gradient(160deg, #ffffff 0%, #f0f0f0 100%);
-  border: 1px solid #bbb;
+  background: linear-gradient(160deg,
+    color-mix(in srgb, var(--item-color, #ffffff) 12%, #ffffff) 0%,
+    color-mix(in srgb, var(--item-color, #efefef) 20%, #efefef) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--item-color, #cccccc) 40%, #ffffff);
   border-radius: 50%;
   padding: 0.5em 1em;
   box-shadow:
@@ -143,6 +152,7 @@ svg > .item > foreignObject > .content {
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
   transition: box-shadow 150ms ease, transform 150ms ease;
 }
+
 [data-shape=ellipse] > foreignObject > .content:hover {
   box-shadow:
     0 3px 8px rgba(0, 0, 0, 0.16),
