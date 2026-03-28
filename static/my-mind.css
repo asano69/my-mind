@@ -21,7 +21,7 @@
   --color-border-menu: rgba(0, 0, 0, 0.12);  /* context-menu separator */
 
   /* Note-preview watermark color (opacity intentionally partial) */
-  --color-preview-ink: rgba(90, 60, 30, 0.68);
+  --color-preview-ink: rgba(90, 60, 30, 0.95);
 
   /* Layout */
   --help-pane-width:    250px;
