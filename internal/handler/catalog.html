@@ -13,7 +13,7 @@
     }
 
     main {
-      max-width: 480px; margin: 3rem auto; padding: 0 1.5rem;
+      max-width: 640px; margin: 3rem auto; padding: 0 1.5rem;
     }
 
     /* ── Header ── */
@@ -22,11 +22,13 @@
       margin-bottom: 1rem;
     }
     h1 {
-      font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em;
+      font-size: 30px; text-transform: uppercase; letter-spacing: 0.06em;
+      font-family: "TeX Gyre Termes", "Nimbus Roman No9 L", "Times New Roman", "Times", serif;
       color: #000; margin: 0;
     }
     .mode-btn {
-      font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase;
+      font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase;
+      font-family: "TeX Gyre Termes", "Nimbus Roman No9 L", "Times New Roman", "Times", serif;
       border: 1px solid rgba(44,32,21,0.25); border-radius: 4px;
       padding: 4px 10px; cursor: pointer; background: transparent;
       color: #2c2015; transition: background 80ms, color 80ms;
@@ -38,9 +40,13 @@
     }
 
     /* ── Search ── */
-    .search-wrap { position: relative; margin-bottom: 1rem; }
+    .search-wrap {
+
+      position: relative;
+      margin-bottom: 1rem;
+    }
     .search-wrap::before {
-      content: "⌕"; position: absolute; left: 10px; top: 50%;
+      content: "?"; position: absolute; left: 10px; top: 50%;
       transform: translateY(-50%); font-size: 16px; color: rgba(0,0,0,0.3);
       pointer-events: none;
     }
@@ -75,8 +81,13 @@
     .view-row:hover .date { color: rgba(255,255,255,0.6); }
     .view-row:focus  { outline: none; background-color: #5a4a3a; color: #fff; }
     .view-row:focus .date { color: rgba(255,255,255,0.6); }
-    .name { font-size: 16px; }
-    .date { font-size: 13px; color: rgba(0,0,0,0.6); letter-spacing: 0.03em; }
+
+    .name {
+      font-size: 18px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .date { font-size: 16px; color: rgba(0,0,0,0.6); letter-spacing: 0.03em; }
 
     /* hide link row in edit mode */
     body.edit-mode .view-row { display: none; }
@@ -138,6 +149,7 @@
     .commit-btn {
       flex: 1; padding: 9px 0; border: none; border-radius: 6px;
       font-size: 14px; cursor: pointer; letter-spacing: 0.03em;
+      font-family: "TeX Gyre Termes", "Nimbus Roman No9 L", "Times New Roman", "Times", serif;
       transition: background 80ms;
     }
     .commit-btn.apply {
@@ -152,7 +164,7 @@
 
     /* ── Result message ── */
     .result-msg {
-      margin-top: 10px; font-size: 13px; padding: 8px 12px;
+      margin-top: 10px; font-size: 16px; padding: 8px 12px;
       border-radius: 5px; display: none;
     }
     .result-msg.error { background: rgba(192,57,43,0.12); color: #922b21; display: block; }
@@ -160,7 +172,7 @@
 
     .empty {
       background-color: #ede0d4; border-radius: 6px; padding: 9px 14px;
-      font-size: 13px; color: rgba(0,0,0,0.4);
+      font-size: 16px; color: rgba(0,0,0,0.4);
       box-shadow: 0 4px 12px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.10);
     }
   </style>
@@ -325,7 +337,6 @@
               body: newName,
             });
             if (res.ok) {
-              // update UI
               li.dataset.name = newName;
               li.dataset.orig = newName;
               const viewName = li.querySelector('.view-row .name');
@@ -346,7 +357,6 @@
 
         applyBtn.disabled = false;
 
-        // show empty message if list is now empty
         if (list.querySelectorAll('li').length === 0) {
           list.insertAdjacentHTML('afterend', '<p class="empty">no maps found.</p>');
           list.remove();
