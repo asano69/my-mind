@@ -1,0 +1,234 @@
+{{template "base" .PageMeta}}
+{{define "head-extra"}}
+  <link rel="stylesheet" href="catalog.css">
+{{end}}
+<body>
+  <a href="/" target="_self" class="catalog-link">
+    <img src="img/catalog-open.png" alt="Catalog">
+  </a>
+  <main>
+    <div class="header">
+      <h1>Index</h1>
+      {{if .Maps}}<button class="mode-btn" id="modeToggle">Edit</button>{{end}}
+    </div>
+
+    {{if .Maps}}
+    <div class="search-wrap">
+      <input type="search" id="search" placeholder="filter..." autofocus>
+    </div>
+    <ul id="list">
+      {{range .Maps}}
+      <li data-name="{{.Name}}" data-orig="{{.Name}}">
+        <!-- view mode -->
+        <a class="view-row" href="{{.URL}}">
+          <span class="name">{{.Name}}</span>
+          <span class="date" data-modtime="{{.ModTime.Unix}}"></span>
+        </a>
+        <!-- edit mode -->
+        <div class="edit-row">
+          <input type="checkbox" class="del-check" title="Mark for deletion">
+          <input type="text" class="rename-input" value="{{.Name}}" spellcheck="false">
+          <span class="edit-date" data-modtime="{{.ModTime.Unix}}"></span>
+        </div>
+      </li>
+      {{end}}
+    </ul>
+
+    <!-- batch commit bar (visible in edit mode only) -->
+    <div class="commit-bar">
+      <button class="commit-btn cancel" id="cancelBtn">Cancel</button>
+      <button class="commit-btn apply"  id="applyBtn">Apply</button>
+    </div>
+    <div class="result-msg" id="resultMsg"></div>
+
+    {{else}}
+    <p class="empty">no maps found.</p>
+    {{end}}
+  </main>
+
+  <script>
+    /* ===== Elements ===== */
+    const body       = document.body;
+    const modeToggle = document.getElementById('modeToggle');
+    const search     = document.getElementById('search');
+    const list       = document.getElementById('list');
+    const applyBtn   = document.getElementById('applyBtn');
+    const cancelBtn  = document.getElementById('cancelBtn');
+    const resultMsg  = document.getElementById('resultMsg');
+
+    /* ===== Mode toggle ===== */
+    function enterEditMode() {
+      body.classList.add('edit-mode');
+      if (modeToggle) modeToggle.textContent = 'Browse';
+      hideResult();
+    }
+    function leaveEditMode() {
+      body.classList.remove('edit-mode');
+      if (modeToggle) modeToggle.textContent = 'Edit';
+      resetEdits();
+    }
+    function resetEdits() {
+      if (!list) return;
+      list.querySelectorAll('li').forEach(li => {
+        li.classList.remove('pending-delete');
+        const cb    = li.querySelector('.del-check');
+        const input = li.querySelector('.rename-input');
+        if (cb)    cb.checked = false;
+        if (input) { input.value = li.dataset.orig; input.classList.remove('dirty'); }
+      });
+      hideResult();
+    }
+
+    if (modeToggle) {
+      modeToggle.addEventListener('click', () => {
+        body.classList.contains('edit-mode') ? leaveEditMode() : enterEditMode();
+      });
+    }
+    if (cancelBtn) cancelBtn.addEventListener('click', leaveEditMode);
+
+    /* ===== Delete mark ===== */
+    if (list) {
+      list.addEventListener('change', (e) => {
+        if (!e.target.classList.contains('del-check')) return;
+        e.target.closest('li').classList.toggle('pending-delete', e.target.checked);
+      });
+
+      list.addEventListener('input', (e) => {
+        if (!e.target.classList.contains('rename-input')) return;
+        const li = e.target.closest('li');
+        e.target.classList.toggle('dirty', e.target.value.trim() !== li.dataset.orig);
+      });
+    }
+
+    /* ===== Batch commit ===== */
+    if (applyBtn) {
+      applyBtn.addEventListener('click', async () => {
+        if (!list) return;
+
+        const toDelete = [];
+        const toRename = [];
+
+        list.querySelectorAll('li:not([hidden])').forEach(li => {
+          const cb    = li.querySelector('.del-check');
+          const input = li.querySelector('.rename-input');
+          const orig  = li.dataset.orig;
+
+          if (cb && cb.checked) {
+            toDelete.push({ li, orig });
+          } else if (input) {
+            const newName = input.value.trim();
+            if (newName && newName !== orig) toRename.push({ li, orig, newName });
+          }
+        });
+
+        if (toDelete.length === 0 && toRename.length === 0) { leaveEditMode(); return; }
+
+        applyBtn.disabled = true;
+        hideResult();
+
+        const errors = [];
+
+        /* -- delete -- */
+        for (const { li, orig } of toDelete) {
+          try {
+            const res = await fetch(`/maps/${encodeURIComponent(orig)}.mymind`, { method: 'DELETE' });
+            if (res.ok) { li.remove(); }
+            else { errors.push(`Delete failed: "${orig}" (${res.status})`); }
+          } catch { errors.push(`Delete error: "${orig}"`); }
+        }
+
+        /* -- rename -- */
+        for (const { li, orig, newName } of toRename) {
+          try {
+            const res = await fetch(`/maps/${encodeURIComponent(orig)}.mymind`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'text/plain' },
+              body: newName,
+            });
+            if (res.ok) {
+              li.dataset.name = newName;
+              li.dataset.orig = newName;
+              const viewName = li.querySelector('.view-row .name');
+              const viewLink = li.querySelector('.view-row');
+              const input    = li.querySelector('.rename-input');
+              if (viewName) viewName.textContent = newName;
+              if (viewLink) viewLink.href = `/m/${encodeURIComponent(newName)}.mymind`;
+              if (input)    { input.value = newName; input.classList.remove('dirty'); }
+            } else if (res.status === 409) {
+              errors.push(`Rename failed: "${orig}" → "${newName}" (name already exists)`);
+            } else {
+              errors.push(`Rename failed: "${orig}" → "${newName}" (${res.status})`);
+            }
+          } catch { errors.push(`Rename error: "${orig}"`); }
+        }
+
+        applyBtn.disabled = false;
+
+        if (list.querySelectorAll('li').length === 0) {
+          list.insertAdjacentHTML('afterend', '<p class="empty">no maps found.</p>');
+          list.remove();
+        }
+
+        if (errors.length > 0) { showResult('error', errors.join('\n')); }
+        else { leaveEditMode(); }
+      });
+    }
+
+    function showResult(type, msg) {
+      if (!resultMsg) return;
+      resultMsg.className = `result-msg ${type}`;
+      resultMsg.textContent = msg;
+    }
+    function hideResult() {
+      if (!resultMsg) return;
+      resultMsg.className = 'result-msg';
+      resultMsg.textContent = '';
+    }
+
+    /* ===== Search filter (view mode only) ===== */
+    function visibleLinks() {
+      return Array.from(list ? list.querySelectorAll('li:not([hidden]) .view-row') : []);
+    }
+
+    if (search) {
+      search.addEventListener('input', () => {
+        const q = search.value.toLowerCase();
+        list && list.querySelectorAll('li').forEach(li => {
+          li.hidden = !li.dataset.name.toLowerCase().includes(q);
+        });
+      });
+      search.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const links = visibleLinks();
+          if (links.length) links[0].focus();
+        }
+      });
+    }
+
+    if (list) {
+      list.addEventListener('keydown', (e) => {
+        if (body.classList.contains('edit-mode')) return;
+        const links   = visibleLinks();
+        const current = document.activeElement;
+        const idx     = links.indexOf(current);
+        if (idx === -1) return;
+        switch (e.key) {
+          case 'ArrowDown':  e.preventDefault(); if (idx + 1 < links.length) links[idx + 1].focus(); break;
+          case 'ArrowUp':    e.preventDefault(); if (idx > 0) links[idx - 1].focus(); else search && search.focus(); break;
+          case 'Enter':      e.preventDefault(); current.click(); break;
+          case 'Escape':     search && (search.focus(), search.select()); break;
+        }
+      });
+    }
+
+    /* ===== Date formatting ===== */
+    document.querySelectorAll('[data-modtime]').forEach(el => {
+      const d   = new Date(parseInt(el.dataset.modtime, 10) * 1000);
+      const pad = n => String(n).padStart(2, '0');
+      const yy  = String(d.getFullYear()).slice(2);
+      el.textContent = `${yy}${pad(d.getMonth()+1)}${pad(d.getDate())}.${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+    });
+  </script>
+</body>
+</html>

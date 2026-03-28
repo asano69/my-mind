@@ -1,10 +1,11 @@
 /* =============================================================
-   map.css
+   map.css — SVG mind-map node styles
+   Requires: theme.css loaded first (provides font token)
    ============================================================= */
 
 /* -------------------------------------------------------------
-   Design tokens
-   Edit values here to apply changes across the whole file.
+   Node-specific design tokens
+   (shared palette tokens live in theme.css)
    ------------------------------------------------------------- */
 :root {
   /* Node border */
@@ -13,10 +14,10 @@
   /* Node shadow (default) */
   --node-shadow: 3px 5px 14px rgba(0, 0, 0, 0.45);
 
-  /* Node shadow (hover) — box + ellipse */
+  /* Node shadow (hover) */
   --node-shadow-hover: 4px 7px 18px rgba(0, 0, 0, 0.50);
 
-  /* Underline hover: outline ring (mimics current-selection style) */
+  /* Underline hover: outline ring */
   --underline-hover-outline: 0 0 0 2px rgba(200, 180, 0, 0.5);
 
   /* Underline hover: yellow tint background */
@@ -36,7 +37,7 @@
 
   /* Status icon colors */
   --status-yes-color: #2CA02C;
-  --status-no-color: #f00;
+  --status-no-color:  #f00;
 }
 
 
@@ -44,7 +45,7 @@
    Base
    ------------------------------------------------------------- */
 * {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-sans);
 }
 
 
@@ -54,18 +55,15 @@
 svg > .item > foreignObject > .content {
   font-weight: bold;
   font-size: 140%;
-  /* border-width is not set here.
-     Managed centrally via --node-border-width in [data-shape=*]. */
 }
 
 svg > .item > .toggle {
   display: none;
 }
 
-/* Second-level node (direct grandchild of SVG) */
+/* Second-level node */
 svg > .item > .item > foreignObject > .content {
   font-size: 120%;
-  /* border-width is not set here. Same as above. */
 }
 
 
@@ -100,7 +98,6 @@ svg > .item > .item > foreignObject > .content {
   display: none;
 }
 
-/* Editable text area */
 .item .text {
   text-align: center;
   min-width: 0.5em;
@@ -109,10 +106,10 @@ svg > .item > .item > foreignObject > .content {
   outline: none;
 }
 
-/* Value display (wrapped in parentheses) */
 .item .value {
   opacity: 0.7;
 }
+
 .item .value:not(:empty)::before { content: "("; }
 .item .value:not(:empty)::after  { content: ")"; }
 
@@ -121,10 +118,12 @@ svg > .item > .item > foreignObject > .content {
   font-size: 150%;
   line-height: 1;
 }
+
 .item .status.yes::after {
   content: "✔";
   color: var(--status-yes-color);
 }
+
 .item .status.no::after {
   content: "✘";
   color: var(--status-no-color);
@@ -134,19 +133,21 @@ svg > .item > .item > foreignObject > .content {
 .item .toggle {
   cursor: pointer;
 }
+
 .item .toggle:not(:hover) {
   opacity: 0.7;
 }
+
 .item .toggle circle {
   stroke: var(--toggle-color);
   fill:   var(--toggle-color);
 }
+
 .item .toggle path {
   stroke: #fff;
   stroke-width: 2;
 }
 
-/* Toggle is visible only when current or collapsed */
 .item:not(.current):not(.collapsed) > .toggle {
   display: none;
 }
@@ -165,7 +166,6 @@ svg > .item > .item > foreignObject > .content {
 
 /* -------------------------------------------------------------
    Selected node (current) highlight
-   Covers both box and ellipse. Overrides shape styles via !important.
    ------------------------------------------------------------- */
 .item.current > foreignObject > .content,
 [data-shape=box].item.current     > foreignObject > .content,
@@ -177,7 +177,6 @@ svg > .item > .item > foreignObject > .content {
 
 /* -------------------------------------------------------------
    Shape styles — shared (box + ellipse)
-   Only padding and border-radius are overridden per shape below.
    ------------------------------------------------------------- */
 :is([data-shape=box], [data-shape=ellipse]) > foreignObject > .content {
   background: linear-gradient(
@@ -191,13 +190,11 @@ svg > .item > .item > foreignObject > .content {
   transition: box-shadow 120ms ease, transform 120ms ease;
 }
 
-/* box specific */
 [data-shape=box] > foreignObject > .content {
   padding: 0.2em 0.55em;
   border-radius: 4px;
 }
 
-/* ellipse specific */
 [data-shape=ellipse] > foreignObject > .content {
   padding: 0.4em 1.1em;
   border-radius: 50%;
@@ -205,16 +202,13 @@ svg > .item > .item > foreignObject > .content {
 
 
 /* -------------------------------------------------------------
-   Hover — lift effect on all shapes
+   Hover — lift effect
    ------------------------------------------------------------- */
-
-/* box + ellipse: lift + stronger shadow, no color change */
 :is([data-shape=box], [data-shape=ellipse]) > foreignObject > .content:hover {
   box-shadow: var(--node-shadow-hover);
   transform: translateY(-2px);
 }
 
-/* underline: lift + outline ring + yellow tint (mirrors current-selection feel) */
 [data-shape=underline] > foreignObject > .content:hover {
   background: var(--underline-hover-bg);
   box-shadow: var(--underline-hover-outline);
@@ -233,6 +227,7 @@ svg > .item > .item > foreignObject > .content {
 [data-align=right] > foreignObject > .content {
   flex-direction: row-reverse;
 }
+
 [data-align=right] > foreignObject > .content > :not(.text):not(.notes) {
   margin-left: 0.3em;
 }
