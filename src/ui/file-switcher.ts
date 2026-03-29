@@ -16,11 +16,11 @@ const STYLE = `
     padding-top: 12vh;
   }
   #fs-box {
-    background: #fff;
-    border: 1px solid #bbb;
+    background: var(--color-pane);
+    border: 1px solid rgba(44, 32, 21, 0.2);
     border-radius: 6px;
     width: min(520px, 90vw);
-    box-shadow: 0 8px 32px rgba(0,0,0,.22);
+    box-shadow: var(--shadow-card);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -31,9 +31,11 @@ const STYLE = `
     padding: 12px 14px;
     font-size: 15px;
     border: none;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid rgba(44, 32, 21, 0.15);
     outline: none;
-    font-family: inherit;
+    font-family: var(--font-sans);
+    background: var(--color-pane);
+    color: var(--color-text);
   }
   #fs-list {
     list-style: none;
@@ -46,24 +48,27 @@ const STYLE = `
     display: block;
     padding: 8px 14px;
     text-decoration: none;
-    color: #222;
+    color: var(--color-text);
     font-size: 14px;
+    font-family: var(--font-sans);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   #fs-list li a:hover,
   #fs-list li a:focus {
-    background: #f0f0f0;
+    background: var(--color-hover);
     outline: none;
   }
   #fs-list li a.fs-active {
-    background: #e8e8e8;
+    background: var(--color-pane-hover);
   }
   #fs-empty {
     padding: 12px 14px;
-    color: #888;
+    color: var(--color-accent);
+    opacity: 0.5;
     font-size: 13px;
+    font-family: var(--font-sans);
   }
 `;
 
