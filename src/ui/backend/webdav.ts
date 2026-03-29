@@ -3,37 +3,10 @@ import BackendUI from "./backend.js";
 import WebDAV from "../../backend/webdav.js";
 import * as app from "../../my-mind.js";
 import { repo as formatRepo } from "../../format/format.js";
+import { showToast } from "../toast.js";
 
 interface State {
 	url: string;
-}
-
-function showToast(message: string) {
-    const el = document.createElement("div");
-    el.textContent = message;
-    el.style.cssText = `
-        position: fixed;
-        bottom: 1.2rem;
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--color-hover);
-        color: var(--color-text);
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        font-size: 20px;
-        letter-spacing: 0.05em;
-        font-family: var(--font-serif);
-        box-shadow: var(--shadow-card);
-        border: 1px solid rgba(255,255,255,0.08);
-        opacity: 1;
-        transition: opacity 700ms ease 2500ms, transform 700ms ease 2500ms;
-        z-index: 9999;
-    `;
-    document.body.appendChild(el);
-    requestAnimationFrame(() => {
-        el.style.opacity = "0";
-        el.addEventListener("transitionend", () => el.remove());
-    });
 }
 
 export default class WebDAVUI extends BackendUI<WebDAV> {
@@ -72,7 +45,7 @@ export default class WebDAVUI extends BackendUI<WebDAV> {
           this.load(data.url);
           return;
       }
-      // 相対パス：ベースURLを決定する
+      // Resolve relative path against the configured base URL.
       const base = this.url.value || (() => {
           const { protocol, host } = window.location;
           return `${protocol}//${host}/maps`;
@@ -80,6 +53,7 @@ export default class WebDAVUI extends BackendUI<WebDAV> {
       const fullUrl = (base.endsWith("/") ? base : base + "/") + data.url;
       this.load(fullUrl);
   }
+
   async save() {
   	app.setThrobber(true);
   	var map = app.currentMap;
@@ -102,10 +76,11 @@ export default class WebDAVUI extends BackendUI<WebDAV> {
   		this.error(e);
   	}
   }
+
   get filename() { return this.node.querySelector<HTMLInputElement>(".filename")!; }
 
   async load(url?: string) {
-      // urlが指定されていない場合はfilename入力欄から生成
+      // Build URL from the filename input when no explicit URL is given.
       if (!url) {
           const base = this.url.value.endsWith("/") ? this.url.value : this.url.value + "/";
           const name = this.filename.value.trim().replace(/\.mymind$/, "");
@@ -114,7 +89,6 @@ export default class WebDAVUI extends BackendUI<WebDAV> {
       }
       this.current = url;
       app.setThrobber(true);
-      // this.url.value は固定なので書き換えない
       try {
           let data = await this.backend.load(url);
           let json = formatRepo.get("native")!.from(data);
