@@ -24,8 +24,8 @@ function handleEvent(e: KeyboardEvent) {
 
 export function init() {
     window.addEventListener("keydown", handleEvent);
+    window.focus();
 }
-
 
 function keyOK(key: Key, e: KeyboardEvent) {
 	return Object.entries(key).every(([key, value]) => e[key as EventProp] == value);
