@@ -36,21 +36,18 @@
       opacity: .55;
       border-bottom: 1px solid rgba(44,32,21,.1);
     }
-
-		#confirm-list {
-		  list-style: none;
-		  margin: 0;
-		  padding: 4px 0;
-		  max-height: 320px;
-		  overflow-y: auto;
-		}
-
-		#confirm-list li {
-		  padding: 8px 14px;
-		  font-size: 15px;
-		  font-family: var(--font-sans);
-		}
-
+    #confirm-list {
+      list-style: none;
+      margin: 0;
+      padding: 4px 0;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    #confirm-list li {
+      padding: 8px 14px;
+      font-size: var(--header-btn-font-size);
+      font-family: var(--font-sans);
+    }
     #confirm-list .diff-delete { color: #922b21; }
     #confirm-list .diff-rename { color: var(--color-text); opacity: .8; }
     #confirm-actions {
@@ -62,17 +59,18 @@
       padding: 10px 8px;
       border: none;
       border-radius: 0;
-      font-size: 15px;
+      font-size: var(--header-btn-font-size);
+      font-weight: normal;   /* suppress browser default bold on <button> */
       font-family: var(--font-sans);
       cursor: pointer;
       background: transparent;
       color: var(--color-text);
-      opacity: .55;
+      opacity: var(--header-btn-opacity);
       transition: opacity 80ms, background-color 80ms;
     }
     #confirm-actions button:hover,
     #confirm-actions button.focused {
-      opacity: 1;
+      opacity: var(--header-btn-opacity-hover);
       background: var(--color-hover);
     }
     #confirm-ok {
@@ -94,18 +92,17 @@
   <main>
     <div class="header">
       <h1>Index</h1>
-      {{if .Maps}}<button class="mode-btn" id="modeToggle">Edit</button>{{end}}
+      {{if .Maps}}
+      <div class="header-actions">
+        <button class="header-btn" id="modeToggle">Edit</button>
+        <button class="header-btn apply-btn" id="applyBtn">Apply</button>
+      </div>
+      {{end}}
     </div>
 
     {{if .Maps}}
     <div class="search-wrap">
       <input type="search" id="search" placeholder="filter..." autofocus>
-    </div>
-
-    <!-- batch commit bar (visible in edit mode only) -->
-    <div class="commit-bar">
-      <button class="commit-btn cancel" id="cancelBtn">Cancel</button>
-      <button class="commit-btn apply"  id="applyBtn">Apply</button>
     </div>
 
     <ul id="list">
@@ -155,7 +152,7 @@
     const search          = document.getElementById('search');
     const list            = document.getElementById('list');
     const applyBtn        = document.getElementById('applyBtn');
-    const cancelBtn       = document.getElementById('cancelBtn');
+
     const resultMsg       = document.getElementById('resultMsg');
     const confirmBackdrop = document.getElementById('confirm-backdrop');
     const confirmList     = document.getElementById('confirm-list');
@@ -165,7 +162,7 @@
     /* ===== Mode toggle ===== */
     function enterEditMode() {
       body.classList.add('edit-mode');
-      if (modeToggle) modeToggle.textContent = 'Browse';
+      if (modeToggle) modeToggle.textContent = 'Cancel';
       hideResult();
     }
     function leaveEditMode() {
@@ -433,3 +430,4 @@
   </script>
 </body>
 </html>
+
