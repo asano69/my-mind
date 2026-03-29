@@ -145,19 +145,18 @@
   <script type="module">
     import { showToast } from '/toast.js';
 
-    /* ===== Elements ===== */
-    const body            = document.body;
-    const modeToggle      = document.getElementById('modeToggle');
-    const newMapBtn       = document.getElementById('newMapBtn');
-    const search          = document.getElementById('search');
-    const list            = document.getElementById('list');
-    const applyBtn        = document.getElementById('applyBtn');
-
-    const resultMsg       = document.getElementById('resultMsg');
-    const confirmBackdrop = document.getElementById('confirm-backdrop');
-    const confirmList     = document.getElementById('confirm-list');
-    const confirmCancel   = document.getElementById('confirm-cancel');
-    const confirmOk       = document.getElementById('confirm-ok');
+		/* ===== Elements ===== */
+		const body            = document.body;
+		const modeToggle      = document.getElementById('modeToggle');
+		const newMapBtn       = document.getElementById('newMapBtn');
+		const search          = document.getElementById('search');
+		const list            = document.getElementById('list');
+		const applyBtn        = document.getElementById('applyBtn');
+		const resultMsg       = document.getElementById('resultMsg');
+		const confirmBackdrop = document.getElementById('confirm-backdrop');
+		const confirmList     = document.getElementById('confirm-list');
+		const confirmCancel   = document.getElementById('confirm-cancel');
+		const confirmOk       = document.getElementById('confirm-ok');
 
     /* ===== Mode toggle ===== */
     function enterEditMode() {
@@ -182,13 +181,19 @@
       hideResult();
     }
 
-    if (modeToggle) {
-      modeToggle.addEventListener('click', () => {
-        body.classList.contains('edit-mode') ? leaveEditMode() : enterEditMode();
-      });
-    }
-    if (cancelBtn) cancelBtn.addEventListener('click', leaveEditMode);
-    if (applyBtn)  applyBtn.addEventListener('click', openConfirmOverlay);
+
+  	if (modeToggle) {
+  	    modeToggle.addEventListener('click', () => {
+  	      body.classList.contains('edit-mode') ? leaveEditMode() : enterEditMode();
+  	    });
+  	  }
+  	  if (applyBtn) applyBtn.addEventListener('click', openConfirmOverlay);
+
+
+
+
+
+
 
     /* ===== New map button ===== */
     if (newMapBtn) {
