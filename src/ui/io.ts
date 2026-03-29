@@ -79,9 +79,28 @@ export function show(mode: Mode) {
 	syncBackend();
 	if (mode === "load") {
 		// Focus the filename input so the user can type immediately.
-		requestAnimationFrame(() => {
-			node.querySelector<HTMLInputElement>(".filename")?.focus();
-		});
+		//requestAnimationFrame(() => {
+		//    const input = node.querySelector<HTMLInputElement>(".filename");
+		//    if (input) {
+		//        input.value = "";
+		//        input.focus();
+		//    }
+		//});
+    requestAnimationFrame(() => {
+        const input = node.querySelector<HTMLInputElement>(".filename");
+        if (!input) { return; }
+        const now = new Date();
+        const yy = String(now.getFullYear()).slice(-2);
+        const mm = String(now.getMonth() + 1).padStart(2, "0");
+        const dd = String(now.getDate()).padStart(2, "0");
+        input.value = `${yy}${mm}${dd}`;
+        input.focus();
+        input.select();
+    });
+
+
+
+
 	}
 }
 
