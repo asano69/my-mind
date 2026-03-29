@@ -6,6 +6,7 @@ import * as help from "../ui/help.js";
 import * as notes from "../ui/notes.js";
 import * as ui from "../ui/ui.js";
 import * as io from "../ui/io.js";
+import * as fileSwitcher from "../ui/file-switcher.js";
 import Action, * as actions from "../action.js";
 import MindMap from "../map.js";
 import { Side, ChildItem } from "../item.js";
@@ -298,10 +299,11 @@ new (class Fold extends Command {
 	}
 });
 
+
 new (class QuickLoad extends Command {
 	keys = [{code:"KeyK", ctrlKey:true}];
 
 	constructor() { super("quick-load", "Quick load"); }
 
-	execute() { /* TODO */ }
+	execute() { fileSwitcher.toggle(); }
 });
