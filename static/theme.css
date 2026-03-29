@@ -44,11 +44,22 @@
   --toast-bottom:         1.2rem;
   --toast-linger:         2500ms; /* fully-visible duration before fade */
 
-	/* ── Shared toolbar/header button tokens ── */
-	--btn-font-size:     14px;
-	--btn-opacity:       0.6;
-	--btn-opacity-hover: 1;
-	--btn-padding:       4px 10px;
-
-
+	/* ── Shared button tokens ─────────────────────────────────────
+	 * Used by toolbar buttons (editor), header buttons (catalog),
+	 * and any future interactive button-like elements.
+	 * ------------------------------------------------------------ */
+	--btn-font-size:        16px;
+	--btn-font-weight:      normal;
+	--btn-font-family:      var(--font-sans);
+	--btn-letter-spacing:   0.04em;
+	--btn-text-transform:   uppercase;
+	--btn-padding:          4px 10px;
+	--btn-border-radius:    3px;
+	--btn-color:            var(--color-accent);
+	--btn-background:       transparent;
+	--btn-opacity:          0.6;
+	--btn-opacity-hover:    1;
+	--btn-opacity-disabled: 0.3;
+	--btn-transition:       opacity 80ms ease, background-color 80ms ease;
+	--btn-background-hover: var(--color-hover);
 }

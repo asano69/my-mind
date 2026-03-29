@@ -15,14 +15,6 @@ html, body {
   color: var(--color-text);
 }
 
-/* ── Design tokens (catalog-local) ── */
-:root {
-  --header-btn-font-size:    15px;
-  --header-btn-opacity:      0.55;
-  --header-btn-opacity-hover: 1;
-  --header-btn-padding:      4px 10px;
-}
-
 /* ── Fixed icon buttons (catalog, new) ── */
 .icon-btn {
   position: fixed;
@@ -86,28 +78,28 @@ h1 {
 /* ── Header buttons: shared base (Edit/Cancel toggle, Apply) ── */
 .header-btn {
   font-size: var(--btn-font-size);
-  font-weight: normal;         /* suppress browser default bold on <button> */
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  font-family: var(--font-sans);
+  font-weight: var(--btn-font-weight);
+  font-family: var(--btn-font-family);
+  letter-spacing: var(--btn-letter-spacing);
+  text-transform: var(--btn-text-transform);
   border: none;
-  border-radius: 3px;
+  border-radius: var(--btn-border-radius);
   padding: var(--btn-padding);
   cursor: pointer;
-  background: transparent;
-  color: var(--color-accent);
+  background: var(--btn-background);
+  color: var(--btn-color);
   opacity: var(--btn-opacity);
-  transition: opacity 80ms ease, background-color 80ms ease;
+  transition: var(--btn-transition);
 }
 
 .header-btn:hover {
   opacity: var(--btn-opacity-hover);
-  background: var(--color-hover);
+  background: var(--btn-background-hover);
 }
 
-/* Apply is hidden until edit mode is active */
-.apply-btn {
-  display: none;
+.apply-btn:disabled {
+  opacity: var(--btn-opacity-disabled);
+  cursor: default;
 }
 
 body.edit-mode .apply-btn {
