@@ -165,13 +165,7 @@ button:not(:disabled) {
   overflow: auto;
 }
 
-.pane#ui button {
-  border: none;
-  padding: 0;
-  background-color: transparent;
-  width: 32px;
-}
-
+/* Appearance is handled entirely by .icon-btn; only position overrides live here. */
 .pane#ui button img {
   display: block;
 }
@@ -186,10 +180,6 @@ button:not(:disabled) {
   position: absolute;
   left: -50px;
   top: 5px;
-  width: 32px;
-  border: none;
-  background-color: transparent;
-  padding: 0;
 }
 
 .pane#ui .color-picker {
@@ -397,11 +387,11 @@ button:not(:disabled) {
 
 
 /* -------------------------------------------------------------
-   Fixed icon buttons — shared base
-   Used by #catalog-link and #help-btn.
+   Icon buttons — shared base
+   Applied to all image-icon buttons across the page.
+   position is NOT set here; fixed/absolute is declared per-element below.
    ------------------------------------------------------------- */
 .icon-btn {
-  position: fixed;
   z-index: 10;
   padding: 4px;
   background: transparent;
@@ -423,6 +413,12 @@ button:not(:disabled) {
   display: block;
   width: 32px;
   height: 32px;
+}
+
+/* Fixed-position buttons */
+#catalog-link,
+#help-btn {
+  position: fixed;
 }
 
 /* Individual positions */
