@@ -21,7 +21,11 @@ import { repo as commandRepo } from "../command/command.js";
 const node = document.querySelector<HTMLElement>("#ui")!;
 
 export function isActive() {
-	return node.contains(document.activeElement) || io.isActive();
+    const active = document.activeElement;
+    const needsKeyboard = active instanceof HTMLInputElement
+        || active instanceof HTMLSelectElement
+        || active instanceof HTMLTextAreaElement;
+    return (needsKeyboard && node.contains(active)) || io.isActive();
 }
 
 export function toggle() {
