@@ -41,6 +41,7 @@ function ensureStyle() {
             font-size: var(--toast-font-size, 20px);
             letter-spacing: var(--toast-letter-spacing, 0.05em);
             font-family: var(--toast-font-family, var(--font-serif));
+            font-weight: var(--toast-font-weight, 400);
             box-shadow: var(--toast-shadow, var(--shadow-card));
             border: 1px solid rgba(255, 255, 255, 0.08);
             z-index: 9999;

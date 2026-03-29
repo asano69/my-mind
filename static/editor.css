@@ -40,7 +40,7 @@ html, body {
   border: none;
   cursor: pointer;
   font-size: 14px;
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   padding: 4px 10px;
   opacity: 0.6;
   border-radius: 3px;
@@ -52,7 +52,6 @@ html, body {
   opacity: 1;
   background: var(--color-hover);
 }
-
 
 #bar #toggle-btn {
   opacity: 0.85;
@@ -68,7 +67,7 @@ html, body {
   flex: 1;
   overflow-y: auto;
   padding: 20px 24px;
-  font-family: var(--font-serif);
+  font-family: var(--font-serif);  /* serif preserved: note body is reading content */
   font-size: 18px;
   line-height: 1.8;
   background: var(--color-bg);
@@ -125,6 +124,5 @@ html, body {
 
 .CodeMirror-cursor { border-left-color: var(--color-accent) !important; }
 .CodeMirror-selected { background: var(--color-pane-hover) !important; }
-
 .hidden { display: none !important; }
 .fa-close::before { content: "x"; font-style: normal; }
