@@ -54,12 +54,12 @@ function ensureStyle() {
             gap: 0.5em;
         }
         /* Subject (map name etc.) — visually subordinate to the label */
-        .toast-subject {
-            font-weight: 400;
-            opacity: 0.6;
-            font-size: 0.85em;
-            letter-spacing: 0.03em;
-        }
+				.toast-subject {
+				    font-weight: 400;
+				    font-size: 20px;
+				    letter-spacing: 0.03em;
+				    opacity: 0.85;
+				}
     `;
     document.head.appendChild(style);
 }
