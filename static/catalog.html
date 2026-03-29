@@ -85,9 +85,12 @@
   </style>
 {{end}}
 <body>
-  <a href="/" target="_self" class="catalog-link">
+  <button class="icon-btn catalog-btn" onclick="window.location.href='/'" title="Catalog">
     <img src="img/catalog-open.png" alt="Catalog">
-  </a>
+  </button>
+  <button id="newMapBtn" class="icon-btn new-btn" title="New map">
+    <img src="img/new.png" alt="New">
+  </button>
   <main>
     <div class="header">
       <h1>Index</h1>
@@ -148,6 +151,7 @@
     /* ===== Elements ===== */
     const body            = document.body;
     const modeToggle      = document.getElementById('modeToggle');
+    const newMapBtn       = document.getElementById('newMapBtn');
     const search          = document.getElementById('search');
     const list            = document.getElementById('list');
     const applyBtn        = document.getElementById('applyBtn');
@@ -188,6 +192,14 @@
     }
     if (cancelBtn) cancelBtn.addEventListener('click', leaveEditMode);
     if (applyBtn)  applyBtn.addEventListener('click', openConfirmOverlay);
+
+    /* ===== New map button ===== */
+    if (newMapBtn) {
+      newMapBtn.addEventListener('click', () => {
+        const filename = `${Math.floor(Date.now() / 1000)}.mymind`;
+        window.location.href = `/m/${filename}`;
+      });
+    }
 
     /* ===== Delete mark ===== */
     if (list) {

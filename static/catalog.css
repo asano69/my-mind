@@ -15,13 +15,41 @@ html, body {
   color: var(--color-text);
 }
 
-/* ── Fixed catalog icon ── */
-.catalog-link {
+/* ── Fixed icon buttons (catalog, new) ── */
+.icon-btn {
   position: fixed;
+  z-index: 10;
+  padding: 6px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.65;
+  transition: opacity 80ms ease, background-color 80ms ease;
+}
+
+.icon-btn:hover {
+  opacity: 1;
+  background: var(--color-hover);
+}
+
+.icon-btn img {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
+.catalog-btn {
   top: 8px;
   left: 8px;
-  z-index: 10;
-  display: block;
+}
+
+.new-btn {
+  top: 8px;
+  right: 8px;
 }
 
 main {
@@ -245,7 +273,6 @@ li.pending-delete .edit-row input {
   background: #fff;
 }
 
-
 /* Date (edit mode) */
 .edit-date {
   font-size: 12px;
@@ -258,7 +285,7 @@ li.pending-delete .edit-row input {
 .commit-bar {
   display: none;
   margin-top: 16px;
-  margin-bottom: 12px;  /* added: space below buttons */
+  margin-bottom: 12px;
   gap: 10px;
   align-items: center;
   padding: 0 2px;
@@ -270,7 +297,7 @@ body.edit-mode .commit-bar {
 
 .commit-btn {
   flex: 1;
-  padding: 8px 8px;       /* matches #bar button */
+  padding: 8px 8px;
   border: none;
   border-radius: 3px;
   font-size: 18px;
@@ -305,7 +332,6 @@ body.edit-mode .commit-bar {
   opacity: 1;
   background: var(--color-hover);
 }
-
 
 /* ── Result message ── */
 .result-msg {
