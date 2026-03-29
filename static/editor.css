@@ -37,28 +37,29 @@ html, body {
 
 /* ── Button ── */
 #bar button {
-  background: transparent;
+  background: var(--btn-background);
   border: none;
   cursor: pointer;
   font-size: var(--btn-font-size);
-  font-weight: normal;         /* suppress browser default bold on <button> */
-  font-family: var(--font-sans);
+  font-weight: var(--btn-font-weight);
+  font-family: var(--btn-font-family);
   padding: var(--btn-padding);
   opacity: var(--btn-opacity);
-  border-radius: 3px;
-  color: var(--color-accent);
-  transition: opacity 80ms ease, background-color 80ms ease;
+  border-radius: var(--btn-border-radius);
+  color: var(--btn-color);
+  transition: var(--btn-transition);
 }
 
 #bar button:hover {
   opacity: var(--btn-opacity-hover);
-  background: var(--color-hover);
+  background: var(--btn-background-hover);
 }
 
 #bar #toggle-btn {
   opacity: 0.85;
-  font-weight: bold;
+  /*font-weight: bold;*/
 }
+
 
 #bar .spacer {
   margin-left: auto;
