@@ -36,8 +36,8 @@
   --toast-color:          var(--color-text);
   --toast-padding:        0.5rem 1rem;
   --toast-radius:         8px;
-  --toast-font-size:      20px;
-  --toast-font-weight:    900;
+  --toast-font-size:      14px;
+  --toast-font-weight:    700;
   --toast-letter-spacing: 0.05em;
   --toast-font-family:    var(--font-sans);
   --toast-shadow:         var(--shadow-card);

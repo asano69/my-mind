@@ -5,62 +5,69 @@ JS       := .js
 FLAG     := $(JS)/.tsflag
 APP      := my-mind.js
 OUT      := static/$(APP)
+TOAST_JS := static/toast.js
 
 # ─────────────────────────────────────────
-#  デフォルト：ビルド＆サーバー起動
+#  Default: build & start server
 # ─────────────────────────────────────────
 .PHONY: all
-all: $(OUT) ## (*) my-mind.js をバンドルしてサーバーを起動
+all: $(OUT) $(TOAST_JS) ## (*) Bundle my-mind.js and start the server
 	go run cmd/server/main.go
 
 # ─────────────────────────────────────────
-#  ビルドルール
+#  Build rules
 # ─────────────────────────────────────────
 $(OUT): $(FLAG)
 	$(ESBUILD) --bundle $(JS)/$(APP) > $@
+
+# toast.js is loaded as a plain ES module by catalog.html and others,
+# so it is copied as-is rather than bundled.
+$(TOAST_JS): $(FLAG)
+	cp $(JS)/ui/toast.js $@
 
 $(FLAG): $(shell find src -type f)
 	$(TSC) -p src
 	touch $@
 
 # ─────────────────────────────────────────
-#  開発
+#  Development
 # ─────────────────────────────────────────
 .PHONY: watch
-watch: $(OUT) ## ソース変更を監視して自動ビルド
-	while inotifywait -e MODIFY -r src; do $(MAKE) $(OUT); done
+watch: $(OUT) $(TOAST_JS) ## Watch for source changes and rebuild automatically
+	while inotifywait -e MODIFY -r src; do $(MAKE) $(OUT) $(TOAST_JS); done
 
 # ─────────────────────────────────────────
-#  Docker / デプロイ
+#  Docker / deploy
 # ─────────────────────────────────────────
 .PHONY: docker-up
-docker-up: ## Docker Compose でビルド＆起動
+docker-up: ## Build and start with Docker Compose
 	docker compose -f docker-compose.dev.yaml up --build --force-recreate
 
 .PHONY: docker-build
-docker-build: ## Docker イメージをビルド
+docker-build: ## Build Docker image
 	docker build -t registry.internal/my-mind:latest .
 
 .PHONY: docker-push
-docker-push: ## Docker イメージをプッシュ
+docker-push: ## Push Docker image
 	docker push registry.internal/my-mind:latest
 
 .PHONY: deploy
-deploy: docker-build docker-push ## (*) Komodo でスタックをデプロイ
+deploy: docker-build docker-push ## (*) Deploy stack via Komodo
 	docker exec -it komodo km x -y destroy-stack mymind
 	docker exec -it komodo km x -y pull-stack   mymind
 	docker exec -it komodo km x -y deploy-stack mymind
 
 # ─────────────────────────────────────────
-#  その他
+#  Misc
 # ─────────────────────────────────────────
 .PHONY: clean
-clean: ## ビルド成果物を削除
+clean: ## Remove build artifacts
 	rm -rf $(JS)
 	rm -f  $(OUT)
+	rm -f  $(TOAST_JS)
 
 .PHONY: help
-help: ## 利用可能なターゲット一覧を表示
+help: ## Show available targets
 	@echo "Usage: make [target]"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 		| sort \

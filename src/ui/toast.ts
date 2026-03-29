@@ -2,13 +2,14 @@
 /* Lightweight toast notification utility.
  * Usage:
  *   import { showToast } from "./toast.js";
- *   showToast("Saved: my-map");
+ *   showToast("Saved", "my-map");   // label + subject
+ *   showToast("Done!");             // plain message (subject omitted)
  *
  * From a plain HTML page (catalog.html etc.), load toast.js as a module
  * and call window.showToast, or import it directly:
  *   <script type="module">
  *     import { showToast } from "/static/toast.js";
- *     showToast("Done!");
+ *     showToast("Saved", "my-map");
  *   </script>
  *
  * Styling is driven entirely by CSS variables defined in theme.css.
@@ -16,7 +17,6 @@
  * visual tokens come from --toast-* custom properties so callers can
  * override them per-page without touching this file.
  */
-
 const STYLE_ID = "toast-style";
 
 /* Inject the keyframe animation once per document. */
@@ -40,7 +40,7 @@ function ensureStyle() {
             border-radius: var(--toast-radius, 8px);
             font-size: var(--toast-font-size, 20px);
             letter-spacing: var(--toast-letter-spacing, 0.05em);
-            font-family: var(--toast-font-family, var(--font-serif));
+            font-family: var(--toast-font-family, var(--font-sans));
             font-weight: var(--toast-font-weight, 400);
             box-shadow: var(--toast-shadow, var(--shadow-card));
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -49,7 +49,17 @@ function ensureStyle() {
             white-space: nowrap;
             animation: toast-in 180ms ease;
             transition: opacity 700ms ease var(--toast-linger, 2500ms);
+            display: flex;
+            align-items: baseline;
+            gap: 0.5em;
         }
+        /* Subject (map name etc.) — visually subordinate to the label */
+				.toast-subject {
+				    font-weight: 400;
+				    font-size: 20px;
+				    letter-spacing: 0.03em;
+				    opacity: 0.85;
+				}
     `;
     document.head.appendChild(style);
 }
@@ -59,12 +69,24 @@ export interface ToastOptions {
     linger?: number;
 }
 
-export function showToast(message: string, options: ToastOptions = {}) {
+export function showToast(label: string, subject?: string, options: ToastOptions = {}) {
     ensureStyle();
-
     const el = document.createElement("div");
     el.className = "toast-el";
-    el.textContent = message;
+
+    if (subject !== undefined) {
+        const labelEl = document.createElement("span");
+        labelEl.textContent = label;
+
+        const subjectEl = document.createElement("span");
+        subjectEl.className = "toast-subject";
+        subjectEl.textContent = subject;
+
+        el.appendChild(labelEl);
+        el.appendChild(subjectEl);
+    } else {
+        el.textContent = label;
+    }
 
     // Allow per-call linger override via CSS custom property.
     if (options.linger !== undefined) {
