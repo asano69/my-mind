@@ -346,10 +346,28 @@
         leaveEditMode();
       }
     }
-
     /* ===== Global keyboard handler ===== */
     document.addEventListener('keydown', (e) => {
+      // Prevent browser interception for all Ctrl/Alt shortcuts before any other logic
+      if (e.ctrlKey || e.altKey) { e.preventDefault(); }
+      // ===== Application-wide shortcuts (intercept before browser defaults) =====      // Ctrl+Shift+O → new map (e.code is layout-independent, unaffected by Shift/IME)
+      if (e.ctrlKey && e.shiftKey && e.code === 'KeyO') {
+        newMapBtn && newMapBtn.click();
+        return;
+      }
+      // Ctrl+P → catalog (must preventDefault to block the browser print dialog)
+      if (e.ctrlKey && !e.shiftKey && e.key === 'p') {
+        window.location.href = '/';
+        return;
+      }
+      // Ctrl+E → toggle edit mode
+      if (e.ctrlKey && !e.shiftKey && e.key === 'e') {
+        modeToggle && modeToggle.click();
+        return;
+      }
+
       const overlayOpen = confirmBackdrop.classList.contains('open');
+
 
       if (overlayOpen) {
         switch (e.key) {
@@ -375,6 +393,10 @@
         if (e.key === 'Enter') {
           e.preventDefault();
           openConfirmOverlay();
+        }
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          leaveEditMode();
         }
         return;
       }
