@@ -3,7 +3,7 @@
 - My Mind: https://github.com/ondras/my-mind
 - Demo: https://my-mind.github.io/
 
-![example](.github/readme-img.png)
+<img src=".github/readme-img01.png" width="800">
 
 ## 概要
 - Generic Web DAVで、FQDN/mapsを登録。https://my-mind.app.internal/maps
