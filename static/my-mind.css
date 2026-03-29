@@ -397,36 +397,48 @@ button:not(:disabled) {
 
 
 /* -------------------------------------------------------------
-   Toolbar buttons (#help-btn, #catalog-link)
-   Both shift rightward when the help pane opens.
+   Fixed icon buttons — shared base
+   Used by #catalog-link and #help-btn.
    ------------------------------------------------------------- */
-#help-btn {
+.icon-btn {
   position: fixed;
+  z-index: 10;
+  padding: 4px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.65;
+  transition: opacity 80ms ease, background-color 80ms ease, left 0.5s;
+}
+
+.icon-btn:hover {
+  opacity: 1;
+  background: var(--color-hover);
+}
+
+.icon-btn img {
+  display: block;
+  width: 32px;
+  height: 32px;
+}
+
+/* Individual positions */
+#catalog-link {
+  top: 5px;
+  left: 8px;
+}
+
+#help-btn {
   bottom: 8px;
   left: 8px;
   top: unset;
-  border: none;
-  background-color: transparent;
-  padding: 0;
-  width: 32px;
-  cursor: pointer;
-  z-index: 10;
-  transition: left 0.5s;
 }
 
-#help-btn img {
-  display: block;
-}
-
-#catalog-link {
-  position: fixed;
-  top: 5px;
-  left: 8px;
-  display: block;
-  z-index: 10;
-  transition: left 0.5s;
-}
-
+/* Shift both buttons right when the help pane is open */
+body:has(#help:not([hidden])) #catalog-link,
 body:has(#help:not([hidden])) #help-btn {
   left: var(--help-pane-width);
 }
