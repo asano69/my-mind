@@ -43,4 +43,12 @@
   --toast-shadow:         var(--shadow-card);
   --toast-bottom:         1.2rem;
   --toast-linger:         2500ms; /* fully-visible duration before fade */
+
+	/* ── Shared toolbar/header button tokens ── */
+	--btn-font-size:     14px;
+	--btn-opacity:       0.6;
+	--btn-opacity-hover: 1;
+	--btn-padding:       4px 10px;
+
+
 }
