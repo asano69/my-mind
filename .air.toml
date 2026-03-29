@@ -5,3 +5,4 @@
   include_ext = ["go", "ts", "html"]
   include_dir = ["cmd", "internal", "src", "static"]
   exclude_dir = ["tmp", ".js"]
+
