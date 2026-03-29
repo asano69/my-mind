@@ -3,83 +3,83 @@
   <link rel="stylesheet" href="catalog.css">
   <style>
     /* ── Confirm overlay (mirrors file-switcher style) ── */
-    #confirm-backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.45);
-      z-index: 9999;
-      align-items: flex-start;
-      justify-content: center;
-      padding-top: 12vh;
-    }
-    #confirm-backdrop.open {
-      display: flex;
-    }
-    #confirm-box {
-      background: var(--color-pane);
-      border: 1px solid rgba(44,32,21,.2);
-      border-radius: 6px;
-      width: min(480px, 90vw);
-      box-shadow: var(--shadow-card);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    #confirm-title {
-      padding: 12px 14px 8px;
-      font-size: 13px;
-      font-family: var(--font-sans);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      opacity: .55;
-      border-bottom: 1px solid rgba(44,32,21,.1);
-    }
-    #confirm-list {
-      list-style: none;
-      margin: 0;
-      padding: 4px 0;
-      max-height: 320px;
-      overflow-y: auto;
-    }
-    #confirm-list li {
-      padding: 8px 14px;
-      font-size: var(--header-btn-font-size);
-      font-family: var(--font-sans);
-    }
-    #confirm-list .diff-delete { color: #922b21; }
-    #confirm-list .diff-rename { color: var(--color-text); opacity: .8; }
-    #confirm-actions {
-      display: flex;
-      border-top: 1px solid rgba(44,32,21,.1);
-    }
-    #confirm-actions button {
-      flex: 1;
-      padding: 10px 8px;
-      border: none;
-      border-radius: 0;
-      font-size: var(--header-btn-font-size);
-      font-weight: normal;   /* suppress browser default bold on <button> */
-      font-family: var(--font-sans);
-      cursor: pointer;
-      background: transparent;
-      color: var(--color-text);
-      opacity: var(--header-btn-opacity);
-      transition: opacity 80ms, background-color 80ms;
-    }
-    #confirm-actions button:hover,
-    #confirm-actions button.focused {
-      opacity: var(--header-btn-opacity-hover);
-      background: var(--color-hover);
-    }
-    #confirm-ok {
-      color: #922b21;
-      border-left: 1px solid rgba(44,32,21,.1);
-    }
-    #confirm-ok.focused {
-      background: rgba(192,57,43,.1);
-    }
+		#confirm-backdrop {
+		  display: none;
+		  position: fixed;
+		  inset: 0;
+		  background: rgba(0,0,0,.45);
+		  z-index: 9999;
+		  align-items: flex-start;
+		  justify-content: center;
+		  padding-top: 12vh;
+		}
+		#confirm-backdrop.open {
+		  display: flex;
+		}
+		#confirm-box {
+		  background: var(--color-pane);
+		  border: 1px solid rgba(44,32,21,.2);
+		  border-radius: 6px;
+		  width: min(480px, 90vw);
+		  box-shadow: var(--shadow-card);
+		  display: flex;
+		  flex-direction: column;
+		  overflow: hidden;
+		}
+		#confirm-title {
+		  padding: 12px 14px 8px;
+		  font-size: 13px;
+		  font-family: var(--btn-font-family);
+		  font-weight: 600;
+		  text-transform: uppercase;
+		  letter-spacing: .05em;
+		  opacity: .55;
+		  border-bottom: 1px solid rgba(44,32,21,.1);
+		}
+		#confirm-list {
+		  list-style: none;
+		  margin: 0;
+		  padding: 4px 0;
+		  max-height: 320px;
+		  overflow-y: auto;
+		}
+		#confirm-list li {
+		  padding: 8px 14px;
+		  font-size: var(--btn-font-size);
+		  font-family: var(--btn-font-family);
+		}
+		#confirm-list .diff-delete { color: #922b21; }
+		#confirm-list .diff-rename { color: var(--color-text); opacity: .8; }
+		#confirm-actions {
+		  display: flex;
+		  border-top: 1px solid rgba(44,32,21,.1);
+		}
+		#confirm-actions button {
+		  flex: 1;
+		  padding: 10px 8px;
+		  border: none;
+		  border-radius: 0;        /* intentionally 0: flush inside the overlay box */
+		  font-size: var(--btn-font-size);
+		  font-weight: var(--btn-font-weight);
+		  font-family: var(--btn-font-family);
+		  cursor: pointer;
+		  background: var(--btn-background);
+		  color: var(--color-text); /* intentionally text color, not accent */
+		  opacity: var(--btn-opacity);
+		  transition: var(--btn-transition);
+		}
+		#confirm-actions button:hover,
+		#confirm-actions button.focused {
+		  opacity: var(--btn-opacity-hover);
+		  background: var(--btn-background-hover);
+		}
+		#confirm-ok {
+		  color: #922b21;
+		  border-left: 1px solid rgba(44,32,21,.1);
+		}
+		#confirm-ok.focused {
+		  background: rgba(192,57,43,.1);
+		}
   </style>
 {{end}}
 <body>

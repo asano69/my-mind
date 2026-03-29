@@ -58,9 +58,6 @@ html, body {
   background: var(--btn-background-hover);
 }
 
-#bar #toggle-btn {
-  opacity: var(--btn-opacity-active);
-}
 
 #bar .spacer {
   margin-left: auto;
