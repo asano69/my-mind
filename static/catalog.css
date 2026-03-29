@@ -85,23 +85,23 @@ h1 {
 
 /* ── Header buttons: shared base (Edit/Cancel toggle, Apply) ── */
 .header-btn {
-  font-size: var(--header-btn-font-size);
-  font-weight: normal;   /* suppress browser default bold on <button> */
+  font-size: var(--btn-font-size);
+  font-weight: normal;         /* suppress browser default bold on <button> */
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-family: var(--font-sans);
   border: none;
   border-radius: 3px;
-  padding: var(--header-btn-padding);
+  padding: var(--btn-padding);
   cursor: pointer;
   background: transparent;
   color: var(--color-accent);
-  opacity: var(--header-btn-opacity);
+  opacity: var(--btn-opacity);
   transition: opacity 80ms ease, background-color 80ms ease;
 }
 
 .header-btn:hover {
-  opacity: var(--header-btn-opacity-hover);
+  opacity: var(--btn-opacity-hover);
   background: var(--color-hover);
 }
 

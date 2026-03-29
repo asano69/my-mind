@@ -35,21 +35,23 @@ html, body {
   gap: 4px;
 }
 
+/* ── Button ── */
 #bar button {
   background: transparent;
   border: none;
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--btn-font-size);
+  font-weight: normal;         /* suppress browser default bold on <button> */
   font-family: var(--font-sans);
-  padding: 4px 10px;
-  opacity: 0.6;
+  padding: var(--btn-padding);
+  opacity: var(--btn-opacity);
   border-radius: 3px;
   color: var(--color-accent);
   transition: opacity 80ms ease, background-color 80ms ease;
 }
 
 #bar button:hover {
-  opacity: 1;
+  opacity: var(--btn-opacity-hover);
   background: var(--color-hover);
 }
 
