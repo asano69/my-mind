@@ -21,7 +21,7 @@
    * Override any of these per-page to restyle toasts locally
    * without touching toast.ts.
    * ---------------------------------------------------------- */
-  --toast-bg:             var(--color-pane);
+  --toast-bg:             var(--color-pane-hover);
   --toast-color:          var(--color-text);
   --toast-padding:        0.5rem 1rem;
   --toast-radius:         8px;
