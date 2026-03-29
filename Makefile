@@ -33,8 +33,8 @@ $(FLAG): $(shell find src -type f)
 #  Development
 # ─────────────────────────────────────────
 .PHONY: watch
-watch: $(OUT) $(TOAST_JS) ## Watch for source changes and rebuild automatically
-	while inotifywait -e MODIFY -r src; do $(MAKE) $(OUT) $(TOAST_JS); done
+watch: ## Watch for changes and reload (requires air)
+	air
 
 # ─────────────────────────────────────────
 #  Docker / deploy
