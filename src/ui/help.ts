@@ -47,7 +47,7 @@ export function init() {
 	t = node.querySelector(".other")!;
 	buildRow(t, "undo", "redo");
 	buildRow(t, "save");
-	buildRow(t, "save-as");
+	//buildRow(t, "save-as");
 	buildRow(t, "load");
 	buildRow(t, "new"); //add
 	buildRow(t, "help");
