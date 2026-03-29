@@ -70,13 +70,20 @@ export function restore() {
 	}
 	app.setThrobber(false);
 }
+
 export function show(mode: Mode) {
 	currentMode = mode;
 	node.hidden = false;
 	node.querySelector("h3")!.textContent = mode;
-
 	syncBackend();
+	if (mode === "load") {
+		// Focus the filename input so the user can type immediately.
+		requestAnimationFrame(() => {
+			node.querySelector<HTMLInputElement>(".filename")?.focus();
+		});
+	}
 }
+
 
 export function hide() {
 	node.hidden = true;
