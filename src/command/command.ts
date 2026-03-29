@@ -297,3 +297,11 @@ new (class Fold extends Command {
 		app.currentMap.ensureItemVisibility(item);
 	}
 });
+
+new (class QuickLoad extends Command {
+	keys = [{code:"KeyK", ctrlKey:true}];
+
+	constructor() { super("quick-load", "Quick load"); }
+
+	execute() { /* TODO */ }
+});
