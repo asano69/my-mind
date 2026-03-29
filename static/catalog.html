@@ -1,6 +1,92 @@
 {{template "base" .PageMeta}}
 {{define "head-extra"}}
   <link rel="stylesheet" href="catalog.css">
+  <style>
+    /* ── Confirm overlay (mirrors file-switcher style) ── */
+    #confirm-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 9999;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 12vh;
+    }
+    #confirm-backdrop.open {
+      display: flex;
+    }
+    #confirm-box {
+      background: var(--color-pane);
+      border: 1px solid rgba(44,32,21,.2);
+      border-radius: 6px;
+      width: min(480px, 90vw);
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #confirm-title {
+      padding: 12px 14px 8px;
+      font-size: 13px;
+      font-family: var(--font-sans);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      opacity: .55;
+      border-bottom: 1px solid rgba(44,32,21,.1);
+    }
+
+		#confirm-list {
+		  list-style: none;
+		  margin: 0;
+		  padding: 4px 0;
+		  max-height: 320px;
+		  overflow-y: auto;
+		  /* Reset ul styles from catalog.css */
+		  background: none;
+		  border-radius: 0;
+		  box-shadow: none;
+		}
+
+		#confirm-list li {
+		  padding: 8px 14px;
+		  font-size: 15px;
+		  font-family: var(--font-sans);
+
+		}
+    #confirm-list .diff-delete { color: #922b21; }
+    #confirm-list .diff-rename { color: var(--color-text); opacity: .8; }
+    #confirm-actions {
+      display: flex;
+      border-top: 1px solid rgba(44,32,21,.1);
+    }
+    #confirm-actions button {
+      flex: 1;
+      padding: 10px 8px;
+      border: none;
+      border-radius: 0;
+      font-size: 15px;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      background: transparent;
+      color: var(--color-text);
+      opacity: .55;
+      transition: opacity 80ms, background-color 80ms;
+    }
+    #confirm-actions button:hover,
+    #confirm-actions button.focused {
+      opacity: 1;
+      background: var(--color-hover);
+    }
+    #confirm-ok {
+      color: #922b21;
+      border-left: 1px solid rgba(44,32,21,.1);
+    }
+    #confirm-ok.focused {
+      background: rgba(192,57,43,.1);
+    }
+  </style>
 {{end}}
 <body>
   <a href="/" target="_self" class="catalog-link">
@@ -48,17 +134,33 @@
     {{end}}
   </main>
 
+  <!-- diff confirm overlay -->
+  <div id="confirm-backdrop" role="dialog" aria-modal="true">
+    <div id="confirm-box">
+      <div id="confirm-title">Confirm changes</div>
+      <ul id="confirm-list"></ul>
+      <div id="confirm-actions">
+        <button id="confirm-cancel">Cancel</button>
+        <button id="confirm-ok">Apply</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { showToast } from '/toast.js';
 
     /* ===== Elements ===== */
-    const body       = document.body;
-    const modeToggle = document.getElementById('modeToggle');
-    const search     = document.getElementById('search');
-    const list       = document.getElementById('list');
-    const applyBtn   = document.getElementById('applyBtn');
-    const cancelBtn  = document.getElementById('cancelBtn');
-    const resultMsg  = document.getElementById('resultMsg');
+    const body            = document.body;
+    const modeToggle      = document.getElementById('modeToggle');
+    const search          = document.getElementById('search');
+    const list            = document.getElementById('list');
+    const applyBtn        = document.getElementById('applyBtn');
+    const cancelBtn       = document.getElementById('cancelBtn');
+    const resultMsg       = document.getElementById('resultMsg');
+    const confirmBackdrop = document.getElementById('confirm-backdrop');
+    const confirmList     = document.getElementById('confirm-list');
+    const confirmCancel   = document.getElementById('confirm-cancel');
+    const confirmOk       = document.getElementById('confirm-ok');
 
     /* ===== Mode toggle ===== */
     function enterEditMode() {
@@ -89,6 +191,7 @@
       });
     }
     if (cancelBtn) cancelBtn.addEventListener('click', leaveEditMode);
+    if (applyBtn)  applyBtn.addEventListener('click', openConfirmOverlay);
 
     /* ===== Delete mark ===== */
     if (list) {
@@ -104,85 +207,181 @@
       });
     }
 
-    /* ===== Batch commit ===== */
-    if (applyBtn) {
-      applyBtn.addEventListener('click', async () => {
-        if (!list) return;
+    /* ===== Collect pending changes ===== */
+    function collectChanges() {
+      const toDelete = [];
+      const toRename = [];
+      if (!list) return { toDelete, toRename };
 
-        const toDelete = [];
-        const toRename = [];
+      list.querySelectorAll('li:not([hidden])').forEach(li => {
+        const cb    = li.querySelector('.del-check');
+        const input = li.querySelector('.rename-input');
+        const orig  = li.dataset.orig;
 
-        list.querySelectorAll('li:not([hidden])').forEach(li => {
-          const cb    = li.querySelector('.del-check');
-          const input = li.querySelector('.rename-input');
-          const orig  = li.dataset.orig;
-
-          if (cb && cb.checked) {
-            toDelete.push({ li, orig });
-          } else if (input) {
-            const newName = input.value.trim();
-            if (newName && newName !== orig) toRename.push({ li, orig, newName });
-          }
-        });
-
-        if (toDelete.length === 0 && toRename.length === 0) { leaveEditMode(); return; }
-
-        applyBtn.disabled = true;
-        hideResult();
-
-        const errors = [];
-
-        /* -- delete -- */
-        for (const { li, orig } of toDelete) {
-          try {
-            const res = await fetch(`/maps/${encodeURIComponent(orig)}.mymind`, { method: 'DELETE' });
-            if (res.ok) { li.remove(); }
-            else { errors.push(`Delete failed: "${orig}" (${res.status})`); }
-          } catch { errors.push(`Delete error: "${orig}"`); }
+        if (cb && cb.checked) {
+          toDelete.push({ li, orig });
+        } else if (input) {
+          const newName = input.value.trim();
+          if (newName && newName !== orig) toRename.push({ li, orig, newName });
         }
-
-        /* -- rename -- */
-        for (const { li, orig, newName } of toRename) {
-          try {
-            const res = await fetch(`/maps/${encodeURIComponent(orig)}.mymind`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'text/plain' },
-              body: newName,
-            });
-            if (res.ok) {
-              li.dataset.name = newName;
-              li.dataset.orig = newName;
-              const viewName = li.querySelector('.view-row .name');
-              const viewLink = li.querySelector('.view-row');
-              const input    = li.querySelector('.rename-input');
-              if (viewName) viewName.textContent = newName;
-              if (viewLink) viewLink.href = `/m/${encodeURIComponent(newName)}.mymind`;
-              if (input)    { input.value = newName; input.classList.remove('dirty'); }
-            } else if (res.status === 409) {
-              errors.push(`Rename failed: "${orig}" → "${newName}" (name already exists)`);
-            } else {
-              errors.push(`Rename failed: "${orig}" → "${newName}" (${res.status})`);
-            }
-          } catch { errors.push(`Rename error: "${orig}"`); }
-        }
-
-        applyBtn.disabled = false;
-
-        if (list.querySelectorAll('li').length === 0) {
-          list.insertAdjacentHTML('afterend', '<p class="empty">no maps found.</p>');
-          list.remove();
-        }
-        if (errors.length > 0) { showResult('error', errors.join('\n')); }
-        else {
-          const parts = [];
-          if (toDelete.length) parts.push(`${toDelete.length} deleted`);
-          if (toRename.length) parts.push(`${toRename.length} renamed`);
-          showToast("Done", parts.join(', '));
-          leaveEditMode();
-        }
-
       });
+
+      return { toDelete, toRename };
     }
+
+    /* ===== Confirm overlay ===== */
+
+    // 0 = Cancel focused, 1 = Apply focused
+    let focusedBtn = 1;
+
+    function setFocus(idx) {
+      focusedBtn = idx;
+      confirmCancel.classList.toggle('focused', idx === 0);
+      confirmOk.classList.toggle('focused',     idx === 1);
+    }
+
+    function openConfirmOverlay() {
+      const { toDelete, toRename } = collectChanges();
+      if (toDelete.length === 0 && toRename.length === 0) { leaveEditMode(); return; }
+
+      // Build diff list
+      confirmList.innerHTML = '';
+      toDelete.forEach(({ orig }) => {
+        const li = document.createElement('li');
+        li.className = 'diff-delete';
+        li.textContent = `Delete  "${orig}"`;
+        confirmList.appendChild(li);
+      });
+      toRename.forEach(({ orig, newName }) => {
+        const li = document.createElement('li');
+        li.className = 'diff-rename';
+        li.textContent = `Rename  "${orig}"  →  "${newName}"`;
+        confirmList.appendChild(li);
+      });
+
+      setFocus(1); // default: Apply
+      confirmBackdrop.classList.add('open');
+    }
+
+    function closeConfirmOverlay() {
+      confirmBackdrop.classList.remove('open');
+    }
+
+    // Close on backdrop click (outside the box)
+    confirmBackdrop.addEventListener('click', (e) => {
+      if (e.target === confirmBackdrop) closeConfirmOverlay();
+    });
+
+    if (confirmCancel) confirmCancel.addEventListener('click', closeConfirmOverlay);
+    if (confirmOk)     confirmOk.addEventListener('click', runCommit);
+
+    /* ===== Batch commit (runs after overlay confirmation) ===== */
+    async function runCommit() {
+      closeConfirmOverlay();
+
+      const { toDelete, toRename } = collectChanges();
+      if (toDelete.length === 0 && toRename.length === 0) { leaveEditMode(); return; }
+
+      if (applyBtn) applyBtn.disabled = true;
+      hideResult();
+
+      const errors = [];
+
+      /* -- delete -- */
+      for (const { li, orig } of toDelete) {
+        try {
+          const res = await fetch(`/maps/${encodeURIComponent(orig)}.mymind`, { method: 'DELETE' });
+          if (res.ok) { li.remove(); }
+          else { errors.push(`Delete failed: "${orig}" (${res.status})`); }
+        } catch { errors.push(`Delete error: "${orig}"`); }
+      }
+
+      /* -- rename -- */
+      for (const { li, orig, newName } of toRename) {
+        try {
+          const res = await fetch(`/maps/${encodeURIComponent(orig)}.mymind`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'text/plain' },
+            body: newName,
+          });
+          if (res.ok) {
+            li.dataset.name = newName;
+            li.dataset.orig = newName;
+            const viewName = li.querySelector('.view-row .name');
+            const viewLink = li.querySelector('.view-row');
+            const input    = li.querySelector('.rename-input');
+            if (viewName) viewName.textContent = newName;
+            if (viewLink) viewLink.href = `/m/${encodeURIComponent(newName)}.mymind`;
+            if (input)    { input.value = newName; input.classList.remove('dirty'); }
+          } else if (res.status === 409) {
+            errors.push(`Rename failed: "${orig}" → "${newName}" (name already exists)`);
+          } else {
+            errors.push(`Rename failed: "${orig}" → "${newName}" (${res.status})`);
+          }
+        } catch { errors.push(`Rename error: "${orig}"`); }
+      }
+
+      if (applyBtn) applyBtn.disabled = false;
+
+      if (list && list.querySelectorAll('li').length === 0) {
+        list.insertAdjacentHTML('afterend', '<p class="empty">no maps found.</p>');
+        list.remove();
+      }
+      if (errors.length > 0) { showResult('error', errors.join('\n')); }
+      else {
+        const parts = [];
+        if (toDelete.length) parts.push(`${toDelete.length} deleted`);
+        if (toRename.length) parts.push(`${toRename.length} renamed`);
+        showToast("Done", parts.join(', '));
+        leaveEditMode();
+      }
+    }
+
+    /* ===== Global keyboard handler ===== */
+    document.addEventListener('keydown', (e) => {
+      const overlayOpen = confirmBackdrop.classList.contains('open');
+
+      if (overlayOpen) {
+        switch (e.key) {
+          case 'ArrowLeft':
+          case 'ArrowRight':
+            e.preventDefault();
+            setFocus(focusedBtn === 0 ? 1 : 0);
+            break;
+          case 'Enter':
+            e.preventDefault();
+            if (focusedBtn === 1) runCommit(); else closeConfirmOverlay();
+            break;
+          case 'Escape':
+            e.preventDefault();
+            closeConfirmOverlay();
+            break;
+        }
+        return; // swallow all other keys while overlay is open
+      }
+
+      /* -- edit mode: Enter opens confirm overlay -- */
+      if (body.classList.contains('edit-mode')) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          openConfirmOverlay();
+        }
+        return;
+      }
+
+      /* -- view mode: arrow / enter navigation -- */
+      if (!list) return;
+      const links   = visibleLinks();
+      const current = document.activeElement;
+      const idx     = links.indexOf(current);
+      if (idx === -1) return;
+      switch (e.key) {
+        case 'ArrowDown':  e.preventDefault(); if (idx + 1 < links.length) links[idx + 1].focus(); break;
+        case 'ArrowUp':    e.preventDefault(); if (idx > 0) links[idx - 1].focus(); else search && search.focus(); break;
+        case 'Enter':      e.preventDefault(); current.click(); break;
+        case 'Escape':     search && (search.focus(), search.select()); break;
+      }
+    });
 
     function showResult(type, msg) {
       if (!resultMsg) return;
@@ -212,22 +411,6 @@
           e.preventDefault();
           const links = visibleLinks();
           if (links.length) links[0].focus();
-        }
-      });
-    }
-
-    if (list) {
-      list.addEventListener('keydown', (e) => {
-        if (body.classList.contains('edit-mode')) return;
-        const links   = visibleLinks();
-        const current = document.activeElement;
-        const idx     = links.indexOf(current);
-        if (idx === -1) return;
-        switch (e.key) {
-          case 'ArrowDown':  e.preventDefault(); if (idx + 1 < links.length) links[idx + 1].focus(); break;
-          case 'ArrowUp':    e.preventDefault(); if (idx > 0) links[idx - 1].focus(); else search && search.focus(); break;
-          case 'Enter':      e.preventDefault(); current.click(); break;
-          case 'Escape':     search && (search.focus(), search.select()); break;
         }
       });
     }
