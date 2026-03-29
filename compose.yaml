@@ -15,10 +15,10 @@ services:
     labels:
       - "traefik.enable=true" ###
       - "traefik.docker.network=traefik_br"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in-http.rule=Host(`${COMPOSE_PROJECT_NAME}.app.internal`)"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in-http.rule=Host(`mm.notes.internal`)"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in-http.entrypoints=web"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in-http.middlewares=force-https@file" ###
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in.rule=Host(`${COMPOSE_PROJECT_NAME}.app.internal`)"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in.rule=Host(`mm.notes.internal`)"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in.entrypoints=websecure"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in.tls=true"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in.service=${COMPOSE_PROJECT_NAME}"
