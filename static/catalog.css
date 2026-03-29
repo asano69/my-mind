@@ -109,7 +109,7 @@ input[type="search"]:focus {
 }
 
 /* ── List ── */
-ul {
+#list {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -119,15 +119,15 @@ ul {
   overflow: hidden;
 }
 
-li {
+#list li {
   border-bottom: 1px solid rgba(0, 0, 0, 0.07);
 }
 
-li:last-child {
+#list li:last-child {
   border-bottom: none;
 }
 
-li[hidden] {
+#list li[hidden] {
   display: none;
 }
 
