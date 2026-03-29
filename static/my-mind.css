@@ -186,26 +186,21 @@ button:not(:disabled) {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 2px;
-  margin: 0px;
+  gap: 3px;
+  margin-top: 10px;
 }
-
 .pane#ui .color-picker [data-color] {
-  width: 18px;
-  height: 18px;
-  border-radius: 20px;
-  border: 1px solid rgba(30, 30, 30, 0.8);
+  width: 19px;
+  height: 19px;
+  border-radius: 5px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
   transition: transform 120ms ease;
 }
-
 .pane#ui .color-picker [data-color]:hover {
   transform: scale(1.3);
-  border-color: #000;
 }
 
-.pane#ui .color-picker [data-color]:first-child {
-  border-color: #000;
-}
+
 
 .pane#ui footer {
   display: flex;
