@@ -173,7 +173,7 @@ new (class SaveAs extends Command {
 });
 
 new (class Load extends Command {
-	keys = [{code:"KeyO", ctrlKey:true}];
+  keys = [{code:"KeyO", ctrlKey:true, shiftKey:false}];
 
 	constructor() { super("load", "Load map"); }
 
@@ -189,15 +189,16 @@ new (class Center extends Command {
 });
 
 new (class New extends Command {
-	keys = [{code:"KeyN", ctrlKey:true}];
-	constructor() { super("new", "New map"); }
-	execute() {
-		if (!confirm("Throw away your current map and start a new one?")) { return; }
-		const filename = `${Math.floor(Date.now() / 1000)}.mymind`;
-		window.history.pushState(null, "", `/m/${filename}`);
-		io.restore();
-	}
+    keys = [{code:"KeyO", ctrlKey:true, shiftKey:true}];
+    constructor() { super("new", "New map"); }
+    execute() {
+        const filename = `${Math.floor(Date.now() / 1000)}.mymind`;
+        window.history.pushState(null, "", `/m/${filename}`);
+        io.restore();
+    }
 });
+
+
 new (class ZoomIn extends Command {
 	keys = [{key:"+"}];
 
