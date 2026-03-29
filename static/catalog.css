@@ -187,8 +187,8 @@ li.pending-delete .edit-row input {
 .del-check {
   appearance: none;
   -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 23px;
+  height: 23px;
   flex-shrink: 0;
   border: 1.5px solid rgba(44, 32, 21, 0.3);
   border-radius: 3px;
@@ -204,7 +204,7 @@ li.pending-delete .edit-row input {
 }
 
 .del-check:checked::after {
-  content: "✕";
+  content: "✘";
   position: absolute;
   inset: 0;
   display: flex;
