@@ -180,13 +180,6 @@ new (class Load extends Command {
 	execute() { io.show("load"); }
 });
 
-new (class Center extends Command {
-	keys = [{code:"End"}];
-
-	constructor() { super("center", "Center map"); }
-
-	execute() { app.currentMap.center(); }
-});
 
 new (class New extends Command {
     keys = [{code:"KeyO", ctrlKey:true, shiftKey:true}];
@@ -196,6 +189,15 @@ new (class New extends Command {
         window.location.assign(`/m/${filename}`);
     }
 });
+
+new (class Center extends Command {
+	keys = [{code:"End"}];
+
+	constructor() { super("center", "Center map"); }
+
+	execute() { app.currentMap.center(); }
+});
+
 
 
 new (class ZoomIn extends Command {
@@ -301,12 +303,11 @@ new (class Fold extends Command {
 
 
 new (class QuickLoad extends Command {
-		keys = [{code:"KeyK", ctrlKey:true}];
-
-		constructor() { super("quick-load", "Quick load"); }
-	  execute() {
-	      fileSwitcher.toggle();
-	  }
+    keys = [{code:"KeyK", ctrlKey:true}];
+    constructor() { super("quick-load", "File picker"); }
+    execute() {
+        fileSwitcher.toggle();
+    }
 });
 
 new (class GoToCatalog extends Command {

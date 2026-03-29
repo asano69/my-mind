@@ -49,9 +49,12 @@ export function init() {
 	buildRow(t, "save");
 	buildRow(t, "save-as");
 	buildRow(t, "load");
+	buildRow(t, "new"); //add
 	buildRow(t, "help");
 	buildRow(t, "notes");
 	buildRow(t, "ui");
+	buildRow(t, "quick-load"); //add
+	buildRow(t, "go-to-catalog"); //add
 }
 
 function buildRow(table: HTMLTableElement, ...commandNames: string[]) {
