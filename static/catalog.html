@@ -48,7 +48,9 @@
     {{end}}
   </main>
 
-  <script>
+  <script type="module">
+    import { showToast } from '/toast.js';
+
     /* ===== Elements ===== */
     const body       = document.body;
     const modeToggle = document.getElementById('modeToggle');
@@ -170,9 +172,15 @@
           list.insertAdjacentHTML('afterend', '<p class="empty">no maps found.</p>');
           list.remove();
         }
-
         if (errors.length > 0) { showResult('error', errors.join('\n')); }
-        else { leaveEditMode(); }
+        else {
+          const parts = [];
+          if (toDelete.length) parts.push(`${toDelete.length} deleted`);
+          if (toRename.length) parts.push(`${toRename.length} renamed`);
+          showToast(parts.join(', '));
+          leaveEditMode();
+        }
+
       });
     }
 
