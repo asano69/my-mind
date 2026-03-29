@@ -25,20 +25,21 @@ export function isActive() {
     return !node.hidden && node.contains(document.activeElement);
 }
 
-
 export function init() {
 	[Local, File, WebDAV, Image].forEach(ctor => {
 		let bui = new ctor();
 		select.append(bui.option);
 	});
-
 	select.value = localStorage.getItem(`${PREFIX}.backend`) || "webdav";
 	select.addEventListener("change", syncBackend);
-
+	node.addEventListener("keydown", e => {
+		if (e.key === "Escape") { hide(); }
+	});
 	pubsub.subscribe("map-new", _ => setCurrentBackend(null));
 	pubsub.subscribe("save-done", onDone);
 	pubsub.subscribe("load-done", onDone);
 }
+
 
 function onDone(_message: string, publisher?: any) {
 	hide();
@@ -106,8 +107,10 @@ export function show(mode: Mode) {
 
 
 export function hide() {
-	node.hidden = true;
-	window.focus();
+    if (node.contains(document.activeElement)) {
+        (document.activeElement as HTMLElement)?.blur();
+    }
+    node.hidden = true;
 }
 
 export function quickSave() {

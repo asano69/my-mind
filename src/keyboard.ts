@@ -19,7 +19,11 @@ function handleEvent(e: KeyboardEvent) {
         if (!command.isValid) { return false; }
         return command.keys.find(key => keyOK(key, e));
     });
-    if (command) { command.execute(e); }
+    if (command) {
+        e.preventDefault();
+        command.execute(e);
+    }
+
 }
 
 export function init() {
