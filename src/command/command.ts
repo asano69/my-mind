@@ -307,3 +307,11 @@ new (class QuickLoad extends Command {
 
 	execute() { fileSwitcher.toggle(); }
 });
+
+
+new (class GoToCatalog extends Command {
+    keys = [{code: "KeyP", ctrlKey: true}];
+    constructor() { super("go-to-catalog", "Go to catalog"); }
+    execute() { window.location.href = "/catalog"; }
+});
+
