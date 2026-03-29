@@ -71,6 +71,10 @@ export default class WebDAVUI extends BackendUI<WebDAV> {
   }
   get filename() { return this.node.querySelector<HTMLInputElement>(".filename")!; }
   async load(url?: string) {
+      // Save the current map before loading a new one.
+      if (this.current) {
+          await this.save();
+      }
       // Build URL from the filename input when no explicit URL is given.
       if (!url) {
           const base = this.url.value.endsWith("/") ? this.url.value : this.url.value + "/";
