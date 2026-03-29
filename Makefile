@@ -53,9 +53,9 @@ docker-push: ## Push Docker image
 
 .PHONY: deploy
 deploy: docker-build docker-push ## (*) Deploy stack via Komodo
-	docker exec -it komodo km x -y destroy-stack mymind
-	docker exec -it komodo km x -y pull-stack   mymind
-	docker exec -it komodo km x -y deploy-stack mymind
+	docker exec -it komodo km x -y destroy-stack my-mind
+	docker exec -it komodo km x -y pull-stack   my-mind
+	docker exec -it komodo km x -y deploy-stack my-mind
 
 # ─────────────────────────────────────────
 #  Misc
