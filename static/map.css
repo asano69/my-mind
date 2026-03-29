@@ -155,8 +155,8 @@ svg > .item > .item > foreignObject > .content {
   height: 20px;
   background: url("../img/notes-indicator.png") right center no-repeat;
   position: absolute;
-  top: -5px;
-  right: -15px;
+  top: 0px;
+  right: 0px;
   opacity: 0.4;
 }
 
