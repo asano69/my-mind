@@ -301,17 +301,19 @@ new (class Fold extends Command {
 
 
 new (class QuickLoad extends Command {
-	keys = [{code:"KeyK", ctrlKey:true}];
+		keys = [{code:"KeyK", ctrlKey:true}];
 
-	constructor() { super("quick-load", "Quick load"); }
-
-	execute() { fileSwitcher.toggle(); }
+		constructor() { super("quick-load", "Quick load"); }
+	  execute() {
+	      fileSwitcher.toggle();
+	  }
 });
-
 
 new (class GoToCatalog extends Command {
     keys = [{code: "KeyP", ctrlKey: true}];
     constructor() { super("go-to-catalog", "Go to catalog"); }
-    execute() { window.location.href = "/catalog"; }
+		async execute() {
+		    await io.quickSave();
+		    window.location.href = "/catalog";
+		}
 });
-
