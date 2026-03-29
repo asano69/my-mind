@@ -9,14 +9,17 @@ import { Direction } from "./layout/layout.js";
 
 const TOUCH_DELAY = 500;
 const SHADOW_OFFSET = 5;
+// Minimum change in pinch distance (px) required to trigger one zoom step
+const PINCH_THRESHOLD = 30;
 
 interface Current {
-	mode: "" | "drag" | "pan";
+	mode: "" | "drag" | "pan" | "pinch";
 	cursor: number[];
 	item: Item | null;
 	ghost: HTMLElement | null;
 	ghostPosition: number[];
 	previousDragState: DragState | null;
+	pinchDistance: number;
 }
 
 interface DragState {
@@ -32,7 +35,8 @@ let current: Current = {
 	item: null,
 	ghost: null,
 	ghostPosition: [],
-	previousDragState: null
+	previousDragState: null,
+	pinchDistance: 0
 };
 let port: HTMLElement;
 
@@ -73,6 +77,15 @@ export function init(port_: HTMLElement) {
 }
 
 function onDragStart(e: MouseEvent | TouchEvent) {
+	if (e.type == "touchstart" && "touches" in e && e.touches.length == 2) {
+		// Two fingers down: enter pinch mode
+		clearTimeout(touchContextTimeout);
+		current.mode = "pinch";
+		current.pinchDistance = getTouchDistance(e.touches);
+		e.preventDefault();
+		return;
+	}
+
 	let point = eventToPoint(e);
 	if (!point) { return; }
 
@@ -117,6 +130,11 @@ function onDragStart(e: MouseEvent | TouchEvent) {
 }
 
 function onDragMove(e: MouseEvent | TouchEvent) {
+	if ("touches" in e && e.touches.length == 2) {
+		handlePinch(e);
+		return;
+	}
+
 	let point = eventToPoint(e);
 	if (!point) { return; }
 
@@ -155,7 +173,7 @@ function onDragEnd(_e: MouseEvent | TouchEvent) {
 
 	const { mode, ghost } = current;
 
-	if (mode == "pan") { return; } // no cleanup after panning
+	if (mode == "pan" || mode == "pinch") { return; } // no cleanup after panning or pinching
 
 	if (ghost) {
 		let state = computeDragState();
@@ -165,6 +183,36 @@ function onDragEnd(_e: MouseEvent | TouchEvent) {
 	}
 
 	current.item = null;
+}
+
+/**
+ * Handle a two-finger pinch gesture to zoom in or out.
+ * Triggers one zoom step per PINCH_THRESHOLD pixels of distance change.
+ */
+function handlePinch(e: TouchEvent) {
+	e.preventDefault();
+	clearTimeout(touchContextTimeout);
+
+	const dist = getTouchDistance(e.touches);
+
+	// If we weren't already in pinch mode, just record the baseline distance
+	if (current.mode !== "pinch") {
+		current.mode = "pinch";
+		current.pinchDistance = dist;
+		return;
+	}
+
+	const delta = dist - current.pinchDistance;
+	if (Math.abs(delta) >= PINCH_THRESHOLD) {
+		app.currentMap.adjustFontSize(delta > 0 ? 1 : -1);
+		current.pinchDistance = dist; // reset baseline after each step
+	}
+}
+
+function getTouchDistance(touches: TouchList): number {
+	const dx = touches[0].clientX - touches[1].clientX;
+	const dy = touches[0].clientY - touches[1].clientY;
+	return Math.hypot(dx, dy);
 }
 
 function buildGhost(item: Item) {
