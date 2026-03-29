@@ -4,7 +4,7 @@
  * Fetches the map list from /catalog, shows a filterable
  * overlay. Arrow keys navigate, Enter opens, Escape closes.
  */
-
+import { quickSave } from "./io.js";
 const STYLE = `
   #fs-backdrop {
     position: fixed; inset: 0;
@@ -155,7 +155,7 @@ function show() {
     if (cachedMaps) populate(cachedMaps, input.value);
   });
 
-  input.addEventListener('keydown', e => {
+  input.addEventListener('keydown', async e => {
     // Prevent all keystrokes from reaching the command system while the overlay is open.
     e.stopPropagation();
 
@@ -170,11 +170,16 @@ function show() {
         e.preventDefault();
         setActive(links[Math.max(idx - 1, 0)]);
         break;
-      case 'Enter':
-        e.preventDefault();
-        const a = activeLink();
-        if (a) { hide(); location.href = a.href; }
-        break;
+			case 'Enter':
+			    e.preventDefault();
+			    const a = activeLink();
+			    if (a) {
+			        hide();
+			        await quickSave();
+			        location.href = a.href;
+			    }
+			    break;
+
       case 'Escape':
         hide();
         break;
