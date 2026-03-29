@@ -143,14 +143,14 @@ button:not(:disabled) {
 
 .pane label span {
   display: block;
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
+  font-weight: 600;
   text-transform: uppercase;
   font-size: 75%;
+  letter-spacing: 0.1em;
   color: var(--color-text);
-  letter-spacing: 0.05em;
   margin-bottom: 3px;
 }
-
 
 /* -------------------------------------------------------------
    Pane — #ui (property panel)
@@ -275,8 +275,8 @@ button:not(:disabled) {
   width: 45%;
   background: transparent;
   border: none;
-  font-size: 14px;
-  font-family: var(--font-serif);
+  font-size: 16px;
+  font-family: var(--font-sans);
   padding: 4px 10px;
   opacity: 0.6;
   border-radius: 3px;

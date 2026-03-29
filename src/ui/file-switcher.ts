@@ -29,7 +29,7 @@ const STYLE = `
     width: 100%;
     box-sizing: border-box;
     padding: 12px 14px;
-    font-size: 15px;
+    font-size: 16px;
     border: none;
     border-bottom: 1px solid rgba(44, 32, 21, 0.15);
     outline: none;
@@ -49,7 +49,7 @@ const STYLE = `
     padding: 8px 14px;
     text-decoration: none;
     color: var(--color-text);
-    font-size: 14px;
+    font-size: 16px;
     font-family: var(--font-sans);
     white-space: nowrap;
     overflow: hidden;
@@ -67,7 +67,7 @@ const STYLE = `
     padding: 12px 14px;
     color: var(--color-accent);
     opacity: 0.5;
-    font-size: 13px;
+    font-size: 16px;
     font-family: var(--font-sans);
   }
 `;

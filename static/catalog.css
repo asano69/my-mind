@@ -40,6 +40,7 @@ main {
 
 h1 {
   font-size: 30px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-family: var(--font-serif);
@@ -51,7 +52,7 @@ h1 {
   font-size: 14px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   border: none;
   border-radius: 3px;
   padding: 4px 10px;
@@ -275,7 +276,7 @@ body.edit-mode .commit-bar {
   font-size: 18px;
   cursor: pointer;
   letter-spacing: 0.03em;
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   opacity: 0.6;
   transition: opacity 80ms ease, background-color 80ms ease;
 }
