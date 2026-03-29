@@ -7,9 +7,10 @@
 {{end}}
 <body>
   <main>
-    <a href="/catalog" target="_self" id="catalog-link">
+    <!-- target="_self" behaviour is preserved via onclick (overrides <base target="_blank">) -->
+    <button id="catalog-link" class="icon-btn" onclick="window.location.href='/catalog'" title="Catalog">
       <img src="img/catalog.png" alt="Catalog">
-    </a>
+    </button>
   </main>
 
   <div id="ui" class="pane">
@@ -179,7 +180,7 @@
     <button data-command="center"></button>
   </div>
 
-  <button id="help-btn" data-command="help" title="Help">
+  <button id="help-btn" class="icon-btn" data-command="help" title="Help">
     <img src="img/help.png" alt="Help">
   </button>
 
