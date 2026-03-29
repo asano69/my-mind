@@ -173,14 +173,21 @@ body.edit-mode .edit-row {
   display: flex;
 }
 
-/* Rows marked for deletion */
-li.pending-delete {
-  background-color: rgba(192, 57, 43, 0.08);
+/* Pending rename: green-tea tint */
+li:has(.rename-input.dirty) {
+  background-color: rgba(74, 109, 74, 0.45);
+}
+
+/* Pending delete takes priority over pending rename */
+li.pending-delete,
+li.pending-delete:has(.rename-input.dirty) {
+  background-color: rgba(139, 28, 28, 0.45);
 }
 
 li.pending-delete .edit-row input {
-  opacity: 0.4;
-  text-decoration: line-through;
+  opacity: 0.55;
+  /*text-decoration: line-through;*/
+  color: #922b21;
 }
 
 /* Checkbox (delete mark) */
@@ -233,9 +240,10 @@ li.pending-delete .edit-row input {
 }
 
 .rename-input.dirty {
-  border-color: var(--color-accent);
+  border-color: rgba(44, 32, 21, 0.2);
   background: #fff;
 }
+
 
 /* Date (edit mode) */
 .edit-date {
