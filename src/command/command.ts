@@ -157,20 +157,18 @@ new (class SetSide extends Command {
 });
 
 new (class Save extends Command {
-	keys = [{code:"KeyS", ctrlKey:true, shiftKey:false}];
-
+	keys = [{code:"KeyS", ctrlKey:true, shiftKey:true}];
 	constructor() { super("save", "Save map"); }
-
 	execute() { io.quickSave(); }
 });
 
 new (class SaveAs extends Command {
-	keys = [{code:"KeyS", ctrlKey:true, shiftKey:true}];
-
+	keys = [];
 	constructor() { super("save-as", "Save as…"); }
-
 	execute() { io.show("save"); }
 });
+
+
 
 new (class Load extends Command {
   keys = [{code:"KeyO", ctrlKey:true, shiftKey:false}];
