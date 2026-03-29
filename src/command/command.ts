@@ -193,8 +193,7 @@ new (class New extends Command {
     constructor() { super("new", "New map"); }
     execute() {
         const filename = `${Math.floor(Date.now() / 1000)}.mymind`;
-        window.history.pushState(null, "", `/m/${filename}`);
-        io.restore();
+        window.location.assign(`/m/${filename}`);
     }
 });
 
