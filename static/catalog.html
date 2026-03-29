@@ -177,7 +177,7 @@
           const parts = [];
           if (toDelete.length) parts.push(`${toDelete.length} deleted`);
           if (toRename.length) parts.push(`${toRename.length} renamed`);
-          showToast(parts.join(', '));
+          showToast("Done", parts.join(', '));
           leaveEditMode();
         }
 

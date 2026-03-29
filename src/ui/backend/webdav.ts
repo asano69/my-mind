@@ -4,14 +4,11 @@ import WebDAV from "../../backend/webdav.js";
 import * as app from "../../my-mind.js";
 import { repo as formatRepo } from "../../format/format.js";
 import { showToast } from "../toast.js";
-
 interface State {
 	url: string;
 }
-
 export default class WebDAVUI extends BackendUI<WebDAV> {
 	protected current = "";
-
   constructor() {
       super(new WebDAV(), "Generic WebDAV");
       const { protocol, host } = window.location;
@@ -24,9 +21,7 @@ export default class WebDAVUI extends BackendUI<WebDAV> {
           }
       });
   }
-
 	get url() { return this.node.querySelector<HTMLInputElement>(".url")!; }
-
 	getState(): State {
 		if (!this.current) return { url: "" };
 		const base = this.url.value
@@ -37,7 +32,6 @@ export default class WebDAVUI extends BackendUI<WebDAV> {
 			: this.current;
 		return { url: relative };
 	}
-
   setState(data: State) {
       if (!data.url) return;
       const isAbsolute = /^https?:\/\//.test(data.url);
@@ -53,7 +47,6 @@ export default class WebDAVUI extends BackendUI<WebDAV> {
       const fullUrl = (base.endsWith("/") ? base : base + "/") + data.url;
       this.load(fullUrl);
   }
-
   async save() {
   	app.setThrobber(true);
   	var map = app.currentMap;
@@ -70,15 +63,13 @@ export default class WebDAVUI extends BackendUI<WebDAV> {
   	try {
   		await this.backend.save(data, url);
   		const filename = url.split("/").pop()!.replace(/\.mymind$/, "");
-  		showToast(`Saved: ${filename}`);
+  		showToast("Saved", filename);
   		this.saveDone();
   	} catch (e) {
   		this.error(e);
   	}
   }
-
   get filename() { return this.node.querySelector<HTMLInputElement>(".filename")!; }
-
   async load(url?: string) {
       // Build URL from the filename input when no explicit URL is given.
       if (!url) {
@@ -93,7 +84,7 @@ export default class WebDAVUI extends BackendUI<WebDAV> {
           let data = await this.backend.load(url);
           let json = formatRepo.get("native")!.from(data);
           const filename = url.split("/").pop()!.replace(/\.mymind$/, "");
-          showToast(`Loaded: ${filename}`);
+          showToast("Loaded", filename);
           this.loadDone(json)
       } catch (e: any) {
           if (e && e.status === 404) {
@@ -103,12 +94,11 @@ export default class WebDAVUI extends BackendUI<WebDAV> {
               const emptyJson = {
                   root: { id, text: filename, notes: "", layout: "map" }
               };
-              showToast(`New Map: ${filename}`);
+              showToast("New Map", filename);
               this.loadDone(emptyJson);
           } else {
               this.error(e);
           }
       }
   }
-
 }
