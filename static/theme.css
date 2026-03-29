@@ -62,4 +62,5 @@
 	--btn-opacity-disabled: 0.3;
 	--btn-transition:       opacity 80ms ease, background-color 80ms ease;
 	--btn-background-hover: var(--color-hover);
+  --btn-opacity-active: 0.85;
 }

@@ -43,6 +43,8 @@ html, body {
   font-size: var(--btn-font-size);
   font-weight: var(--btn-font-weight);
   font-family: var(--btn-font-family);
+  letter-spacing: var(--btn-letter-spacing);     /* add */
+  text-transform: var(--btn-text-transform);     /* add */
   padding: var(--btn-padding);
   opacity: var(--btn-opacity);
   border-radius: var(--btn-border-radius);
@@ -50,16 +52,15 @@ html, body {
   transition: var(--btn-transition);
 }
 
+
 #bar button:hover {
   opacity: var(--btn-opacity-hover);
   background: var(--btn-background-hover);
 }
 
 #bar #toggle-btn {
-  opacity: 0.85;
-  /*font-weight: bold;*/
+  opacity: var(--btn-opacity-active);
 }
-
 
 #bar .spacer {
   margin-left: auto;

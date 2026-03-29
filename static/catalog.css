@@ -97,9 +97,9 @@ h1 {
   background: var(--btn-background-hover);
 }
 
-.apply-btn:disabled {
-  opacity: var(--btn-opacity-disabled);
-  cursor: default;
+/* Apply is hidden until edit mode is active */
+.apply-btn {
+  display: none;
 }
 
 body.edit-mode .apply-btn {
@@ -107,9 +107,11 @@ body.edit-mode .apply-btn {
 }
 
 .apply-btn:disabled {
-  opacity: 0.3;
+  opacity: var(--btn-opacity-disabled);
   cursor: default;
 }
+
+
 
 /* ── Search ── */
 .search-wrap {
