@@ -3,6 +3,8 @@
 - My Mind: https://github.com/ondras/my-mind
 - Demo: https://my-mind.github.io/
 
+![example](.github/readme-img.png)
+
 ## 概要
 - Generic Web DAVで、FQDN/mapsを登録。https://my-mind.app.internal/maps
 - 以降、保存したURLを使ってマインドマップを開く。https://my-mind.app.internal/?url=https%3A%2F%2Fmy-mind.app.internal%2Fmaps%2Ftest.mymind
