@@ -22,7 +22,7 @@ services:
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in.entrypoints=websecure"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in.tls=true"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in.service=${COMPOSE_PROJECT_NAME}"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in.middlewares=hsts@file" ###
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in.middlewares=hsts@file,authelia-forwardauth@file" ###
       - "traefik.http.services.${COMPOSE_PROJECT_NAME}.loadbalancer.server.port=3000"
 networks:
   traefik_br:
