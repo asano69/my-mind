@@ -297,6 +297,24 @@ button:not(:disabled) {
   flex: auto;
 }
 
+/* On narrow screens, display the notes pane as a bottom sheet
+   instead of a right-side panel. */
+@media (max-width: 768px) {
+  .pane#notes {
+    width: 100%;
+    height: 50%;
+    top: auto;
+    bottom: 0;
+    right: 0;
+    box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.20);
+  }
+
+  /* Slide down to hide instead of sliding right. */
+  .pane#notes[hidden] {
+    transform: translate(0, 100%);
+  }
+}
+
 
 /* -------------------------------------------------------------
    Context menu
