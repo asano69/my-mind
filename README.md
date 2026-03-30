@@ -1,18 +1,20 @@
 # My Mind
+
+# 用途
+
+
+## 概要
 驚くべきことに、自分が求めているWebで動作するマインドマップアプリがGithubにまったくなかった。ondras/my-mindをリバースエイジングするしかない。
 - My Mind: https://github.com/ondras/my-mind
 - Demo: https://my-mind.github.io/
 
 <img src=".github/readme-img01.png" width="800">
 
-## 概要
-- Generic Web DAVで、FQDN/mapsを登録。https://my-mind.app.internal/maps
-- 以降、保存したURLを使ってマインドマップを開く。https://my-mind.app.internal/?url=https%3A%2F%2Fmy-mind.app.internal%2Fmaps%2Ftest.mymind
-- 新規ファイルから保存しようとすると、既存のマインドマップを上書きしてしまう危険性がある。
-
-
 ## 設計
 - アプリ側がSchemeやホスト名を知る必要はない。それらはリバースProxyに責任
+- Generic Web DAVで、FQDN/mapsを登録。https://mm.notes.internal/maps
+- 以降、保存したURLを使ってマインドマップを開く。https://mm.notes.internal/?url=https%3A%2F%2Fmy-mind.app.internal%2Fmaps%2Ftest.mymind
+- 新規ファイルから保存しようとすると、既存のマインドマップを上書きしてしまう危険性がある。
 
 ## 計画
 - メニューを作成したい
