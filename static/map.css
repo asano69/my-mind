@@ -254,6 +254,39 @@ svg > .item > .item > foreignObject > .content {
   background: var(--node-bg-current);
   box-shadow: var(--node-shadow-current);
 }
+
+/* -------------------------------------------------------------
+   Multi-selected items (.selected) — Ctrl/Cmd+click additions
+   Uses a blue-tinted ring so they are visually distinct from
+   the yellow primary selection (.current).
+   ------------------------------------------------------------- */
+[data-shape=box].item.selected     > foreignObject > .content,
+[data-shape=ellipse].item.selected > foreignObject > .content {
+  background:
+    radial-gradient(
+      ellipse 55% 35% at 40% 18%,
+      rgba(255, 255, 255, 0.72) 0%,
+      rgba(255, 255, 255, 0.0)  100%
+    ),
+    color-mix(
+      in srgb,
+      color-mix(in srgb, var(--item-color, #f0f0f0) 18%, #ffffff) 30%,
+      rgb(180, 220, 255) 50%
+    );
+  box-shadow:
+    0 0 0 2px rgba(70, 140, 230, 0.70),
+    var(--node-shadow),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* Fallback for underline-shaped nodes without data-shape */
+.item.selected > foreignObject > .content {
+  background: rgba(180, 220, 255, 0.40);
+  box-shadow: 0 0 0 2px rgba(70, 140, 230, 0.70), var(--node-shadow);
+}
+
+
+
 /* -------------------------------------------------------------
    Text alignment (left / right)
    ------------------------------------------------------------- */
@@ -268,3 +301,4 @@ svg > .item > .item > foreignObject > .content {
 [data-align=right] > foreignObject > .content > :not(.text):not(.notes) {
   margin-left: 0.3em;
 }
+

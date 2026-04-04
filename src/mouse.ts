@@ -47,9 +47,16 @@ export function init(port_: HTMLElement) {
 	port.addEventListener("mousedown", onDragStart);
 
 	port.addEventListener("click", e => {
+		const me = e as MouseEvent;
 		let item = app.currentMap.getItemFor(e.target as HTMLElement);
 		if (app.editing && item == app.currentItem) { return; } // ignore on edited node
-		item && app.selectItem(item);
+		if (!item) { return; }
+		// Ctrl/Cmd+click toggles multi-selection; plain click replaces it
+		if (me.ctrlKey || me.metaKey) {
+			app.addToSelection(item);
+		} else {
+			app.selectItem(item);
+		}
 	});
 
 	port.addEventListener("dblclick", e => {

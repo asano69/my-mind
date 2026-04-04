@@ -16,6 +16,10 @@ const port = document.querySelector<HTMLElement>("main")!;
 export let currentMap: Map;
 export let currentItem: Item;
 export let editing = false;
+
+// Additional items selected via Ctrl/Cmd+click (does not include currentItem)
+export let selectedItems = new Set<Item>();
+
 export function showMap(map: Map) {
 	currentMap && currentMap.hide();
 	history.reset();
@@ -26,7 +30,37 @@ export function action(action: Action) {
 	history.push(action);
 	action.do();
 }
+
+/** Clear all items in the multi-selection, restoring their visual state. */
+export function clearMultiSelection() {
+	selectedItems.forEach(i => i.unmarkSelected());
+	selectedItems.clear();
+}
+
+/**
+ * Toggle an item in/out of the multi-selection.
+ * Has no effect on the primary currentItem.
+ */
+export function addToSelection(item: Item) {
+	if (item === currentItem) { return; }
+	if (selectedItems.has(item)) {
+		selectedItems.delete(item);
+		item.unmarkSelected();
+	} else {
+		selectedItems.add(item);
+		item.markSelected();
+	}
+}
+
+/** Returns all selected items: [currentItem, ...selectedItems]. */
+export function getAllSelected(): Item[] {
+	const items: Item[] = [currentItem];
+	selectedItems.forEach(i => items.push(i));
+	return items;
+}
+
 export function selectItem(item: Item) {
+	clearMultiSelection();
 	if (currentItem && currentItem != item) {
 		if (editing) { commandRepo.get("finish")!.execute(); }
 		currentItem.deselect();
@@ -40,6 +74,7 @@ export function setThrobber(visible: boolean) {
 	document.querySelector<HTMLElement>(".spinner")!.hidden = !visible;
 }
 export function startEditing() {
+	clearMultiSelection();
 	editing = true;
 	currentItem.startEditing();
 }

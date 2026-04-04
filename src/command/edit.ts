@@ -70,6 +70,8 @@ new (class Cancel extends Command {
 				app.action(action);
 			}
 		} else {
+			// Clear multi-selection before closing panels
+			app.clearMultiSelection();
 			notes.close();
 			help.close();
 			io.hide();
