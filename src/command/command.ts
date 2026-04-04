@@ -113,8 +113,11 @@ new (class Delete extends Command {
 	get isValid() { return super.isValid && !app.currentItem.isRoot; }
 
 	execute() {
-		let action = new actions.RemoveItem(app.currentItem as ChildItem);
-		app.action(action);
+		// Delete all selected non-root items in one undoable action
+		const toDelete = app.getAllSelected().filter(i => !i.isRoot) as ChildItem[];
+		if (toDelete.length === 0) { return; }
+		const subactions = toDelete.map(item => new actions.RemoveItem(item));
+		app.action(toDelete.length === 1 ? subactions[0] : new actions.Multi(subactions));
 	}
 });
 
