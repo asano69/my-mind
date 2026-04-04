@@ -15,7 +15,8 @@ const PINCH_THRESHOLD = 30;
 interface Current {
 	mode: "" | "drag" | "pan" | "pinch";
 	cursor: number[];
-	item: Item | null;
+	// All items being dragged together (may be more than one via multi-selection)
+	items: Item[];
 	ghost: HTMLElement | null;
 	ghostPosition: number[];
 	previousDragState: DragState | null;
@@ -32,7 +33,7 @@ let touchContextTimeout: ReturnType<typeof setTimeout>;
 let current: Current = {
 	mode: "",
 	cursor: [],
-	item: null,
+	items: [],
 	ghost: null,
 	ghostPosition: [],
 	previousDragState: null,
@@ -109,7 +110,14 @@ function onDragStart(e: MouseEvent | TouchEvent) {
 	current.cursor = point;
 	if (item && !item.isRoot) {
 		current.mode = "drag";
-		current.item = item;
+		// If the grabbed item is part of the current selection, drag all selected non-root items.
+		// Otherwise drag only the grabbed item (and switch the selection to it).
+		const isSelected = item === app.currentItem || app.selectedItems.has(item);
+		if (isSelected) {
+			current.items = app.getAllSelected().filter(i => !i.isRoot);
+		} else {
+			current.items = [item];
+		}
 	} else {
 		current.mode = "pan";
 		port.style.cursor = "move";
@@ -158,7 +166,7 @@ function onDragMove(e: MouseEvent | TouchEvent) {
 		case "drag":
 			if (!current.ghost) {
 				port.style.cursor = "move";
-				buildGhost(current.item!);
+				buildGhost(current.items[0], current.items.length);
 			}
 			moveGhost(delta);
 			let state = computeDragState();
@@ -189,7 +197,7 @@ function onDragEnd(_e: MouseEvent | TouchEvent) {
 		current.ghost = null;
 	}
 
-	current.item = null;
+	current.items = [];
 }
 
 /**
@@ -222,11 +230,24 @@ function getTouchDistance(touches: TouchList): number {
 	return Math.hypot(dx, dy);
 }
 
-function buildGhost(item: Item) {
+/**
+ * Build a drag ghost from the first dragged item's content node.
+ * When multiple items are dragged, a badge showing the count is overlaid.
+ */
+function buildGhost(item: Item, count: number) {
 	const { content } = item.dom;
 	let ghost = content.cloneNode(true) as HTMLElement;
 	ghost.classList.add("ghost");
-	port.append(ghost); // FIXME jinam
+
+	// Show a count badge so the user knows multiple items are moving
+	if (count > 1) {
+		let badge = document.createElement("span");
+		badge.className = "ghost-count";
+		badge.textContent = String(count);
+		ghost.appendChild(badge);
+	}
+
+	port.append(ghost);
 
 	let rect = content.getBoundingClientRect();
 	current.ghost = ghost;
@@ -248,27 +269,34 @@ function finishDragDrop(state: DragState) {
 
 	const { target, result, direction } = state;
 
-	let action: Action;
-	switch (result) {
-		case "append":
-			action = new actions.MoveItem(current.item as ChildItem, target);
-		break;
+	// Build one MoveItem action per dragged item, then wrap in Multi if needed
+	const subactions: Action[] = [];
 
-		case "sibling":
-			let targetChildItem = target as ChildItem;
-			let index = targetChildItem.parent.children.indexOf(targetChildItem);
-			let targetIndex = index + (direction == "right" || direction == "bottom" ? 1 : 0);
-			action = new actions.MoveItem(current.item as ChildItem, targetChildItem.parent, targetIndex, targetChildItem.side);
-		break;
+	for (const item of current.items) {
+		switch (result) {
+			case "append":
+				subactions.push(new actions.MoveItem(item as ChildItem, target));
+			break;
 
-		default: return; break;
+			case "sibling": {
+				let targetChildItem = target as ChildItem;
+				let index = targetChildItem.parent.children.indexOf(targetChildItem);
+				let targetIndex = index + (direction == "right" || direction == "bottom" ? 1 : 0);
+				subactions.push(new actions.MoveItem(item as ChildItem, targetChildItem.parent, targetIndex, targetChildItem.side));
+			}
+			break;
+
+			default: return;
+		}
 	}
 
-	app.action(action);
+	if (subactions.length === 0) { return; }
+	app.action(subactions.length === 1 ? subactions[0] : new actions.Multi(subactions));
 }
 
 /**
- * Compute a state object for a drag: current result (""/"append"/"sibling"), parent/sibling, direction
+ * Compute a state object for a drag: current result (""/"append"/"sibling"), parent/sibling, direction.
+ * Returns result="" if the drop target is a dragged item itself or one of its descendants.
  */
 function computeDragState() {
 	let rect = current.ghost!.getBoundingClientRect();
@@ -282,13 +310,18 @@ function computeDragState() {
 		direction: "left"
 	}
 
-	let tmp = target;
-	while (!tmp.isRoot) {
-		if (tmp == current.item) { return state; } // drop on a child or self
-		tmp = tmp.parent as Item;
+	// Reject drop if target is inside any of the dragged subtrees
+	for (const draggedItem of current.items) {
+		let tmp = target;
+		while (!tmp.isRoot) {
+			if (tmp === draggedItem) { return state; }
+			tmp = tmp.parent as Item;
+		}
+		if (tmp === draggedItem) { return state; } // root check
 	}
 
-	let itemContentSize = current.item!.contentSize;
+	// Use the first dragged item's content size for proximity calculation
+	let itemContentSize = current.items[0].contentSize;
 	let targetContentSize = target.contentSize;
 	const w = Math.max(itemContentSize[0], targetContentSize[0]);
 	const h = Math.max(itemContentSize[1], targetContentSize[1]);
