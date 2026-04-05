@@ -257,13 +257,22 @@ svg > .item > .item > foreignObject > .content {
 }
 
 /* -------------------------------------------------------------
-   Multi-selected items (.selected) — Ctrl/Cmd+click additions
-   Uses a blue-tinted ring so they are visually distinct from
-   the yellow primary selection (.current).
+   Multi-selected items (.selected) — Ctrl/Cmd+click additions.
+   Same yellow tint as .current, with gloss gradient preserved.
    ------------------------------------------------------------- */
 [data-shape=box].item.selected     > foreignObject > .content,
 [data-shape=ellipse].item.selected > foreignObject > .content {
-  background: rgba(255, 255, 187, 0.50);
+  background:
+    radial-gradient(
+      ellipse 55% 35% at 40% 18%,
+      rgba(255, 255, 255, 0.72) 0%,
+      rgba(255, 255, 255, 0.0)  100%
+    ),
+    color-mix(
+      in srgb,
+      color-mix(in srgb, var(--item-color, #f0f0f0) 18%, #ffffff) 25%,
+      rgb(255, 255, 187) 55%
+    );
 }
 
 [data-shape=underline].item.selected > foreignObject > .content {
@@ -310,4 +319,3 @@ svg > .item > .item > foreignObject > .content {
 [data-align=right] > foreignObject > .content > :not(.text):not(.notes) {
   margin-left: 0.3em;
 }
-
