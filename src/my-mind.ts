@@ -39,10 +39,25 @@ export function clearMultiSelection() {
 
 /**
  * Toggle an item in/out of the multi-selection.
- * Has no effect on the primary currentItem.
+ *
+ * When the primary currentItem is Ctrl+clicked, it is deselected by
+ * promoting the first item in selectedItems to become the new currentItem.
+ * If nothing else is selected, the click is ignored (currentItem must
+ * always exist).
  */
 export function addToSelection(item: Item) {
-	if (item === currentItem) { return; }
+	if (item === currentItem) {
+		// Cannot deselect the only selected item.
+		if (selectedItems.size === 0) { return; }
+		// Promote the first item in selectedItems to be the new primary.
+		const next = selectedItems.values().next().value as Item;
+		selectedItems.delete(next);
+		next.unmarkSelected();
+		currentItem.deselect();
+		currentItem = next;
+		currentItem.select();
+		return;
+	}
 	if (selectedItems.has(item)) {
 		selectedItems.delete(item);
 		item.unmarkSelected();

@@ -19,7 +19,12 @@ interface Current {
 	items: Item[];
 	ghost: HTMLElement | null;
 	ghostPosition: number[];
-
+	// Offset from the ghost top-left to the point where the user grabbed the item.
+	// Keeps the grab point fixed under the cursor throughout the drag.
+	grabOffset: number[];
+	// True when the drag was started with Ctrl/Cmd held (Ctrl+click then drag).
+	// Used to suppress selectItem during ghost build so multi-selection is preserved.
+	ctrlHeld: boolean;
 	previousDragState: DragState | null;
 	pinchDistance: number;
 }
@@ -37,6 +42,8 @@ let current: Current = {
 	items: [],
 	ghost: null,
 	ghostPosition: [],
+	grabOffset: [0, 0],
+	ctrlHeld: false,
 	previousDragState: null,
 	pinchDistance: 0
 };
@@ -122,6 +129,7 @@ function onDragStart(e: MouseEvent | TouchEvent) {
 			// before the click event has a chance to run. Selection is updated
 			// in onDragMove once we know a real drag is happening.
 			current.items = [item];
+			current.ctrlHeld = (e as MouseEvent).ctrlKey || (e as MouseEvent).metaKey;
 		}
 	} else {
 		current.mode = "pan";
@@ -175,7 +183,8 @@ function onDragMove(e: MouseEvent | TouchEvent) {
 				// now (drag confirmed). Doing this at mousedown would clear any
 				// Ctrl+click multi-selection before the click event could fire.
 				const draggedItem = current.items[0];
-				if (current.items.length === 1 &&
+				if (!current.ctrlHeld &&
+					current.items.length === 1 &&
 					draggedItem !== app.currentItem &&
 					!app.selectedItems.has(draggedItem)) {
 					app.selectItem(draggedItem);
