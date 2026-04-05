@@ -5,7 +5,7 @@ import * as notes from "../ui/notes.js";
 import * as help from "../ui/help.js";
 import * as io from "../ui/io.js";
 import Command, { repo as commandRepo } from "./command.js";
-import { ChildItem, Status } from "../item.js";
+import Item, { ChildItem, Status } from "../item.js";
 
 
 new (class Edit extends Command {
@@ -79,21 +79,75 @@ new (class Cancel extends Command {
 	}
 });
 
+// ---------------------------------------------------------------------------
+// Text style helpers
+// ---------------------------------------------------------------------------
+
+// Tags used by execCommand (maps command name -> HTML tag name)
+const STYLE_TAGS: Record<string, string> = {
+	bold:         "b",
+	italic:       "i",
+	underline:    "u",
+	strikeThrough: "s",
+};
+
+/**
+ * Toggle a style tag on an HTML string.
+ * Strips ALL occurrences of the tag (at any nesting depth) if any exist;
+ * otherwise wraps the entire content in the tag once.
+ *
+ * This handles cases like <i><b>text</b></i> correctly: toggling bold
+ * removes <b>/<b> even when they are nested inside another tag.
+ */
+function toggleStyleTag(html: string, tag: string): string {
+	// Case-insensitive removal of all open and close tags
+	const openRe  = new RegExp(`<${tag}>`, "gi");
+	const closeRe = new RegExp(`</${tag}>`, "gi");
+	const stripped = html.replace(openRe, "").replace(closeRe, "");
+	if (stripped !== html) {
+		// Tag was present somewhere – return with all instances removed
+		return stripped;
+	}
+	// Tag was absent – wrap the whole content
+	return `<${tag}>${html}</${tag}>`;
+}
+
+/**
+ * Apply a style to a single item's full text via a SetText action.
+ * Falls back to execCommand when the item is currently being edited.
+ */
+function applyStyleToItem(item: Item, command: string): Action {
+	const tag = STYLE_TAGS[command];
+	const newText = toggleStyleTag(item.text, tag);
+	return new actions.SetText(item, newText);
+}
+
 abstract class Style extends Command {
 	editMode = null;
 	command!: string;
 
 	execute() {
 		if (app.editing) {
+			// Single-item edit mode: use execCommand for cursor-aware formatting
 			document.execCommand(this.command, false);
+			return;
+		}
+
+		const selected = app.getAllSelected();
+		if (selected.length > 1) {
+			// Multi-selection: apply style to every selected item as one undo step
+			const subactions = selected.map(item => applyStyleToItem(item, this.command));
+			app.action(new actions.Multi(subactions));
 		} else {
+			// Single item (no multi-selection): use the original execCommand path
+			// so that partial-text selection inside a node still works
 			commandRepo.get("edit")!.execute();
 			let selection = getSelection()!;
 			let range = selection.getRangeAt(0);
 			range.selectNodeContents(app.currentItem.dom.text);
 			selection.removeAllRanges();
 			selection.addRange(range);
-			this.execute();
+			document.execCommand(this.command, false);
 			commandRepo.get("finish")!.execute();
 		}
 	}
@@ -152,10 +206,13 @@ new (class Yes extends Command {
 	constructor() { super("yes", "Yes"); }
 
 	execute() {
-		let item = app.currentItem;
-		let status = (item.status === true ? null : true);
-		let action = new actions.SetStatus(item, status);
-		app.action(action);
+		// Apply to all selected items: toggle based on currentItem's current status
+		const current = app.currentItem;
+		const newStatus = (current.status === true ? null : true);
+		const subactions = app.getAllSelected().map(
+			item => new actions.SetStatus(item, newStatus)
+		);
+		app.action(subactions.length === 1 ? subactions[0] : new actions.Multi(subactions));
 	}
 });
 
@@ -165,10 +222,12 @@ new (class No extends Command {
 	constructor() { super("no", "No"); }
 
 	execute() {
-		let item = app.currentItem;
-		let status = (item.status === false ? null : false);
-		let action = new actions.SetStatus(item, status);
-		app.action(action);
+		const current = app.currentItem;
+		const newStatus = (current.status === false ? null : false);
+		const subactions = app.getAllSelected().map(
+			item => new actions.SetStatus(item, newStatus)
+		);
+		app.action(subactions.length === 1 ? subactions[0] : new actions.Multi(subactions));
 	}
 });
 
