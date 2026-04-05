@@ -263,27 +263,7 @@ svg > .item > .item > foreignObject > .content {
    ------------------------------------------------------------- */
 [data-shape=box].item.selected     > foreignObject > .content,
 [data-shape=ellipse].item.selected > foreignObject > .content {
-background:
-  /* Top gloss highlight — preserved from base style */
-  radial-gradient(
-    ellipse 55% 35% at 40% 18%,
-    rgba(255, 255, 255, 0.72) 0%,
-    rgba(255, 255, 255, 0.0)  100%
-  ),
-  /* Selection tint — yellow blended with item color.
-     Adjust the second percentage to control yellow intensity:
-     0% = item color only, 100% = solid yellow (#ffffbb) */
-  color-mix(
-    in srgb,
-    color-mix(in srgb, var(--item-color, #f0f0f0) 18%, #ffffff) 25%,
-    rgb(255, 255, 187) 55%
-  );
-box-shadow:
-  var(--node-shadow-current),
-  0 3px 8px  rgba(0, 0, 0, 0.14),   /* outer lift shadow */
-  0 1px 2px  rgba(0, 0, 0, 0.08),   /* outer contact shadow */
-  inset 0 -2px 6px rgba(0, 0, 0, 0.06);  /* bottom shade, very subtle */
-/* mix-blend-mode removed — it was flattening out the gloss */
+  background: rgba(255, 255, 187, 0.50);
 }
 
 [data-shape=underline].item.selected > foreignObject > .content {
@@ -291,6 +271,7 @@ box-shadow:
   box-shadow: 0 0 0 1px rgba(180, 160, 0, 0.55);
   border-radius: 3px;
 }
+
 
 /* -------------------------------------------------------------
    Drag ghost badge — shown when multiple items are dragged
