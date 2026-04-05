@@ -19,6 +19,7 @@ interface Current {
 	items: Item[];
 	ghost: HTMLElement | null;
 	ghostPosition: number[];
+
 	previousDragState: DragState | null;
 	pinchDistance: number;
 }
@@ -249,9 +250,13 @@ function buildGhost(item: Item, count: number) {
 
 	port.append(ghost);
 
-	let rect = content.getBoundingClientRect();
 	current.ghost = ghost;
-	current.ghostPosition = [rect.left, rect.top];
+	// Center the ghost on the cursor so dragging feels natural regardless of
+	// where within the node the user clicked.
+	current.ghostPosition = [
+		current.cursor[0] - ghost.offsetWidth  / 2,
+		current.cursor[1] - ghost.offsetHeight / 2
+	];
 }
 
 function moveGhost(delta: number[]) {
