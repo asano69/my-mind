@@ -16,10 +16,12 @@ type BUI = BackendUI<any>;
 
 let currentMode: Mode = "load";
 let currentBackend: BUI | null = null;
+let autoSaveTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const node = document.querySelector<HTMLElement>("#io")!;
 const select = node.querySelector<HTMLSelectElement>("#backend")!;
 const PREFIX = "mm.app";
+const AUTO_SAVE_DELAY_MS = 5000;
 
 export function isActive() {
     return !node.hidden && node.contains(document.activeElement);
@@ -38,6 +40,15 @@ export function init() {
 	pubsub.subscribe("map-new", _ => setCurrentBackend(null));
 	pubsub.subscribe("save-done", onDone);
 	pubsub.subscribe("load-done", onDone);
+	// Auto-save: debounce item changes and save after a short delay.
+	pubsub.subscribe("item-change", () => {
+	    if (!currentBackend) { return; }
+	    if (autoSaveTimeout !== null) { clearTimeout(autoSaveTimeout); }
+	    autoSaveTimeout = setTimeout(() => {
+	        autoSaveTimeout = null;
+	        currentBackend?.save();
+	    }, AUTO_SAVE_DELAY_MS);
+	});
 }
 
 
