@@ -185,7 +185,8 @@ new (class Load extends Command {
 new (class New extends Command {
     keys = [{code:"KeyO", ctrlKey:true, shiftKey:true}];
     constructor() { super("new", "New map"); }
-    execute() {
+    async execute() {
+        await io.quickSave();
         const filename = `${Math.floor(Date.now() / 1000)}.mymind`;
         window.location.assign(`/m/${filename}`);
     }
