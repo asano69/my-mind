@@ -7,26 +7,58 @@ import { Direction } from "../layout/layout.js";
 
 new (class Select extends Command {
 	keys = [
-		{code: "ArrowLeft", ctrlKey: false},
-		{code: "ArrowUp", ctrlKey: false},
-		{code: "ArrowRight", ctrlKey: false},
-		{code: "ArrowDown", ctrlKey: false}
+		{code: "ArrowLeft",  ctrlKey: false, shiftKey: false},
+		{code: "ArrowUp",    ctrlKey: false, shiftKey: false},
+		{code: "ArrowRight", ctrlKey: false, shiftKey: false},
+		{code: "ArrowDown",  ctrlKey: false, shiftKey: false}
 	];
 
 	constructor() { super("select", "Move selection"); }
 
 	execute(e: KeyboardEvent) {
-		let dirs: Record<string, Direction> = {
+		const dirs: Record<string, Direction> = {
 			"ArrowLeft": "left",
 			"ArrowUp": "top",
 			"ArrowRight": "right",
 			"ArrowDown": "bottom"
-		}
-		let dir = dirs[e.code];
-
-		let layout = app.currentItem.resolvedLayout;
-		let item = layout.pick(app.currentItem, dir);
+		};
+		const dir = dirs[e.code];
+		const layout = app.currentItem.resolvedLayout;
+		const item = layout.pick(app.currentItem, dir);
 		app.selectItem(item);
+	}
+
+});
+
+new (class SelectAdd extends Command {
+	keys = [
+		{code: "ArrowLeft",  ctrlKey: false, shiftKey: true},
+		{code: "ArrowUp",    ctrlKey: false, shiftKey: true},
+		{code: "ArrowRight", ctrlKey: false, shiftKey: true},
+		{code: "ArrowDown",  ctrlKey: false, shiftKey: true}
+	];
+
+	constructor() { super("select-add", "Add to selection"); }
+
+	execute(e: KeyboardEvent) {
+		const dirs: Record<string, Direction> = {
+			"ArrowLeft": "left",
+			"ArrowUp": "top",
+			"ArrowRight": "right",
+			"ArrowDown": "bottom"
+		};
+		const dir = dirs[e.code];
+
+		// Start from the current selection cursor (or currentItem if none yet)
+		const from = app.selectionCursor ?? app.currentItem;
+		const layout = from.resolvedLayout;
+		const next = layout.pick(from, dir);
+
+		// Boundary reached: pick() returned the same item
+		if (next === from) { return; }
+
+		app.extendSelection(next);
+		app.currentMap.ensureItemVisibility(next);
 	}
 
 });
