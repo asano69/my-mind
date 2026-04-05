@@ -17,8 +17,12 @@ export let currentMap: Map;
 export let currentItem: Item;
 export let editing = false;
 
-// Additional items selected via Ctrl/Cmd+click (does not include currentItem)
+// Additional items selected via Ctrl/Cmd+click or Shift+Arrow (does not include currentItem)
 export let selectedItems = new Set<Item>();
+
+// The "active end" of a Shift+Arrow range selection.
+// Moves with each Shift+Arrow press; null when no range selection is active.
+export let selectionCursor: Item | null = null;
 
 export function showMap(map: Map) {
 	currentMap && currentMap.hide();
@@ -35,17 +39,46 @@ export function action(action: Action) {
 export function clearMultiSelection() {
 	selectedItems.forEach(i => i.unmarkSelected());
 	selectedItems.clear();
+	selectionCursor = null;
 }
 
 /**
- * Toggle an item in/out of the multi-selection.
+ * Extend the selection by one step in the given direction from selectionCursor
+ * (or from currentItem if no range is active yet).
  *
- * When the primary currentItem is Ctrl+clicked, it is deselected by
- * promoting the first item in selectedItems to become the new currentItem.
- * If nothing else is selected, the click is ignored (currentItem must
- * always exist).
+ * Repeated calls keep moving the cursor, adding new items to selectedItems.
+ * If the cursor moves back onto currentItem, the intermediate items are cleared.
+ */
+export function extendSelection(next: Item) {
+	if (next === currentItem) {
+		// Cursor returned to anchor – clear the whole range.
+		clearMultiSelection();
+		return;
+	}
+	if (selectionCursor !== null && selectedItems.has(next)) {
+		// Cursor is moving back: remove the item the cursor is leaving.
+		selectedItems.delete(selectionCursor);
+		selectionCursor.unmarkSelected();
+		selectionCursor = next;
+		return;
+	}
+	// Moving forward: add the new item.
+	selectedItems.add(next);
+	next.markSelected();
+	selectionCursor = next;
+}
+
+/**
+ * Toggle an item in/out of the multi-selection (Ctrl/Cmd+click).
+ *
+ * When the primary currentItem is toggled, it is deselected by promoting
+ * the first item in selectedItems to become the new currentItem.
+ * If nothing else is selected, the click is ignored (currentItem must exist).
  */
 export function addToSelection(item: Item) {
+	// Any manual Ctrl+click resets the Shift+Arrow cursor.
+	selectionCursor = null;
+
 	if (item === currentItem) {
 		// Cannot deselect the only selected item.
 		if (selectedItems.size === 0) { return; }
