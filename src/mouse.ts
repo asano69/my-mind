@@ -117,6 +117,10 @@ function onDragStart(e: MouseEvent | TouchEvent) {
 		if (isSelected) {
 			current.items = app.getAllSelected().filter(i => !i.isRoot);
 		} else {
+			// Item is not in the current selection. Do NOT call selectItem here
+			// (mousedown) because that would clear any Ctrl+click multi-selection
+			// before the click event has a chance to run. Selection is updated
+			// in onDragMove once we know a real drag is happening.
 			current.items = [item];
 		}
 	} else {
@@ -167,6 +171,15 @@ function onDragMove(e: MouseEvent | TouchEvent) {
 		case "drag":
 			if (!current.ghost) {
 				port.style.cursor = "move";
+				// If dragging a single item that was not already selected, select it
+				// now (drag confirmed). Doing this at mousedown would clear any
+				// Ctrl+click multi-selection before the click event could fire.
+				const draggedItem = current.items[0];
+				if (current.items.length === 1 &&
+					draggedItem !== app.currentItem &&
+					!app.selectedItems.has(draggedItem)) {
+					app.selectItem(draggedItem);
+				}
 				buildGhost(current.items[0], current.items.length);
 			}
 			moveGhost(delta);
@@ -304,8 +317,10 @@ function finishDragDrop(state: DragState) {
  * Returns result="" if the drop target is a dragged item itself or one of its descendants.
  */
 function computeDragState() {
-	let rect = current.ghost!.getBoundingClientRect();
-	let point = [rect.left + rect.width/2, rect.top + rect.height/2];
+	// Use the cursor position for hit-testing, not the ghost center.
+	// The ghost can be grabbed anywhere, so its center drifts away from
+	// the cursor; the cursor is always the authoritative "drop here" point.
+	let point = current.cursor;
 	let closest = app.currentMap.getClosestItem(point);
 	let target = closest.item;
 
