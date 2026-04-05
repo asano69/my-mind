@@ -9,7 +9,7 @@ import { repo as formatRepo } from "./format/format.js";
 
 type Mode = "" | "copy" | "cut";
 
-let storedItem: Item | null = null;
+let storedItems: Item[] = [];
 let mode: Mode = "";
 
 export function init() {
@@ -24,22 +24,26 @@ function onCopyCut(e: ClipboardEvent) {
 
 	endCut();
 
+	// Operate on all selected items, excluding the root
+	const selected = app.getAllSelected().filter(i => !i.isRoot);
+	if (selected.length === 0) { return; }
+
 	switch (e.type) {
 		case "copy":
-			storedItem = app.currentItem.clone();
+			storedItems = selected.map(i => i.clone());
 		break;
 
 		case "cut":
-			storedItem = app.currentItem;
-			storedItem.dom.node.classList.add("cut");
+			storedItems = selected;
+			storedItems.forEach(i => i.dom.node.classList.add("cut"));
 		break;
 
-		default: return; // TS needs non-null storedItem
+		default: return; // TS needs non-null storedItems
 	}
 
-	let json = storedItem.toJSON();
+	// Set clipboard text from the first stored item for system clipboard compatibility
+	let json = storedItems[0].toJSON();
 	let plaintext = formatRepo.get("plaintext")!.to(json);
-
 	e.clipboardData!.setData("text/plain", plaintext);
 	mode = e.type as Mode;
 }
@@ -51,40 +55,52 @@ function onPaste(e: ClipboardEvent) {
 	let pasted = e.clipboardData!.getData("text/plain");
 	if (!pasted) { return; }
 
-	if (storedItem && pasted == formatRepo.get("plaintext")!.to(storedItem.toJSON())) {
-		// pasted a previously copied/cut item
-		pasteItem(storedItem, app.currentItem);
+	if (storedItems.length > 0) {
+		// For a single stored item, verify the clipboard text to detect external pastes
+		const isInternal = storedItems.length > 1 ||
+			pasted === formatRepo.get("plaintext")!.to(storedItems[0].toJSON());
+
+		if (isInternal) {
+			pasteItems(storedItems, app.currentItem);
+		} else {
+			pastePlaintext(pasted, app.currentItem);
+		}
 	} else {
-		// pasted some external data
 		pastePlaintext(pasted, app.currentItem);
 	}
 	endCut();
 }
 
-function pasteItem(sourceItem: Item, targetItem: Item) {
-	let action: Action;
+function pasteItems(items: Item[], targetItem: Item) {
+	let subactions: Action[];
 
 	switch (mode) {
-		case "cut":
-			// abort by pasting on the same node or the parent
-			if (sourceItem == targetItem || sourceItem.parent == targetItem) { return ; }
-
-			let item = targetItem;
-			while (true) {
-				if (item == sourceItem) { return; } // moving to a child => forbidden
-				if (item.parent instanceof Map) { break; }
-				item = item.parent as Item;
-			}
-
-			action = new actions.MoveItem(sourceItem as ChildItem, targetItem);
-			app.action(action);
+		case "cut": {
+			const validItems = items.filter(item => {
+				// Prevent moving to self, to current parent, or to own descendant
+				if (item === targetItem || item.parent === targetItem) { return false; }
+				let node = targetItem;
+				while (true) {
+					if (node === item) { return false; }
+					if (node.parent instanceof Map) { break; }
+					node = node.parent as Item;
+				}
+				return true;
+			});
+			if (validItems.length === 0) { return; }
+			subactions = validItems.map(item => new actions.MoveItem(item as ChildItem, targetItem));
+		}
 		break;
 
 		case "copy":
-			action = new actions.AppendItem(targetItem, sourceItem.clone());
-			app.action(action);
+			// Clone each item so repeated pastes each get an independent copy
+			subactions = items.map(item => new actions.AppendItem(targetItem, item.clone()));
 		break;
+
+		default: return;
 	}
+
+	app.action(subactions.length === 1 ? subactions[0] : new actions.Multi(subactions));
 }
 
 function pastePlaintext(plaintext: string, targetItem: Item) {
@@ -105,7 +121,7 @@ function pastePlaintext(plaintext: string, targetItem: Item) {
 function endCut() {
 	if (mode != "cut") { return; }
 
-	storedItem!.dom.node.classList.remove("cut");
-	storedItem = null;
+	storedItems.forEach(i => i.dom.node.classList.remove("cut"));
+	storedItems = [];
 	mode = "";
 }

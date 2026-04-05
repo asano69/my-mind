@@ -238,6 +238,13 @@ svg > .item > .item > foreignObject > .content {
   /* mix-blend-mode removed — it was flattening out the gloss */
 }
 
+[data-shape=underline].item.current > foreignObject > .content {
+  background: rgba(255, 255, 187, 0.75);
+  box-shadow: 0 0 0 1px rgba(180, 160, 0, 0.55);
+  border-radius: 3px;
+}
+
+
 /* Hover lift is preserved for selected nodes */
 [data-shape=box].item.current     > foreignObject > .content:hover,
 [data-shape=ellipse].item.current > foreignObject > .content:hover {
@@ -249,11 +256,46 @@ svg > .item > .item > foreignObject > .content {
   transform: translateY(-2px);
 }
 
-/* Fallback for nodes without data-shape */
-.item.current > foreignObject > .content {
-  background: var(--node-bg-current);
-  box-shadow: var(--node-shadow-current);
+/* -------------------------------------------------------------
+   Multi-selected items (.selected) — Ctrl/Cmd+click additions
+   Uses a blue-tinted ring so they are visually distinct from
+   the yellow primary selection (.current).
+   ------------------------------------------------------------- */
+[data-shape=box].item.selected     > foreignObject > .content,
+[data-shape=ellipse].item.selected > foreignObject > .content {
+  background: rgba(255, 255, 187, 0.50);
 }
+
+[data-shape=underline].item.selected > foreignObject > .content {
+  background: rgba(255, 255, 187, 0.75);
+  box-shadow: 0 0 0 1px rgba(180, 160, 0, 0.55);
+  border-radius: 3px;
+}
+
+
+/* -------------------------------------------------------------
+   Drag ghost badge — shown when multiple items are dragged
+   ------------------------------------------------------------- */
+.ghost { position: relative; }
+
+.ghost-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: #4682e6;
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 18px;
+  text-align: center;
+  pointer-events: none;
+  z-index: 10;
+}
+
 /* -------------------------------------------------------------
    Text alignment (left / right)
    ------------------------------------------------------------- */
@@ -268,3 +310,4 @@ svg > .item > .item > foreignObject > .content {
 [data-align=right] > foreignObject > .content > :not(.text):not(.notes) {
   margin-left: 0.3em;
 }
+

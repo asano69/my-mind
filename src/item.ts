@@ -291,6 +291,16 @@ export default class Item {
 		this.dom.node.classList.remove("current");
 	}
 
+	/** Mark this item as part of a multi-selection (Ctrl/Cmd+click). */
+	markSelected() {
+		this.dom.node.classList.add("selected");
+	}
+
+	/** Remove the multi-selection mark from this item. */
+	unmarkSelected() {
+		this.dom.node.classList.remove("selected");
+	}
+
 	/*
 	 * This item changed in some way (typically one of its attributes has been changed).
 	 * We need to re-render its immediate DOM and also prehaps recurse upwards/downwards.
