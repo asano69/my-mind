@@ -49,6 +49,7 @@ function onMessage(e: MessageEvent) {
         case "setContent":
             app.currentItem.notes = e.data.value.trim();
             updatePreview(app.currentItem.notes);
+            pubsub.publish("item-change", app.currentItem);  // trigger auto-save
             break;
         case "getContent":
             if (app.currentItem) { sendToEditor(app.currentItem.notes); }
