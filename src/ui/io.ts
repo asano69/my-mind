@@ -17,6 +17,7 @@ type BUI = BackendUI<any>;
 let currentMode: Mode = "load";
 let currentBackend: BUI | null = null;
 let autoSaveTimeout: ReturnType<typeof setTimeout> | null = null;
+let lastSaveTime: number | null = null;
 
 const node = document.querySelector<HTMLElement>("#io")!;
 const select = node.querySelector<HTMLSelectElement>("#backend")!;
@@ -40,6 +41,15 @@ export function init() {
 	pubsub.subscribe("map-new", _ => setCurrentBackend(null));
 	pubsub.subscribe("save-done", onDone);
 	pubsub.subscribe("load-done", onDone);
+
+	// Track last save time and refresh the elapsed-time display every 10s.
+	pubsub.subscribe("save-done", () => {
+	    lastSaveTime = Date.now();
+	    updateSaveStatus();
+	});
+	setInterval(updateSaveStatus, 10_000);
+
+
 	// Auto-save: debounce item changes and save after a short delay.
 	pubsub.subscribe("item-change", () => {
 	    if (!currentBackend) { return; }
@@ -163,4 +173,20 @@ function updateURL() {
 			history.replaceState(null, "", "?" + arr.join("&"));
 		}
 	}
+}
+
+
+function updateSaveStatus() {
+    const el = document.getElementById("save-status");
+    if (!el) { return; }
+    if (lastSaveTime === null) { el.textContent = ""; return; }
+
+    const elapsed = Math.floor((Date.now() - lastSaveTime) / 1000);
+    if (elapsed < 10) {
+        el.textContent = "just saved";
+    } else if (elapsed < 60) {
+        el.textContent = `${Math.floor(elapsed / 10) * 10}s ago`;
+    } else {
+        el.textContent = `${Math.floor(elapsed / 60)}m ago`;
+    }
 }
