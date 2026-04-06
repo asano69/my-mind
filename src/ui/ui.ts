@@ -19,6 +19,52 @@ import { repo as commandRepo } from "../command/command.js";
 
 
 const node = document.querySelector<HTMLElement>("#ui")!;
+const saveTimeEl = document.querySelector<HTMLElement>("#save-time")!;
+
+// Timestamp of the last successful save (ms since epoch), or null if not yet saved.
+let lastSaveTime: number | null = null;
+let elapsedTimer: ReturnType<typeof setInterval> | null = null;
+
+/** Format a Date as HH:MM:SS. */
+function formatTime(d: Date): string {
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+/** Format elapsed milliseconds as a human-readable string.
+ *  <5s  → "now"
+ *  <60s → "<1m"
+ *  <60m → "Xm ago"
+ *  else → "Xh ago"
+ */
+function formatElapsed(ms: number): string {
+    const s = Math.floor(ms / 1000);
+    if (s < 5)   { return "now"; }
+    if (s < 60)  { return "<1m"; }
+    const m = Math.floor(s / 60);
+    if (m < 60)  { return `${m}m ago`; }
+    const h = Math.floor(m / 60);
+    return `${h}h ago`;
+}
+
+/** Refresh the elapsed portion of the save-time display. */
+function refreshElapsed() {
+    if (lastSaveTime === null || !saveTimeEl) { return; }
+    const elapsed = Date.now() - lastSaveTime;
+    const timeStr = formatTime(new Date(lastSaveTime));
+    saveTimeEl.textContent = `${timeStr}  (${formatElapsed(elapsed)})`;
+}
+
+/** Called whenever a successful save completes. */
+function onSaveDone() {
+    lastSaveTime = Date.now();
+    refreshElapsed();
+
+    // Start the per-second ticker if not already running.
+    if (!elapsedTimer) {
+        elapsedTimer = setInterval(refreshElapsed, 1000);
+    }
+}
 
 export function isActive() {
     const active = document.activeElement;
@@ -73,6 +119,7 @@ export function init(port: HTMLElement) {
 	pubsub.subscribe("item-change", (_message: string, publisher: any) => {
 		if (publisher == app.currentItem) { update(); }
 	});
+	pubsub.subscribe("save-done", onSaveDone);
 
 	document.addEventListener("click", onClick);
 

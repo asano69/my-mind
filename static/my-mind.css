@@ -201,7 +201,9 @@ button:not(:disabled) {
 }
 
 
-
+/* -------------------------------------------------------------
+   Pane — #ui footer (save timestamp display)
+   ------------------------------------------------------------- */
 .pane#ui footer {
   display: flex;
   flex-direction: row;
@@ -209,10 +211,26 @@ button:not(:disabled) {
   align-items: flex-end;
   justify-content: space-between;
   border-top: 1px solid var(--color-border-mid);
+  min-height: 28px;
 }
 
 .pane#ui footer img {
   display: block;
+}
+
+/* Save timestamp: subdued monospace text, right-aligned */
+#save-time {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  letter-spacing: 0.03em;
+  color: var(--color-text);
+  opacity: 0.38;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+  width: 100%;
+  line-height: 1.5;
 }
 
 
