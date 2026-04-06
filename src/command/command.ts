@@ -6,6 +6,7 @@ import * as help from "../ui/help.js";
 import * as notes from "../ui/notes.js";
 import * as ui from "../ui/ui.js";
 import * as io from "../ui/io.js";
+import { showToast } from "../ui/toast.js";
 import * as fileSwitcher from "../ui/file-switcher.js";
 import ImageBackend from "../backend/image.js";
 import Action, * as actions from "../action.js";
@@ -330,14 +331,13 @@ new (class CopyImage extends Command {
             const backend = new ImageBackend();
             const url = await backend.save("png");
 
-            // Try the Clipboard API first (requires HTTPS or localhost).
             if (navigator.clipboard?.write) {
                 const res = await fetch(url);
                 const blob = await res.blob();
                 URL.revokeObjectURL(url);
                 await navigator.clipboard.write([new ClipboardItem({"image/png": blob})]);
+                showToast("Copied", app.currentMap.name);
             } else {
-                // Fallback: open the image in a new tab so the user can copy manually.
                 window.open(url, "_blank");
             }
         } finally {
