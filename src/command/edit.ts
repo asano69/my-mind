@@ -83,42 +83,54 @@ new (class Cancel extends Command {
 // Text style helpers
 // ---------------------------------------------------------------------------
 
-// Tags used by execCommand (maps command name -> HTML tag name)
-const STYLE_TAGS: Record<string, string> = {
-	bold:         "b",
-	italic:       "i",
-	underline:    "u",
+// All tag variants that each execCommand may produce across browsers.
+// e.g. bold -> <b> in Chrome, <strong> in some older browsers.
+// strikeThrough -> <s> or <strike> depending on browser.
+const STYLE_TAGS: Record<string, string[]> = {
+	bold:          ["b", "strong"],
+	italic:        ["i", "em"],
+	underline:     ["u"],
+	strikeThrough: ["s", "strike"],
+};
+
+// The canonical (first) tag used when adding the style
+const STYLE_TAG_PRIMARY: Record<string, string> = {
+	bold:          "b",
+	italic:        "i",
+	underline:     "u",
 	strikeThrough: "s",
 };
 
 /**
- * Toggle a style tag on an HTML string.
- * Strips ALL occurrences of the tag (at any nesting depth) if any exist;
- * otherwise wraps the entire content in the tag once.
+ * Toggle a style on an HTML string.
+ * Accepts multiple tag aliases (e.g. ["s","strike"]) so that content
+ * produced by any browser variant is recognised.
  *
- * This handles cases like <i><b>text</b></i> correctly: toggling bold
- * removes <b>/<b> even when they are nested inside another tag.
+ * If ANY of the alias tags appear anywhere in the HTML, ALL occurrences of
+ * ALL aliases are stripped and the stripped string is returned.
+ * Otherwise the whole content is wrapped in the primary (canonical) tag.
  */
-function toggleStyleTag(html: string, tag: string): string {
-	// Case-insensitive removal of all open and close tags
-	const openRe  = new RegExp(`<${tag}>`, "gi");
-	const closeRe = new RegExp(`</${tag}>`, "gi");
-	const stripped = html.replace(openRe, "").replace(closeRe, "");
+function toggleStyleTag(html: string, tags: string[], primaryTag: string): string {
+	// Build a combined regex that matches any open or close alias tag
+	const tagPattern = tags.map(t => `${t}`).join("|");
+	const anyTagRe = new RegExp(`</?(?:${tagPattern})>`, "gi");
+
+	const stripped = html.replace(anyTagRe, "");
 	if (stripped !== html) {
-		// Tag was present somewhere – return with all instances removed
+		// At least one alias was present – return with all removed
 		return stripped;
 	}
-	// Tag was absent – wrap the whole content
-	return `<${tag}>${html}</${tag}>`;
+	// No alias found – add the canonical tag
+	return `<${primaryTag}>${html}</${primaryTag}>`;
 }
 
 /**
  * Apply a style to a single item's full text via a SetText action.
- * Falls back to execCommand when the item is currently being edited.
  */
 function applyStyleToItem(item: Item, command: string): Action {
-	const tag = STYLE_TAGS[command];
-	const newText = toggleStyleTag(item.text, tag);
+	const tags = STYLE_TAGS[command];
+	const primary = STYLE_TAG_PRIMARY[command];
+	const newText = toggleStyleTag(item.text, tags, primary);
 	return new actions.SetText(item, newText);
 }
 
