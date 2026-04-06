@@ -22,7 +22,7 @@ let lastSaveTime: number | null = null;
 const node = document.querySelector<HTMLElement>("#io")!;
 const select = node.querySelector<HTMLSelectElement>("#backend")!;
 const PREFIX = "mm.app";
-const AUTO_SAVE_DELAY_MS = 5000;
+const AUTO_SAVE_DELAY_MS = 3000;
 
 export function isActive() {
     return !node.hidden && node.contains(document.activeElement);
@@ -47,7 +47,7 @@ export function init() {
 	    lastSaveTime = Date.now();
 	    updateSaveStatus();
 	});
-	setInterval(updateSaveStatus, 10_000);
+	setInterval(updateSaveStatus, 1_000);
 
 
 	// Auto-save: debounce item changes and save after a short delay.
@@ -175,15 +175,18 @@ function updateURL() {
 	}
 }
 
-
 function updateSaveStatus() {
     const el = document.getElementById("save-status");
     if (!el) { return; }
     if (lastSaveTime === null) { el.textContent = ""; return; }
 
     const elapsed = Math.floor((Date.now() - lastSaveTime) / 1000);
-    if (elapsed < 10) {
-        el.textContent = "just saved";
+    if (elapsed < 2) {
+        el.textContent = "just saved!";
+    } else if (elapsed < 5) {
+        el.textContent = "<5s ago";
+    } else if (elapsed < 10) {
+        el.textContent = "<10s ago";
     } else if (elapsed < 60) {
         el.textContent = `${Math.floor(elapsed / 10) * 10}s ago`;
     } else {
