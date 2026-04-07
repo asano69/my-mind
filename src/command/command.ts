@@ -324,7 +324,7 @@ new (class GoToCatalog extends Command {
 });
 new (class CopyImage extends Command {
     keys = [{code:"KeyC", ctrlKey:true, shiftKey:true}];
-    constructor() { super("copy-image", "Copy image to clipboard"); }
+    constructor() { super("copy-image", "Copy image"); }
     async execute() {
         app.setThrobber(true);
         try {

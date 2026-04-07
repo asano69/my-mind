@@ -47,6 +47,7 @@ export function init() {
 	t = node.querySelector(".other")!;
 	buildRow(t, "undo", "redo");
 	buildRow(t, "save");
+	buildRow(t, "copy-image"); //add
 	//buildRow(t, "save-as");
 	buildRow(t, "load");
 	buildRow(t, "new"); //add
@@ -55,6 +56,7 @@ export function init() {
 	buildRow(t, "ui");
 	buildRow(t, "quick-load"); //add
 	buildRow(t, "go-to-catalog"); //add
+
 }
 
 function buildRow(table: HTMLTableElement, ...commandNames: string[]) {
