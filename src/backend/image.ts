@@ -45,15 +45,14 @@ export default class ImageBackend extends Backend {
 
 				// Paint #f5ede4 behind selected nodes before drawing the SVG.
 				// On the page the semi-transparent color-mix() background lets the
-				// warm page background show through.  On a transparent canvas the same
-				// transparency would composite as black.  By filling the exact bounding
-				// rect of each selected .content element with the page background colour
-				// first, then drawing the SVG on top, we replicate what the browser does
-				// — selected nodes appear semi-transparent over #f5ede4, everywhere else
-				// remains transparent.
-				paintSelectionBackgrounds(ctx, app.currentMap.node, p);
-
+				// Draw the SVG first on a transparent canvas, then paint #f5ede4
+				// *under* the already-drawn pixels using destination-over compositing.
+				// This means the fill only shows through where the SVG is transparent
+				or semi-transparent — no shape-matching needed, no bleed at edges.
 				ctx.drawImage(img, p, p);
+				ctx.globalCompositeOperation = "destination-over";
+				paintSelectionBackgrounds(ctx, app.currentMap.node, p);
+				ctx.globalCompositeOperation = "source-over";
 
 				return new Promise((resolve, reject) => {
 					canvas.toBlob(blob => {
@@ -78,7 +77,10 @@ export default class ImageBackend extends Backend {
 
 /**
  * Fill the bounding rect of each selected .content element with the page
- * background colour on the canvas, before the SVG is drawn on top.
+ * background colour.  Called with destination-over compositing active so the
+ * fill is painted *under* the already-drawn SVG — it only shows through where
+ * the SVG is transparent or semi-transparent, giving a perfect shape match
+ * with zero bleed regardless of border-radius.
  *
  * Coordinates are converted from page-relative (getBoundingClientRect) to
  * canvas-relative by subtracting the SVG element's own bounding rect and
@@ -97,23 +99,14 @@ function paintSelectionBackgrounds(
 	liveSvg.querySelectorAll(".current, .selected").forEach(item => {
 		const content = item.querySelector<HTMLElement>(".content");
 		if (!content) { return; }
-		const r   = content.getBoundingClientRect();
-		const x   = r.left - svgRect.left + offset;
-		const y   = r.top  - svgRect.top  + offset;
-		const w   = r.width;
-		const h   = r.height;
-
-		// Read the computed border-radius so the fill matches the node shape
-		// exactly (4px for box, ~50% resolved to pixels for ellipse).
-		const radiusStr = getComputedStyle(content).borderTopLeftRadius;
-		const radius = radiusStr.endsWith("%")
-			? Math.min(w, h) / 2           // 50% → full ellipse
-			: parseFloat(radiusStr) || 0;  // px value
-
+		const r = content.getBoundingClientRect();
 		ctx.fillStyle = pageBg;
-		ctx.beginPath();
-		ctx.roundRect(x, y, w, h, radius);
-		ctx.fill();
+		ctx.fillRect(
+			r.left - svgRect.left + offset,
+			r.top  - svgRect.top  + offset,
+			r.width,
+			r.height,
+		);
 	});
 }
 
