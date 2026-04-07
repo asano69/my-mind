@@ -5,6 +5,10 @@ import * as app from "../my-mind.js";
 
 export type Format = "svg" | "png";
 
+// Extra space added around the exported PNG so that node box-shadows
+// are not clipped at the edges of the image.
+const EXPORT_PADDING = 24;
+
 export default class ImageBackend extends Backend {
 	constructor() { super("image"); }
 
@@ -22,17 +26,6 @@ export default class ImageBackend extends Backend {
 		// Injecting the resolved values as a :root block fixes that.
 		injectRootVariables(svgNode);
 
-		if (format === "png") {
-			// The selection highlight uses color-mix() whose percentages sum to less
-			// than 100%, leaving a transparent remainder.  On the page the warm
-			// background colour shows through correctly; on a transparent canvas the
-			// transparent fraction composites as black, making nodes look dark.
-			// Fix: sample the computed background-color of each live selected element,
-			// blend it with the page background to produce a fully opaque equivalent,
-			// then inject that as an inline style override on the cloned element.
-			fixSelectionOpacity(app.currentMap.node, svgNode);
-		}
-
 		let xmlStr = serializer.serializeToString(svgNode);
 		let encoded = encoder.encode(xmlStr);
 		let byteString = [...encoded].map(byte => String.fromCharCode(byte)).join("");
@@ -44,11 +37,23 @@ export default class ImageBackend extends Backend {
 
 			case "png": {
 				let img = await waitForImageLoad(svgUrl);
+				const p = EXPORT_PADDING;
 				let canvas = document.createElement("canvas");
-				canvas.width = img.width;
-				canvas.height = img.height;
+				canvas.width  = img.width  + p * 2;
+				canvas.height = img.height + p * 2;
 				const ctx = canvas.getContext("2d")!;
-				ctx.drawImage(img, 0, 0);
+
+				// Paint #f5ede4 behind selected nodes before drawing the SVG.
+				// On the page the semi-transparent color-mix() background lets the
+				// warm page background show through.  On a transparent canvas the same
+				// transparency would composite as black.  By filling the exact bounding
+				// rect of each selected .content element with the page background colour
+				// first, then drawing the SVG on top, we replicate what the browser does
+				// — selected nodes appear semi-transparent over #f5ede4, everywhere else
+				// remains transparent.
+				paintSelectionBackgrounds(ctx, app.currentMap.node, p);
+
+				ctx.drawImage(img, p, p);
 
 				return new Promise((resolve, reject) => {
 					canvas.toBlob(blob => {
@@ -72,46 +77,34 @@ export default class ImageBackend extends Backend {
 }
 
 /**
- * For each .current / .selected item, read the computed background-color of
- * the live .content element (where color-mix() is already resolved by the
- * browser to an rgba value), blend it with the page background to make it
- * fully opaque, then write that colour as an inline style override on the
- * corresponding element in the cloned SVG.
+ * Fill the bounding rect of each selected .content element with the page
+ * background colour on the canvas, before the SVG is drawn on top.
  *
- * The radial gloss gradient is re-applied on top so the visual appearance
- * matches the live map as closely as possible.
+ * Coordinates are converted from page-relative (getBoundingClientRect) to
+ * canvas-relative by subtracting the SVG element's own bounding rect and
+ * adding the export padding offset.
  */
-function fixSelectionOpacity(liveSvg: SVGSVGElement, clonedSvg: SVGSVGElement) {
-	const pageBgHex = getComputedStyle(document.documentElement)
+function paintSelectionBackgrounds(
+	ctx: CanvasRenderingContext2D,
+	liveSvg: SVGSVGElement,
+	offset: number,
+) {
+	const pageBg = getComputedStyle(document.documentElement)
 		.getPropertyValue("--color-bg").trim() || "#f5ede4";
-	const pageBg = parseHexColor(pageBgHex);
-	if (!pageBg) { return; }
 
-	const liveItems   = Array.from(liveSvg.querySelectorAll(".current, .selected"));
-	const clonedItems = Array.from(clonedSvg.querySelectorAll(".current, .selected"));
+	const svgRect = liveSvg.getBoundingClientRect();
 
-	liveItems.forEach((liveItem, i) => {
-		const liveContent   = liveItem.querySelector<HTMLElement>(".content");
-		const clonedContent = clonedItems[i]?.querySelector<HTMLElement>(".content");
-		if (!liveContent || !clonedContent) { return; }
-
-		const bgStr  = getComputedStyle(liveContent).backgroundColor;
-		const bgRgba = parseRgbaColor(bgStr);
-		if (!bgRgba || bgRgba.a >= 1) { return; } // already opaque — nothing to do
-
-		// Alpha-composite the semi-transparent selection colour over the page background.
-		const a = bgRgba.a;
-		const opaque = {
-			r: Math.round(bgRgba.r * a + pageBg.r * (1 - a)),
-			g: Math.round(bgRgba.g * a + pageBg.g * (1 - a)),
-			b: Math.round(bgRgba.b * a + pageBg.b * (1 - a)),
-		};
-
-		// Preserve the gloss radial gradient from map.css, replace only the base color.
-		clonedContent.style.background = [
-			"radial-gradient(ellipse 55% 35% at 40% 18%, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0) 100%)",
-			`rgb(${opaque.r}, ${opaque.g}, ${opaque.b})`,
-		].join(", ");
+	liveSvg.querySelectorAll(".current, .selected").forEach(item => {
+		const content = item.querySelector<HTMLElement>(".content");
+		if (!content) { return; }
+		const r = content.getBoundingClientRect();
+		ctx.fillStyle = pageBg;
+		ctx.fillRect(
+			r.left - svgRect.left + offset,
+			r.top  - svgRect.top  + offset,
+			r.width,
+			r.height,
+		);
 	});
 }
 
@@ -161,38 +154,6 @@ function injectRootVariables(svgNode: SVGSVGElement) {
 	if (style) {
 		style.textContent = rootBlock + (style.textContent ?? "");
 	}
-}
-
-/** Parse "rgba(r, g, b, a)" or "rgb(r, g, b)" into component numbers. */
-function parseRgbaColor(str: string): { r: number; g: number; b: number; a: number } | null {
-	const m = str.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+))?\s*\)/);
-	if (!m) { return null; }
-	return {
-		r: parseFloat(m[1]),
-		g: parseFloat(m[2]),
-		b: parseFloat(m[3]),
-		a: m[4] !== undefined ? parseFloat(m[4]) : 1,
-	};
-}
-
-/** Parse a 3- or 6-digit hex color string into rgb components. */
-function parseHexColor(hex: string): { r: number; g: number; b: number } | null {
-	const clean = hex.replace("#", "");
-	if (clean.length === 3) {
-		return {
-			r: parseInt(clean[0] + clean[0], 16),
-			g: parseInt(clean[1] + clean[1], 16),
-			b: parseInt(clean[2] + clean[2], 16),
-		};
-	}
-	if (clean.length === 6) {
-		return {
-			r: parseInt(clean.slice(0, 2), 16),
-			g: parseInt(clean.slice(2, 4), 16),
-			b: parseInt(clean.slice(4, 6), 16),
-		};
-	}
-	return null;
 }
 
 async function waitForImageLoad(src: string): Promise<HTMLImageElement> {
