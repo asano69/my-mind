@@ -97,14 +97,23 @@ function paintSelectionBackgrounds(
 	liveSvg.querySelectorAll(".current, .selected").forEach(item => {
 		const content = item.querySelector<HTMLElement>(".content");
 		if (!content) { return; }
-		const r = content.getBoundingClientRect();
+		const r   = content.getBoundingClientRect();
+		const x   = r.left - svgRect.left + offset;
+		const y   = r.top  - svgRect.top  + offset;
+		const w   = r.width;
+		const h   = r.height;
+
+		// Read the computed border-radius so the fill matches the node shape
+		// exactly (4px for box, ~50% resolved to pixels for ellipse).
+		const radiusStr = getComputedStyle(content).borderTopLeftRadius;
+		const radius = radiusStr.endsWith("%")
+			? Math.min(w, h) / 2           // 50% → full ellipse
+			: parseFloat(radiusStr) || 0;  // px value
+
 		ctx.fillStyle = pageBg;
-		ctx.fillRect(
-			r.left - svgRect.left + offset,
-			r.top  - svgRect.top  + offset,
-			r.width,
-			r.height,
-		);
+		ctx.beginPath();
+		ctx.roundRect(x, y, w, h, radius);
+		ctx.fill();
 	});
 }
 
