@@ -2,7 +2,6 @@
 import Backend from "./backend.js";
 import * as app from "../my-mind.js";
 
-
 export type Format = "svg" | "png";
 
 const EXPORT_PADDING = 24;
@@ -17,12 +16,24 @@ export default class ImageBackend extends Backend {
 		// Clone so we can mutate freely without affecting the live map
 		const svgNode = app.currentMap.node.cloneNode(true) as SVGSVGElement;
 
-		// Embed the page-level CSS custom properties into the SVG's style element.
-		// When the SVG is rendered as an isolated image (data URI / canvas), it has
-		// no access to the HTML document's :root variables, which causes rules like
-		// `box-shadow: var(--node-shadow), …` to become invalid and drop entirely.
-		// Injecting the resolved values as a :root block fixes that.
+		// CSSカスタムプロパティを埋め込む
 		injectRootVariables(svgNode);
+
+		const p = EXPORT_PADDING;
+
+		// SVGの元のサイズを取得
+		const width = svgNode.width.baseVal.value || svgNode.viewBox.baseVal.width;
+		const height = svgNode.height.baseVal.value || svgNode.viewBox.baseVal.height;
+
+		if (format === "svg") {
+			// viewBox を拡張して余白を確保
+			svgNode.setAttribute("width", (width + p * 2).toString());
+			svgNode.setAttribute("height", (height + p * 2).toString());
+			svgNode.setAttribute(
+				"viewBox",
+				`${-p} ${-p} ${width + p * 2} ${height + p * 2}`
+			);
+		}
 
 		let xmlStr = serializer.serializeToString(svgNode);
 		let encoded = encoder.encode(xmlStr);
@@ -31,25 +42,20 @@ export default class ImageBackend extends Backend {
 		let svgUrl = `data:image/svg+xml;base64,${base64}`;
 
 		switch (format) {
-			case "svg": return svgUrl;
+			case "svg":
+				return svgUrl;
 
 			case "png": {
 				let img = await waitForImageLoad(svgUrl);
-				const p = EXPORT_PADDING;
-
-				// SVGのピクセルサイズを取得
-				let svgNode = app.currentMap.node as SVGSVGElement;
-				let width = svgNode.width.baseVal.value || svgNode.viewBox.baseVal.width;
-				let height = svgNode.height.baseVal.value || svgNode.viewBox.baseVal.height;
 
 				const canvas = document.createElement("canvas");
 				canvas.width = width + p * 2;
 				canvas.height = height + p * 2;
 
 				const ctx = canvas.getContext("2d")!;
-
 				// 余白を考慮して描画
 				ctx.drawImage(img, p, p, width, height);
+
 				return new Promise((resolve, reject) => {
 					canvas.toBlob(blob => {
 						if (!blob) {
@@ -72,43 +78,23 @@ export default class ImageBackend extends Backend {
 }
 
 /**
- * Read all CSS custom properties defined on :root in the main document and
- * inject them as a :root block at the top of the SVG's <style> element.
- *
- * This is necessary because when an SVG is serialized to a data URI and
- * drawn onto a canvas, it runs in an isolated context where the HTML
- * document's stylesheet variables are not accessible.
+ * :rootに定義されたCSSカスタムプロパティをSVGの<style>に埋め込む
  */
 function injectRootVariables(svgNode: SVGSVGElement) {
 	const rootStyle = getComputedStyle(document.documentElement);
 
-	// All custom properties referenced directly or indirectly by map.css
 	const varNames = [
-		"--node-shadow",
-		"--node-shadow-hover",
-		"--node-shadow-current",
-		"--node-bg-current",
-		"--node-border-width",
-		"--underline-hover-outline",
-		"--underline-hover-bg",
-		"--toggle-color",
-		"--status-yes-color",
-		"--status-no-color",
-		"--shadow-card",
-		"--color-bg",
-		"--color-pane",
-		"--color-pane-hover",
-		"--color-accent",
-		"--color-text",
-		"--color-hover",
-		"--font-sans",
-		"--font-serif",
-		"--font-mono",
+		"--node-shadow", "--node-shadow-hover", "--node-shadow-current",
+		"--node-bg-current", "--node-border-width", "--underline-hover-outline",
+		"--underline-hover-bg", "--toggle-color", "--status-yes-color",
+		"--status-no-color", "--shadow-card", "--color-bg", "--color-pane",
+		"--color-pane-hover", "--color-accent", "--color-text", "--color-hover",
+		"--font-sans", "--font-serif", "--font-mono",
 	];
 
 	const declarations = varNames
 		.map(name => `${name}: ${rootStyle.getPropertyValue(name).trim()}`)
-		.filter(decl => !decl.endsWith(": ")) // skip variables that are not set
+		.filter(decl => !decl.endsWith(": ")) // 未設定は除外
 		.join("; ");
 
 	const rootBlock = `:root { ${declarations} }\n`;
@@ -119,10 +105,13 @@ function injectRootVariables(svgNode: SVGSVGElement) {
 	}
 }
 
+/**
+ * 画像ロードを待つ
+ */
 async function waitForImageLoad(src: string): Promise<HTMLImageElement> {
-	let img = new Image();
-	img.src = src;
 	return new Promise(resolve => {
+		const img = new Image();
 		img.onload = () => resolve(img);
+		img.src = src;
 	});
 }
