@@ -5,6 +5,8 @@ import * as app from "../my-mind.js";
 
 export type Format = "svg" | "png";
 
+const EXPORT_PADDING = 24;
+
 export default class ImageBackend extends Backend {
 	constructor() { super("image"); }
 
@@ -33,13 +35,21 @@ export default class ImageBackend extends Backend {
 
 			case "png": {
 				let img = await waitForImageLoad(svgUrl);
-				let canvas = document.createElement("canvas");
-				canvas.width = img.width;
-				canvas.height = img.height;
-				const ctx = canvas.getContext("2d")!;
-				ctx.fillStyle = "#f5ede4";
-				ctx.drawImage(img, 0, 0);
+				const p = EXPORT_PADDING;
 
+				// SVGのピクセルサイズを取得
+				let svgNode = app.currentMap.node as SVGSVGElement;
+				let width = svgNode.width.baseVal.value || svgNode.viewBox.baseVal.width;
+				let height = svgNode.height.baseVal.value || svgNode.viewBox.baseVal.height;
+
+				const canvas = document.createElement("canvas");
+				canvas.width = width + p * 2;
+				canvas.height = height + p * 2;
+
+				const ctx = canvas.getContext("2d")!;
+
+				// 余白を考慮して描画
+				ctx.drawImage(img, p, p, width, height);
 				return new Promise((resolve, reject) => {
 					canvas.toBlob(blob => {
 						if (!blob) {
