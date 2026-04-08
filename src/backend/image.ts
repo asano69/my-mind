@@ -20,20 +20,18 @@ export default class ImageBackend extends Backend {
 		injectRootVariables(svgNode);
 
 		const p = EXPORT_PADDING;
-
-		// SVGの元のサイズを取得
+		// Get the original SVG dimensions before adding padding.
 		const width = svgNode.width.baseVal.value || svgNode.viewBox.baseVal.width;
 		const height = svgNode.height.baseVal.value || svgNode.viewBox.baseVal.height;
 
-		if (format === "svg") {
-			// viewBox を拡張して余白を確保
-			svgNode.setAttribute("width", (width + p * 2).toString());
-			svgNode.setAttribute("height", (height + p * 2).toString());
-			svgNode.setAttribute(
-				"viewBox",
-				`${-p} ${-p} ${width + p * 2} ${height + p * 2}`
-			);
-		}
+		// Expand the viewBox unconditionally so that drop shadows (which extend
+		// beyond the node bounds) are not clipped in either SVG or PNG output.
+		svgNode.setAttribute("width", (width + p * 2).toString());
+		svgNode.setAttribute("height", (height + p * 2).toString());
+		svgNode.setAttribute(
+			"viewBox",
+			`${-p} ${-p} ${width + p * 2} ${height + p * 2}`
+		);
 
 		let xmlStr = serializer.serializeToString(svgNode);
 		let encoded = encoder.encode(xmlStr);
@@ -53,8 +51,10 @@ export default class ImageBackend extends Backend {
 				canvas.height = height + p * 2;
 
 				const ctx = canvas.getContext("2d")!;
-				// 余白を考慮して描画
-				ctx.drawImage(img, p, p, width, height);
+				// The SVG already contains the padding via its expanded viewBox,
+				// so draw it at the origin without an additional offset.
+				ctx.drawImage(img, 0, 0);
+
 
 				return new Promise((resolve, reject) => {
 					canvas.toBlob(blob => {
