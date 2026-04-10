@@ -3,7 +3,8 @@
 - ユニークなメモ帳として、頭の中を整理するのに向いている。
 
 ## 概要
-驚くべきことに、自分が求めているWebで動作するマインドマップアプリがGithubにまったくなかった。ondras/my-mindをリバースエイジングするしかない。
+驚くべきことに、自分が求めているWebで動作するマインドマップアプリがGithubにまったくなかった。
+ondras/my-mindをリバースエンジニアリングすることにした。
 - My Mind: https://github.com/ondras/my-mind
 - Demo: https://my-mind.github.io/
 
