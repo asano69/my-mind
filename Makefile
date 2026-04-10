@@ -58,6 +58,18 @@ deploy: docker-build docker-push ## (*) Deploy stack via Komodo
 	docker exec -it komodo km x -y deploy-stack my-mind
 
 # ─────────────────────────────────────────
+# icon
+# ─────────────────────────────────────────
+.PHONY: icon
+icon:
+	magick -background none src/my-mind.svg \
+	  \( -clone 0 -resize 16x16 \) \
+	  \( -clone 0 -resize 32x32 \) \
+	  \( -clone 0 -resize 48x48 \) \
+	  -delete 0 static/favicon.ico
+
+
+# ─────────────────────────────────────────
 #  Misc
 # ─────────────────────────────────────────
 .PHONY: clean
