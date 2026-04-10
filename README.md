@@ -4,7 +4,7 @@
 
 ## 概要
 驚くべきことに、自分が求めているWebで動作するマインドマップアプリがGithubにまったくなかった。
-ondras/my-mindをリバースエイジングすることにした。
+ondras/my-mindをリバースエンジニアリングすることにした。
 - My Mind: https://github.com/ondras/my-mind
 - Demo: https://my-mind.github.io/
 
