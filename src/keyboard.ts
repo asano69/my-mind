@@ -6,6 +6,11 @@ import { repo as commandRepo, Key } from "./command/command.js";
 type EventProp = keyof KeyboardEvent;
 
 function handleEvent(e: KeyboardEvent) {
+		// Ignore key events that are part of IME composition (e.g. Japanese input).
+		// Without this check, pressing Enter to confirm an IME candidate would also
+		// trigger the app's "finish editing" command — particularly visible in Firefox.
+		if (e.isComposing) { return; }
+
     // For modifier-based shortcuts, always prevent browser interception
     const isModifierShortcut = [...commandRepo.values()].some(command =>
         command.keys.some(key => keyOK(key, e) && (key.ctrlKey || key.metaKey))
