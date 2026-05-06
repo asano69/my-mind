@@ -13,17 +13,11 @@ services:
     networks:
       - traefik_br
     labels:
-      - "traefik.enable=true" ###
-      - "traefik.docker.network=traefik_br"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in-http.rule=Host(`mm.notes.internal`)"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in-http.entrypoints=web"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in-http.middlewares=force-https@file" ###
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in.rule=Host(`mm.notes.internal`)"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in.entrypoints=websecure"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in.tls=true"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in.service=${COMPOSE_PROJECT_NAME}"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-in.middlewares=hsts@file,authelia-forwardauth@file" ###
-      - "traefik.http.services.${COMPOSE_PROJECT_NAME}.loadbalancer.server.port=3000"
+      - "traefik.enable=true"
+      - "traefik.http.routers.my-mind.rule=Host(`mm.notes.internal`)"
+      - "traefik.http.routers.my-mind.middlewares=authelia@docker"
+      - "diun.enable=true"
+
 networks:
   traefik_br:
     external: true
