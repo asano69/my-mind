@@ -16,8 +16,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.my-mind.rule=Host(`mm.notes.internal`)"
       - "traefik.http.routers.my-mind.middlewares=authelia@docker"
-
-
 networks:
   traefik_net:
     external: true
