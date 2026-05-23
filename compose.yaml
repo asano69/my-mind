@@ -3,6 +3,7 @@ services:
     image: registry.internal/my-mind:latest
     #ports:
     #  - "3001:3000"
+    expose: 3000
     volumes:
       - data:/app/maps
     restart: unless-stopped
