@@ -4,14 +4,14 @@ services:
     container_name: my-mind
     #ports:
     #  - "3001:3000"
-    expose: 3000
+    expose: 
+      - 3000
     volumes:
       - data:/app/maps
     restart: unless-stopped
     environment:
       PORT: 3000
       TZ: Asia/Tokyo
-
     networks:
       - traefik_net
     labels:
