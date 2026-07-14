@@ -8,15 +8,14 @@
     />
     <title>my-mind</title>
     <link rel="stylesheet" href="theme.css" />
-    <link rel="stylesheet" href="easymde.min.css" />
     <link rel="stylesheet" href="editor.css" />
   </head>
   <body>
     <div id="app">
       <div id="bar">
-        <button onclick="sendMessage('closeEditor', true)">Close</button>
+        <button id="close-btn">Close</button>
         <span class="spacer"></span>
-        <button id="toggle-btn" onclick="toggleMode()">Edit</button>
+        <button id="toggle-btn">Edit</button>
       </div>
 
       <div id="edit-pane" class="hidden">
@@ -25,8 +24,10 @@
       <div id="view-pane"></div>
     </div>
 
-    <script src="easymde.min.js"></script>
-    <script>
+    <script type="module">
+      import EasyMDE from "easymde";
+      import "easymde/dist/easymde.min.css";
+
       function sendMessage(action, value) {
         window.parent.postMessage({ action, value }, "*");
       }
@@ -97,6 +98,13 @@
           updateViewPane();
         }
       }
+
+      document
+        .getElementById("close-btn")
+        .addEventListener("click", () => sendMessage("closeEditor", true));
+      document
+        .getElementById("toggle-btn")
+        .addEventListener("click", () => toggleMode());
 
       window.addEventListener("message", function (e) {
         if (!e.data || !e.data.action) return;
