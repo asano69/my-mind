@@ -74,116 +74,131 @@ const STYLE = `
 let backdrop = null;
 let cachedMaps = null;
 async function fetchMaps() {
-    if (cachedMaps)
-        return cachedMaps;
-    const res = await fetch('/catalog');
-    if (!res.ok)
-        throw new Error('catalog fetch failed: ' + res.status);
-    const html = await res.text();
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    cachedMaps = Array.from(doc.querySelectorAll('#list li')).map(li => {
-        var _a, _b, _c;
-        return ({
-            name: (_a = li.dataset.name) !== null && _a !== void 0 ? _a : '',
-            href: (_c = (_b = li.querySelector('.view-row')) === null || _b === void 0 ? void 0 : _b.getAttribute('href')) !== null && _c !== void 0 ? _c : '',
-        });
-    }).filter(m => m.name && m.href);
-    return cachedMaps;
+  if (cachedMaps) return cachedMaps;
+  const res = await fetch("/catalog");
+  if (!res.ok) throw new Error("catalog fetch failed: " + res.status);
+  const html = await res.text();
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  cachedMaps = Array.from(doc.querySelectorAll("#list li"))
+    .map((li) => {
+      var _a, _b, _c;
+      return {
+        name: (_a = li.dataset.name) !== null && _a !== void 0 ? _a : "",
+        href:
+          (_c =
+            (_b = li.querySelector(".view-row")) === null || _b === void 0
+              ? void 0
+              : _b.getAttribute("href")) !== null && _c !== void 0
+            ? _c
+            : "",
+      };
+    })
+    .filter((m) => m.name && m.href);
+  return cachedMaps;
 }
 function escapeHtml(s) {
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 function activeLink() {
-    return document.querySelector('#fs-list a.fs-active');
+  return document.querySelector("#fs-list a.fs-active");
 }
 function setActive(a) {
-    document.querySelectorAll('#fs-list a').forEach(el => el.classList.remove('fs-active'));
-    if (a) {
-        a.classList.add('fs-active');
-        a.scrollIntoView({ block: 'nearest' });
-    }
+  document
+    .querySelectorAll("#fs-list a")
+    .forEach((el) => el.classList.remove("fs-active"));
+  if (a) {
+    a.classList.add("fs-active");
+    a.scrollIntoView({ block: "nearest" });
+  }
 }
 function populate(maps, query) {
-    const ul = document.getElementById('fs-list');
-    if (!ul)
-        return;
-    const q = query.toLowerCase();
-    const filtered = q ? maps.filter(m => m.name.toLowerCase().includes(q)) : maps;
-    if (filtered.length === 0) {
-        ul.innerHTML = '<li id="fs-empty">no matches</li>';
-        return;
-    }
-    ul.innerHTML = filtered.map(m => `<li><a href="${encodeURI(m.href)}" tabindex="-1">${escapeHtml(m.name)}</a></li>`).join('');
-    setActive(ul.querySelector('a'));
+  const ul = document.getElementById("fs-list");
+  if (!ul) return;
+  const q = query.toLowerCase();
+  const filtered = q
+    ? maps.filter((m) => m.name.toLowerCase().includes(q))
+    : maps;
+  if (filtered.length === 0) {
+    ul.innerHTML = '<li id="fs-empty">no matches</li>';
+    return;
+  }
+  ul.innerHTML = filtered
+    .map(
+      (m) =>
+        `<li><a href="${encodeURI(m.href)}" tabindex="-1">${escapeHtml(m.name)}</a></li>`,
+    )
+    .join("");
+  setActive(ul.querySelector("a"));
 }
 function hide() {
-    backdrop === null || backdrop === void 0 ? void 0 : backdrop.remove();
-    backdrop = null;
+  backdrop === null || backdrop === void 0 ? void 0 : backdrop.remove();
+  backdrop = null;
 }
 function show() {
-    // Guard against double invocation (e.g. command system firing twice).
-    if (document.getElementById('fs-backdrop'))
-        return;
-    /* inject styles once */
-    if (!document.getElementById('fs-style')) {
-        const tag = document.createElement('style');
-        tag.id = 'fs-style';
-        tag.textContent = STYLE;
-        document.head.appendChild(tag);
-    }
-    backdrop = document.createElement('div');
-    backdrop.id = 'fs-backdrop';
-    backdrop.innerHTML = `
+  // Guard against double invocation (e.g. command system firing twice).
+  if (document.getElementById("fs-backdrop")) return;
+  /* inject styles once */
+  if (!document.getElementById("fs-style")) {
+    const tag = document.createElement("style");
+    tag.id = "fs-style";
+    tag.textContent = STYLE;
+    document.head.appendChild(tag);
+  }
+  backdrop = document.createElement("div");
+  backdrop.id = "fs-backdrop";
+  backdrop.innerHTML = `
     <div id="fs-box">
       <input id="fs-input" type="text" placeholder="filter maps…" autocomplete="off" spellcheck="false">
       <ul id="fs-list"><li id="fs-empty">Loading…</li></ul>
     </div>
   `;
-    /* close on backdrop click */
-    backdrop.addEventListener('mousedown', e => {
-        if (e.target === backdrop)
-            hide();
-    });
-    const input = backdrop.querySelector('#fs-input');
-    const ul = backdrop.querySelector('#fs-list');
-    input.addEventListener('input', () => {
-        if (cachedMaps)
-            populate(cachedMaps, input.value);
-    });
-    input.addEventListener('keydown', async (e) => {
-        // Prevent all keystrokes from reaching the command system while the overlay is open.
-        e.stopPropagation();
-        const links = Array.from(ul.querySelectorAll('a'));
-        const idx = links.indexOf(activeLink());
-        switch (e.key) {
-            case 'ArrowDown':
-                e.preventDefault();
-                setActive(links[Math.min(idx + 1, links.length - 1)]);
-                break;
-            case 'ArrowUp':
-                e.preventDefault();
-                setActive(links[Math.max(idx - 1, 0)]);
-                break;
-            case 'Enter':
-                e.preventDefault();
-                const a = activeLink();
-                if (a) {
-                    hide();
-                    await quickSave();
-                    location.href = a.href;
-                }
-                break;
-            case 'Escape':
-                hide();
-                break;
+  /* close on backdrop click */
+  backdrop.addEventListener("mousedown", (e) => {
+    if (e.target === backdrop) hide();
+  });
+  const input = backdrop.querySelector("#fs-input");
+  const ul = backdrop.querySelector("#fs-list");
+  input.addEventListener("input", () => {
+    if (cachedMaps) populate(cachedMaps, input.value);
+  });
+  input.addEventListener("keydown", async (e) => {
+    // Prevent all keystrokes from reaching the command system while the overlay is open.
+    e.stopPropagation();
+    const links = Array.from(ul.querySelectorAll("a"));
+    const idx = links.indexOf(activeLink());
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setActive(links[Math.min(idx + 1, links.length - 1)]);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setActive(links[Math.max(idx - 1, 0)]);
+        break;
+      case "Enter":
+        e.preventDefault();
+        const a = activeLink();
+        if (a) {
+          hide();
+          await quickSave();
+          location.href = a.href;
         }
+        break;
+      case "Escape":
+        hide();
+        break;
+    }
+  });
+  document.body.appendChild(backdrop);
+  input.focus();
+  fetchMaps()
+    .then((maps) => populate(maps, input.value))
+    .catch(() => {
+      ul.innerHTML = '<li id="fs-empty">failed to load maps</li>';
     });
-    document.body.appendChild(backdrop);
-    input.focus();
-    fetchMaps()
-        .then(maps => populate(maps, input.value))
-        .catch(() => { ul.innerHTML = '<li id="fs-empty">failed to load maps</li>'; });
 }
 export function toggle() {
-    (backdrop === null || backdrop === void 0 ? void 0 : backdrop.isConnected) ? hide() : show();
+  (backdrop === null || backdrop === void 0 ? void 0 : backdrop.isConnected)
+    ? hide()
+    : show();
 }

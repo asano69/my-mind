@@ -33,10 +33,8 @@ render(
     <AuthGate>
       <Router>
         <Route path="/" component={Home} />
-     
       </Router>
     </AuthGate>
   ),
   document.getElementById("app"),
 );
-

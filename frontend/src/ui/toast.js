@@ -20,11 +20,10 @@
 const STYLE_ID = "toast-style";
 /* Inject the keyframe animation once per document. */
 function ensureStyle() {
-    if (document.getElementById(STYLE_ID))
-        return;
-    const style = document.createElement("style");
-    style.id = STYLE_ID;
-    style.textContent = `
+  if (document.getElementById(STYLE_ID)) return;
+  const style = document.createElement("style");
+  style.id = STYLE_ID;
+  style.textContent = `
         @keyframes toast-in {
             from { translate: 0 0.5rem; }
             to   { translate: 0 0; }
@@ -61,36 +60,37 @@ function ensureStyle() {
 				    opacity: 0.85;
 				}
     `;
-    document.head.appendChild(style);
+  document.head.appendChild(style);
 }
 export function showToast(label, subject, options = {}) {
-    ensureStyle();
-    const el = document.createElement("div");
-    el.className = "toast-el";
-    if (subject !== undefined) {
-        const labelEl = document.createElement("span");
-        labelEl.textContent = label;
-        const subjectEl = document.createElement("span");
-        subjectEl.className = "toast-subject";
-        subjectEl.textContent = subject;
-        el.appendChild(labelEl);
-        el.appendChild(subjectEl);
-    }
-    else {
-        el.textContent = label;
-    }
-    // Allow per-call linger override via CSS custom property.
-    if (options.linger !== undefined) {
-        el.style.setProperty("--toast-linger", `${options.linger}ms`);
-    }
-    document.body.appendChild(el);
-    // Double-rAF: the first frame lets the browser paint the element at full
-    // opacity; the second frame then sets opacity:0 so the CSS transition
-    // (delayed by --toast-linger) actually starts from a visible state.
-    // A single rAF is not enough — the transition fires before the initial
-    // paint is committed, causing the toast to vanish immediately.
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-        el.style.opacity = "0";
-        el.addEventListener("transitionend", () => el.remove(), { once: true });
-    }));
+  ensureStyle();
+  const el = document.createElement("div");
+  el.className = "toast-el";
+  if (subject !== undefined) {
+    const labelEl = document.createElement("span");
+    labelEl.textContent = label;
+    const subjectEl = document.createElement("span");
+    subjectEl.className = "toast-subject";
+    subjectEl.textContent = subject;
+    el.appendChild(labelEl);
+    el.appendChild(subjectEl);
+  } else {
+    el.textContent = label;
+  }
+  // Allow per-call linger override via CSS custom property.
+  if (options.linger !== undefined) {
+    el.style.setProperty("--toast-linger", `${options.linger}ms`);
+  }
+  document.body.appendChild(el);
+  // Double-rAF: the first frame lets the browser paint the element at full
+  // opacity; the second frame then sets opacity:0 so the CSS transition
+  // (delayed by --toast-linger) actually starts from a visible state.
+  // A single rAF is not enough — the transition fires before the initial
+  // paint is committed, causing the toast to vanish immediately.
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => {
+      el.style.opacity = "0";
+      el.addEventListener("transitionend", () => el.remove(), { once: true });
+    }),
+  );
 }

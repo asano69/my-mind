@@ -19,8 +19,8 @@ let lastSaveTime = null;
 let elapsedTimer = null;
 /** Format a Date as HH:MM:SS. */
 function formatTime(d) {
-    const pad = (n) => String(n).padStart(2, "0");
-    return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 /** Format elapsed milliseconds as a human-readable string.
  *  <5s  → "now"
@@ -29,87 +29,89 @@ function formatTime(d) {
  *  else → "Xh ago"
  */
 function formatElapsed(ms) {
-    const s = Math.floor(ms / 1000);
-    if (s < 5) {
-        return "now";
-    }
-    if (s < 60) {
-        return "<1m";
-    }
-    const m = Math.floor(s / 60);
-    if (m < 60) {
-        return `${m}m ago`;
-    }
-    const h = Math.floor(m / 60);
-    return `${h}h ago`;
+  const s = Math.floor(ms / 1000);
+  if (s < 5) {
+    return "now";
+  }
+  if (s < 60) {
+    return "<1m";
+  }
+  const m = Math.floor(s / 60);
+  if (m < 60) {
+    return `${m}m ago`;
+  }
+  const h = Math.floor(m / 60);
+  return `${h}h ago`;
 }
 /** Refresh the elapsed portion of the save-time display. */
 function refreshElapsed() {
-    if (lastSaveTime === null || !saveTimeEl) {
-        return;
-    }
-    const elapsed = Date.now() - lastSaveTime;
-    const timeStr = formatTime(new Date(lastSaveTime));
-    saveTimeEl.textContent = `${timeStr}  (${formatElapsed(elapsed)})`;
+  if (lastSaveTime === null || !saveTimeEl) {
+    return;
+  }
+  const elapsed = Date.now() - lastSaveTime;
+  const timeStr = formatTime(new Date(lastSaveTime));
+  saveTimeEl.textContent = `${timeStr}  (${formatElapsed(elapsed)})`;
 }
 /** Called whenever a successful save completes. */
 function onSaveDone() {
-    lastSaveTime = Date.now();
-    refreshElapsed();
-    // Start the per-second ticker if not already running.
-    if (!elapsedTimer) {
-        elapsedTimer = setInterval(refreshElapsed, 1000);
-    }
+  lastSaveTime = Date.now();
+  refreshElapsed();
+  // Start the per-second ticker if not already running.
+  if (!elapsedTimer) {
+    elapsedTimer = setInterval(refreshElapsed, 1000);
+  }
 }
 export function isActive() {
-    const active = document.activeElement;
-    const needsKeyboard = active instanceof HTMLInputElement
-        || active instanceof HTMLSelectElement
-        || active instanceof HTMLTextAreaElement;
-    return (needsKeyboard && node.contains(active)) || io.isActive();
+  const active = document.activeElement;
+  const needsKeyboard =
+    active instanceof HTMLInputElement ||
+    active instanceof HTMLSelectElement ||
+    active instanceof HTMLTextAreaElement;
+  return (needsKeyboard && node.contains(active)) || io.isActive();
 }
 export function toggle() {
-    node.hidden = !node.hidden;
-    pubsub.publish("ui-change");
+  node.hidden = !node.hidden;
+  pubsub.publish("ui-change");
 }
 export function getWidth() {
-    return (node.hidden ? 0 : node.offsetWidth);
+  return node.hidden ? 0 : node.offsetWidth;
 }
 function update() {
-    [layout, shape, value, status].forEach(ui => ui.update());
+  [layout, shape, value, status].forEach((ui) => ui.update());
 }
 function onClick(e) {
-    let target = e.target;
-    if (target == node.querySelector("#toggle")) { // fixme nelibi
-        toggle();
-        return;
+  let target = e.target;
+  if (target == node.querySelector("#toggle")) {
+    // fixme nelibi
+    toggle();
+    return;
+  }
+  let current = target;
+  while (true) {
+    let command = current.dataset.command;
+    if (command) {
+      commandRepo.get(command).execute();
+      return;
     }
-    let current = target;
-    while (true) {
-        let command = current.dataset.command;
-        if (command) {
-            commandRepo.get(command).execute();
-            return;
-        }
-        if (current.parentNode instanceof Element) {
-            current = current.parentNode;
-        }
-        else {
-            return;
-        }
+    if (current.parentNode instanceof Element) {
+      current = current.parentNode;
+    } else {
+      return;
     }
+  }
 }
 export function init(port) {
-    [layout, shape, value, status, color, textColor,
-        help, notes, io].forEach(ui => ui.init());
-    menu.init(port);
-    pubsub.subscribe("item-select", update);
-    pubsub.subscribe("item-change", (_message, publisher) => {
-        if (publisher == app.currentItem) {
-            update();
-        }
-    });
-    pubsub.subscribe("save-done", onSaveDone);
-    document.addEventListener("click", onClick);
-    io.restore();
+  [layout, shape, value, status, color, textColor, help, notes, io].forEach(
+    (ui) => ui.init(),
+  );
+  menu.init(port);
+  pubsub.subscribe("item-select", update);
+  pubsub.subscribe("item-change", (_message, publisher) => {
+    if (publisher == app.currentItem) {
+      update();
+    }
+  });
+  pubsub.subscribe("save-done", onSaveDone);
+  document.addEventListener("click", onClick);
+  io.restore();
 }
