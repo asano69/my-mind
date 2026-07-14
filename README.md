@@ -7,8 +7,14 @@ New to Mind maps? They are useful, aesthetic and cool! Read more about these spe
 
 <img src=".github/assets/sample-01.png" width="800">
 
-## Work in Progress
+## Plan
+- 各マインドマップにIDを降る（現状、名前ベースで不安定）
+- CSRに移行する。マインドマップの切り替えはもっとスムーズであるべき。
+- データの保存は、WebDAVのような不安定なものではなく、PocketBaseを使う。
 
+
+## Work in Progress
+- バックエンドをPocketBaseをつかったコードに置き換える。
 
 ---
 
