@@ -1,12 +1,9 @@
 # My Mind
-## 用途
-- ユニークなメモ帳として、頭の中を整理するのに向いている。
 
 ## 概要
-驚くべきことに、自分が求めているWebで動作するマインドマップアプリがGithubにまったくなかった。
-ondras/my-mindをリバースエンジニアリングすることにした。
-- My Mind: https://github.com/ondras/my-mind
-- Demo: https://my-mind.github.io/
+
+らくがきノートとして使えます。
+
 
 <img src=".github/readme-img01.png" width="800">
 
@@ -32,3 +29,11 @@ make
 
 make deploy
 ```
+
+---
+
+## 参考
+
+ondras/my-mindを参考にすることにした
+- My Mind: https://github.com/ondras/my-mind
+- Demo: https://my-mind.github.io/
