@@ -7,28 +7,7 @@
 
 <img src=".github/readme-img01.png" width="800">
 
-## 設計
-- アプリ側がSchemeやホスト名を知る必要はない。それらはリバースProxyに責任
-- Generic Web DAVで、FQDN/mapsを登録。https://mm.notes.internal/maps
-- 以降、保存したURLを使ってマインドマップを開く。https://mm.notes.internal/?url=https%3A%2F%2Fmy-mind.app.internal%2Fmaps%2Ftest.mymind
-- 新規ファイルから保存しようとすると、既存のマインドマップを上書きしてしまう危険性がある。
 
-## 計画
-- マップファイル（ルートノード）のインタラクティブなリネーム
-- マップファイルをタグ付けによって整理可能にする
-- マップファイルのディスクリプションを設定可能にする
-
-## Makefile
-
-- static/my-mind.jsをsrcから生成する。中間ファイルは.jsに保存される。
-- nix-shellに入ってから、make。
-- 生成物を削除するには、make clean。
-```shell
-nix-shell
-make
-
-make deploy
-```
 
 ---
 
