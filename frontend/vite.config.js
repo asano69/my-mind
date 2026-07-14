@@ -14,12 +14,8 @@ export default defineConfig({
     port: 3001,
     allowedHosts: true,
     proxy: {
-      // Only the WebDAV-style data endpoint needs the Go backend now; "/" and
-      // "/m/*" are served by Vite itself (src/index.html — the vanilla-JS
-      // editor) via its default SPA fallback, until Solid.js replaces it.
-      // "/catalog" is intentionally still broken (CLAUDE.md: not essential yet).
-      "^/catalog$": { target: "http://127.0.0.1:3000", changeOrigin: true },
-      "^/maps/": { target: "http://127.0.0.1:3000", changeOrigin: true },
+      // All map storage now goes through the PocketBase API.
+      "^/api": { target: "http://127.0.0.1:3000", changeOrigin: true },
     },
   },
   build: {

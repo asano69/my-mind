@@ -1,0 +1,146 @@
+// src/my-mind.js
+// Application entry point. Owns global editor state (current map/item/selection,
+// undo history) and boots all the input/UI subsystems on load.
+//
+// Command modules are imported here purely for their registration side effects:
+// each one calls `new (class ... extends Command)` at module scope, which adds
+// itself to command/command.js's repo.
+import "./command/command.js";
+import "./command/edit.js";
+import "./command/select.js";
+
+import { repo as commandRepo } from "./command/command.js";
+import Map, { init as initMapCSS } from "./map.js";
+import * as history from "./history.js";
+import * as pubsub from "./pubsub.js";
+import * as keyboard from "./keyboard.js";
+import * as mouse from "./mouse.js";
+import * as clipboard from "./clipboard.js";
+import * as title from "./title.js";
+import * as ui from "./ui/ui.js";
+
+const port = document.querySelector("main");
+const spinner = document.querySelector(".spinner");
+
+export let currentMap = null;
+export let currentItem = null;
+export let editing = false;
+export const selectedItems = new Set();
+export let selectionCursor = null;
+
+export function setThrobber(visible) {
+  spinner.hidden = !visible;
+}
+
+export function showMap(map) {
+  if (currentMap) {
+    currentMap.hide();
+  }
+  history.reset();
+  currentMap = map;
+  currentMap.show(port);
+}
+
+export function action(action) {
+  history.push(action);
+  action.do();
+}
+
+export function clearMultiSelection() {
+  selectedItems.forEach((item) => item.unmarkSelected());
+  selectedItems.clear();
+  selectionCursor = null;
+}
+
+export function extendSelection(item) {
+  if (item === currentItem) {
+    clearMultiSelection();
+    return;
+  }
+  if (selectionCursor !== null && selectedItems.has(item)) {
+    selectedItems.delete(selectionCursor);
+    selectionCursor.unmarkSelected();
+    selectionCursor = item;
+    return;
+  }
+  selectedItems.add(item);
+  item.markSelected();
+  selectionCursor = item;
+}
+
+export function addToSelection(item) {
+  selectionCursor = null;
+  if (item === currentItem) {
+    if (selectedItems.size === 0) {
+      return;
+    }
+    let next = selectedItems.values().next().value;
+    selectedItems.delete(next);
+    next.unmarkSelected();
+    currentItem.deselect();
+    currentItem = next;
+    currentItem.select();
+    return;
+  }
+  if (selectedItems.has(item)) {
+    selectedItems.delete(item);
+    item.unmarkSelected();
+  } else {
+    selectedItems.add(item);
+    item.markSelected();
+  }
+}
+
+export function getAllSelected() {
+  let all = [currentItem];
+  selectedItems.forEach((item) => all.push(item));
+  return all;
+}
+
+export function selectItem(item) {
+  clearMultiSelection();
+  if (currentItem && currentItem != item) {
+    if (editing) {
+      commandRepo.get("finish").execute();
+    }
+    currentItem.deselect();
+  }
+  currentItem = item;
+  currentItem.select();
+  currentMap.ensureItemVisibility(currentItem);
+}
+
+export function startEditing() {
+  clearMultiSelection();
+  editing = true;
+  currentItem.startEditing();
+}
+
+export function stopEditing() {
+  editing = false;
+  return currentItem.stopEditing();
+}
+
+function handleResize() {
+  const size = [window.innerWidth - ui.getWidth(), window.innerHeight];
+  port.style.width = `${size[0]}px`;
+  port.style.height = `${size[1]}px`;
+  currentMap && currentMap.ensureItemVisibility(currentItem);
+}
+
+async function boot() {
+  setThrobber(true);
+  await initMapCSS();
+  pubsub.subscribe("ui-change", handleResize);
+  window.addEventListener("resize", handleResize);
+  clipboard.init();
+  keyboard.init();
+  mouse.init(port);
+  title.init();
+  ui.init(port); // also calls io.restore() internally
+  handleResize();
+  showMap(new Map());
+  setThrobber(false);
+}
+
+boot();
