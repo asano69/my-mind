@@ -29,45 +29,6 @@ $(FLAG): $(shell find src -type f)
 	$(TSC) -p src
 	touch $@
 
-# ─────────────────────────────────────────
-#  Development
-# ─────────────────────────────────────────
-.PHONY: watch
-watch: ## Watch for changes and reload (requires air)
-	air
-
-# ─────────────────────────────────────────
-#  Docker / deploy
-# ─────────────────────────────────────────
-.PHONY: docker-up
-docker-up: ## Build and start with Docker Compose
-	docker compose -f docker-compose.dev.yaml up --build --force-recreate
-
-.PHONY: docker-build
-docker-build: ## Build Docker image
-	docker build -t registry.internal/my-mind:latest .
-
-.PHONY: docker-push
-docker-push: ## Push Docker image
-	docker push registry.internal/my-mind:latest
-
-.PHONY: deploy
-deploy: docker-build docker-push ## (*) Deploy stack via Komodo
-	docker exec -it komodo km x -y destroy-stack my-mind
-	docker exec -it komodo km x -y pull-stack   my-mind
-	docker exec -it komodo km x -y deploy-stack my-mind
-
-# ─────────────────────────────────────────
-# icon
-# ─────────────────────────────────────────
-.PHONY: icon
-icon:
-	magick -background none src/my-mind.svg \
-	  \( -clone 0 -resize 16x16 \) \
-	  \( -clone 0 -resize 32x32 \) \
-	  \( -clone 0 -resize 48x48 \) \
-	  -delete 0 static/favicon.ico
-
 
 # ─────────────────────────────────────────
 #  Misc
