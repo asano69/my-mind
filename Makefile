@@ -62,3 +62,9 @@ dev-back:
 test:
 	cd frontend && pnpm test
 	go test ./...
+
+
+
+migrate-collections:
+	ls -1 migrations/*.go | sort | head -n -1 | xargs rm -f
+	yes | go run ./cmd/my-mind migrate collections

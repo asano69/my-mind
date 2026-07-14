@@ -834,19 +834,15 @@ func init() {
 						"type": "text"
 					},
 					{
-						"autogeneratePattern": "",
 						"help": "",
 						"hidden": false,
-						"id": "text999008199",
-						"max": 0,
-						"min": 0,
-						"name": "text",
-						"pattern": "",
+						"id": "json2477632187",
+						"maxSize": 0,
+						"name": "mymind",
 						"presentable": false,
-						"primaryKey": false,
 						"required": false,
 						"system": false,
-						"type": "text"
+						"type": "json"
 					},
 					{
 						"hidden": false,
@@ -857,12 +853,22 @@ func init() {
 						"presentable": false,
 						"system": false,
 						"type": "autodate"
+					},
+					{
+						"hidden": false,
+						"id": "autodate3332085495",
+						"name": "updated",
+						"onCreate": true,
+						"onUpdate": true,
+						"presentable": false,
+						"system": false,
+						"type": "autodate"
 					}
 				],
-				"id": "pbc_1246247920",
+				"id": "pbc_1612934933",
 				"indexes": [],
 				"listRule": null,
-				"name": "error_logs",
+				"name": "maps",
 				"system": false,
 				"type": "base",
 				"updateRule": null,
