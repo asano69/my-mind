@@ -14,14 +14,12 @@ export default defineConfig({
     port: 3001,
     allowedHosts: true,
     proxy: {
-      // Use 127.0.0.1 explicitly to avoid localhost resolving to ::1 (IPv6)
-      // while the Go backend only listens on 127.0.0.1 (IPv4).
-      // Only backend-rendered pages / data endpoints go through the proxy;
-      // static assets (my-mind.js, theme.css, img/*, ...) are served by Vite.
-      "^/$": { target: "http://127.0.0.1:3000", changeOrigin: true },
+      // Only the WebDAV-style data endpoint needs the Go backend now; "/" and
+      // "/m/*" are served by Vite itself (src/index.html — the vanilla-JS
+      // editor) via its default SPA fallback, until Solid.js replaces it.
+      // "/catalog" is intentionally still broken (CLAUDE.md: not essential yet).
       "^/catalog$": { target: "http://127.0.0.1:3000", changeOrigin: true },
       "^/maps/": { target: "http://127.0.0.1:3000", changeOrigin: true },
-      "^/m/": { target: "http://127.0.0.1:3000", changeOrigin: true },
     },
   },
   build: {

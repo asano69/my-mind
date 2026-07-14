@@ -51,7 +51,7 @@ kill-ports:
 # port: 3001
 .PHONY: dev-front
 dev-front:
-	npx concurrently -n "frontend,backend" -c "blue,green" "cd frontend && pnpm dev" "./$(BINARY) serve"
+	npx concurrently -n "frontend,backend" -c "blue,green" "cd frontend && pnpm dev" "go run cmd/$(BINARY)/main.go serve"
 
 # port: 3000
 .PHONY: dev-back
