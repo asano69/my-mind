@@ -17,3 +17,6 @@
 - frontend: solid.js + **tailwind v4**
 
 ## Work in Progress
+
+- backendは、PocketBase **v0.39+**をつかったものへ、frontendは、solid.js + **tailwind v4** をつかったものへ並行して書き換えている。
+- バックエンドのほうが書き換えが容易だと思われるので、先にバックエンドのリファクタリングを行う。
