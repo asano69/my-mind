@@ -23,15 +23,17 @@ New to Mind maps? They are useful, aesthetic and cool! Read more about these spe
 - [ ] vanila JSをSolid.jsをつかい、フロントエンドの構造を整理する
 - [ ] go embedでフロンエンドコードをバックエンドに結合できるようにする
 
+その他
+- [ ] ファイル名とトピック名を分離する。中心ノードの名前とファイル名は同じにするべきではない。
+
 
 ## Work in Progress
-- 開発環境のセットアップ。フロントエンド、バックエンドでビルドできるようにする。
-- フロントエンドからPocketBase APIを使用して、マップを保存できるようにする
-- バックエンドをPocketBaseをつかったコードに置き換える。
-- フロントエンドのマインドマップ関連のコードはlibまたはcomponentsに移動するようにする。以下のコードはsold.js用のテンプレ
+- [ ] フロントエンドのプロジェクト構造をフレームワークSolid.jsを前提にした構造に書き換える
+- [ ] フロントエンドのマインドマップ関連のコードはlibまたはcomponentsに移動するようにする。以下のコードはsold.js用のテンプレ
     - frontend/src/lib/
     - frontend/src/main.jsx
     - frontend/src/routes/
+- [ ] バックエンドをPocketBaseを前提にしたコードに置き換える。
 ---
 
 ## Ref
