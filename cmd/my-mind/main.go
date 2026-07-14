@@ -1,30 +1,60 @@
+// main.go
 package main
 
 import (
 	"fmt"
-	"my-mind/internal/handler"
-	"net/http"
 	"os"
+
+	"github.com/pocketbase/pocketbase"
+	pbcmd "github.com/pocketbase/pocketbase/cmd"
+	"github.com/spf13/cobra"
+
+	"github.com/asano69/my-mind/internal/cmd/serve"
+
+	"github.com/asano69/my-mind/internal/config"
+	_ "github.com/asano69/my-mind/migrations"
+	"github.com/pocketbase/pocketbase/plugins/migratecmd"
 )
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "3000"
-	}
+	app := pocketbase.NewWithConfig(pocketbase.Config{HideStartBanner: true})
 
-	mapsDir := "./maps"
+	// Registers "my-mind migrate up/down/create/collections/history-sync"
+	// for manual or CI-driven schema management. Automigrate is off because
+	// the schema is defined purely in Go migration files (internal/migrations),
+	// not edited through the PocketBase dashboard.
+	migratecmd.MustRegister(app, app.RootCmd, migratecmd.Config{
+		Automigrate: false,
+	})
 
-	if err := os.MkdirAll(mapsDir, 0755); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to create maps dir: %v\n", err)
+	root := app.RootCmd
+	root.Use = "my-mind"
+	root.Short = "my tool"
+	root.SilenceUsage = true
+	root.Version = "0.0.1-beta.1"
+
+	root.AddCommand(
+
+		serveCmd(app),
+		pbcmd.NewSuperuserCommand(app),
+	)
+
+	if err := app.Execute(); err != nil {
 		os.Exit(1)
 	}
+}
 
-	fmt.Printf("Listening on :%s\n", port)
-
-	h := handler.New(mapsDir)
-	if err := http.ListenAndServe(":"+port, h); err != nil {
-		fmt.Fprintf(os.Stderr, "Server error: %v\n", err)
-		os.Exit(1)
+func serveCmd(app *pocketbase.PocketBase) *cobra.Command {
+	return &cobra.Command{
+		Use:   "serve",
+		Short: "Start the web server for all configured drill sessions",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg, err := config.Load()
+			if err != nil {
+				return fmt.Errorf("load config: %w", err)
+			}
+			return serve.Run(app, cfg)
+		},
 	}
 }
