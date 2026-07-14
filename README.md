@@ -34,8 +34,7 @@ New to Mind maps? They are useful, aesthetic and cool! Read more about these spe
     - frontend/src/main.jsx
     - frontend/src/routes/
 - [ ] バックエンドをPocketBaseを前提にしたコードに置き換える。
----
+
 
 ## Ref
-- [ondras/my-mind](https://github.com/ondras/my-mind)
-- Demo: https://my-mind.github.io/
+- [ondras/my-mind](https://github.com/ondras/my-mind)/ Demo: https://my-mind.github.io/
