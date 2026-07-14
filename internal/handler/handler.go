@@ -9,11 +9,13 @@ import (
 	"io"
 	"io/fs"
 	"net/http"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/core"
 )
 
 //go:embed templates/*.html
@@ -34,6 +36,12 @@ var mimeTypes = map[string]string{
 	".gif":    "image/gif",
 	".mymind": "application/json",
 }
+
+// mapsCollection is the PocketBase collection that stores mind maps.
+// Each record holds one map's full JSON payload in its "mymind" field.
+// There is no dedicated "name" field: the map's name is the root item's
+// text, read out of that JSON payload on demand.
+const mapsCollection = "maps"
 
 // pageMeta holds the data passed to the base template partial.
 type pageMeta struct {
@@ -59,14 +67,16 @@ type mapEntry struct {
 }
 
 type Handler struct {
-	MapsDir     string
+	App         core.App
 	assets      fs.FS // Vite build output (internal/handler/dist), rooted at "."
 	catalogTmpl *template.Template
 	indexTmpl   *template.Template
 	editorTmpl  *template.Template
 }
 
-func New(mapsDir string) *Handler {
+// New builds a Handler backed by the given PocketBase app. The app must
+// already have the "maps" collection (see migrations/collections snapshot).
+func New(app core.App) *Handler {
 	// Each child template is parsed first so it becomes the entry point for
 	// Execute(). base.html is parsed second so its {{define "base"}} block is
 	// available when the child calls {{template "base" .PageMeta}}.
@@ -84,7 +94,7 @@ func New(mapsDir string) *Handler {
 	}
 
 	return &Handler{
-		MapsDir:     mapsDir,
+		App:         app,
 		assets:      assets,
 		catalogTmpl: catalogTmpl,
 		indexTmpl:   indexTmpl,
@@ -119,7 +129,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case path == "/catalog":
 			h.listMaps(w)
 		case strings.HasPrefix(path, "/maps/"):
-			h.getMap(w, path)
+			h.getMap(w, nameFromMapsPath(path))
 		case strings.HasPrefix(path, "/m/"):
 			ext := strings.ToLower(filepath.Ext(path))
 			switch ext {
@@ -140,21 +150,21 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	case http.MethodPut:
 		if strings.HasPrefix(path, "/maps/") {
-			h.putMap(w, r, path)
+			h.putMap(w, r, nameFromMapsPath(path))
 		} else {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 		}
 
 	case http.MethodPatch:
 		if strings.HasPrefix(path, "/maps/") {
-			h.renameMap(w, r, path)
+			h.renameMap(w, r, nameFromMapsPath(path))
 		} else {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 		}
 
 	case http.MethodDelete:
 		if strings.HasPrefix(path, "/maps/") {
-			h.deleteMap(w, path)
+			h.deleteMap(w, nameFromMapsPath(path))
 		} else {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 		}
@@ -164,26 +174,57 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) listMaps(w http.ResponseWriter) {
-	entries, err := os.ReadDir(h.MapsDir)
+// nameFromMapsPath extracts the map name from a "/maps/{name}.mymind" path.
+func nameFromMapsPath(path string) string {
+	rel := strings.TrimPrefix(path, "/maps/")
+	return strings.TrimSuffix(rel, ".mymind")
+}
+
+// findMapRecord looks up a maps-collection record by the name stored in its
+// mymind.root.text field. PocketBase resolves the dotted path directly
+// against the JSON column, so no dedicated "name" field is needed.
+func (h *Handler) findMapRecord(name string) (*core.Record, error) {
+	return h.App.FindFirstRecordByFilter(
+		mapsCollection,
+		"mymind.root.text = {:name}",
+		dbx.Params{"name": name},
+	)
+}
+
+// mapName reads the map's display name out of its mymind JSON payload.
+func mapName(record *core.Record) string {
+	data, err := json.Marshal(record.Get("mymind"))
 	if err != nil {
-		http.Error(w, "Failed to read maps directory", http.StatusInternalServerError)
+		return ""
+	}
+	var doc struct {
+		Root struct {
+			Text string `json:"text"`
+		} `json:"root"`
+	}
+	if err := json.Unmarshal(data, &doc); err != nil {
+		return ""
+	}
+	return doc.Root.Text
+}
+
+func (h *Handler) listMaps(w http.ResponseWriter) {
+	records, err := h.App.FindRecordsByFilter(mapsCollection, "", "-updated", 0, 0)
+	if err != nil {
+		http.Error(w, "Failed to read maps: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	list := make([]mapEntry, 0, len(entries))
-	for _, e := range entries {
-		if e.IsDir() || strings.ToLower(filepath.Ext(e.Name())) != ".mymind" {
-			continue
-		}
-		info, err := e.Info()
-		if err != nil {
+	list := make([]mapEntry, 0, len(records))
+	for _, record := range records {
+		name := mapName(record)
+		if name == "" {
 			continue
 		}
 		list = append(list, mapEntry{
-			Name:    strings.TrimSuffix(e.Name(), ".mymind"),
-			URL:     "/m/" + e.Name(),
-			ModTime: info.ModTime(),
+			Name:    name,
+			URL:     "/m/" + name + ".mymind",
+			ModTime: record.GetDateTime("updated").Time(),
 		})
 	}
 
@@ -209,25 +250,19 @@ func (h *Handler) serveEditor(w http.ResponseWriter) {
 	})
 }
 
-func (h *Handler) getMap(w http.ResponseWriter, path string) {
-	rel := strings.TrimPrefix(path, "/maps")
-	if rel == "" || rel == "/" {
+func (h *Handler) getMap(w http.ResponseWriter, name string) {
+	if name == "" {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
 	}
-	fpath, err := safeJoin(h.MapsDir, rel)
-	if err != nil {
-		http.Error(w, "Forbidden", http.StatusForbidden)
-		return
-	}
-	info, err := os.Stat(fpath)
-	if err != nil || info.IsDir() {
-		http.Error(w, "Not found", http.StatusNotFound)
-		return
-	}
-	data, err := os.ReadFile(fpath)
+	record, err := h.findMapRecord(name)
 	if err != nil {
 		http.Error(w, "Not found", http.StatusNotFound)
+		return
+	}
+	data, err := json.Marshal(record.Get("mymind"))
+	if err != nil {
+		http.Error(w, "Failed to encode map: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -269,142 +304,108 @@ func (h *Handler) serveStatic(w http.ResponseWriter, path string) {
 	w.Write(data)
 }
 
-func (h *Handler) putMap(w http.ResponseWriter, r *http.Request, path string) {
-	fpath, err := safeJoin(h.MapsDir, strings.TrimPrefix(path, "/maps"))
-	if err != nil {
-		http.Error(w, "Forbidden", http.StatusForbidden)
-		return
-	}
-	if err := os.MkdirAll(filepath.Dir(fpath), 0755); err != nil {
-		http.Error(w, "Failed to create directory", http.StatusInternalServerError)
-		return
-	}
-	data, err := io.ReadAll(r.Body)
+// putMap creates or overwrites the map record whose root.text matches name
+// with the JSON payload from the request body.
+func (h *Handler) putMap(w http.ResponseWriter, r *http.Request, name string) {
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read body", http.StatusInternalServerError)
 		return
 	}
 	defer r.Body.Close()
-	if err := os.WriteFile(fpath, data, 0644); err != nil {
-		http.Error(w, "Failed to write file", http.StatusInternalServerError)
+
+	var payload any
+	if err := json.Unmarshal(body, &payload); err != nil {
+		http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
 		return
 	}
-	fmt.Printf("[Saved] %s\n", fpath)
+
+	record, err := h.findMapRecord(name)
+	if err != nil {
+		collection, err := h.App.FindCollectionByNameOrId(mapsCollection)
+		if err != nil {
+			http.Error(w, "maps collection not found: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		record = core.NewRecord(collection)
+	}
+	record.Set("mymind", payload)
+	if err := h.App.Save(record); err != nil {
+		http.Error(w, "Failed to save map: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Printf("[Saved] %s\n", name)
 	w.WriteHeader(http.StatusCreated)
 }
 
 // renameMap handles PATCH /maps/{name}.mymind.
 // Body: plain-text new base name (extension optional).
-// Renames the file and rewrites root.text inside the JSON payload.
-func (h *Handler) renameMap(w http.ResponseWriter, r *http.Request, path string) {
-	srcRel := strings.TrimPrefix(path, "/maps")
-	srcPath, err := safeJoin(h.MapsDir, srcRel)
+// Renames the map by rewriting root.text inside its JSON payload.
+func (h *Handler) renameMap(w http.ResponseWriter, r *http.Request, oldName string) {
+	record, err := h.findMapRecord(oldName)
 	if err != nil {
-		http.Error(w, "Forbidden", http.StatusForbidden)
-		return
-	}
-	if _, err := os.Stat(srcPath); err != nil {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
 	}
 
-	bodyBytes, err := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read body", http.StatusInternalServerError)
 		return
 	}
 	defer r.Body.Close()
 
-	newBase := strings.TrimSpace(string(bodyBytes))
-	if newBase == "" {
+	newName := strings.TrimSpace(strings.TrimSuffix(string(body), ".mymind"))
+	if newName == "" {
 		http.Error(w, "New name is required", http.StatusBadRequest)
 		return
 	}
-	newFileName := newBase
-	if !strings.HasSuffix(newFileName, ".mymind") {
-		newFileName += ".mymind"
-	}
-	if strings.ContainsAny(newFileName, `/\`) {
-		http.Error(w, "Invalid name", http.StatusBadRequest)
-		return
-	}
-	newText := strings.TrimSuffix(newFileName, ".mymind")
 
-	dstPath := filepath.Join(h.MapsDir, newFileName)
-	if srcPath != dstPath {
-		if _, err := os.Stat(dstPath); err == nil {
+	if newName != oldName {
+		if existing, err := h.findMapRecord(newName); err == nil && existing.Id != record.Id {
 			http.Error(w, "Already exists", http.StatusConflict)
 			return
 		}
 	}
 
-	raw, err := os.ReadFile(srcPath)
+	var doc map[string]any
+	data, err := json.Marshal(record.Get("mymind"))
 	if err != nil {
-		http.Error(w, "Failed to read file", http.StatusInternalServerError)
+		http.Error(w, "Failed to read map: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	var doc map[string]any
-	if jsonErr := json.Unmarshal(raw, &doc); jsonErr == nil {
-		if root, ok := doc["root"].(map[string]any); ok {
-			root["text"] = newText
-			doc["root"] = root
-		}
-		if updated, marshalErr := json.MarshalIndent(doc, "", "\t"); marshalErr == nil {
-			raw = updated
-		}
+	if err := json.Unmarshal(data, &doc); err != nil {
+		http.Error(w, "Failed to read map: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if root, ok := doc["root"].(map[string]any); ok {
+		root["text"] = newName
+		doc["root"] = root
+	}
+	record.Set("mymind", doc)
+
+	if err := h.App.Save(record); err != nil {
+		http.Error(w, "Failed to rename map: "+err.Error(), http.StatusInternalServerError)
+		return
 	}
 
-	if srcPath == dstPath {
-		if err := os.WriteFile(srcPath, raw, 0644); err != nil {
-			http.Error(w, "Failed to write file", http.StatusInternalServerError)
-			return
-		}
-	} else {
-		if err := os.WriteFile(dstPath, raw, 0644); err != nil {
-			http.Error(w, "Failed to write file", http.StatusInternalServerError)
-			return
-		}
-		if err := os.Remove(srcPath); err != nil {
-			os.Remove(dstPath) // rollback
-			http.Error(w, "Failed to remove old file", http.StatusInternalServerError)
-			return
-		}
-	}
-
-	fmt.Printf("[Renamed] %s -> %s (root.text=%q)\n", srcPath, dstPath, newText)
+	fmt.Printf("[Renamed] %s -> %s\n", oldName, newName)
 	w.WriteHeader(http.StatusNoContent)
 }
 
 // deleteMap handles DELETE /maps/{name}.mymind.
-func (h *Handler) deleteMap(w http.ResponseWriter, path string) {
-	rel := strings.TrimPrefix(path, "/maps")
-	fpath, err := safeJoin(h.MapsDir, rel)
+func (h *Handler) deleteMap(w http.ResponseWriter, name string) {
+	record, err := h.findMapRecord(name)
 	if err != nil {
-		http.Error(w, "Forbidden", http.StatusForbidden)
-		return
-	}
-	info, err := os.Stat(fpath)
-	if err != nil || info.IsDir() {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
 	}
-	if err := os.Remove(fpath); err != nil {
-		http.Error(w, "Failed to delete", http.StatusInternalServerError)
+	if err := h.App.Delete(record); err != nil {
+		http.Error(w, "Failed to delete: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fmt.Printf("[Deleted] %s\n", fpath)
+	fmt.Printf("[Deleted] %s\n", name)
 	w.WriteHeader(http.StatusNoContent)
-}
-
-// safeJoin is only used for h.MapsDir (real files on disk), never for
-// embedded assets, since fs.FS/embed.FS already rejects ".." path segments.
-func safeJoin(base, reqPath string) (string, error) {
-	reqPath = strings.TrimPrefix(reqPath, "/")
-	clean := filepath.Clean(reqPath)
-	if strings.HasPrefix(clean, "..") {
-		return "", fmt.Errorf("invalid path")
-	}
-	return filepath.Join(base, clean), nil
 }
 
 func setCORSHeaders(w http.ResponseWriter) {
