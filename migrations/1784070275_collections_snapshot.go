@@ -815,8 +815,8 @@ func init() {
 				"viewRule": "id = @request.auth.id"
 			},
 			{
-				"createRule": null,
-				"deleteRule": null,
+				"createRule": "",
+				"deleteRule": "",
 				"fields": [
 					{
 						"autogeneratePattern": "[a-z0-9]{15}",
@@ -831,6 +831,21 @@ func init() {
 						"primaryKey": true,
 						"required": true,
 						"system": true,
+						"type": "text"
+					},
+					{
+						"autogeneratePattern": "",
+						"help": "",
+						"hidden": false,
+						"id": "text1579384326",
+						"max": 0,
+						"min": 0,
+						"name": "name",
+						"pattern": "",
+						"presentable": false,
+						"primaryKey": false,
+						"required": false,
+						"system": false,
 						"type": "text"
 					},
 					{
@@ -867,12 +882,12 @@ func init() {
 				],
 				"id": "pbc_1612934933",
 				"indexes": [],
-				"listRule": null,
+				"listRule": "",
 				"name": "maps",
 				"system": false,
 				"type": "base",
-				"updateRule": null,
-				"viewRule": null
+				"updateRule": "",
+				"viewRule": ""
 			}
 		]`
 
