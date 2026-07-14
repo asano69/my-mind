@@ -19,7 +19,7 @@ New to Mind maps? They are useful, aesthetic and cool! Read more about these spe
 
 - [x] vite 開発サーバでフロントエンドを動かす
 - [x] vite 開発サーバから、バックエンド起動時にデータを保存できるようにする
-- [ ] easymd.jsなどは、pnpm moduleを使うようにする
+- [x] easymd.jsなどは、pnpm moduleを使うようにする
 - [ ] vanila JSをSolid.jsをつかい、フロントエンドの構造を整理する
 - [ ] go embedでフロンエンドコードをバックエンドに結合できるようにする
 
