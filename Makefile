@@ -10,8 +10,9 @@ PORTS := 3000 3001
 #  Default: build & start server
 # ─────────────────────────────────────────
 .PHONY: all
-all: frontend ## (*) Build frontend assets and start the server
-	go run cmd/my-mind/main.go
+all: kill-ports frontend## (*) Build frontend assets and start the server
+	go run cmd/$(BINARY)/main.go superuser upsert admin@mail.internal password --dir=pb_data
+	go run cmd/$(BINARY)/main.go serve
 
 # ─────────────────────────────────────────
 #  Frontend (Vite build -> internal/handler/dist, embedded via go:embed)
@@ -43,14 +44,21 @@ kill-ports:
 	done
 
 
+.PHONY: clean
+	rm -fr ./tmp/ # air
+
 # -------------------------
 # port: 3001
 .PHONY: dev-front
 dev-front:
-	npx concurrently -n "frontend,backend" -c "blue,green" "cd frontend && pnpm dev" "./$(BINARY)"
+	npx concurrently -n "frontend,backend" -c "blue,green" "cd frontend && pnpm dev" "./$(BINARY) serve"
 
 # port: 3000
 .PHONY: dev-back
 dev-back:
 	npx concurrently -n "frontend,backend" -c "blue,green" "cd frontend && pnpm watch" "air"
 
+.PHONY: test
+test:
+	cd frontend && pnpm test
+	go test ./...

@@ -9,7 +9,7 @@ import { resolve } from "path";
 export default defineConfig({
   root: "src",
   publicDir: resolve(__dirname, "public"),
-  my-mind: {
+  server: {
     host: "0.0.0.0",
     port: 3001,
     allowedHosts: true,
@@ -29,8 +29,8 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        "my-mind": resolve(__dirname, "src/my-mind.ts"),
-        toast: resolve(__dirname, "src/ui/toast.ts"),
+        server: resolve(__dirname, "src/my-mind.js"),
+        toast: resolve(__dirname, "src/ui/toast.js"),
       },
       output: {
         // Fixed filenames on purpose: Go templates reference these by

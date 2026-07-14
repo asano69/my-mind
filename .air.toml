@@ -1,6 +1,6 @@
 [build]
-cmd = "make frontend && go build -o ./tmp/server ./cmd/server"
-bin = "./tmp/server"
+cmd = "make frontend && go build -o ./tmp/my-mind ./cmd/my-mind"
+bin = "./tmp/my-mind"
 include_ext = ["go", "ts", "html"]
 include_dir = ["cmd", "internal", "frontend/src", "frontend/public"]
 exclude_dir = ["tmp", "frontend/node_modules", "internal/handler/dist"]
