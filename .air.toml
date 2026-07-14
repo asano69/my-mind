@@ -1,8 +1,6 @@
-# .air.toml
 [build]
-  cmd = "make static/my-mind.js static/toast.js && go build -o ./tmp/server ./cmd/server"
-  bin = "./tmp/server"
-  include_ext = ["go", "ts", "html"]
-  include_dir = ["cmd", "internal", "src", "static"]
-  exclude_dir = ["tmp", ".js"]
-
+cmd = "make frontend && go build -o ./tmp/server ./cmd/server"
+bin = "./tmp/server"
+include_ext = ["go", "ts", "html"]
+include_dir = ["cmd", "internal", "frontend/src", "frontend/public"]
+exclude_dir = ["tmp", "frontend/node_modules", "internal/handler/dist"]

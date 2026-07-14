@@ -1,43 +1,27 @@
-MAKEOPTS := "-r"
-TSC      := tsc
-ESBUILD  := esbuild
-JS       := .js
-FLAG     := $(JS)/.tsflag
-APP      := my-mind.js
-OUT      := static/$(APP)
-TOAST_JS := static/toast.js
-
 # ─────────────────────────────────────────
 #  Default: build & start server
 # ─────────────────────────────────────────
 .PHONY: all
-all: $(OUT) $(TOAST_JS) ## (*) Bundle my-mind.js and start the server
+all: frontend ## (*) Build frontend assets and start the server
 	go run cmd/server/main.go
 
 # ─────────────────────────────────────────
-#  Build rules
+#  Frontend (Vite build -> internal/handler/dist, embedded via go:embed)
 # ─────────────────────────────────────────
-$(OUT): $(FLAG)
-	$(ESBUILD) --bundle $(JS)/$(APP) > $@
+.PHONY: frontend
+frontend: frontend/node_modules
+	cd frontend && npm run build
 
-# toast.js is loaded as a plain ES module by catalog.html and others,
-# so it is copied as-is rather than bundled.
-$(TOAST_JS): $(FLAG)
-	cp $(JS)/ui/toast.js $@
-
-$(FLAG): $(shell find src -type f)
-	$(TSC) -p src
+frontend/node_modules: frontend/package.json frontend/package-lock.json
+	cd frontend && npm ci
 	touch $@
-
 
 # ─────────────────────────────────────────
 #  Misc
 # ─────────────────────────────────────────
 .PHONY: clean
 clean: ## Remove build artifacts
-	rm -rf $(JS)
-	rm -f  $(OUT)
-	rm -f  $(TOAST_JS)
+	rm -rf internal/handler/dist
 
 .PHONY: help
 help: ## Show available targets
