@@ -8,7 +8,7 @@ RUN go mod download || true
 COPY cmd/ ./cmd/
 COPY internal/ ./internal/
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" \
-    -o /usr/local/bin/my-mind ./cmd/server
+    -o /usr/local/bin/my-mind ./cmd/my-mind
 # Stage 2: runtime
 FROM alpine:3.23
 RUN apk add --no-cache ca-certificates su-exec busybox-extras tzdata

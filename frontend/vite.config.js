@@ -9,7 +9,7 @@ import { resolve } from "path";
 export default defineConfig({
   root: "src",
   publicDir: resolve(__dirname, "public"),
-  server: {
+  my-mind: {
     host: "0.0.0.0",
     port: 3001,
     allowedHosts: true,

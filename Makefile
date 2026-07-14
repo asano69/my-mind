@@ -11,7 +11,7 @@ PORTS := 3000 3001
 # ─────────────────────────────────────────
 .PHONY: all
 all: frontend ## (*) Build frontend assets and start the server
-	go run cmd/server/main.go
+	go run cmd/my-mind/main.go
 
 # ─────────────────────────────────────────
 #  Frontend (Vite build -> internal/handler/dist, embedded via go:embed)
