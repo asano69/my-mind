@@ -7,6 +7,7 @@ New to Mind maps? They are useful, aesthetic and cool! Read more about these spe
 
 <img src=".github/assets/sample-01.png" width="800">
 
+## Work in Progress
 
 
 ---
