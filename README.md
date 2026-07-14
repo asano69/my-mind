@@ -5,7 +5,7 @@
 らくがきノートとして使えます。
 
 
-<img src=".github/readme-img01.png" width="800">
+<img src=".github/assets/sample-01.png" width="800">
 
 
 
