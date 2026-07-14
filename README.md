@@ -18,6 +18,7 @@ New to Mind maps? They are useful, aesthetic and cool! Read more about these spe
 
 ## Work in Progress
 - 開発環境のセットアップ。フロントエンド、バックエンドでビルドできるようにする。
+- フロントエンドからPocketBase APIを使用して、マップを保存できるようにする
 - バックエンドをPocketBaseをつかったコードに置き換える。
 
 ---
