@@ -2,10 +2,12 @@ package handler
 
 import (
 	"bytes"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,6 +15,14 @@ import (
 	"strings"
 	"time"
 )
+
+//go:embed templates/*.html
+var templateFS embed.FS
+
+// all:dist includes dotfiles too (not needed here, but harmless and future-proof).
+//
+//go:embed all:dist
+var rawDistFS embed.FS
 
 var mimeTypes = map[string]string{
 	".html":   "text/html; charset=utf-8",
@@ -49,26 +59,33 @@ type mapEntry struct {
 }
 
 type Handler struct {
-	StaticDir   string
 	MapsDir     string
+	assets      fs.FS // Vite build output (internal/handler/dist), rooted at "."
 	catalogTmpl *template.Template
 	indexTmpl   *template.Template
 	editorTmpl  *template.Template
 }
 
-func New(staticDir, mapsDir string) *Handler {
+func New(mapsDir string) *Handler {
 	// Each child template is parsed first so it becomes the entry point for
 	// Execute(). base.html is parsed second so its {{define "base"}} block is
 	// available when the child calls {{template "base" .PageMeta}}.
-	base := filepath.Join(staticDir, "base.html")
+	const base = "templates/base.html"
 
-	catalogTmpl := template.Must(template.ParseFiles(filepath.Join(staticDir, "catalog.html"), base))
-	indexTmpl := template.Must(template.ParseFiles(filepath.Join(staticDir, "index.html"), base))
-	editorTmpl := template.Must(template.ParseFiles(filepath.Join(staticDir, "editor.html"), base))
+	catalogTmpl := template.Must(template.ParseFS(templateFS, "templates/catalog.html", base))
+	indexTmpl := template.Must(template.ParseFS(templateFS, "templates/index.html", base))
+	editorTmpl := template.Must(template.ParseFS(templateFS, "templates/editor.html", base))
+
+	// Strip the "dist" prefix so asset paths match what the templates/JS
+	// reference (e.g. "theme.css", "my-mind.js"), not "dist/theme.css".
+	assets, err := fs.Sub(rawDistFS, "dist")
+	if err != nil {
+		panic(err) // programmer error: dist/ must exist at build time
+	}
 
 	return &Handler{
-		StaticDir:   staticDir,
 		MapsDir:     mapsDir,
+		assets:      assets,
 		catalogTmpl: catalogTmpl,
 		indexTmpl:   indexTmpl,
 		editorTmpl:  editorTmpl,
@@ -217,29 +234,33 @@ func (h *Handler) getMap(w http.ResponseWriter, path string) {
 	w.Write(data)
 }
 
+// serveStatic serves a file out of the embedded Vite build (h.assets).
+// editor.html is special-cased below: it's a Go template, not a static file.
 func (h *Handler) serveStatic(w http.ResponseWriter, path string) {
 	path = strings.SplitN(path, "?", 2)[0]
 	if path == "/" || path == "" {
 		path = "/index.html"
 	}
 
-	// editor.html is served as a template (not a raw static file).
 	if path == "/editor.html" {
 		h.serveEditor(w)
 		return
 	}
 
-	fpath, err := safeJoin(h.StaticDir, path)
-	if err != nil {
+	// embed.FS/fs.FS paths are always "/"-separated and must not start with "/".
+	rel := strings.TrimPrefix(path, "/")
+	clean := filepath.ToSlash(filepath.Clean(rel))
+	if clean == ".." || strings.HasPrefix(clean, "../") {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
-	data, err := os.ReadFile(fpath)
+
+	data, err := fs.ReadFile(h.assets, clean)
 	if err != nil {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
 	}
-	ext := strings.ToLower(filepath.Ext(fpath))
+	ext := strings.ToLower(filepath.Ext(clean))
 	mime, ok := mimeTypes[ext]
 	if !ok {
 		mime = "application/octet-stream"
@@ -375,6 +396,8 @@ func (h *Handler) deleteMap(w http.ResponseWriter, path string) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// safeJoin is only used for h.MapsDir (real files on disk), never for
+// embedded assets, since fs.FS/embed.FS already rejects ".." path segments.
 func safeJoin(base, reqPath string) (string, error) {
 	reqPath = strings.TrimPrefix(reqPath, "/")
 	clean := filepath.Clean(reqPath)

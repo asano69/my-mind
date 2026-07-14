@@ -1,11 +1,13 @@
 {
-	"include": ["."],
 	"compilerOptions": {
-		"outDir": "../.js",
 		"target": "es2019",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
 		"strict": true,
 		"allowJs": true,
-		"noEmitOnError": true,
-		"incremental": true,
-	}
+		"skipLibCheck": true,
+		"isolatedModules": true,
+		"noEmit": true
+	},
+	"include": ["src"]
 }

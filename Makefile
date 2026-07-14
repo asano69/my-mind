@@ -1,3 +1,11 @@
+
+BINARY := $(notdir $(CURDIR))
+APP := $(notdir $(CURDIR))
+# Ports used by the dev servers (frontend, backend, and PocketBase-style API)
+PORTS := 3000 3001
+
+
+
 # ─────────────────────────────────────────
 #  Default: build & start server
 # ─────────────────────────────────────────
@@ -10,10 +18,10 @@ all: frontend ## (*) Build frontend assets and start the server
 # ─────────────────────────────────────────
 .PHONY: frontend
 frontend: frontend/node_modules
-	cd frontend && npm run build
+	cd frontend && pnpm run build
 
-frontend/node_modules: frontend/package.json frontend/package-lock.json
-	cd frontend && npm ci
+frontend/node_modules: frontend/package.json frontend/pnpm-lock.yaml
+	cd frontend && pnpm install --frozen-lockfile
 	touch $@
 
 # ─────────────────────────────────────────
@@ -23,9 +31,16 @@ frontend/node_modules: frontend/package.json frontend/package-lock.json
 clean: ## Remove build artifacts
 	rm -rf internal/handler/dist
 
-.PHONY: help
-help: ## Show available targets
-	@echo "Usage: make [target]"
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
-		| sort \
-		| awk 'BEGIN {FS=":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
+
+.PHONY: kill-ports
+kill-ports:
+	@for port in $(PORTS); do \
+		pid=$$(lsof -ti tcp:$$port); \
+		if [ -n "$$pid" ]; then \
+			echo "Killing process on port $$port (pid $$pid)"; \
+			kill -9 $$pid; \
+		fi \
+	done
+
+
+

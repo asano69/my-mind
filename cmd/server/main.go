@@ -13,7 +13,6 @@ func main() {
 		port = "3000"
 	}
 
-	staticDir := "./static"
 	mapsDir := "./maps"
 
 	if err := os.MkdirAll(mapsDir, 0755); err != nil {
@@ -23,7 +22,7 @@ func main() {
 
 	fmt.Printf("Listening on :%s\n", port)
 
-	h := handler.New(staticDir, mapsDir)
+	h := handler.New(mapsDir)
 	if err := http.ListenAndServe(":"+port, h); err != nil {
 		fmt.Fprintf(os.Stderr, "Server error: %v\n", err)
 		os.Exit(1)
