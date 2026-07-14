@@ -11,7 +11,7 @@ fi
 ADMIN_EMAIL="${INITIAL_ADMIN_EMAIL:-admin@mail.internal}"
 ADMIN_PASSWORD="${INITIAL_ADMIN_PASSWORD:-password}"
 
-# /myapp/data
-su-exec myapp:myapp myapp superuser create "$ADMIN_EMAIL" "$ADMIN_PASSWORD" --dir=data || true
+# /my-mind/data
+su-exec my-mind:my-mind my-mind superuser create "$ADMIN_EMAIL" "$ADMIN_PASSWORD" --dir=data || true
 
-exec su-exec myapp:myapp "$@"
+exec su-exec my-mind:my-mind "$@"
