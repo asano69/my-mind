@@ -19,13 +19,18 @@
 ## 計画
 
 - backendは、PocketBase **v0.39+**をつかったものへ、frontendは、solid.js + **tailwind v4** をつかったものへ並行して書き換えている。
-- バックエンドのほうが書き換えが容易だと思われるので、先にバックエンドのリファクタリングを行う。
-- フロントエンドは、go-templateをつかったSSRアプリからSolid.jsをつかったSPAへの書き換えが必要になっている。
-- フロントエンドは、タイプスクリプトを使ったコードを、JavaScriptに戻した。一部、戻し忘れによるバグがある。
+- バックエンドは、go-templateをつかったSSRアプリを前提にした構造から、Solid.jsをつかったSPAを前提にした構造に書き換えが必要の可能性がある。
 - フロントエンドは、フレームワーク（solid.js）をつかったコードの書き換えもすすめている。
 - Catalog.index関連は、go-templateでやっていたが本質機能ではないので現状リンク切れの状態でよい。
-- 重複コードの削除を優先的に行う。
+- 重複コード、未使用コードの削除を優先的に行う。
 
 
 # Work in progress
+- フロントエンドのプロジェクト構造をフレームワークSolid.jsを前提にした構造に書き換える
+- フロントエンドのマインドマップ関連のコードはlibまたはcomponentsに移動するようにする。以下のコードはsold.js用のテンプレ
+
+    frontend/src/lib/
+    frontend/src/main.jsx
+    frontend/src/routes/
+
 
