@@ -20,7 +20,10 @@ New to Mind maps? They are useful, aesthetic and cool! Read more about these spe
 - 開発環境のセットアップ。フロントエンド、バックエンドでビルドできるようにする。
 - フロントエンドからPocketBase APIを使用して、マップを保存できるようにする
 - バックエンドをPocketBaseをつかったコードに置き換える。
-
+- フロントエンドのマインドマップ関連のコードはlibまたはcomponentsに移動するようにする。以下のコードはsold.js用のテンプレ
+    - frontend/src/lib/
+    - frontend/src/main.jsx
+    - frontend/src/routes/
 ---
 
 ## Ref
