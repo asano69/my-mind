@@ -30,7 +30,7 @@ frontend/node_modules: frontend/package.json frontend/pnpm-lock.yaml
 # ─────────────────────────────────────────
 .PHONY: clean
 clean: ## Remove build artifacts
-	rm -rf internal/handler/dist
+	rm -rf internal/assets/dist
 
 
 .PHONY: kill-ports
