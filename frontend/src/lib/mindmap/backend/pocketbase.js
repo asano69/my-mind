@@ -7,11 +7,13 @@ const COLLECTION = "maps";
 // Creates a new record when id is falsy, otherwise updates the existing one.
 // mymind is a plain object (the map's JSON tree) — PocketBase stores it
 // natively in the "mymind" json field, no string (de)serialization needed.
-export async function save(id, title, mymind) {
+// svg is the rendered SVG snapshot, stored alongside for use on the catalog page.
+export async function save(id, title, mymind, svg) {
+  const data = { title, mymind, svg };
   if (id) {
-    return pb.collection(COLLECTION).update(id, { title, mymind });
+    return pb.collection(COLLECTION).update(id, data);
   }
-  return pb.collection(COLLECTION).create({ title, mymind });
+  return pb.collection(COLLECTION).create(data);
 }
 
 // Maps are addressed publicly by "uuid" (see /maps/<uuid>), not by

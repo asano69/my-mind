@@ -3,6 +3,7 @@ import * as pubsub from "../pubsub.js";
 import * as app from "../my-mind.js";
 import * as backend from "../backend/pocketbase.js";
 import MindMap from "../map.js";
+import { serializeCurrentMap } from "../backend/image.js";
 
 let currentMapId = null; // PocketBase record id, used for save/update calls
 let currentMapUuid = null; // public uuid, used in the URL
@@ -140,6 +141,7 @@ async function save() {
     saveInFlight = false;
   }
 }
+
 async function performSave() {
   const map = app.currentMap;
   const mymind = map.toJSON();
@@ -147,8 +149,14 @@ async function performSave() {
   // root node's name (only relevant for maps that have never had a
   // custom title set).
   const title = currentTitle || map.name;
+  let svg = "";
   try {
-    const record = await backend.save(currentMapId, title, mymind);
+    svg = serializeCurrentMap().xml;
+  } catch (e) {
+    console.warn("failed to generate SVG snapshot:", e);
+  }
+  try {
+    const record = await backend.save(currentMapId, title, mymind, svg);
     setCurrentMap(record);
     pubsub.publish("save-done");
   } catch (e) {
@@ -179,9 +187,18 @@ function updateURL() {
 // Fix for the "[object Object]" bug: PocketBase client errors are
 // ClientResponseError instances (which extend Error), but be defensive
 // about any non-Error rejection too, so the alert is always readable.
+// Field-level validation errors (e.g. wrong type, required, too long)
+// live in e.response.data — surface them so the message stays actionable.
 function error(e) {
   app.setThrobber(false);
-  const message = e instanceof Error ? e.message : JSON.stringify(e);
+  let message = e instanceof Error ? e.message : JSON.stringify(e);
+  const fieldErrors = e?.response?.data;
+  if (fieldErrors && Object.keys(fieldErrors).length) {
+    const detail = Object.entries(fieldErrors)
+      .map(([field, info]) => `${field}: ${info.message || info.code}`)
+      .join("; ");
+    message = `${message} (${detail})`;
+  }
   alert(`IO error: ${message}`);
 }
 
