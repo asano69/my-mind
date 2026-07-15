@@ -19,7 +19,7 @@ It has a catalog feature.
 
 
 ## Work in Progress
-- [ ] my-mind.js アンマウント安全化
+- [x] my-mind.js アンマウント安全化
 - [ ] Mindmapライブラリを、Solidのリアクティブな状態管理に書き換える。
 
 ## Ref
