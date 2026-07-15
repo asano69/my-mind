@@ -13,8 +13,16 @@ let currentTitle = "";
 let autoSaveTimeout = null;
 let lastSaveTime = null;
 
+// Guards against overlapping save() calls. With a short auto-save debounce,
+// a new save can be triggered before the previous request finishes; sending
+// two concurrent updates to the same record risks the PocketBase SDK
+// auto-cancelling one of them, or worse, an older snapshot overwriting a
+// newer one if the requests resolve out of order.
+let saveInFlight = false;
+let saveAgainRequested = false;
+
 const node = document.querySelector("#io");
-const AUTO_SAVE_DELAY_MS = 3000;
+const AUTO_SAVE_DELAY_MS = 1000;
 
 export function isActive() {
   return !node.hidden && node.contains(document.activeElement);
@@ -118,7 +126,21 @@ function submit() {
 }
 
 async function save() {
-  app.setThrobber(true);
+  if (saveInFlight) {
+    saveAgainRequested = true;
+    return;
+  }
+  saveInFlight = true;
+  try {
+    do {
+      saveAgainRequested = false;
+      await performSave();
+    } while (saveAgainRequested);
+  } finally {
+    saveInFlight = false;
+  }
+}
+async function performSave() {
   const map = app.currentMap;
   const mymind = map.toJSON();
   // Use the explicitly-set title if present; otherwise fall back to the
@@ -128,7 +150,6 @@ async function save() {
   try {
     const record = await backend.save(currentMapId, title, mymind);
     setCurrentMap(record);
-    app.setThrobber(false);
     pubsub.publish("save-done");
   } catch (e) {
     error(e);
