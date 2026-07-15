@@ -98,23 +98,27 @@ export default function Catalog() {
         border-pane-hover bg-pane text-left shadow-card
         transition hover:bg-pane-hover"
                     >
-                      <div
-                        onClick={() =>
-                          !editMode() &&
-                          (window.location.href = `/maps/${map.uuid}`)
-                        }
-                        class="relative flex h-32 items-center justify-center overflow-hidden
-           bg-white p-2 [&_svg]:!static [&_svg]:!h-full
+                      <div class="relative flex h-32 items-center justify-center overflow-hidden bg-white">
+                        {/* SVG only — innerHTML replaces this element's
+                            children on every render, so nothing else may
+                            live inside it. Pin badge/buttons are rendered
+                            as siblings below instead. */}
+                        <div
+                          onClick={() =>
+                            !editMode() &&
+                            (window.location.href = `/maps/${map.uuid}`)
+                          }
+                          class="h-full w-full p-2 [&_svg]:!static [&_svg]:!h-full
           [&_svg]:!w-full [&_svg]:!overflow-hidden"
-                        classList={{ "cursor-pointer": !editMode() }}
-                        innerHTML={map.svg || ""}
-                      >
+                          classList={{ "cursor-pointer": !editMode() }}
+                          innerHTML={map.svg || ""}
+                        />
+                        i
                         <Show when={!editMode() && map.pin}>
                           <span class="absolute top-1 right-1 text-sm drop-shadow">
                             📍
                           </span>
                         </Show>
-
                         <Show when={editMode()}>
                           <button
                             onClick={(e) => {
