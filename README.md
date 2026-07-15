@@ -21,19 +21,16 @@ New to Mind maps? They are useful, aesthetic and cool! Read more about these spe
 - [x] vite 開発サーバでフロントエンドを動かす
 - [x] vite 開発サーバから、バックエンド起動時にデータを保存できるようにする
 - [x] easymd.jsなどは、pnpm moduleを使うようにする
-- [ ] vanila JSをSolid.jsをつかい、フロントエンドの構造を整理する
-- [ ] go embedでフロンエンドコードをバックエンドに結合できるようにする
+- [x] vanila JSをSolid.jsをつかい、フロントエンドの構造を整理する
+- [x] go embedでフロンエンドコードをバックエンドに結合できるようにする
 
 その他
 - [ ] ファイル名とトピック名を分離する。中心ノードの名前とファイル名は同じにするべきではない。
 
 
 ## Work in Progress
-- [ ] フロントエンドのプロジェクト構造をフレームワークSolid.jsを前提にした構造に書き換える
-- [ ] フロントエンドのマインドマップ関連のコードはlibまたはcomponentsに移動するようにする。以下のコードはsold.js用のテンプレ
-    - frontend/src/lib/
-    - frontend/src/main.jsx
-    - frontend/src/routes/
+- [x] フロントエンドのプロジェクト構造をフレームワークSolid.jsを前提にした構造に書き換える
+- [x] フロントエンドのマインドマップ関連のコードはlibまたはcomponentsに移動するようにする。以下のコードはsold.js用のテンプレ
 - [ ] バックエンドをPocketBaseを前提にしたコードに置き換える。
 
 
