@@ -91,22 +91,23 @@ export default function NotesEditor() {
   });
 
   onCleanup(() => easyMDE?.toTextArea());
-
-  return (
-    <div id="notes-editor">
-      <div id="notes-editor-bar">
-        <button onClick={() => notesModule?.close()}>Close</button>
-        <span class="spacer" />
-        <button onClick={toggleMode}>{mode() === "edit" ? "View" : "Edit"}</button>
+return (
+    <div id="notes" class="pane" hidden>
+      <div id="notes-editor">
+        <div id="notes-editor-bar">
+          <button onClick={() => notesModule?.close()}>Close</button>
+          <span class="spacer" />
+          <button onClick={toggleMode}>{mode() === "edit" ? "View" : "Edit"}</button>
+        </div>
+        <div id="notes-editor-edit-pane" hidden={mode() !== "edit"}>
+          <textarea ref={textareaEl} />
+        </div>
+        <div
+          id="notes-editor-view-pane"
+          hidden={mode() !== "view"}
+          innerHTML={previewHtml()}
+        />
       </div>
-      <div id="notes-editor-edit-pane" hidden={mode() !== "edit"}>
-        <textarea ref={textareaEl} />
-      </div>
-      <div
-        id="notes-editor-view-pane"
-        hidden={mode() !== "view"}
-        innerHTML={previewHtml()}
-      />
     </div>
   );
 }

@@ -1,12 +1,16 @@
 import NotesEditor from "./NotesEditor";
+import PropertyPanel from "./PropertyPanel";
+import SaveDialog from "./SaveDialog";
+import HelpPanel from "./HelpPanel";
+import ContextMenu from "./ContextMenu";
 import { onMount } from "solid-js";
 
 // Renders the exact DOM structure the legacy mind-map engine expects
 // (#ui, #io, #help, #notes, #context-menu, #help-btn, and the <main>
-// element the engine mounts the SVG map into). The engine itself is
-// imported dynamically inside onMount so its module-level
-// `document.querySelector(...)` calls run only after this markup is
-// actually attached to the real DOM.
+// element the engine mounts the SVG map into), delegating each pane to
+// its own subcomponent. The engine itself is imported dynamically inside
+// onMount so its module-level `document.querySelector(...)` calls run
+// only after this markup is actually attached to the real DOM.
 export default function MindMapCanvas() {
   onMount(() => {
     import("../lib/mindmap/my-mind.js");
@@ -25,154 +29,11 @@ export default function MindMapCanvas() {
         </button>
       </main>
 
-      <div id="ui" class="pane">
-        <div class="scrollable">
-          <p class="row">
-            <button class="icon-btn" data-command="new" title="New">
-              <img src="/icon/new.png" alt="New" />
-            </button>
-            <button class="icon-btn" data-command="load" title="Open">
-              <img src="/icon/open.png" alt="Open" />
-            </button>
-            <button class="icon-btn" data-command="save" title="Save">
-              <img src="/icon/save.png" alt="Save" />
-            </button>
-            <button class="icon-btn" data-command="save-as" title="Save as">
-              <img src="/icon/save-as.png" alt="Save as" />
-            </button>
-          </p>
-          <p>
-            <label>
-              <span>Layout</span>
-              <select id="layout">
-                <option value="">(Inherit)</option>
-              </select>
-            </label>
-          </p>
-          <p>
-            <label>
-              <span>Shape</span>
-              <select id="shape">
-                <option value="">(Automatic)</option>
-              </select>
-            </label>
-          </p>
-          <p>
-            <label>
-              <span>Value</span>
-              <select id="value">
-                <option value="">(None)</option>
-                <option value="num">Number</option>
-                <optgroup label="Formula">
-                  <option value="sum">Sum</option>
-                  <option value="avg">Average</option>
-                  <option value="min">Minimum</option>
-                  <option value="max">Maximum</option>
-                </optgroup>
-              </select>
-            </label>
-          </p>
-          <p>
-            <label>
-              <span>Status</span>
-              <select id="status">
-                <option value="">None</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-                <option value="computed">Autocompute</option>
-              </select>
-            </label>
-          </p>
-          <p>
-            <label>
-              <span>Item color</span>
-              <span id="color" class="color-picker">
-                <a data-color="" title="Inherit" href="#"></a>
-                <a data-color="#000" title="Black" href="#"></a>
-                <a data-color="#d33" title="Red" href="#"></a>
-                <a data-color="#33d" title="Blue" href="#"></a>
-                <a data-color="#3d3" title="Green" href="#"></a>
-                <a data-color="#d3d" title="Magenta" href="#"></a>
-                <a data-color="#3dd" title="Cyan" href="#"></a>
-                <a data-color="#dd3" title="Yellow" href="#"></a>
-              </span>
-            </label>
-          </p>
-          <p>
-            <label>
-              <span>Text color</span>
-              <span id="text-color" class="color-picker">
-                <a data-color="" title="Inherit" href="#"></a>
-                <a data-color="#000" title="Black" href="#"></a>
-                <a data-color="#d33" title="Red" href="#"></a>
-                <a data-color="#33d" title="Blue" href="#"></a>
-                <a data-color="#3d3" title="Green" href="#"></a>
-                <a data-color="#d3d" title="Magenta" href="#"></a>
-                <a data-color="#3dd" title="Cyan" href="#"></a>
-                <a data-color="#dd3" title="Yellow" href="#"></a>
-              </span>
-            </label>
-          </p>
-        </div>
-        <footer>
-          <span id="save-status"></span>
-        </footer>
-
-        <button class="icon-btn" data-command="notes" title="Notes">
-          <img src="/icon/notes.png" alt="Notes" />
-        </button>
-        <button
-          class="icon-btn"
-          id="toggle"
-          data-command="ui"
-          title="Toggle UI"
-        >
-          <img src="/icon/menu.png" alt="Menu" />
-        </button>
-        <div class="spinner" hidden>
-          <div class="dot1"></div>
-          <div class="dot2"></div>
-        </div>
-      </div>
-
-      <div id="io" class="pane" hidden>
-        <h3>Save</h3>
-        <p class="row">
-          <button class="go">Save</button>
-          <button class="cancel">Cancel</button>
-        </p>
-      </div>
-
-      <div id="help" class="pane" hidden>
-        <h3>Help</h3>
-        <p>Navigation</p>
-        <table class="navigation"></table>
-        <p>Manipulation</p>
-        <table class="manipulation"></table>
-        <p>Editing</p>
-        <table class="editing"></table>
-        <p>Other</p>
-        <table class="other"></table>
-      </div>
-
-      <div id="notes" class="pane" hidden>
-       <NotesEditor />
-      </div>
-
-      <div id="context-menu" hidden>
-        <button data-command="notes"></button>
-        <span></span>
-        <button data-command="insert-child"></button>
-        <button data-command="insert-sibling"></button>
-        <button data-command="delete"></button>
-        <span></span>
-        <button data-command="edit"></button>
-        <button data-command="value"></button>
-        <span></span>
-        <button data-command="undo"></button>
-        <button data-command="redo"></button>
-        <button data-command="center"></button>
-      </div>
+      <PropertyPanel />
+      <SaveDialog />
+      <HelpPanel />
+      <NotesEditor />
+      <ContextMenu />
 
       <button id="help-btn" class="icon-btn" data-command="help" title="Help">
         <img src="/icon/help.png" alt="Help" />
