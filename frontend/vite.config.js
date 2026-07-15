@@ -28,6 +28,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
+        editor: resolve(__dirname, "editor.html"),
         server: resolve(__dirname, "src/my-mind.js"),
         toast: resolve(__dirname, "src/ui/toast.js"),
       },
@@ -36,7 +37,9 @@ export default defineConfig({
         // reference them by exact name; the Solid entry can use normal
         // content-hashed asset names.
         entryFileNames: (chunk) =>
-          chunk.name === "server" || chunk.name === "toast"
+          chunk.name === "server" ||
+          chunk.name === "toast" ||
+          chunk.name === "editor"
             ? "[name].js"
             : "assets/[name]-[hash].js",
       },

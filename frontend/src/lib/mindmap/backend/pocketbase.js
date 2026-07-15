@@ -1,7 +1,7 @@
 // src/backend/pocketbase.ts
 // The only save/load mechanism for maps. Talks directly to the "maps"
 // collection through the shared PocketBase client.
-import pb from "../lib/pb.js";
+import pb from "../../pb.js";
 
 const COLLECTION = "maps";
 

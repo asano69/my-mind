@@ -1,7 +1,7 @@
+/* Shared design tokens (palette, fonts, button/toast variables) already
+   * used by the legacy mind-map engine. Loaded as-is for now; mapping these
+   * into Tailwind's own theme (@theme block) is a separate follow-up task. */
+@import url("/theme.css");
+
 /* Tailwind v4 entry point */
 @import "tailwindcss";
-
-/* Shared design tokens (palette, fonts, button/toast variables) already
- * used by the legacy mind-map engine. Loaded as-is for now; mapping these
- * into Tailwind's own theme (@theme block) is a separate follow-up task. */
-@import url("/theme.css");
