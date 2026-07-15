@@ -1,4 +1,3 @@
-// src/ui/ui.ts
 import * as pubsub from "../pubsub.js";
 import * as app from "../my-mind.js";
 import * as color from "./color.js";
@@ -12,8 +11,8 @@ import * as notes from "./notes.js";
 import * as io from "./io.js";
 import * as menu from "./context-menu.js";
 import { repo as commandRepo } from "../command/command.js";
-const node = document.querySelector("#ui");
-const saveTimeEl = document.querySelector("#save-time");
+let node = null;
+let saveTimeEl = null;
 // Timestamp of the last successful save (ms since epoch), or null if not yet saved.
 let lastSaveTime = null;
 let elapsedTimer = null;
@@ -111,6 +110,8 @@ function onClick(e) {
   }
 }
 export function init(port) {
+  node = document.querySelector("#ui");
+  saveTimeEl = document.querySelector("#save-time");
   [layout, shape, value, status, color, textColor, help, notes, io].forEach(
     (ui) => ui.init(),
   );
@@ -124,4 +125,20 @@ export function init(port) {
   pubsub.subscribe("save-done", onSaveDone);
   document.addEventListener("click", onClick);
   io.restore();
+}
+
+// Called by my-mind.js's unmount(). Tears down this module's own listener
+// and timer, then disposes every child UI module in the reverse order
+// init() brought them up, mirroring standard stack-unwind teardown order.
+export function dispose() {
+  document.removeEventListener("click", onClick);
+  clearInterval(elapsedTimer);
+  elapsedTimer = null;
+  lastSaveTime = null;
+  menu.dispose();
+  [io, notes, help, textColor, color, status, value, shape, layout].forEach(
+    (ui) => ui.dispose(),
+  );
+  node = null;
+  saveTimeEl = null;
 }
