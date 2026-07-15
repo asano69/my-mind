@@ -1,18 +1,23 @@
 import { createResource, createSignal, For, Show } from "solid-js";
 
 import pb from "../lib/pb";
-import { updateTitle, deleteMap } from "../lib/mindmap/backend/pocketbase";
+import {
+  updateTitle,
+  updatePin,
+  deleteMap,
+} from "../lib/mindmap/backend/pocketbase";
 import Search from "../components/Search";
 
 // query is empty for the initial/unfiltered list, or a title search term.
 // pb.filter() escapes the value for us; "~" is PocketBase's substring
-// match operator.
+// match operator. Pinned maps ("-pin") always sort before unpinned ones,
+// then newest-updated first.
 async function fetchMaps(query) {
   // svg is stored directly on the record, so no extra request is needed
   // to render a thumbnail.
   return pb.collection("maps").getFullList({
-    sort: "-updated",
-    fields: "id,uuid,title,svg",
+    sort: "-pin,-updated",
+    fields: "id,uuid,title,svg,pin",
     filter: query ? pb.filter("title ~ {:q}", { q: query }) : "",
   });
 }
@@ -35,6 +40,18 @@ export default function Catalog() {
     await updateTitle(map.id, trimmed);
     mutate((prev) =>
       prev.map((m) => (m.id === map.id ? { ...m, title: trimmed } : m)),
+    );
+  }
+
+  // Toggles pin state and re-sorts (pinned maps first) to match the
+  // server-side ordering without waiting for a full refetch.
+  async function handleTogglePin(map) {
+    const nextPin = !map.pin;
+    await updatePin(map.id, nextPin);
+    mutate((prev) =>
+      prev
+        .map((m) => (m.id === map.id ? { ...m, pin: nextPin } : m))
+        .sort((a, b) => (b.pin ? 1 : 0) - (a.pin ? 1 : 0)),
     );
   }
 
@@ -78,20 +95,53 @@ export default function Catalog() {
                   {(map) => (
                     <div
                       class="flex flex-col overflow-hidden rounded-md border
-                        border-pane-hover bg-pane text-left shadow-card
-                        transition hover:bg-pane-hover"
+        border-pane-hover bg-pane text-left shadow-card
+        transition hover:bg-pane-hover"
                     >
                       <div
                         onClick={() =>
                           !editMode() &&
                           (window.location.href = `/maps/${map.uuid}`)
                         }
-                        class="flex h-32 items-center justify-center overflow-hidden
-                           bg-white p-2 [&_svg]:!static [&_svg]:!h-full
-                          [&_svg]:!w-full [&_svg]:!overflow-hidden"
+                        class="relative flex h-32 items-center justify-center overflow-hidden
+           bg-white p-2 [&_svg]:!static [&_svg]:!h-full
+          [&_svg]:!w-full [&_svg]:!overflow-hidden"
                         classList={{ "cursor-pointer": !editMode() }}
                         innerHTML={map.svg || ""}
-                      />
+                      >
+                        <Show when={!editMode() && map.pin}>
+                          <span class="absolute top-1 right-1 text-sm drop-shadow">
+                            📌
+                          </span>
+                        </Show>
+
+                        <Show when={editMode()}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTogglePin(map);
+                            }}
+                            title={map.pin ? "Unpin" : "Pin"}
+                            class="absolute top-1 right-1 flex h-7 w-7 items-center
+        justify-center  text-sm             "
+                            classList={{ "opacity-30": !map.pin }}
+                          >
+                            📌
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(map.id);
+                            }}
+                            title="Delete"
+                            class="absolute top-1 left-1 flex h-7 w-7 items-center
+              justify-center text-sm  
+        "
+                          >
+                            🗑️
+                          </button>
+                        </Show>
+                      </div>
                       <div class="flex items-center gap-1 px-3 py-2">
                         <Show
                           when={editMode()}
@@ -109,16 +159,8 @@ export default function Catalog() {
                               e.key === "Enter" && e.currentTarget.blur()
                             }
                             class="min-w-0 flex-1 rounded border border-pane-hover
-                              bg-bg px-2 py-1 text-sm"
+              bg-bg px-2 py-1 text-sm"
                           />
-                          <button
-                            onClick={() => handleDelete(map.id)}
-                            title="Delete"
-                            class="shrink-0 rounded px-2 py-1 text-sm text-[#dc3545]
-                              hover:bg-pane-hover"
-                          >
-                            🗑️
-                          </button>
                         </Show>
                       </div>
                     </div>

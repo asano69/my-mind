@@ -6,7 +6,6 @@ import ContextMenu from "./ContextMenu";
 import TitleBar from "./TitleBar";
 import { onMount } from "solid-js";
 
-
 export default function MindMapCanvas() {
   onMount(() => {
     import("../lib/mindmap/my-mind.js");
@@ -15,9 +14,9 @@ export default function MindMapCanvas() {
   return (
     <>
       <main>
-       <a href="/catalog" id="catalog-link" class="icon-btn" title="Catalog">
+        <a href="/catalog" id="catalog-link" class="icon-btn" title="Catalog">
           <img src="/icon/catalog.png" alt="Catalog" />
-</a>
+        </a>
       </main>
 
       <TitleBar />

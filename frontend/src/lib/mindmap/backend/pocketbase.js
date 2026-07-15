@@ -36,3 +36,7 @@ export async function updateTitle(id, title) {
 export async function deleteMap(id) {
   return pb.collection(COLLECTION).delete(id);
 }
+
+export async function updatePin(id, pin) {
+  return pb.collection(COLLECTION).update(id, { pin });
+}
