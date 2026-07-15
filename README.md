@@ -6,8 +6,6 @@
 My Mind is a web application for creating and managing Mind maps.  
 New to Mind maps? They are useful, aesthetic and cool! Read more about these special diagrams in [the Wikipedia article](https://en.wikipedia.org/wiki/Mind_map).
 
-
-
 <img src=".github/assets/sample-01.png" width="800">
 
 It has a catalog feature.
@@ -16,7 +14,11 @@ It has a catalog feature.
 
 ## Plan
 - [ ] データ保存コードの整理: マインドマップを保存する経路が2, 3種類ある。自動保存によるmymind形式のみのデータ転送と手動保存によるmymind+svgのデータ転送。保存部分だけ、ファイルを分割したほうがよさそう。
-
+- [ ] Catalog遷移時に、svgデータの自動保存
+- [ ] svg画像を配信するルートを作成。http://localhost:3001/img/UUID
+- [ ] catalogにおいて、タイトルをクリックしてもそのマップを開くようにする（現在イメージの部分しかクリック可能ではない）
+- [ ] キャンバスで、右ペインが戻らなくなるバグの修正
+- [ ] CanvasのSave Asボタンで、マインドマップのpng画像をクリップボードにコピーする
 
 ## Work in Progress
 - [x] my-mind.js アンマウント安全化
