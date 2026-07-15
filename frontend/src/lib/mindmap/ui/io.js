@@ -86,7 +86,11 @@ export async function setTitle(title) {
   currentTitle = title;
   pubsub.publish("title-change", currentTitle);
   if (currentMapId) {
-    await save();
+    try {
+      await backend.updateTitle(currentMapId, currentTitle);
+    } catch (e) {
+      error(e);
+    }
   }
 }
 

@@ -21,3 +21,7 @@ export async function loadByUuid(uuid) {
     .collection(COLLECTION)
     .getFirstListItem(pb.filter("uuid = {:uuid}", { uuid }));
 }
+
+export async function updateTitle(id, title) {
+  return pb.collection(COLLECTION).update(id, { title });
+}
