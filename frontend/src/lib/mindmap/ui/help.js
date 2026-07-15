@@ -1,6 +1,5 @@
-// src/ui/help.ts
 import { repo as commandRepo } from "../command/command.js";
-const node = document.querySelector("#help");
+let node = null;
 const MAP = {
   Enter: "↩",
   Space: "Spacebar",
@@ -14,6 +13,7 @@ export function toggle() {
   node.hidden = !node.hidden;
 }
 export function init() {
+  node = document.querySelector("#help");
   let t = node.querySelector(".navigation");
   buildRow(t, "pan");
   buildRow(t, "select");
@@ -49,6 +49,9 @@ export function init() {
   buildRow(t, "ui");
   buildRow(t, "quick-load"); //add
   buildRow(t, "go-to-catalog"); //add
+}
+export function dispose() {
+  node = null;
 }
 function buildRow(table, ...commandNames) {
   var row = table.insertRow(-1);

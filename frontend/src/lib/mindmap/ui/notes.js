@@ -1,8 +1,8 @@
 import * as app from "../my-mind.js";
 import * as pubsub from "../pubsub.js";
 
-let previewEl;
-let previewInner;
+let previewEl = null;
+let previewInner = null;
 
 // Set by NotesEditor's onMount (see components/NotesEditor.jsx) instead of
 // the old iframe + postMessage protocol, since the editor now lives in the
@@ -64,4 +64,14 @@ export function init() {
     editorAPI?.setContent(publisher.notes);
     updatePreview(publisher.notes);
   });
+}
+
+// Called by my-mind.js's unmount(). Removes the watermark element this
+// module injects directly into <main>, so a remount does not stack a
+// second copy behind the fresh one.
+export function dispose() {
+  previewEl?.remove();
+  previewEl = null;
+  previewInner = null;
+  editorAPI = null;
 }

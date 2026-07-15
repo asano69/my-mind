@@ -1,8 +1,8 @@
-// src/ui/context-menu.ts
 import { repo as commandRepo } from "../command/command.js";
-let node = document.querySelector("#context-menu");
-let port;
+let node = null;
+let port = null;
 export function init(port_) {
+  node = document.querySelector("#context-menu");
   port = port_;
   [...node.querySelectorAll("[data-command]")].forEach((button) => {
     let commandName = button.dataset.command;
@@ -11,6 +11,12 @@ export function init(port_) {
   port.addEventListener("mousedown", handleEvent);
   node.addEventListener("mousedown", handleEvent);
   close();
+}
+export function dispose() {
+  port.removeEventListener("mousedown", handleEvent);
+  node.removeEventListener("mousedown", handleEvent);
+  node = null;
+  port = null;
 }
 export function open(point) {
   node.hidden = false;

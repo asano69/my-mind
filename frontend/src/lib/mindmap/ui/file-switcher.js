@@ -202,3 +202,8 @@ export function toggle() {
     ? hide()
     : show();
 }
+
+export function dispose() {
+  hide();
+  cachedMaps = null;
+}

@@ -1,4 +1,3 @@
-// src/ui/io.ts
 import * as pubsub from "../pubsub.js";
 import * as app from "../my-mind.js";
 import * as backend from "../backend/pocketbase.js";
@@ -13,6 +12,7 @@ let currentTitle = "";
 
 let autoSaveTimeout = null;
 let lastSaveTime = null;
+let statusTimer = null; // setInterval id for updateSaveStatus, cleared in dispose()
 
 // Guards against overlapping save() calls. With a short auto-save debounce,
 // a new save can be triggered before the previous request finishes; sending
@@ -22,7 +22,7 @@ let lastSaveTime = null;
 let saveInFlight = false;
 let saveAgainRequested = false;
 
-const node = document.querySelector("#io");
+let node = null;
 const AUTO_SAVE_DELAY_MS = 1000;
 
 export function isActive() {
@@ -30,6 +30,7 @@ export function isActive() {
 }
 
 export function init() {
+  node = document.querySelector("#io");
   node.querySelector(".cancel").addEventListener("click", (_) => hide());
   node.querySelector(".go").addEventListener("click", (_) => submit());
   node.addEventListener("keydown", (e) => {
@@ -44,7 +45,7 @@ export function init() {
     hide();
   });
   pubsub.subscribe("load-done", () => hide());
-  setInterval(updateSaveStatus, 1000);
+  statusTimer = setInterval(updateSaveStatus, 1000);
   // Auto-save: debounce item changes and save after a short delay.
   // Only kicks in once the map has been saved at least once (has an id).
   pubsub.subscribe("item-change", () => {
@@ -59,6 +60,25 @@ export function init() {
       save(false); // auto-save: skip SVG generation/transfer
     }, AUTO_SAVE_DELAY_MS);
   });
+}
+
+// Called by my-mind.js's unmount(). node's own click/keydown listeners die
+// along with the DOM element (Solid removes #io on unmount), so only the
+// module-level timer and map-identity state need explicit teardown here.
+export function dispose() {
+  clearInterval(statusTimer);
+  statusTimer = null;
+  if (autoSaveTimeout !== null) {
+    clearTimeout(autoSaveTimeout);
+    autoSaveTimeout = null;
+  }
+  currentMapId = null;
+  currentMapUuid = null;
+  currentTitle = "";
+  lastSaveTime = null;
+  saveInFlight = false;
+  saveAgainRequested = false;
+  node = null;
 }
 
 export async function restore() {
