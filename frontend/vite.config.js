@@ -3,9 +3,6 @@ import { resolve } from "path";
 import solid from "vite-plugin-solid";
 import tailwindcss from "@tailwindcss/vite";
 
-// Two HTML entry points:
-//   - index.html:  the Solid.js SPA
-//   - editor.html: the notes editor, loaded standalone in an <iframe>
 export default defineConfig({
   plugins: [solid(), tailwindcss()],
   publicDir: resolve(__dirname, "public"),
@@ -24,11 +21,5 @@ export default defineConfig({
   build: {
     outDir: resolve(__dirname, "../internal/assets/dist"),
     emptyOutDir: true,
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, "index.html"),
-        editor: resolve(__dirname, "editor.html"),
-      },
-    },
   },
 });

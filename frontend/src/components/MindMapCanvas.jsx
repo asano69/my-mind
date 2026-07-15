@@ -1,3 +1,4 @@
+import NotesEditor from "./NotesEditor";
 import { onMount } from "solid-js";
 
 // Renders the exact DOM structure the legacy mind-map engine expects
@@ -155,10 +156,7 @@ export default function MindMapCanvas() {
       </div>
 
       <div id="notes" class="pane" hidden>
-        <iframe
-          sandbox="allow-scripts allow-same-origin allow-popups"
-          src="/editor.html"
-        ></iframe>
+       <NotesEditor />
       </div>
 
       <div id="context-menu" hidden>

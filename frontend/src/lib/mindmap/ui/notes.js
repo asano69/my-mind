@@ -1,76 +1,67 @@
 import * as app from "../my-mind.js";
 import * as pubsub from "../pubsub.js";
-const node = document.querySelector("#notes");
-const iframe = node.querySelector("iframe");
-// 背景プレビュー要素を作成
-const previewEl = document.createElement("div");
-previewEl.id = "note-preview";
-previewEl.hidden = true;
-previewEl.innerHTML = '<div id="note-preview-inner"></div>';
-document.querySelector("main").appendChild(previewEl);
-const previewInner = previewEl.querySelector("#note-preview-inner");
-function sendToEditor(content) {
-  var _a;
-  (_a = iframe.contentWindow) === null || _a === void 0
-    ? void 0
-    : _a.postMessage({ action: "setContent", value: content }, "*");
+
+let previewEl;
+let previewInner;
+
+// Set by NotesEditor's onMount (see components/NotesEditor.jsx) instead of
+// the old iframe + postMessage protocol, since the editor now lives in the
+// same document as this module.
+let editorAPI = null;
+
+export function registerEditorAPI(api) {
+  editorAPI = api;
+  if (app.currentItem) {
+    api.setContent(app.currentItem.notes);
+  }
 }
+
 function updatePreview(notes) {
-  var _a, _b;
-  const text =
-    (_a = notes === null || notes === void 0 ? void 0 : notes.trim()) !==
-      null && _a !== void 0
-      ? _a
-      : "";
-  if (text) {
-    (_b = iframe.contentWindow) === null || _b === void 0
-      ? void 0
-      : _b.postMessage({ action: "renderMarkdown", value: text }, "*");
+  const text = notes?.trim() ?? "";
+  if (text && editorAPI) {
+    previewInner.innerHTML = editorAPI.renderMarkdown(text);
     previewEl.hidden = false;
   } else {
     previewEl.hidden = true;
   }
 }
+
 export function toggle() {
+  const node = document.querySelector("#notes");
   node.hidden = !node.hidden;
   if (!node.hidden && app.currentItem) {
-    sendToEditor(app.currentItem.notes);
+    editorAPI?.setContent(app.currentItem.notes);
   }
 }
+
 export function close() {
+  const node = document.querySelector("#notes");
   if (node.hidden) {
     return;
   }
   node.hidden = true;
 }
-function onMessage(e) {
-  var _a;
-  if (!((_a = e.data) === null || _a === void 0 ? void 0 : _a.action)) {
+
+// Called by NotesEditor whenever the user edits the text.
+export function onEditorChange(text) {
+  if (!app.currentItem) {
     return;
   }
-  switch (e.data.action) {
-    case "renderedMarkdown":
-      previewInner.innerHTML = e.data.value;
-      break;
-    case "setContent":
-      app.currentItem.notes = e.data.value.trim();
-      updatePreview(app.currentItem.notes);
-      pubsub.publish("item-change", app.currentItem); // trigger auto-save
-      break;
-    case "getContent":
-      if (app.currentItem) {
-        sendToEditor(app.currentItem.notes);
-      }
-      break;
-    case "closeEditor":
-      close();
-      break;
-  }
+  app.currentItem.notes = text.trim();
+  updatePreview(app.currentItem.notes);
+  pubsub.publish("item-change", app.currentItem); // trigger auto-save
 }
+
 export function init() {
+  previewEl = document.createElement("div");
+  previewEl.id = "note-preview";
+  previewEl.hidden = true;
+  previewEl.innerHTML = '<div id="note-preview-inner"></div>';
+  document.querySelector("main").appendChild(previewEl);
+  previewInner = previewEl.querySelector("#note-preview-inner");
+
   pubsub.subscribe("item-select", (_message, publisher) => {
-    sendToEditor(publisher.notes);
+    editorAPI?.setContent(publisher.notes);
     updatePreview(publisher.notes);
   });
-  window.addEventListener("message", onMessage);
 }

@@ -9,17 +9,16 @@
    ------------------------------------------------------------- */
 :root {
   /* Layout */
-  --help-pane-width:  250px;
+  --help-pane-width: 250px;
 
   /* Note-preview watermark */
   --color-preview-ink: rgba(90, 60, 30, 0.95);
 
   /* Dividers */
-  --color-border:      rgba(0, 0, 0, 0.07);
-  --color-border-mid:  rgba(0, 0, 0, 0.10);
+  --color-border: rgba(0, 0, 0, 0.07);
+  --color-border-mid: rgba(0, 0, 0, 0.1);
   --color-border-menu: rgba(0, 0, 0, 0.12);
 }
-
 
 /* -------------------------------------------------------------
    Base / reset
@@ -67,7 +66,6 @@ button:not(:disabled) {
   z-index: 1;
 }
 
-
 /* -------------------------------------------------------------
    Pane — shared base
    ------------------------------------------------------------- */
@@ -78,7 +76,7 @@ button:not(:disabled) {
   height: 100%;
   background-color: var(--color-pane);
   width: 200px;
-  box-shadow: -3px 0 12px rgba(0, 0, 0, 0.20);
+  box-shadow: -3px 0 12px rgba(0, 0, 0, 0.2);
   -webkit-transition: -webkit-transform 500ms;
   transition: transform 500ms;
   z-index: 5;
@@ -170,7 +168,7 @@ button:not(:disabled) {
   display: block;
 }
 
-.pane#ui button[data-command=notes] {
+.pane#ui button[data-command="notes"] {
   position: absolute;
   left: -90px;
   top: 5px;
@@ -200,7 +198,6 @@ button:not(:disabled) {
   transform: scale(1.3);
 }
 
-
 /* -------------------------------------------------------------
    Pane — #ui footer (save timestamp display)
    ------------------------------------------------------------- */
@@ -225,7 +222,6 @@ button:not(:disabled) {
   opacity: 1;
   padding-left: 2px;
 }
-
 
 /* -------------------------------------------------------------
    Pane — #help
@@ -263,7 +259,6 @@ button:not(:disabled) {
   padding-right: 16px;
 }
 
-
 /* -------------------------------------------------------------
    Pane — #io (close / save)
    ------------------------------------------------------------- */
@@ -277,24 +272,23 @@ button:not(:disabled) {
   opacity: 0.6;
   border-radius: 3px;
   color: var(--color-accent);
-  transition: opacity 80ms ease, background-color 80ms ease;
+  transition:
+    opacity 80ms ease,
+    background-color 80ms ease;
 }
-
 
 .pane#io button:hover {
   opacity: 1;
   background: var(--color-hover);
 }
 
-
 .pane#io button.go {
   font-weight: bold;
   opacity: 0.85;
 }
 
-
 /* -------------------------------------------------------------
-   Pane — #notes (iframe wrapper)
+   Pane — #notes (notes editor)
    ------------------------------------------------------------- */
 .pane#notes {
   width: 50%;
@@ -302,10 +296,9 @@ button:not(:disabled) {
   flex-direction: column;
 }
 
-.pane#notes iframe {
-  border: 0;
-  width: 100%;
+.pane#notes #notes-editor {
   flex: auto;
+  min-height: 0;
 }
 
 /* On narrow screens, display the notes pane as a bottom sheet
@@ -317,7 +310,7 @@ button:not(:disabled) {
     top: auto;
     bottom: 0;
     right: 0;
-    box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.20);
+    box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.2);
   }
 
   /* Slide down to hide instead of sliding right. */
@@ -325,7 +318,6 @@ button:not(:disabled) {
     transform: translate(0, 100%);
   }
 }
-
 
 /* -------------------------------------------------------------
    Context menu
@@ -366,7 +358,6 @@ button:not(:disabled) {
   margin: 3px 0;
 }
 
-
 /* -------------------------------------------------------------
    Note preview (background watermark)
    ------------------------------------------------------------- */
@@ -400,15 +391,35 @@ button:not(:disabled) {
   pointer-events: none;
 }
 
-#note-preview-inner h1 { font-size: 2em;   margin: 0.3em 0; }
-#note-preview-inner h2 { font-size: 1.5em; margin: 0.3em 0; }
-#note-preview-inner h3 { font-size: 1.2em; margin: 0.3em 0; }
-#note-preview-inner p  { font-size: 1em;   margin: 0.3em 0; }
-#note-preview-inner ul { margin: 0.3em 0; padding-left: 1.5em; }
-#note-preview-inner img { max-width: 200px; height: auto; opacity: 0.2; }
+#note-preview-inner h1 {
+  font-size: 2em;
+  margin: 0.3em 0;
+}
+#note-preview-inner h2 {
+  font-size: 1.5em;
+  margin: 0.3em 0;
+}
+#note-preview-inner h3 {
+  font-size: 1.2em;
+  margin: 0.3em 0;
+}
+#note-preview-inner p {
+  font-size: 1em;
+  margin: 0.3em 0;
+}
+#note-preview-inner ul {
+  margin: 0.3em 0;
+  padding-left: 1.5em;
+}
+#note-preview-inner img {
+  max-width: 200px;
+  height: auto;
+  opacity: 0.2;
+}
 
-#note-preview[hidden] { display: none; }
-
+#note-preview[hidden] {
+  display: none;
+}
 
 /* -------------------------------------------------------------
    Icon buttons — shared base
@@ -425,7 +436,10 @@ button:not(:disabled) {
   align-items: center;
   justify-content: center;
   opacity: 0.65;
-  transition: opacity 80ms ease, background-color 80ms ease, left 0.5s;
+  transition:
+    opacity 80ms ease,
+    background-color 80ms ease,
+    left 0.5s;
 }
 
 .icon-btn:hover {
@@ -463,7 +477,6 @@ body:has(#help:not([hidden])) #help-btn {
   left: var(--help-pane-width);
 }
 
-
 /* -------------------------------------------------------------
    Loading spinner
    ------------------------------------------------------------- */
@@ -474,10 +487,11 @@ body:has(#help:not([hidden])) #help-btn {
   width: 40px;
   height: 40px;
   z-index: 9999;
-  animation: sk-rotate 2.0s infinite linear;
+  animation: sk-rotate 2s infinite linear;
 }
 
-.dot1, .dot2 {
+.dot1,
+.dot2 {
   width: 60%;
   height: 60%;
   display: inline-block;
@@ -485,22 +499,30 @@ body:has(#help:not([hidden])) #help-btn {
   top: 0;
   background-color: var(--color-accent);
   border-radius: 100%;
-  animation: sk-bounce 2.0s infinite ease-in-out;
+  animation: sk-bounce 2s infinite ease-in-out;
 }
 
 .dot2 {
   top: auto;
   bottom: 0;
-  animation-delay: -1.0s;
+  animation-delay: -1s;
 }
 
-@keyframes sk-rotate { 100% { transform: rotate(360deg); } }
+@keyframes sk-rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
 
 @keyframes sk-bounce {
-  0%, 100% { transform: scale(0.0); }
-  50%       { transform: scale(1.0); }
+  0%,
+  100% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1);
+  }
 }
-
 
 /* -------------------------------------------------------------
    Print
