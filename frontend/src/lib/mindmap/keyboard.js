@@ -1,11 +1,18 @@
-// src/keyboard.ts
+// frontend/src/lib/mindmap/keyboard.js
 import * as ui from "./ui/ui.js";
 import { repo as commandRepo } from "./command/command.js";
+
 function handleEvent(e) {
   // Ignore key events that are part of IME composition (e.g. Japanese input).
   // Without this check, pressing Enter to confirm an IME candidate would also
   // trigger the app's "finish editing" command — particularly visible in Firefox.
   if (e.isComposing) {
+    return;
+  }
+  // Some other part of the UI (title bar, notes editor, property panel, ...)
+  // currently has keyboard focus: let it handle the event and do not treat
+  // this keystroke as a mindmap shortcut.
+  if (ui.isActive()) {
     return;
   }
   // For modifier-based shortcuts, always prevent browser interception
@@ -14,10 +21,6 @@ function handleEvent(e) {
   );
   if (isModifierShortcut) {
     e.preventDefault();
-  }
-  // Ignore keyboard when the activeElement resides somewhere inside of the UI pane
-  if (ui.isActive()) {
-    return;
   }
   let command = [...commandRepo.values()].find((command) => {
     if (!command.isValid) {
@@ -30,6 +33,7 @@ function handleEvent(e) {
     command.execute(e);
   }
 }
+
 export function init() {
   window.addEventListener("keydown", handleEvent);
   window.focus();

@@ -63,12 +63,22 @@ function onSaveDone() {
 }
 export function isActive() {
   const active = document.activeElement;
-  const needsKeyboard =
+  if (
     active instanceof HTMLInputElement ||
     active instanceof HTMLSelectElement ||
-    active instanceof HTMLTextAreaElement;
-  return (needsKeyboard && node.contains(active)) || io.isActive();
+    active instanceof HTMLTextAreaElement
+  ) {
+    return true;
+  }
+  // The mindmap engine's own item-text editing is a contentEditable div;
+  // any other contentEditable region belongs to some other part of the UI
+  // (and should not receive mindmap shortcuts).
+  if (active?.isContentEditable && active !== app.currentItem?.dom.text) {
+    return true;
+  }
+  return io.isActive();
 }
+
 export function toggle() {
   node.hidden = !node.hidden;
   pubsub.publish("ui-change");
