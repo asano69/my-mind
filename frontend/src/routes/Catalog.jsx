@@ -1,5 +1,5 @@
 import { createResource, For, Show } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+
 import pb from "../lib/pb";
 
 async function fetchMaps() {
@@ -13,7 +13,7 @@ async function fetchMaps() {
 
 export default function Catalog() {
   const [maps] = createResource(fetchMaps);
-  const navigate = useNavigate();
+
 
   return (
     <div class="min-h-screen bg-bg p-8 text-text">
@@ -21,7 +21,7 @@ export default function Catalog() {
         <div class="mb-6 flex items-center justify-between">
           <h1 class="font-serif text-3xl">my-mind</h1>
           <button
-            onClick={() => navigate("/")}
+             onClick={() => (window.location.href = "/")}
             class="rounded-md border border-pane-hover bg-pane px-4 py-2 text-sm hover:bg-pane-hover"
           >
             New map
@@ -38,7 +38,7 @@ export default function Catalog() {
                 <For each={maps()}>
                   {(map) => (
                     <button
-                      onClick={() => navigate(`/maps/${map.uuid}`)}
+                         onClick={() => (window.location.href = `/maps/${map.uuid}`)}
                       class="flex flex-col overflow-hidden rounded-md border
                         border-pane-hover bg-pane text-left shadow-card
                         transition hover:bg-pane-hover"
