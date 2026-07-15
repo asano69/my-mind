@@ -863,6 +863,21 @@ func init() {
 						"autogeneratePattern": "",
 						"help": "",
 						"hidden": false,
+						"id": "text54863248",
+						"max": 0,
+						"min": 0,
+						"name": "svg",
+						"pattern": "",
+						"presentable": false,
+						"primaryKey": false,
+						"required": false,
+						"system": false,
+						"type": "text"
+					},
+					{
+						"autogeneratePattern": "",
+						"help": "",
+						"hidden": false,
 						"id": "text3514781862",
 						"max": 0,
 						"min": 0,
@@ -896,7 +911,9 @@ func init() {
 					}
 				],
 				"id": "pbc_1612934933",
-				"indexes": [],
+				"indexes": [
+					"CREATE UNIQUE INDEX ` + "`" + `idx_kgrbxq0uq9` + "`" + ` ON ` + "`" + `maps` + "`" + ` (` + "`" + `uuid` + "`" + `)"
+				],
 				"listRule": "",
 				"name": "maps",
 				"system": false,
