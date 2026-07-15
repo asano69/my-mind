@@ -11,8 +11,7 @@ services:
       - ./data:/app/maps
     restart: unless-stopped
     environment:
-      PORT: 3000
-      TZ: Asia/Tokyo
+      TZ: Europe/London
     networks:
       - traefik_net
     labels:
