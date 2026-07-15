@@ -32,3 +32,7 @@ export async function loadByUuid(uuid) {
 export async function updateTitle(id, title) {
   return pb.collection(COLLECTION).update(id, { title });
 }
+
+export async function deleteMap(id) {
+  return pb.collection(COLLECTION).delete(id);
+}
