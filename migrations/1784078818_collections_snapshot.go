@@ -840,7 +840,7 @@ func init() {
 						"id": "text1579384326",
 						"max": 0,
 						"min": 0,
-						"name": "name",
+						"name": "title",
 						"pattern": "",
 						"presentable": false,
 						"primaryKey": false,
