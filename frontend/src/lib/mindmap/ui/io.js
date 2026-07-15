@@ -56,7 +56,7 @@ export function init() {
     }
     autoSaveTimeout = setTimeout(() => {
       autoSaveTimeout = null;
-      save();
+      save(false); // auto-save: skip SVG generation/transfer
     }, AUTO_SAVE_DELAY_MS);
   });
 }
@@ -126,7 +126,7 @@ function submit() {
   save();
 }
 
-async function save() {
+async function save(includeSvg = true) {
   if (saveInFlight) {
     saveAgainRequested = true;
     return;
@@ -135,25 +135,30 @@ async function save() {
   try {
     do {
       saveAgainRequested = false;
-      await performSave();
+      await performSave(includeSvg);
     } while (saveAgainRequested);
   } finally {
     saveInFlight = false;
   }
 }
 
-async function performSave() {
+async function performSave(includeSvg) {
   const map = app.currentMap;
   const mymind = map.toJSON();
   // Use the explicitly-set title if present; otherwise fall back to the
   // root node's name (only relevant for maps that have never had a
   // custom title set).
   const title = currentTitle || map.name;
-  let svg = "";
-  try {
-    svg = serializeCurrentMap().xml;
-  } catch (e) {
-    console.warn("failed to generate SVG snapshot:", e);
+  // SVG snapshot generation is somewhat expensive and only needed for the
+  // catalog page thumbnail, so it's skipped on auto-save (includeSvg=false)
+  // and only computed when the user explicitly saves.
+  let svg;
+  if (includeSvg) {
+    try {
+      svg = serializeCurrentMap().xml;
+    } catch (e) {
+      console.warn("failed to generate SVG snapshot:", e);
+    }
   }
   try {
     const record = await backend.save(currentMapId, title, mymind, svg);
@@ -163,7 +168,6 @@ async function performSave() {
     error(e);
   }
 }
-
 function setCurrentMap(record) {
   currentMapId = record ? record.id : null;
   currentMapUuid = record ? record.uuid : null;
