@@ -2,7 +2,7 @@ import { render } from "solid-js/web";
 import { Router, Route } from "@solidjs/router";
 import { createSignal, onCleanup, Show } from "solid-js";
 
-// Order matters: tokens.css defines the CSS custom properties every other
+// Order matters: style.css defines the CSS custom properties every other
 // stylesheet consumes via var().
 import "./style.css";
 import Home from "./routes/Home";
