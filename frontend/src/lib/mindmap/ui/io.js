@@ -6,6 +6,9 @@ import MindMap from "../map.js";
 
 let currentMapId = null; // PocketBase record id, used for save/update calls
 let currentMapUuid = null; // public uuid, used in the URL
+// PocketBase "title" field. Kept independent of the root node's text
+// (which is exposed separately as map.name) — see title.js.
+let currentTitle = "";
 
 let autoSaveTimeout = null;
 let lastSaveTime = null;
@@ -59,7 +62,7 @@ export async function restore() {
   }
   app.setThrobber(true);
   try {
-    const record = await backend.loadByUuid(match[1]);
+    const record = await backend.save(currentMapId, currentTitle, mymind);
     setCurrentMap(record);
     app.setThrobber(false);
     app.showMap(MindMap.fromJSON(record.mymind));
@@ -69,10 +72,24 @@ export async function restore() {
   }
 }
 
-// Placeholder until a dedicated title-input component exists (see CLAUDE.md
-// "Work in progress"). Title is meant to be settable independently of the
-// root node's text, but until that UI is built, every save just uses this.
-const PLACEHOLDER_TITLE = "Untitled";
+export function getTitle() {
+  return currentTitle;
+}
+
+// Renames the map's title (the "title" field stored in PocketBase),
+// independent of the mindmap's root node text. Saves immediately if the
+// map has already been saved once; otherwise the new title just carries
+// into the next save.
+export async function setTitle(title) {
+  if (title === currentTitle) {
+    return;
+  }
+  currentTitle = title;
+  pubsub.publish("title-change", currentTitle);
+  if (currentMapId) {
+    await save();
+  }
+}
 
 export function show() {
   node.hidden = false;
@@ -102,7 +119,7 @@ async function save() {
   const map = app.currentMap;
   const mymind = map.toJSON();
   try {
-    const record = await backend.save(currentMapId, PLACEHOLDER_TITLE, mymind);
+    const record = await backend.save(currentMapId, map.name, mymind);
     setCurrentMap(record);
     app.setThrobber(false);
     pubsub.publish("save-done");
@@ -114,6 +131,8 @@ async function save() {
 function setCurrentMap(record) {
   currentMapId = record ? record.id : null;
   currentMapUuid = record ? record.uuid : null;
+  currentTitle = record ? record.title || "" : "";
+  pubsub.publish("title-change", currentTitle);
   updateURL();
 }
 
