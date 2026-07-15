@@ -57,7 +57,19 @@
 ### Phase 0 — 準備・回帰テストの土台
 - 現状のバグを実証する失敗テストを先に書く（CLAUDE.mdのルール通り）。例：jsdom上で `keyboard.init()` を2回呼び、1回の `keydown` で command が2回実行されることを確認するテスト。
 - 影響モジュールの棚卸しリスト（本メッセージのAppendix相当）をIssue化。
-- この段階ではコード変更なし。
+
+| Phase | モジュール | 症状 |
+|---|---|---|
+| 1 | `pubsub.js` | `reset()` が無く、購読が蓄積する（本ファイルの回帰テスト対象） |
+| 1 | `history.js` | 既に `reset()` あり。unmount時の呼び出し義務化のみ |
+| 2 | `ui/color.js`, `ui/text-color.js`, `ui/value.js`, `ui/status.js`, `ui/shape.js`, `ui/layout.js` | module スコープの `querySelector`、`dispose()` なし |
+| 3 | `ui/help.js`, `ui/notes.js`, `ui/context-menu.js`, `ui/io.js`, `ui/file-switcher.js` | `io.js` の `setInterval`/`setTimeout` がリマウントごとに増殖。`notes.js` は `previewEl` が毎回 append される |
+| 4 | `keyboard.js`, `mouse.js`, `clipboard.js`, `title.js` | グローバルリスナー未解除。`title.js` は無名関数購読で本テストの対象 |
+| 5 | `ui/ui.js` | 子モジュールの `dispose()` を集約する場所が無い |
+| 6 | `map.js` | `init()` の CSS fetch がリマウントごとに再実行される |
+| 7 | `my-mind.js` | 無条件の `boot()`。`mount()`/`unmount()` への分割が必要 |
+| 8 | `MindMapCanvas.jsx` | `document.querySelector("main")` への暗黙依存 |
+
 
 ### Phase 1 — 基盤ユーティリティ：`pubsub.js`, `history.js`
 - `pubsub.js` に `reset()` を追加（`subscribers.clear()`）。
