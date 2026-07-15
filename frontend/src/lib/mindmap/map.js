@@ -1,4 +1,4 @@
-// src/map.ts
+// src/map.js
 import Item from "./item.js";
 import { repo as layoutRepo } from "./layout/layout.js";
 import { br2nl } from "./format/format.js";
@@ -274,6 +274,12 @@ export default class Map {
   }
 }
 export async function init() {
+  // Skip the fetch on every remount: css is a module-level cache that
+  // survives across mount/unmount cycles (map.css never changes at
+  // runtime), so only the very first mount needs to fetch it.
+  if (css) {
+    return;
+  }
   let response = await fetch("/map.css");
   css = await response.text();
 }

@@ -19,8 +19,9 @@ import * as clipboard from "./clipboard.js";
 import * as title from "./title.js";
 import * as ui from "./ui/ui.js";
 
-const port = document.querySelector("main");
-const spinner = document.querySelector(".spinner");
+let port = null;
+let spinner = null;
+let mounted = false;
 
 export let currentMap = null;
 export let currentItem = null;
@@ -128,7 +129,17 @@ function handleResize() {
   currentMap && currentMap.ensureItemVisibility(currentItem);
 }
 
-async function boot() {
+// Boots the whole engine into `root` (the <main> element). Safe to call
+// only once per unmount(): a second call while already mounted is a no-op,
+// since remounting on top of live listeners/state would double them up.
+export async function mount(root) {
+  if (mounted) {
+    return;
+  }
+  mounted = true;
+  port = root;
+  spinner = document.querySelector(".spinner");
+
   setThrobber(true);
   await initMapCSS();
   pubsub.subscribe("ui-change", handleResize);
@@ -143,4 +154,29 @@ async function boot() {
   setThrobber(false);
 }
 
-boot();
+// Tears down everything mount() set up, in reverse order, so a subsequent
+// mount() starts from a clean slate. Safe to call only when mounted.
+export function unmount() {
+  if (!mounted) {
+    return;
+  }
+  window.removeEventListener("resize", handleResize);
+  ui.dispose();
+  title.dispose();
+  mouse.dispose();
+  keyboard.dispose();
+  clipboard.dispose();
+  pubsub.reset();
+  history.reset();
+  currentMap?.hide();
+
+  currentMap = null;
+  currentItem = null;
+  editing = false;
+  selectedItems.clear();
+  selectionCursor = null;
+
+  port = null;
+  spinner = null;
+  mounted = false;
+}
