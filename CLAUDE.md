@@ -28,3 +28,4 @@
 
 
 # Work in progress
+- Catalog.jsxとMindMapCanvas.jsxを軽快に切り替えられるように、本格的なSPA化する。my-mind.js 自体をアンマウント安全（cleanup + 再 boot 可能）に作り直すために、シングルトンの状態を持つモジュール群（mouse.js, keyboard.js, io.js, ui.js …）すべてに手を入れる
