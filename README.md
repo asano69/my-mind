@@ -16,7 +16,7 @@ New to Mind maps? They are useful, aesthetic and cool! Read more about these spe
 - 各マインドマップにIDを降る（現状、名前ベースで不安定）
 - CSRに移行する。マインドマップの切り替えはもっとスムーズであるべき。
 - データの保存は、WebDAVのような不安定なものではなく、PocketBaseを使う。
-- 最終ゴールは、Mindmapライブラリを、Solidのリアクティブな状態管理に書き換える
+- できればやりたいことは、Mindmapライブラリを、Solidのリアクティブな状態管理に書き換える。ただし、やらなくてもよい。
 
 - [x] vite 開発サーバでフロントエンドを動かす
 - [x] vite 開発サーバから、バックエンド起動時にデータを保存できるようにする
