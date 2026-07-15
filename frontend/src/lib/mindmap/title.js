@@ -25,7 +25,11 @@ export function init() {
 
 // Called by my-mind.js's unmount(). The "title-change" subscription itself
 // is torn down by unmount()'s later pubsub.reset() call, so this only
-// needs to drop the reference to the (now-unmounted) TitleBar's API.
+// needs to drop the reference to the (now-unmounted) TitleBar's API and
+// reset the browser tab title. Without this, navigating back to the
+// catalog via SPA routing (no full page reload) would leave the last
+// opened map's title showing in the tab.
 export function dispose() {
+  document.title = "my-mind";
   inputAPI = null;
 }

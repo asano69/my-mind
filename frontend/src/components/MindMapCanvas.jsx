@@ -1,3 +1,4 @@
+import { A } from "@solidjs/router";
 import NotesEditor from "./NotesEditor";
 import PropertyPanel from "./PropertyPanel";
 import SaveDialog from "./SaveDialog";
@@ -8,8 +9,6 @@ import { onMount, onCleanup } from "solid-js";
 
 export default function MindMapCanvas() {
   let mainRef;
-  // Cached after onMount's dynamic import, so onCleanup can call the same
-  // module instance's unmount() without re-importing.
   let engine;
 
   onMount(async () => {
@@ -24,9 +23,9 @@ export default function MindMapCanvas() {
   return (
     <>
       <main ref={mainRef}>
-        <a href="/catalog" id="catalog-link" class="icon-btn" title="Catalog">
+        <A href="/catalog" id="catalog-link" class="icon-btn" title="Catalog">
           <img src="/icon/catalog.png" alt="Catalog" />
-        </a>
+        </A>
       </main>
 
       <TitleBar />
