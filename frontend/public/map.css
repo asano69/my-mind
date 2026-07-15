@@ -12,7 +12,7 @@
   --node-border-width: 2px;
 
   /* Node shadow (default) */
-  --node-shadow: 3px 5px 14px rgba(0, 0, 0, 0.20);
+  --node-shadow: 3px 5px 14px rgba(0, 0, 0, 0.2);
 
   /* Node shadow (hover) */
   --node-shadow-hover: 4px 7px 18px rgba(0, 0, 0, 0.45);
@@ -21,22 +21,21 @@
   --underline-hover-outline: 0 0 0 1px rgba(200, 180, 0, 0.5);
 
   /* Underline hover: yellow tint background */
-  --underline-hover-bg: rgba(255, 255, 200, 0.40);
+  --underline-hover-bg: rgba(255, 255, 200, 0.4);
 
   /* Selected node (current) background */
-  --node-bg-current: rgba(255, 255, 187, 0.50);
+  --node-bg-current: rgba(255, 255, 187, 0.5);
 
   /* Selected node shadow */
-  --node-shadow-current: 3px 5px 14px rgba(0, 0, 0, 0.20);
+  --node-shadow-current: 3px 5px 14px rgba(0, 0, 0, 0.2);
 
   /* Toggle button color */
   --toggle-color: #999999;
 
   /* Status icon colors */
-  --status-yes-color: #2CA02C;
-  --status-no-color:  #D62728;
+  --status-yes-color: #2ca02c;
+  --status-no-color: #d62728;
 }
-
 
 /* -------------------------------------------------------------
    Base
@@ -44,7 +43,6 @@
 * {
   font-family: var(--font-sans);
 }
-
 
 /* -------------------------------------------------------------
    Root node (top level, direct child of SVG)
@@ -62,7 +60,6 @@ svg > .item > .toggle {
 svg > .item > .item > foreignObject > .content {
   font-size: 120%;
 }
-
 
 /* -------------------------------------------------------------
    General .item styles
@@ -107,8 +104,12 @@ svg > .item > .item > foreignObject > .content {
   opacity: 0.7;
 }
 
-.item .value:not(:empty)::before { content: "("; }
-.item .value:not(:empty)::after  { content: ")"; }
+.item .value:not(:empty)::before {
+  content: "(";
+}
+.item .value:not(:empty)::after {
+  content: ")";
+}
 
 /* Status icons */
 .item .status {
@@ -137,7 +138,7 @@ svg > .item > .item > foreignObject > .content {
 
 .item .toggle circle {
   stroke: var(--toggle-color);
-  fill:   var(--toggle-color);
+  fill: var(--toggle-color);
 }
 
 .item .toggle path {
@@ -153,43 +154,43 @@ svg > .item > .item > foreignObject > .content {
 .item .notes {
   width: 20px;
   height: 20px;
-  background: url("../img/notes-indicator.png") right center no-repeat;
+  background: url("../icon/notes-indicator.png") right center no-repeat;
   position: absolute;
   top: 0px;
   right: 0px;
   opacity: 0.4;
 }
 
-
-
 /* -------------------------------------------------------------
    Shape styles — shared (box + ellipse)
    ------------------------------------------------------------- */
-:is([data-shape=box], [data-shape=ellipse]) > foreignObject > .content {
+:is([data-shape="box"], [data-shape="ellipse"]) > foreignObject > .content {
   background:
     /* Top gloss highlight — bright specular spot, offset slightly left */
     radial-gradient(
       ellipse 55% 35% at 40% 18%,
       rgba(255, 255, 255, 0.72) 0%,
-      rgba(255, 255, 255, 0.0)  100%
+      rgba(255, 255, 255, 0) 100%
     ),
     color-mix(in srgb, var(--item-color, #f0f0f0) 18%, #ffffff);
   border: var(--node-border-width) solid
     color-mix(in srgb, var(--item-color, transparent) 60%, #555555);
   box-shadow:
     var(--node-shadow),
-    0 3px 8px  rgba(0, 0, 0, 0.14),   /* outer lift shadow */
-    0 1px 2px  rgba(0, 0, 0, 0.08),   /* outer contact shadow */
-    inset 0 -2px 6px rgba(0, 0, 0, 0.06);    /* bottom shade, very subtle */
-  transition: box-shadow 120ms ease, transform 120ms ease;
+    0 3px 8px rgba(0, 0, 0, 0.14),
+    /* outer lift shadow */ 0 1px 2px rgba(0, 0, 0, 0.08),
+    /* outer contact shadow */ inset 0 -2px 6px rgba(0, 0, 0, 0.06); /* bottom shade, very subtle */
+  transition:
+    box-shadow 120ms ease,
+    transform 120ms ease;
 }
 
-[data-shape=box] > foreignObject > .content {
+[data-shape="box"] > foreignObject > .content {
   padding: 0.2em 0.55em;
   border-radius: 4px;
 }
 
-[data-shape=ellipse] > foreignObject > .content {
+[data-shape="ellipse"] > foreignObject > .content {
   padding: 0.4em 1.1em;
   border-radius: 50%;
 }
@@ -197,61 +198,62 @@ svg > .item > .item > foreignObject > .content {
 /* -------------------------------------------------------------
    Hover — lift effect
    ------------------------------------------------------------- */
-:is([data-shape=box], [data-shape=ellipse]) > foreignObject > .content:hover {
+:is([data-shape="box"], [data-shape="ellipse"])
+  > foreignObject
+  > .content:hover {
   box-shadow: var(--node-shadow-hover);
   transform: translateY(-2px);
 }
 
-[data-shape=underline] > foreignObject > .content:hover {
+[data-shape="underline"] > foreignObject > .content:hover {
   background: var(--underline-hover-bg);
   box-shadow: var(--underline-hover-outline);
   transform: translateY(-2px);
   border-radius: 3px;
 }
 
-
 /* -------------------------------------------------------------
    Selected node (current) highlight
    ------------------------------------------------------------- */
-[data-shape=box].item.current     > foreignObject > .content,
-[data-shape=ellipse].item.current > foreignObject > .content {
+[data-shape="box"].item.current > foreignObject > .content,
+[data-shape="ellipse"].item.current > foreignObject > .content {
   background:
     /* Top gloss highlight — preserved from base style */
     radial-gradient(
       ellipse 55% 35% at 40% 18%,
       rgba(255, 255, 255, 0.72) 0%,
-      rgba(255, 255, 255, 0.0)  100%
+      rgba(255, 255, 255, 0) 100%
     ),
     /* Selection tint — yellow blended with item color.
        Adjust the second percentage to control yellow intensity:
        0% = item color only, 100% = solid yellow (#ffffbb) */
     color-mix(
-      in srgb,
-      color-mix(in srgb, var(--item-color, #f0f0f0) 18%, #ffffff) 25%,
-      rgb(255, 255, 187) 55%
-    );
+        in srgb,
+        color-mix(in srgb, var(--item-color, #f0f0f0) 18%, #ffffff) 25%,
+        rgb(255, 255, 187) 55%
+      );
   box-shadow:
     var(--node-shadow-current),
-    0 3px 8px  rgba(0, 0, 0, 0.14),   /* outer lift shadow */
-    0 1px 2px  rgba(0, 0, 0, 0.08),   /* outer contact shadow */
-    inset 0 -2px 6px rgba(0, 0, 0, 0.06);  /* bottom shade, very subtle */
+    0 3px 8px rgba(0, 0, 0, 0.14),
+    /* outer lift shadow */ 0 1px 2px rgba(0, 0, 0, 0.08),
+    /* outer contact shadow */ inset 0 -2px 6px rgba(0, 0, 0, 0.06); /* bottom shade, very subtle */
   /* mix-blend-mode removed — it was flattening out the gloss */
 }
 
-[data-shape=underline].item.current > foreignObject > .content {
+[data-shape="underline"].item.current > foreignObject > .content {
   background: rgba(255, 255, 187, 0.75);
   box-shadow: 0 0 0 1px rgba(180, 160, 0, 0.55);
   border-radius: 3px;
 }
 
-
 /* Hover lift is preserved for selected nodes */
-[data-shape=box].item.current     > foreignObject > .content:hover,
-[data-shape=ellipse].item.current > foreignObject > .content:hover {
+[data-shape="box"].item.current > foreignObject > .content:hover,
+[data-shape="ellipse"].item.current > foreignObject > .content:hover {
   box-shadow:
-    var(--node-shadow-current), var(--node-shadow-hover),
-    0 3px 8px  rgba(0, 0, 0, 0.14),
-    0 1px 2px  rgba(0, 0, 0, 0.08),
+    var(--node-shadow-current),
+    var(--node-shadow-hover),
+    0 3px 8px rgba(0, 0, 0, 0.14),
+    0 1px 2px rgba(0, 0, 0, 0.08),
     inset 0 -2px 6px rgba(0, 0, 0, 0.06);
   transform: translateY(-2px);
 }
@@ -260,13 +262,13 @@ svg > .item > .item > foreignObject > .content {
    Multi-selected items (.selected) — Ctrl/Cmd+click additions.
    Same yellow tint as .current, with gloss gradient preserved.
    ------------------------------------------------------------- */
-[data-shape=box].item.selected     > foreignObject > .content,
-[data-shape=ellipse].item.selected > foreignObject > .content {
+[data-shape="box"].item.selected > foreignObject > .content,
+[data-shape="ellipse"].item.selected > foreignObject > .content {
   background:
     radial-gradient(
       ellipse 55% 35% at 40% 18%,
       rgba(255, 255, 255, 0.72) 0%,
-      rgba(255, 255, 255, 0.0)  100%
+      rgba(255, 255, 255, 0) 100%
     ),
     color-mix(
       in srgb,
@@ -275,17 +277,18 @@ svg > .item > .item > foreignObject > .content {
     );
 }
 
-[data-shape=underline].item.selected > foreignObject > .content {
+[data-shape="underline"].item.selected > foreignObject > .content {
   background: rgba(255, 255, 187, 0.75);
   box-shadow: 0 0 0 1px rgba(180, 160, 0, 0.55);
   border-radius: 3px;
 }
 
-
 /* -------------------------------------------------------------
    Drag ghost badge — shown when multiple items are dragged
    ------------------------------------------------------------- */
-.ghost { position: relative; }
+.ghost {
+  position: relative;
+}
 
 .ghost-count {
   position: absolute;
@@ -308,14 +311,14 @@ svg > .item > .item > foreignObject > .content {
 /* -------------------------------------------------------------
    Text alignment (left / right)
    ------------------------------------------------------------- */
-[data-align=left] > foreignObject > .content > :not(.text):not(.notes) {
+[data-align="left"] > foreignObject > .content > :not(.text):not(.notes) {
   margin-right: 0.3em;
 }
 
-[data-align=right] > foreignObject > .content {
+[data-align="right"] > foreignObject > .content {
   flex-direction: row-reverse;
 }
 
-[data-align=right] > foreignObject > .content > :not(.text):not(.notes) {
+[data-align="right"] > foreignObject > .content > :not(.text):not(.notes) {
   margin-left: 0.3em;
 }
