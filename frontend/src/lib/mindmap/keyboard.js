@@ -1,4 +1,3 @@
-// frontend/src/lib/mindmap/keyboard.js
 import * as ui from "./ui/ui.js";
 import { repo as commandRepo } from "./command/command.js";
 
@@ -38,6 +37,13 @@ export function init() {
   window.addEventListener("keydown", handleEvent);
   window.focus();
 }
+
+// Called by my-mind.js's unmount(). Without this, remounting would leave
+// the previous mount's listener attached, firing every shortcut twice.
+export function dispose() {
+  window.removeEventListener("keydown", handleEvent);
+}
+
 function keyOK(key, e) {
   return Object.entries(key).every(([key, value]) => e[key] == value);
 }

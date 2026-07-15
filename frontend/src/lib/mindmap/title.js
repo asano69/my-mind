@@ -22,3 +22,10 @@ export function init() {
     inputAPI?.setValue(title);
   });
 }
+
+// Called by my-mind.js's unmount(). The "title-change" subscription itself
+// is torn down by unmount()'s later pubsub.reset() call, so this only
+// needs to drop the reference to the (now-unmounted) TitleBar's API.
+export function dispose() {
+  inputAPI = null;
+}

@@ -23,41 +23,77 @@ export function init(port_) {
   port = port_;
   port.addEventListener("touchstart", onDragStart);
   port.addEventListener("mousedown", onDragStart);
-  port.addEventListener("click", (e) => {
-    const me = e;
-    let item = app.currentMap.getItemFor(e.target);
-    if (app.editing && item == app.currentItem) {
-      return;
-    } // ignore on edited node
-    if (!item) {
-      return;
-    }
-    // Ctrl/Cmd+click toggles multi-selection; plain click replaces it
-    if (me.ctrlKey || me.metaKey) {
-      app.addToSelection(item);
-    } else {
-      app.selectItem(item);
-    }
-  });
-  port.addEventListener("dblclick", (e) => {
-    let item = app.currentMap.getItemFor(e.target);
-    item && commandRepo.get("edit").execute();
-  });
-  port.addEventListener("wheel", (e) => {
-    const { deltaY } = e;
-    if (!deltaY) {
-      return;
-    }
-    let dir = deltaY > 0 ? -1 : 1;
-    app.currentMap.adjustFontSize(dir);
-  });
-  port.addEventListener("contextmenu", (e) => {
-    onDragEnd(e);
-    e.preventDefault();
-    let item = app.currentMap.getItemFor(e.target);
-    item && app.selectItem(item);
-    menu.open([e.clientX, e.clientY]);
-  });
+  port.addEventListener("click", onClick);
+  port.addEventListener("dblclick", onDblClick);
+  port.addEventListener("wheel", onWheel);
+  port.addEventListener("contextmenu", onContextMenu);
+}
+// Called by my-mind.js's unmount(). Removes every listener registered by
+// init(), force-ends any drag in progress (so an orphaned ghost element
+// does not survive the unmount), and resets all module state.
+export function dispose() {
+  clearTimeout(touchContextTimeout);
+  if (current.ghost) {
+    current.ghost.remove();
+  }
+  port.removeEventListener("touchstart", onDragStart);
+  port.removeEventListener("mousedown", onDragStart);
+  port.removeEventListener("click", onClick);
+  port.removeEventListener("dblclick", onDblClick);
+  port.removeEventListener("wheel", onWheel);
+  port.removeEventListener("contextmenu", onContextMenu);
+  port.removeEventListener("mousemove", onDragMove);
+  port.removeEventListener("mouseup", onDragEnd);
+  port.removeEventListener("touchmove", onDragMove);
+  port.removeEventListener("touchend", onDragEnd);
+  port.style.cursor = "";
+  current = {
+    mode: "",
+    cursor: [],
+    items: [],
+    ghost: null,
+    ghostPosition: [],
+    grabOffset: [0, 0],
+    ctrlHeld: false,
+    previousDragState: null,
+    pinchDistance: 0,
+  };
+  port = null;
+}
+function onClick(e) {
+  const me = e;
+  let item = app.currentMap.getItemFor(e.target);
+  if (app.editing && item == app.currentItem) {
+    return;
+  } // ignore on edited node
+  if (!item) {
+    return;
+  }
+  // Ctrl/Cmd+click toggles multi-selection; plain click replaces it
+  if (me.ctrlKey || me.metaKey) {
+    app.addToSelection(item);
+  } else {
+    app.selectItem(item);
+  }
+}
+function onDblClick(e) {
+  let item = app.currentMap.getItemFor(e.target);
+  item && commandRepo.get("edit").execute();
+}
+function onWheel(e) {
+  const { deltaY } = e;
+  if (!deltaY) {
+    return;
+  }
+  let dir = deltaY > 0 ? -1 : 1;
+  app.currentMap.adjustFontSize(dir);
+}
+function onContextMenu(e) {
+  onDragEnd(e);
+  e.preventDefault();
+  let item = app.currentMap.getItemFor(e.target);
+  item && app.selectItem(item);
+  menu.open([e.clientX, e.clientY]);
 }
 function onDragStart(e) {
   if (e.type == "touchstart" && "touches" in e && e.touches.length == 2) {

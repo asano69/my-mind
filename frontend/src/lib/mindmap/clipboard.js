@@ -1,4 +1,3 @@
-// src/clipboard.ts
 import Map from "./map.js";
 import * as app from "./my-mind.js";
 import * as ui from "./ui/ui.js";
@@ -10,6 +9,15 @@ export function init() {
   document.body.addEventListener("cut", onCopyCut);
   document.body.addEventListener("copy", onCopyCut);
   document.body.addEventListener("paste", onPaste);
+}
+// Called by my-mind.js's unmount(). Also clears any cut-in-progress state
+// so a remount does not resume an old cut/copy from the previous map.
+export function dispose() {
+  document.body.removeEventListener("cut", onCopyCut);
+  document.body.removeEventListener("copy", onCopyCut);
+  document.body.removeEventListener("paste", onPaste);
+  storedItems = [];
+  mode = "";
 }
 function onCopyCut(e) {
   if (ui.isActive() || app.editing) {
