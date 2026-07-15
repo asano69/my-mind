@@ -10,6 +10,10 @@ New to Mind maps? They are useful, aesthetic and cool! Read more about these spe
 
 <img src=".github/assets/sample-01.png" width="800">
 
+It has a catalog feature.
+
+<img src=".github/assets/sample-02.png" width="800">
+
 ## Plan
 
 - [ ] 後回し：Mindmapライブラリを、Solidのリアクティブな状態管理に書き換える。やらなくてよい。
