@@ -52,17 +52,16 @@ export function init() {
   });
 }
 
-// Maps are addressed by a public uuid via /maps/<uuid>, not by
-// PocketBase's own record id.
 export async function restore() {
   const match = location.pathname.match(/^\/maps\/([^/]+)$/);
   if (!match) {
     app.setThrobber(false);
     return;
   }
+  const uuid = match[1];
   app.setThrobber(true);
   try {
-    const record = await backend.save(currentMapId, currentTitle, mymind);
+    const record = await backend.loadByUuid(uuid);
     setCurrentMap(record);
     app.setThrobber(false);
     app.showMap(MindMap.fromJSON(record.mymind));
@@ -118,8 +117,12 @@ async function save() {
   app.setThrobber(true);
   const map = app.currentMap;
   const mymind = map.toJSON();
+  // Use the explicitly-set title if present; otherwise fall back to the
+  // root node's name (only relevant for maps that have never had a
+  // custom title set).
+  const title = currentTitle || map.name;
   try {
-    const record = await backend.save(currentMapId, map.name, mymind);
+    const record = await backend.save(currentMapId, title, mymind);
     setCurrentMap(record);
     app.setThrobber(false);
     pubsub.publish("save-done");
