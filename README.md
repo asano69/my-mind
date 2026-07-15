@@ -15,14 +15,12 @@ It has a catalog feature.
 <img src=".github/assets/sample-02.png" width="800">
 
 ## Plan
-
-- [ ] 後回し：Mindmapライブラリを、Solidのリアクティブな状態管理に書き換える。やらなくてよい。
 - [ ] データ保存コードの整理: マインドマップを保存する経路が2, 3種類ある。自動保存によるmymind形式のみのデータ転送と手動保存によるmymind+svgのデータ転送。保存部分だけ、ファイルを分割したほうがよさそう。
-- [ ] my-mind.js 自体をアンマウント安全（cleanup + 再 boot 可能）に作り直すために、シングルトンの状態を持つモジュール群（mouse.js, keyboard.js, io.js, ui.js …）すべてに手を入れる
+
 
 ## Work in Progress
-
-
+- [ ] my-mind.js アンマウント安全化
+- [ ] Mindmapライブラリを、Solidのリアクティブな状態管理に書き換える。
 
 ## Ref
 - [ondras/my-mind](https://github.com/ondras/my-mind)/ Demo: https://my-mind.github.io/
