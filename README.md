@@ -20,7 +20,7 @@ It has a catalog feature.
 
 ## Work in Progress
 - [x] my-mind.js アンマウント安全化
-- [ ] Mindmapライブラリを、Solidのリアクティブな状態管理に書き換える。
+- [ ] Mindmap Engine → Solid Reactive State: Migration Plan
 
 ## Ref
 - [ondras/my-mind](https://github.com/ondras/my-mind)/ Demo: https://my-mind.github.io/
