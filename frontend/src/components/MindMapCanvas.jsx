@@ -136,12 +136,6 @@ export default function MindMapCanvas() {
 
       <div id="io" class="pane" hidden>
         <h3>Save</h3>
-        <p>
-          <label>
-            <span>Name</span>
-            <input type="text" class="name" placeholder="my map" />
-          </label>
-        </p>
         <p class="row">
           <button class="go">Save</button>
           <button class="cancel">Cancel</button>

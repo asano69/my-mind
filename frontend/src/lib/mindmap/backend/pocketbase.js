@@ -8,11 +8,11 @@ const COLLECTION = "maps";
 // Creates a new record when id is falsy, otherwise updates the existing one.
 // mymind is a plain object (the map's JSON tree) — PocketBase stores it
 // natively in the "mymind" json field, no string (de)serialization needed.
-export async function save(id, name, mymind) {
+export async function save(id, title, mymind) {
   if (id) {
-    return pb.collection(COLLECTION).update(id, { name, mymind });
+    return pb.collection(COLLECTION).update(id, { title, mymind });
   }
-  return pb.collection(COLLECTION).create({ name, mymind });
+  return pb.collection(COLLECTION).create({ title, mymind });
 }
 
 export async function load(id) {

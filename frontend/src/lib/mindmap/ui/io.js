@@ -68,20 +68,13 @@ export async function restore() {
   }
 }
 
-// Always opens the "save" dialog: with the PocketBase backend, loading a
-// map by name is handled by the file-switcher (Ctrl+K) instead, so this
-// panel only ever needs to support saving/renaming.
+// Placeholder until a dedicated title-input component exists (see CLAUDE.md
+// "Work in progress"). Title is meant to be settable independently of the
+// root node's text, but until that UI is built, every save just uses this.
+const PLACEHOLDER_TITLE = "Untitled";
+
 export function show() {
   node.hidden = false;
-  requestAnimationFrame(() => {
-    const input = node.querySelector(".name");
-    if (!input) {
-      return;
-    }
-    input.value = app.currentMap.name || "";
-    input.focus();
-    input.select();
-  });
 }
 
 export function hide() {
@@ -106,11 +99,9 @@ function submit() {
 async function save() {
   app.setThrobber(true);
   const map = app.currentMap;
-  const input = node.querySelector(".name");
-  const name = (input && input.value.trim()) || map.name;
   const mymind = map.toJSON();
   try {
-    const record = await backend.save(currentMapId, name, mymind);
+    const record = await backend.save(currentMapId, PLACEHOLDER_TITLE, mymind);
     setCurrentMap(record.id);
     app.setThrobber(false);
     pubsub.publish("save-done");
