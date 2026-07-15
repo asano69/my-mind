@@ -111,7 +111,7 @@ export default function Catalog() {
                       >
                         <Show when={!editMode() && map.pin}>
                           <span class="absolute top-1 right-1 text-sm drop-shadow">
-                            📌
+                            📍
                           </span>
                         </Show>
 
@@ -126,7 +126,7 @@ export default function Catalog() {
         justify-center  text-sm             "
                             classList={{ "opacity-30": !map.pin }}
                           >
-                            📌
+                            📍
                           </button>
                           <button
                             onClick={(e) => {
