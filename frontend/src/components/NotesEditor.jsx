@@ -81,7 +81,9 @@ export default function NotesEditor() {
         if (mode() === "edit") {
           if (easyMDE.value() !== content()) easyMDE.value(content());
         } else {
-          setPreviewHtml(content() ? easyMDE.options.previewRender(content()) : "");
+          setPreviewHtml(
+            content() ? easyMDE.options.previewRender(content()) : "",
+          );
         }
       },
       renderMarkdown(text) {
@@ -91,13 +93,15 @@ export default function NotesEditor() {
   });
 
   onCleanup(() => easyMDE?.toTextArea());
-return (
+  return (
     <div id="notes" class="pane" hidden>
       <div id="notes-editor">
         <div id="notes-editor-bar">
           <button onClick={() => notesModule?.close()}>Close</button>
           <span class="spacer" />
-          <button onClick={toggleMode}>{mode() === "edit" ? "View" : "Edit"}</button>
+          <button onClick={toggleMode}>
+            {mode() === "edit" ? "View" : "Edit"}
+          </button>
         </div>
         <div id="notes-editor-edit-pane" hidden={mode() !== "edit"}>
           <textarea ref={textareaEl} />

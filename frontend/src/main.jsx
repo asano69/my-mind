@@ -1,7 +1,7 @@
-;import { render } from "solid-js/web";
+import { render } from "solid-js/web";
 import { Router, Route } from "@solidjs/router";
 import { createSignal, onCleanup, Show } from "solid-js";
-
+import Catalog from "./routes/Catalog";
 // Order matters: style.css defines the CSS custom properties every other
 // stylesheet consumes via var().
 import "./style.css";
@@ -34,6 +34,7 @@ render(
       <Router>
         <Route path="/" component={Home} />
         <Route path="/maps/:uuid" component={Home} />
+        <Route path="/catalog" component={Catalog} />
       </Router>
     </AuthGate>
   ),

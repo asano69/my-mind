@@ -5,6 +5,7 @@ import HelpPanel from "./HelpPanel";
 import ContextMenu from "./ContextMenu";
 import TitleBar from "./TitleBar";
 import { onMount } from "solid-js";
+import { A } from "@solidjs/router";
 
 export default function MindMapCanvas() {
   onMount(() => {
@@ -14,14 +15,9 @@ export default function MindMapCanvas() {
   return (
     <>
       <main>
-        <button
-          id="catalog-link"
-          class="icon-btn"
-          data-command="go-to-catalog"
-          title="Catalog"
-        >
+        <A href="/catalog" id="catalog-link" class="icon-btn" title="Catalog">
           <img src="/icon/catalog.png" alt="Catalog" />
-        </button>
+        </A>
       </main>
 
       <TitleBar />
