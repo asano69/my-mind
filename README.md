@@ -16,8 +16,10 @@ New to Mind maps? They are useful, aesthetic and cool! Read more about these spe
 
 
 ## Work in Progress
-- [ ] ファイル名とトピック名を分離する。中心ノードの名前とファイル名は同じにするべきではない。
-- [ ] バックエンドをPocketBaseを前提にしたコードに置き換える。
+
+マップのパスを変更する
+- 現在、http://localhost:3001/?id=2jjelkk3a63m6qo のようにしてマップを開くが、pbへの依存を減らすために、http://localhost:3001/maps/UUID にしようかと思う。
+- バックエンドにおいて、エントリをdbに保存するタイミングにフックしてuuidをつけるようにする。
 
 
 ## Ref
