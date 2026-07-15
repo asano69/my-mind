@@ -18,7 +18,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.my-mind.rule=Host(`my-mind.app.internal`)"
-      - "traefik.http.routers.my-mind.middlewares=tinyauth-in@docker"
+
 networks:
   traefik_net:
     external: true
