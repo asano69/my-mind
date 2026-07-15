@@ -2,18 +2,25 @@ import { createResource, createSignal, For, Show } from "solid-js";
 
 import pb from "../lib/pb";
 import { updateTitle, deleteMap } from "../lib/mindmap/backend/pocketbase";
+import Search from "../components/Search";
 
-async function fetchMaps() {
+// query is empty for the initial/unfiltered list, or a title search term.
+// pb.filter() escapes the value for us; "~" is PocketBase's substring
+// match operator.
+async function fetchMaps(query) {
   // svg is stored directly on the record, so no extra request is needed
   // to render a thumbnail.
   return pb.collection("maps").getFullList({
     sort: "-updated",
     fields: "id,uuid,title,svg",
+    filter: query ? pb.filter("title ~ {:q}", { q: query }) : "",
   });
 }
 
 export default function Catalog() {
-  const [maps, { mutate }] = createResource(fetchMaps);
+  const [query, setQuery] = createSignal("");
+  // Re-fetches from PocketBase whenever query() changes.
+  const [maps, { mutate }] = createResource(query, fetchMaps);
   const [editMode, setEditMode] = createSignal(false);
 
   async function handleDelete(id) {
@@ -37,27 +44,34 @@ export default function Catalog() {
         <div class="mb-6 flex items-center justify-between">
           <h1 class="font-serif text-3xl">my-mind</h1>
           <div class="flex gap-2">
-          
             <button
               onClick={() => setEditMode(!editMode())}
               class="rounded-md border border-pane-hover bg-pane px-4 py-2 text-sm hover:bg-pane-hover"
             >
               {editMode() ? "Done" : "Edit"}
             </button>
-      <button
+            <button
               onClick={() => (window.location.href = "/")}
               class="rounded-md border border-pane-hover bg-pane px-4 py-2 text-sm hover:bg-pane-hover"
             >
-              New 
-    </button>
+              New
+            </button>
           </div>
+        </div>
+
+        <div class="mb-6">
+          <Search onSearch={setQuery} />
         </div>
 
         <Show when={!maps.loading} fallback={<p>Loading…</p>}>
           <Show when={!maps.error} fallback={<p>Failed to load maps.</p>}>
             <Show
               when={maps()?.length}
-              fallback={<p class="text-text/50">No maps yet.</p>}
+              fallback={
+                <p class="text-text/50">
+                  {query() ? "No matching maps." : "No maps yet."}
+                </p>
+              }
             >
               <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
                 <For each={maps()}>
