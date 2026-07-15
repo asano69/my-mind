@@ -81,14 +81,11 @@ src/lib/mindmap/
 
 ### Phase 5 — 配信経路の整合（バックエンド側）
 - `vite.config.js` の出力先と `assets.go` のembed先を一致させる（どちらかに合わせる）
-- 旧 `toast.js` エントリは、`docs/legacy-ssr-frontend`（もう配信されていない）専用だったため、この時点で削除可能か確認
+
 
 ### Phase 6 — 不要物の掃除
-- `frontend/src/index.html`、二重化していたCSSの参照、使われなくなった旧command/backend系の重複コード確認（CLAUDE.mdの「重複コード・未使用コードの削除を優先」に対応）
-
-保留（あとで対応）:
+- 二重化していたCSSの参照、使われなくなった旧command/backend系の重複コード確認
 - Tailwind v4の @theme ブロックへ --color-bg 等のトークンを正式移植する作業
-- outDir と assets.go のembedパス不一致（Phase 5）
-- frontend/src/index.html（旧エントリ）の削除（Phase 3）
+
 
 
