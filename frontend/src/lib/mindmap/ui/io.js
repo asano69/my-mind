@@ -4,7 +4,8 @@ import * as app from "../my-mind.js";
 import * as backend from "../backend/pocketbase.js";
 import MindMap from "../map.js";
 
-let currentMapId = null;
+let currentMapId = null; // PocketBase record id, used for save/update calls
+let currentMapUuid = null; // public uuid, used in the URL
 
 let autoSaveTimeout = null;
 let lastSaveTime = null;
@@ -48,18 +49,18 @@ export function init() {
   });
 }
 
-// Maps are addressed by PocketBase record id via ?id=..., not by filename path.
+// Maps are addressed by a public uuid via /maps/<uuid>, not by
+// PocketBase's own record id.
 export async function restore() {
-  const params = new URLSearchParams(location.search);
-  const id = params.get("id");
-  if (!id) {
+  const match = location.pathname.match(/^\/maps\/([^/]+)$/);
+  if (!match) {
     app.setThrobber(false);
     return;
   }
   app.setThrobber(true);
   try {
-    const record = await backend.load(id);
-    currentMapId = record.id;
+    const record = await backend.loadByUuid(match[1]);
+    setCurrentMap(record);
     app.setThrobber(false);
     app.showMap(MindMap.fromJSON(record.mymind));
     pubsub.publish("load-done");
@@ -102,7 +103,7 @@ async function save() {
   const mymind = map.toJSON();
   try {
     const record = await backend.save(currentMapId, PLACEHOLDER_TITLE, mymind);
-    setCurrentMap(record.id);
+    setCurrentMap(record);
     app.setThrobber(false);
     pubsub.publish("save-done");
   } catch (e) {
@@ -110,16 +111,21 @@ async function save() {
   }
 }
 
-function setCurrentMap(id) {
-  currentMapId = id;
+function setCurrentMap(record) {
+  currentMapId = record ? record.id : null;
+  currentMapUuid = record ? record.uuid : null;
   updateURL();
 }
 
 function updateURL() {
-  if (!currentMapId) {
+  if (!currentMapUuid) {
     history.replaceState(null, "", "/");
   } else {
-    history.replaceState(null, "", `?id=${encodeURIComponent(currentMapId)}`);
+    history.replaceState(
+      null,
+      "",
+      `/maps/${encodeURIComponent(currentMapUuid)}`,
+    );
   }
 }
 

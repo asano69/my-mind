@@ -20,7 +20,7 @@ export default function MindMapCanvas() {
           data-command="go-to-catalog"
           title="Catalog"
         >
-          <img src="icon/catalog.png" alt="Catalog" />
+          <img src="/icon/catalog.png" alt="Catalog" />
         </button>
       </main>
 
@@ -28,16 +28,16 @@ export default function MindMapCanvas() {
         <div class="scrollable">
           <p class="row">
             <button class="icon-btn" data-command="new" title="New">
-              <img src="icon/new.png" alt="New" />
+              <img src="/icon/new.png" alt="New" />
             </button>
             <button class="icon-btn" data-command="load" title="Open">
-              <img src="icon/open.png" alt="Open" />
+              <img src="/icon/open.png" alt="Open" />
             </button>
             <button class="icon-btn" data-command="save" title="Save">
-              <img src="icon/save.png" alt="Save" />
+              <img src="/icon/save.png" alt="Save" />
             </button>
             <button class="icon-btn" data-command="save-as" title="Save as">
-              <img src="icon/save-as.png" alt="Save as" />
+              <img src="/icon/save-as.png" alt="Save as" />
             </button>
           </p>
           <p>
@@ -118,7 +118,7 @@ export default function MindMapCanvas() {
         </footer>
 
         <button class="icon-btn" data-command="notes" title="Notes">
-          <img src="icon/notes.png" alt="Notes" />
+          <img src="/icon/notes.png" alt="Notes" />
         </button>
         <button
           class="icon-btn"
@@ -126,7 +126,7 @@ export default function MindMapCanvas() {
           data-command="ui"
           title="Toggle UI"
         >
-          <img src="icon/menu.png" alt="Menu" />
+          <img src="/icon/menu.png" alt="Menu" />
         </button>
         <div class="spinner" hidden>
           <div class="dot1"></div>
@@ -157,7 +157,7 @@ export default function MindMapCanvas() {
       <div id="notes" class="pane" hidden>
         <iframe
           sandbox="allow-scripts allow-same-origin allow-popups"
-          src="editor.html"
+          src="/editor.html"
         ></iframe>
       </div>
 
@@ -177,7 +177,7 @@ export default function MindMapCanvas() {
       </div>
 
       <button id="help-btn" class="icon-btn" data-command="help" title="Help">
-        <img src="icon/help.png" alt="Help" />
+        <img src="/icon/help.png" alt="Help" />
       </button>
     </>
   );

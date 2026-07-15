@@ -274,6 +274,6 @@ export default class Map {
   }
 }
 export async function init() {
-  let response = await fetch("map.css");
+  let response = await fetch("/map.css");
   css = await response.text();
 }

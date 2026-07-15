@@ -1,5 +1,3 @@
-// Package serve implements the "serve" command, which runs a single HTTP server
-// that hosts the index page and all drill sessions defined in the config file.
 package serve
 
 import (
@@ -8,6 +6,7 @@ import (
 	"github.com/asano69/my-mind/internal/assets"
 	"github.com/asano69/my-mind/internal/config"
 
+	"github.com/google/uuid"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
@@ -15,10 +14,22 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const mapsCollection = "maps"
+
 // Run opens the database and collection once, registers all drill routes, then
 // starts listening. The database and collection are shared across all sessions.
 func Run(app *pocketbase.PocketBase, cfg *config.Config) error {
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
+
+	// Every map gets a public uuid the moment it's first saved, so the
+	// frontend can address it as /maps/<uuid> instead of depending on
+	// PocketBase's own record id.
+	app.OnRecordCreate(mapsCollection).BindFunc(func(e *core.RecordEvent) error {
+		if e.Record.GetString("uuid") == "" {
+			e.Record.Set("uuid", uuid.NewString())
+		}
+		return e.Next()
+	})
 
 	app.OnServe().BindFunc(func(e *core.ServeEvent) error {
 		// Serve the whole Vite build output as-is: index.html, editor.html,

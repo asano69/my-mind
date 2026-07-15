@@ -1,4 +1,3 @@
-// src/backend/pocketbase.ts
 // The only save/load mechanism for maps. Talks directly to the "maps"
 // collection through the shared PocketBase client.
 import pb from "../../pb.js";
@@ -15,6 +14,10 @@ export async function save(id, title, mymind) {
   return pb.collection(COLLECTION).create({ title, mymind });
 }
 
-export async function load(id) {
-  return pb.collection(COLLECTION).getOne(id);
+// Maps are addressed publicly by "uuid" (see /maps/<uuid>), not by
+// PocketBase's own record id.
+export async function loadByUuid(uuid) {
+  return pb
+    .collection(COLLECTION)
+    .getFirstListItem(pb.filter("uuid = {:uuid}", { uuid }));
 }

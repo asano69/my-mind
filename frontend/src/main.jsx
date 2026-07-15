@@ -1,4 +1,4 @@
-import { render } from "solid-js/web";
+;import { render } from "solid-js/web";
 import { Router, Route } from "@solidjs/router";
 import { createSignal, onCleanup, Show } from "solid-js";
 
@@ -33,6 +33,7 @@ render(
     <AuthGate>
       <Router>
         <Route path="/" component={Home} />
+        <Route path="/maps/:uuid" component={Home} />
       </Router>
     </AuthGate>
   ),
