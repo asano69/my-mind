@@ -98,7 +98,7 @@ export default function Catalog() {
         border-pane-hover bg-pane text-left shadow-card
         transition hover:bg-pane-hover"
                     >
-                      <div class="relative flex h-32 items-center justify-center overflow-hidden bg-white">
+                      <div class="relative flex h-32 items-center justify-center overflow-hidden bg-white/50">
                         {/* SVG only — innerHTML replaces this element's
                             children on every render, so nothing else may
                             live inside it. Pin badge/buttons are rendered
@@ -113,7 +113,7 @@ export default function Catalog() {
                           classList={{ "cursor-pointer": !editMode() }}
                           innerHTML={map.svg || ""}
                         />
-                        i
+                        
                         <Show when={!editMode() && map.pin}>
                           <span class="absolute top-1 right-1 text-sm drop-shadow">
                             📍
