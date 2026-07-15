@@ -13,7 +13,7 @@ New to Mind maps? They are useful, aesthetic and cool! Read more about these spe
 ## Plan
 
 - [ ] 後回し：Mindmapライブラリを、Solidのリアクティブな状態管理に書き換える。やらなくてよい。
-
+- [ ] データ保存コードの整理: マインドマップを保存する経路が2, 3種類ある。自動保存によるmymind形式のみのデータ転送と手動保存によるmymind+svgのデータ転送。保存部分だけ、ファイルを分割したほうがよさそう。
 
 ## Work in Progress
 
