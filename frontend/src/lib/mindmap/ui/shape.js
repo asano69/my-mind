@@ -1,14 +1,18 @@
-// src/ui/shape.ts
 import "../shape/box.js";
 import "../shape/ellipse.js";
 import "../shape/underline.js";
 import * as actions from "../action.js";
 import * as app from "../my-mind.js";
 import { repo } from "../shape/shape.js";
-const select = document.querySelector("#shape");
+let select = null;
 export function init() {
+  select = document.querySelector("#shape");
   repo.forEach((shape) => select.append(shape.option));
   select.addEventListener("change", onChange);
+}
+export function dispose() {
+  select.removeEventListener("change", onChange);
+  select = null;
 }
 export function update() {
   let value = "";

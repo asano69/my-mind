@@ -1,12 +1,12 @@
-// src/ui/layout.ts
 import "../layout/graph.js";
 import "../layout/tree.js";
 import "../layout/map.js";
 import * as actions from "../action.js";
 import * as app from "../my-mind.js";
 import { repo } from "../layout/layout.js";
-const select = document.querySelector("#layout");
+let select = null;
 export function init() {
+  select = document.querySelector("#layout");
   let layout = repo.get("map");
   select.append(layout.option);
   let label = buildGroup("Graph");
@@ -20,6 +20,10 @@ export function init() {
   });
   label.append(...treeOptions);
   select.addEventListener("change", onChange);
+}
+export function dispose() {
+  select.removeEventListener("change", onChange);
+  select = null;
 }
 export function update() {
   var value = "";

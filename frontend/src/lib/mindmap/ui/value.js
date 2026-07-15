@@ -1,10 +1,14 @@
-// src/ui/value.ts
 import * as actions from "../action.js";
 import * as app from "../my-mind.js";
 import { repo as commandRepo } from "../command/command.js";
-const select = document.querySelector("#value");
+let select = null;
 export function init() {
+  select = document.querySelector("#value");
   select.addEventListener("change", onChange);
+}
+export function dispose() {
+  select.removeEventListener("change", onChange);
+  select = null;
 }
 export function update() {
   let value = app.currentItem.value;

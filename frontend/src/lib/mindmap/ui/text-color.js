@@ -1,12 +1,16 @@
-// src/ui/text-color.ts
 import * as actions from "../action.js";
 import * as app from "../my-mind.js";
-const node = document.querySelector("#text-color");
+let node = null;
 export function init() {
+  node = document.querySelector("#text-color");
   node.addEventListener("click", onClick);
   [...node.querySelectorAll("[data-color]")].forEach((item) => {
     item.style.backgroundColor = item.dataset.color;
   });
+}
+export function dispose() {
+  node.removeEventListener("click", onClick);
+  node = null;
 }
 function onClick(e) {
   e.preventDefault();

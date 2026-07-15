@@ -1,7 +1,6 @@
-// src/ui/status.ts
 import * as actions from "../action.js";
 import * as app from "../my-mind.js";
-const select = document.querySelector("#status");
+let select = null;
 const STATUS_MAP = {
   yes: true,
   no: false,
@@ -19,7 +18,12 @@ function stringToStatus(str) {
   return str in STATUS_MAP ? STATUS_MAP[str] : str;
 }
 export function init() {
+  select = document.querySelector("#status");
   select.addEventListener("change", onChange);
+}
+export function dispose() {
+  select.removeEventListener("change", onChange);
+  select = null;
 }
 export function update() {
   select.value = statusToString(app.currentItem.status);
