@@ -18,7 +18,7 @@ New to Mind maps? They are useful, aesthetic and cool! Read more about these spe
 ## Work in Progress
 
 フロントエンドのコンポーネント化
-- editor.htmlをiframeで挿入する方法をやめられないか検討する
+-  MindMapCanvas が肥大化しているので NotesEditorコンポーネント にならってサブコンポーネント化したい。とくに、サイドベインはコンポーネント化できるだろう
 
 
 ## Ref
