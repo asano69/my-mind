@@ -1,6 +1,6 @@
 services:
   my-mind:
-    image: registry.internal/my-mind:latest
+    build: .
     container_name: my-mind
     #ports:
     #  - "3001:3000"
