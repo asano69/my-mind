@@ -135,7 +135,7 @@ export default function MindMapCanvas() {
       </div>
 
       <div id="io" class="pane" hidden>
-        <h3></h3>
+        <h3>Save</h3>
         <p>
           <label>
             <span>Name</span>
@@ -143,7 +143,7 @@ export default function MindMapCanvas() {
           </label>
         </p>
         <p class="row">
-          <button class="go"></button>
+          <button class="go">Save</button>
           <button class="cancel">Cancel</button>
         </p>
       </div>

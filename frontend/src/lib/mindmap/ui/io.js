@@ -5,7 +5,7 @@ import * as backend from "../backend/pocketbase.js";
 import MindMap from "../map.js";
 
 let currentMapId = null;
-let currentMode = "load";
+
 let autoSaveTimeout = null;
 let lastSaveTime = null;
 
@@ -68,23 +68,20 @@ export async function restore() {
   }
 }
 
-export function show(mode) {
-  currentMode = mode;
+// Always opens the "save" dialog: with the PocketBase backend, loading a
+// map by name is handled by the file-switcher (Ctrl+K) instead, so this
+// panel only ever needs to support saving/renaming.
+export function show() {
   node.hidden = false;
-  node.querySelector("h3").textContent = mode;
-  node.querySelector(".go").textContent =
-    mode.charAt(0).toUpperCase() + mode.substring(1);
-  if (mode === "save") {
-    requestAnimationFrame(() => {
-      const input = node.querySelector(".name");
-      if (!input) {
-        return;
-      }
-      input.value = app.currentMap.name || "";
-      input.focus();
-      input.select();
-    });
-  }
+  requestAnimationFrame(() => {
+    const input = node.querySelector(".name");
+    if (!input) {
+      return;
+    }
+    input.value = app.currentMap.name || "";
+    input.focus();
+    input.select();
+  });
 }
 
 export function hide() {
@@ -98,14 +95,12 @@ export function quickSave() {
   if (currentMapId) {
     save();
   } else {
-    show("save");
+    show();
   }
 }
 
 function submit() {
-  if (currentMode === "save") {
-    save();
-  }
+  save();
 }
 
 async function save() {

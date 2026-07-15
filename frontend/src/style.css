@@ -1,7 +1,25 @@
 /* Shared design tokens (palette, fonts, button/toast variables) already
-   * used by the legacy mind-map engine. Loaded as-is for now; mapping these
-   * into Tailwind's own theme (@theme block) is a separate follow-up task. */
+   * used by the legacy mind-map engine. theme.css stays the single source
+   * of truth for the actual values (editor.html and the legacy SSR pages
+   * load it directly), and is re-exposed below via `@theme inline` so
+   * Tailwind utility classes (bg-bg, text-text, font-sans, ...) can be
+   * generated from the same tokens. */
 @import url("/theme.css");
 
 /* Tailwind v4 entry point */
 @import "tailwindcss";
+
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-pane: var(--color-pane);
+  --color-pane-hover: var(--color-pane-hover);
+  --color-accent: var(--color-accent);
+  --color-text: var(--color-text);
+  --color-hover: var(--color-hover);
+
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-mono);
+
+  --shadow-card: var(--shadow-card);
+}

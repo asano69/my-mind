@@ -1,11 +1,6 @@
-// src/backend/image.ts
-import Backend from "./backend.js";
 import * as app from "../my-mind.js";
 const EXPORT_PADDING = 24;
-export default class ImageBackend extends Backend {
-  constructor() {
-    super("image");
-  }
+export default class ImageBackend {
   async save(format) {
     const serializer = new XMLSerializer();
     const encoder = new TextEncoder();

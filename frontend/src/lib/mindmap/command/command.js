@@ -174,7 +174,7 @@ new (class Load extends Command {
     this.keys = [{ code: "KeyO", ctrlKey: true, shiftKey: false }];
   }
   execute() {
-    io.show("load");
+    fileSwitcher.toggle();
   }
 })();
 new (class New extends Command {
