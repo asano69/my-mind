@@ -26,3 +26,10 @@ export function unsubscribe(message, subscriber) {
     subs.splice(index, 1);
   }
 }
+// Clears every subscription across all messages. Called once by
+// my-mind.js's unmount() so that a subsequent mount() can freely
+// re-subscribe without piling up duplicate handlers from the previous
+// mount (see CLAUDE.md, "my-mind.js アンマウント安全化").
+export function reset() {
+  subscribers.clear();
+}

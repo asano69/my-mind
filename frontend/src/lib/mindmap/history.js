@@ -1,3 +1,6 @@
+// reset() must be called by my-mind.js's unmount() on every teardown, so a
+// subsequent mount() starts with an empty undo stack instead of inheriting
+// the previous map's history.
 let index = 0; // points to the last undoed action
 let actions = [];
 export function reset() {
