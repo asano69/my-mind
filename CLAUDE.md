@@ -4,6 +4,7 @@
 ## Rules
 
 - データベースのマイグレーションはPocketBaseのWEB UIから行うのでマイグレーションコードを作成する必要はまったくない。
+- 後方互換性は維持しなくてよい。
 - When fixing bugs, add a failing regression test first.
 - All errors are user-facing, so messages should be clear.
 - Keep functions small and focused.
