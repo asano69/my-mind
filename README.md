@@ -14,6 +14,7 @@ New to Mind maps? They are useful, aesthetic and cool! Read more about these spe
 
 - [ ] 後回し：Mindmapライブラリを、Solidのリアクティブな状態管理に書き換える。やらなくてよい。
 - [ ] データ保存コードの整理: マインドマップを保存する経路が2, 3種類ある。自動保存によるmymind形式のみのデータ転送と手動保存によるmymind+svgのデータ転送。保存部分だけ、ファイルを分割したほうがよさそう。
+- [ ] my-mind.js 自体をアンマウント安全（cleanup + 再 boot 可能）に作り直すために、シングルトンの状態を持つモジュール群（mouse.js, keyboard.js, io.js, ui.js …）すべてに手を入れる
 
 ## Work in Progress
 
