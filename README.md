@@ -21,6 +21,7 @@ It has a catalog feature.
 - [ ] キャンバスで、右ペインが戻らなくなるバグの修正
 - [ ] CanvasのSave Asボタンで、マインドマップのpng画像をクリップボードにコピーする
 - [ ] canvasで、Catalogアイコンや、タイトル、エディターボタンなどのある細長い部分を、topbarなどのコンポーネント化する
+- [ ] Catalogにおいて、SVGイメージに埋め込まれたURLなどを誤ってクリックしないように、マウスで選択不可能にする
 
 ## Work in Progress
 - [x] my-mind.js アンマウント安全化
