@@ -28,7 +28,7 @@ import "./shape/underline.js";
 import { repo as commandRepo } from "./command/command.js";
 import Map, { init as initMapCSS } from "./map.js";
 import * as history from "./history.js";
-import * as pubsub from "./pubsub.js";
+
 import * as keyboard from "./keyboard.js";
 import * as mouse from "./mouse.js";
 import * as clipboard from "./clipboard.js";
@@ -191,7 +191,7 @@ export function unmount() {
   mouse.dispose();
   keyboard.dispose();
   clipboard.dispose();
-  pubsub.reset();
+
   history.reset();
   currentMap?.hide();
   currentMap = null;

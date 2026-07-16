@@ -336,6 +336,30 @@ Steps:
 Risk: none beyond what 9.1–9.5 already carried — this step is pure
 dead-code removal once its precondition holds.
 
+### Phase 9.6 progress note
+
+Confirmed zero remaining `pubsub` references across every file reviewed
+in this migration (command.js, map.js, notes.js, io.js, ui.js,
+PropertyPanel.jsx, item.js already cleaned in 9.1–9.5 and the earlier
+Phase 9 `update()` removal; mouse.js, keyboard.js, clipboard.js,
+title.js, help.js, context-menu.js, action.js, store.js never used it).
+The only remaining call site was `my-mind.js`'s `unmount()` calling
+`pubsub.reset()` — removed, along with the `pubsub` import.
+
+Deleted `pubsub.js` and `pubsub.test.js`. The remount-safety concern
+`pubsub.test.js` characterized (a fresh closure re-subscribing without
+unsubscribing the old one) no longer applies: nothing subscribes to
+anything through an event bus anymore. Each Phase 9.1–9.5 replacement
+carries its own remount safety by construction — Solid signals have no
+subscribe/unsubscribe lifecycle to double up, and the two vanilla-module
+`createRoot` effects that do exist (`io.js`'s auto-save, `title.js`'s
+document-title sync) are explicitly disposed in each module's own
+`dispose()`, called from `my-mind.js`'s `unmount()` same as before.
+
+This closes out the redesigned pubsub-elimination plan (9.1–9.6) in
+full. Update to the top-level Phase 9 step 1: no longer "kept as-is" —
+`pubsub.js` is deleted.
+
 ---
 
 ## Revised order summary
