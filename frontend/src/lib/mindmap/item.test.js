@@ -50,6 +50,7 @@ function node() {
   };
 }
 
+vi.mock("solid-js", async () => await import("solid-js/dist/solid.js"));
 vi.mock("./html.js", () => ({ node }));
 vi.mock("./svg.js", () => ({ group: node, foreignObject: node, node }));
 vi.mock("./pubsub.js", () => ({ publish: vi.fn() }));
@@ -75,5 +76,24 @@ describe("Item resolved layout memo", () => {
     expect(() => {
       child.parent = null;
     }).not.toThrow();
+  });
+});
+
+describe("Item resolved value/status memos", () => {
+  it("tracks children inserted after computed value/status is selected", () => {
+    const parent = new Item();
+    parent.value = "sum";
+    parent.status = "computed";
+
+    expect(parent.resolvedValue).toBe(0);
+    expect(parent.resolvedStatus).toBe(true);
+
+    const child = new Item();
+    child.value = 3;
+    child.status = false;
+    parent.insertChild(child);
+
+    expect(parent.resolvedValue).toBe(3);
+    expect(parent.resolvedStatus).toBe(false);
   });
 });

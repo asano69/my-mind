@@ -21,6 +21,7 @@ export default class Item {
   }
   constructor() {
     this._id = generateId();
+    this.children = [];
     const [parent, setParent] = createSignal(null);
     this._parent = parent;
     this._setParent = setParent;
@@ -30,6 +31,9 @@ export default class Item {
     // can affect content box size and collapsed can affect subtree layout, so
     // layout must still be recomputed. The direct DOM sync for each property
     // is driven by effects set up at the end of this constructor.
+    const [text, setText] = createSignal("");
+    this._text = text;
+    this._setText = setText;
     const [collapsed, setCollapsed] = createSignal(false);
     this._collapsed = collapsed;
     this._setCollapsed = setCollapsed;
@@ -52,6 +56,10 @@ export default class Item {
     this._status = status;
     this._setStatus = setStatus;
     this._side = null; // side preference
+    const [childrenVersion, setChildrenVersion] = createSignal(0);
+    this._childrenVersion = childrenVersion;
+    this._bumpChildrenVersion = () =>
+      setChildrenVersion((version) => version + 1);
     const [shape, setShape] = createSignal(null);
     this._shape = shape;
     this._setShape = setShape;
@@ -79,6 +87,36 @@ export default class Item {
         return parent.resolvedTextColor;
       }
       return "";
+    });
+    this._resolvedValue = createMemo(() => {
+      this._childrenVersion();
+      const value = this._value();
+      if (typeof value == "number") {
+        return value;
+      }
+      let childValues = this.children.map((child) => child.resolvedValue);
+      switch (value) {
+        case "max":
+          return Math.max(...childValues);
+        case "min":
+          return Math.min(...childValues);
+        case "sum":
+          return childValues.reduce((prev, cur) => prev + cur, 0);
+        case "avg": {
+          const sum = childValues.reduce((prev, cur) => prev + cur, 0);
+          return childValues.length ? sum / childValues.length : 0;
+        }
+        default:
+          return 0;
+      }
+    });
+    this._resolvedStatus = createMemo(() => {
+      this._childrenVersion();
+      const status = this._status();
+      if (status == "computed") {
+        return this.children.every((child) => child.resolvedStatus !== false);
+      }
+      return status;
     });
     this._resolvedLayout = createMemo(() => {
       const layout = this._layout();
@@ -126,7 +164,6 @@ export default class Item {
       text: html.node("div"),
       toggle: buildToggle(),
     };
-    this.children = [];
     const { dom } = this;
     dom.node.classList.add("item");
     dom.content.classList.add("content");
@@ -158,6 +195,7 @@ export default class Item {
     // itself is reworked (Phase 7).
     createRoot((dispose) => {
       this._disposeItemEffects = dispose;
+      createEffect(() => this.updateText());
       createEffect(() => this.updateStatus());
       createEffect(() => this.updateValue());
       createEffect(() => this.updateIcon());
@@ -432,11 +470,10 @@ export default class Item {
     } // explicit children:false when the parent is a Map
   }
   get text() {
-    return this.dom.text.innerHTML;
+    return this._text();
   }
   set text(text) {
-    this.dom.text.innerHTML = text;
-    findLinks(this.dom.text);
+    this._setText(text);
     this.update();
   }
   get notes() {
@@ -461,29 +498,7 @@ export default class Item {
     this.update();
   }
   get resolvedValue() {
-    const value = this._value();
-    if (typeof value == "number") {
-      return value;
-    }
-    let childValues = this.children.map((child) => child.resolvedValue);
-    switch (value) {
-      case "max":
-        return Math.max(...childValues);
-        break;
-      case "min":
-        return Math.min(...childValues);
-        break;
-      case "sum":
-        return childValues.reduce((prev, cur) => prev + cur, 0);
-        break;
-      case "avg":
-        var sum = childValues.reduce((prev, cur) => prev + cur, 0);
-        return childValues.length ? sum / childValues.length : 0;
-        break;
-      default:
-        return 0;
-        break;
-    }
+    return this._resolvedValue();
   }
   get status() {
     return this._status();
@@ -493,14 +508,7 @@ export default class Item {
     this.update();
   }
   get resolvedStatus() {
-    let status = this._status();
-    if (status == "computed") {
-      return this.children.every((child) => {
-        return child.resolvedStatus !== false;
-      });
-    } else {
-      return status;
-    }
+    return this._resolvedStatus();
   }
   get icon() {
     return this._icon();
@@ -593,11 +601,13 @@ export default class Item {
     }
     this.dom.node.insertBefore(child.dom.node, next);
     this.children.splice(index, 0, child);
+    this._bumpChildrenVersion();
     child.parent = this;
   }
   removeChild(child) {
     var index = this.children.indexOf(child);
     this.children.splice(index, 1);
+    this._bumpChildrenVersion();
     child.dom.node.remove();
     child.parent = null;
     !this.children.length && this.dom.toggle.remove();
@@ -640,6 +650,15 @@ export default class Item {
         break;
     }
   }
+  updateText() {
+    const text = this._text();
+    if (this.dom.text.innerHTML == text) {
+      return;
+    }
+    this.dom.text.innerHTML = text;
+    findLinks(this.dom.text);
+  }
+
   updateStatus() {
     const { resolvedStatus, dom } = this;
     dom.status.className = "status";

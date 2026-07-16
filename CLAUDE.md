@@ -291,6 +291,13 @@ in the constructor for why). Repeat this exact pattern for `value`, `icon`,
 `notes`, `collapsed` next, keeping each property's own `update()` call
 intact until Phase 8 proves it's safe to drop layout recompute entirely.
 
+Phase 6 step 4 has started, but `update()` cannot be deleted yet. All item
+attributes are now signal-backed and the resolved value/status calculations
+are memo-backed alongside the existing inheritance-chain memos. The remaining
+`update()` callers still trigger layout/SVG recomputation and `item-change`
+for autosave; deleting them belongs with Phase 8's map/layout effect work,
+not this item-state PR.
+
 
 ---
 
