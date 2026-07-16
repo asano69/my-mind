@@ -22,10 +22,10 @@ It has a catalog feature.
 - [x] Catalog遷移時に、svgデータの自動保存
 - [x] catalogにおいて、タイトルをクリックしてもそのマップを開くようにする（現在イメージの部分しかクリック可能ではない）
 - [x] Catalogにおいて、SVGイメージに埋め込まれたURLなどを誤ってクリックしないように、マウスで選択不可能にする
-- [ ] エディタにおいて、既存のnoteを読み込むことができない
+- [x] my-mind.js アンマウント安全化
+- [x] Mindmap Engine → Solid Reactive State: Migration Plan
+
 - [ ] Canvasにおいて、URLはURLとわかるように色を変えて下線をひくCSSにする
-- [ ] canvasで、Catalogアイコンや、タイトル、エディターボタンなどのある細長い部分を、topbarなどのコンポーネント化する
-- [ ] Canvasで、Map削除ボタンを追加する
 - [ ] svg画像を配信するルートを作成。http://localhost:3001/img/UUID
 - [ ] キャンバスで、右ペインが戻らなくなるバグの修正
 - [ ] CanvasのSave Asボタンで、マインドマップのpng画像をクリップボードにコピーする
@@ -36,8 +36,9 @@ It has a catalog feature.
 
 
 ## Work in Progress
-- [x] my-mind.js アンマウント安全化
-- [ ] Mindmap Engine → Solid Reactive State: Migration Plan
+- [ ] canvasで、Catalogアイコンや、タイトル、エディターボタンなどのある細長い部分を、topbarなどのコンポーネント化する
+- [ ] Canvasで、Map削除ボタンを追加する
+
 
 ## Ref
 - [ondras/my-mind](https://github.com/ondras/my-mind)/ Demo: https://my-mind.github.io/
