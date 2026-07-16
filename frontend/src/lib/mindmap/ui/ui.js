@@ -4,11 +4,12 @@ import * as notes from "./notes.js";
 import * as io from "./io.js";
 import * as menu from "./context-menu.js";
 import { repo as commandRepo } from "../command/command.js";
+import { lastSaveTime } from "../store.js";
+
 let node = null;
 let saveTimeEl = null;
-// Timestamp of the last successful save (ms since epoch), or null if not yet saved.
-let lastSaveTime = null;
 let elapsedTimer = null;
+
 /** Format a Date as HH:MM:SS. */
 function formatTime(d) {
   const pad = (n) => String(n).padStart(2, "0");
@@ -35,23 +36,18 @@ function formatElapsed(ms) {
   const h = Math.floor(m / 60);
   return `${h}h ago`;
 }
-/** Refresh the elapsed portion of the save-time display. */
+
+/** Refresh the elapsed portion of the save-time display, reading the
+ *  shared save timestamp from store.js (see CLAUDE.md, Solid migration
+ *  Phase 4) instead of a locally tracked copy. */
 function refreshElapsed() {
-  if (lastSaveTime === null || !saveTimeEl) {
+  const savedAt = lastSaveTime();
+  if (savedAt === null || !saveTimeEl) {
     return;
   }
-  const elapsed = Date.now() - lastSaveTime;
-  const timeStr = formatTime(new Date(lastSaveTime));
+  const elapsed = Date.now() - savedAt;
+  const timeStr = formatTime(new Date(savedAt));
   saveTimeEl.textContent = `${timeStr}  (${formatElapsed(elapsed)})`;
-}
-/** Called whenever a successful save completes. */
-function onSaveDone() {
-  lastSaveTime = Date.now();
-  refreshElapsed();
-  // Start the per-second ticker if not already running.
-  if (!elapsedTimer) {
-    elapsedTimer = setInterval(refreshElapsed, 1000);
-  }
 }
 export function isActive() {
   const active = document.activeElement;
@@ -108,7 +104,10 @@ export function init(port) {
   // Phase 3, see CLAUDE.md).
   [notes, io].forEach((ui) => ui.init());
   menu.init(port);
-  pubsub.subscribe("save-done", onSaveDone);
+  // Poll store.js's `lastSaveTime` signal once a second instead of
+  // subscribing to the old "save-done" pubsub message (Solid migration
+  // Phase 4, see CLAUDE.md).
+  elapsedTimer = setInterval(refreshElapsed, 1000);
   document.addEventListener("click", onClick);
   io.restore();
 }
@@ -120,7 +119,6 @@ export function dispose() {
   document.removeEventListener("click", onClick);
   clearInterval(elapsedTimer);
   elapsedTimer = null;
-  lastSaveTime = null;
   menu.dispose();
   [io, notes].forEach((ui) => ui.dispose());
   node = null;

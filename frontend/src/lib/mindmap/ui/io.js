@@ -3,15 +3,20 @@ import * as app from "../my-mind.js";
 import * as backend from "../backend/pocketbase.js";
 import MindMap from "../map.js";
 import { serializeCurrentMap } from "../backend/image.js";
+import {
+  currentTitle,
+  setCurrentTitle,
+  lastSaveTime,
+  setLastSaveTime,
+} from "../store.js";
 
 let currentMapId = null; // PocketBase record id, used for save/update calls
 let currentMapUuid = null; // public uuid, used in the URL
-// PocketBase "title" field. Kept independent of the root node's text
-// (which is exposed separately as map.name) — see title.js.
-let currentTitle = "";
+// PocketBase "title" field itself now lives in store.js as a Solid signal
+// (see CLAUDE.md, Solid migration Phase 4), kept independent of the root
+// node's text (which is exposed separately as map.name) — see title.js.
 
 let autoSaveTimeout = null;
-let lastSaveTime = null;
 let statusTimer = null; // setInterval id for updateSaveStatus, cleared in dispose()
 
 // Guards against overlapping save() calls. With a short auto-save debounce,
@@ -23,6 +28,7 @@ let saveInFlight = false;
 let saveAgainRequested = false;
 
 let node = null;
+
 const AUTO_SAVE_DELAY_MS = 1000;
 
 export function isActive() {
@@ -39,11 +45,7 @@ export function init() {
     }
   });
   pubsub.subscribe("map-new", (_) => setCurrentMap(null));
-  pubsub.subscribe("save-done", () => {
-    lastSaveTime = Date.now();
-    updateSaveStatus();
-    hide();
-  });
+
   pubsub.subscribe("load-done", () => hide());
   statusTimer = setInterval(updateSaveStatus, 1000);
   // Auto-save: debounce item changes and save after a short delay.
@@ -74,8 +76,10 @@ export function dispose() {
   }
   currentMapId = null;
   currentMapUuid = null;
-  currentTitle = "";
-  lastSaveTime = null;
+
+  setCurrentTitle("");
+  setLastSaveTime(null);
+
   saveInFlight = false;
   saveAgainRequested = false;
   node = null;
@@ -101,7 +105,7 @@ export async function restore() {
 }
 
 export function getTitle() {
-  return currentTitle;
+  return currentTitle();
 }
 
 // Renames the map's title (the "title" field stored in PocketBase),
@@ -109,14 +113,13 @@ export function getTitle() {
 // map has already been saved once; otherwise the new title just carries
 // into the next save.
 export async function setTitle(title) {
-  if (title === currentTitle) {
+  if (title === currentTitle()) {
     return;
   }
-  currentTitle = title;
-  pubsub.publish("title-change", currentTitle);
+  setCurrentTitle(title);
   if (currentMapId) {
     try {
-      await backend.updateTitle(currentMapId, currentTitle);
+      await backend.updateTitle(currentMapId, title);
     } catch (e) {
       error(e);
     }
@@ -186,7 +189,7 @@ async function performSave(includeSvg) {
   // Use the explicitly-set title if present; otherwise fall back to the
   // root node's name (only relevant for maps that have never had a
   // custom title set).
-  const title = currentTitle || map.name;
+  const title = currentTitle() || map.name;
   // SVG snapshot generation is somewhat expensive and only needed for the
   // catalog page thumbnail, so it's skipped on auto-save (includeSvg=false)
   // and only computed when the user explicitly saves.
@@ -201,7 +204,9 @@ async function performSave(includeSvg) {
   try {
     const record = await backend.save(currentMapId, title, mymind, svg);
     setCurrentMap(record);
-    pubsub.publish("save-done");
+    setLastSaveTime(Date.now());
+    updateSaveStatus();
+    hide();
   } catch (e) {
     error(e);
   }
@@ -209,8 +214,7 @@ async function performSave(includeSvg) {
 function setCurrentMap(record) {
   currentMapId = record ? record.id : null;
   currentMapUuid = record ? record.uuid : null;
-  currentTitle = record ? record.title || "" : "";
-  pubsub.publish("title-change", currentTitle);
+  setCurrentTitle(record ? record.title || "" : "");
   updateURL();
 }
 
@@ -249,11 +253,12 @@ function updateSaveStatus() {
   if (!el) {
     return;
   }
-  if (lastSaveTime === null) {
+  const savedAt = lastSaveTime();
+  if (savedAt === null) {
     el.textContent = "";
     return;
   }
-  const elapsed = Math.floor((Date.now() - lastSaveTime) / 1000);
+  const elapsed = Math.floor((Date.now() - savedAt) / 1000);
   if (elapsed < 2) {
     el.textContent = "just saved!";
   } else if (elapsed < 5) {

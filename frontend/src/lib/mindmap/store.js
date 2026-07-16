@@ -5,3 +5,15 @@ import { createSignal } from "solid-js";
 // without going through pubsub. Written by my-mind.js's selectItem() and
 // unmount(); treat as read-only everywhere else.
 export const [currentItem, setCurrentItem] = createSignal(null);
+
+// The map's title (PocketBase's "title" field), owned by ui/io.js. Replaces
+// the old "title-change" pubsub message (see CLAUDE.md, Solid migration
+// Phase 4) — title.js and TitleBar.jsx read this directly instead of
+// subscribing to an event.
+export const [currentTitle, setCurrentTitle] = createSignal("");
+
+// Timestamp (ms since epoch) of the last successful save, or null if the
+// current map has not been saved yet. Replaces the old "save-done" pubsub
+// message (see CLAUDE.md, Solid migration Phase 4) — ui/io.js and ui/ui.js
+// both read this instead of maintaining their own copies.
+export const [lastSaveTime, setLastSaveTime] = createSignal(null);

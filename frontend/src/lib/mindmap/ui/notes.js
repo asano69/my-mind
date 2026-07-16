@@ -42,6 +42,17 @@ export function close() {
   node.hidden = true;
 }
 
+// Called by NotesEditor's createEffect whenever the selected item changes
+// (see components/NotesEditor.jsx). Replaces the old "item-select" pubsub
+// subscription (see CLAUDE.md, Solid migration Phase 4).
+export function onItemSelect(item) {
+  if (!item) {
+    return;
+  }
+  editorAPI?.setContent(item.notes);
+  updatePreview(item.notes);
+}
+
 // Called by NotesEditor whenever the user edits the text.
 export function onEditorChange(text) {
   if (!app.currentItem) {
@@ -59,11 +70,6 @@ export function init() {
   previewEl.innerHTML = '<div id="note-preview-inner"></div>';
   document.querySelector("main").appendChild(previewEl);
   previewInner = previewEl.querySelector("#note-preview-inner");
-
-  pubsub.subscribe("item-select", (_message, publisher) => {
-    editorAPI?.setContent(publisher.notes);
-    updatePreview(publisher.notes);
-  });
 }
 
 // Called by my-mind.js's unmount(). Removes the watermark element this

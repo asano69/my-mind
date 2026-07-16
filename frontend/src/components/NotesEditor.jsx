@@ -1,8 +1,8 @@
-import { createSignal, onMount, onCleanup } from "solid-js";
+import { createSignal, createEffect, onMount, onCleanup } from "solid-js";
 import EasyMDE from "easymde";
 import "easymde/dist/easymde.min.css";
 import "./NotesEditor.css";
-
+import { currentItem } from "../lib/mindmap/store";
 /**
  * The markdown notes editor for the currently selected item.
  *
@@ -90,6 +90,13 @@ export default function NotesEditor() {
         return easyMDE.options.previewRender(text);
       },
     });
+  });
+
+  // Sync the notes editor whenever the selected item changes. Replaces the
+  // old "item-select" pubsub subscription that used to live in notes.js
+  // (see CLAUDE.md, Solid migration Phase 4).
+  createEffect(() => {
+    notesModule?.onItemSelect(currentItem());
   });
 
   onCleanup(() => easyMDE?.toTextArea());

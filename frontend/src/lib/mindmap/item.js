@@ -274,7 +274,6 @@ export default class Item {
   }
   select() {
     this.dom.node.classList.add("current");
-    pubsub.publish("item-select", this);
   }
   deselect() {
     this.dom.node.classList.remove("current");
