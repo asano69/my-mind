@@ -5,7 +5,6 @@
 
 - データベースのマイグレーションはPocketBaseのWEB UIから行うのでマイグレーションコードを作成する必要はまったくない。
 - 後方互換性は維持しなくてよい。
-- ライブラリを書き換える場合は、余裕があれば、Solidのリアクティブな状態管理に書き換える。
 - When fixing bugs, add a failing regression test first.
 - All errors are user-facing, so messages should be clear.
 - Keep functions small and focused.
