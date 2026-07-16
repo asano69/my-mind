@@ -23,6 +23,8 @@ It has a catalog feature.
 - [ ] svg画像を配信するルートを作成。http://localhost:3001/img/UUID
 - [ ] キャンバスで、右ペインが戻らなくなるバグの修正
 - [ ] CanvasのSave Asボタンで、マインドマップのpng画像をクリップボードにコピーする
+- [ ] 落書き機能（フリーライティング）
+- [ ] ノードの移動をdnd-kitに変えられないか検討する
 
 
 ## Work in Progress
