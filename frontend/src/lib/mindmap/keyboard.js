@@ -8,6 +8,16 @@ function handleEvent(e) {
   if (e.isComposing) {
     return;
   }
+
+  // Escape always releases any stray focus (e.g. a property-panel <select>
+  // or the title input) before checking ui.isActive(). Without this,
+  // focus left on such an element would permanently block every mindmap
+  // shortcut -- including Escape itself -- until the user happened to
+  // click back into the canvas.
+  if (e.key === "Escape" && ui.isActive()) {
+    document.activeElement.blur();
+  }
+
   // Some other part of the UI (title bar, notes editor, property panel, ...)
   // currently has keyboard focus: let it handle the event and do not treat
   // this keystroke as a mindmap shortcut.

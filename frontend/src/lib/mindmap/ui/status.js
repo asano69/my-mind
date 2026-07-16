@@ -32,4 +32,5 @@ function onChange() {
   let status = stringToStatus(select.value);
   let action = new actions.SetStatus(app.currentItem, status);
   app.action(action);
+  select.blur(); // return focus to the canvas so shortcuts keep working
 }

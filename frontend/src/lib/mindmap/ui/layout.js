@@ -35,10 +35,12 @@ export function update() {
   getOption("").disabled = app.currentItem.isRoot;
   getOption("map").disabled = !app.currentItem.isRoot;
 }
+
 function onChange() {
   let layout = repo.get(select.value);
   var action = new actions.SetLayout(app.currentItem, layout);
   app.action(action);
+  select.blur(); // return focus to the canvas so shortcuts keep working
 }
 function getOption(value) {
   return select.querySelector(`option[value="${value}"]`);

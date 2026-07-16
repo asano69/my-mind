@@ -20,6 +20,7 @@ export function update() {
   }
   select.value = value;
 }
+
 function onChange() {
   let value = select.value;
   if (value == "num") {
@@ -28,4 +29,5 @@ function onChange() {
     let action = new actions.SetValue(app.currentItem, value || null);
     app.action(action);
   }
+  select.blur();
 }

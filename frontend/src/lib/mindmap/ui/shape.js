@@ -26,4 +26,5 @@ function onChange() {
   let shape = repo.get(select.value);
   let action = new actions.SetShape(app.currentItem, shape);
   app.action(action);
+  select.blur(); // return focus to the canvas so shortcuts keep working
 }
