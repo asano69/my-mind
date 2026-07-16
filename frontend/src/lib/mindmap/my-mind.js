@@ -143,7 +143,10 @@ export function stopEditing() {
   return currentItem.stopEditing();
 }
 
-function handleResize() {
+// Exported so ui.js can call it directly after toggling the property
+// panel, replacing the old "ui-change" pubsub message (see CLAUDE.md,
+// Solid migration Phase 9.4).
+export function handleResize() {
   const size = [window.innerWidth - ui.getWidth(), window.innerHeight];
   port.style.width = `${size[0]}px`;
   port.style.height = `${size[1]}px`;
@@ -163,7 +166,7 @@ export async function mount(root) {
 
   setThrobber(true);
   await initMapCSS();
-  pubsub.subscribe("ui-change", handleResize);
+
   window.addEventListener("resize", handleResize);
   clipboard.init();
   keyboard.init();

@@ -1,4 +1,3 @@
-import * as pubsub from "../pubsub.js";
 import * as app from "../my-mind.js";
 import * as notes from "./notes.js";
 import * as io from "./io.js";
@@ -9,6 +8,17 @@ import { lastSaveTime } from "../store.js";
 let node = null;
 let saveTimeEl = null;
 let elapsedTimer = null;
+
+// Set by PropertyPanel's onMount (see components/PropertyPanel.jsx).
+// Same bridge pattern as help.js's registerToggle: #ui is a Solid-owned
+// element, so show/hide forwards to Solid's own signal instead of this
+// module mutating node.hidden directly (replaces the old "ui-change"
+// pubsub message, see CLAUDE.md, Solid migration Phase 9.4).
+let toggleAPI = null;
+
+export function registerToggle(api) {
+  toggleAPI = api;
+}
 
 /** Format a Date as HH:MM:SS. */
 function formatTime(d) {
@@ -68,8 +78,8 @@ export function isActive() {
 }
 
 export function toggle() {
-  node.hidden = !node.hidden;
-  pubsub.publish("ui-change");
+  toggleAPI?.toggle();
+  app.handleResize();
 }
 export function getWidth() {
   return node.hidden ? 0 : node.offsetWidth;
@@ -123,4 +133,5 @@ export function dispose() {
   [io, notes].forEach((ui) => ui.dispose());
   node = null;
   saveTimeEl = null;
+  toggleAPI = null;
 }

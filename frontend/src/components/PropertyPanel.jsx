@@ -34,14 +34,16 @@ export default function PropertyPanel() {
   let pubsubModule;
 
   const [ready, setReady] = createSignal(false);
-  // Bumped on every "item-change" pubsub event for the currently selected
-  // item. Item properties (layout, shape, value, status) are plain fields,
-  // not signals yet (that's Phase 6), so this is what makes the selects
-  // below re-read them after an action mutates the item.
+  // Mirrors #ui's show/hide state as Solid state instead of ui.js
+  // reaching into the DOM directly (replaces the old "ui-change" pubsub
+  // message, see CLAUDE.md, Solid migration Phase 9.4). Same bridge
+  // pattern as HelpPanel.jsx's `hidden` signal for #help.
+  const [hidden, setHidden] = createSignal(false);
+
   const [tick, setTick] = createSignal(0);
 
   onMount(async () => {
-    const [actionsMod, appMod, cmdMod, pubsubMod, layoutMod, shapeMod] =
+    const [actionsMod, appMod, cmdMod, pubsubMod, layoutMod, shapeMod, uiMod] =
       await Promise.all([
         import("../lib/mindmap/action.js"),
         import("../lib/mindmap/my-mind.js"),
@@ -49,6 +51,7 @@ export default function PropertyPanel() {
         import("../lib/mindmap/pubsub.js"),
         import("../lib/mindmap/layout/layout.js"),
         import("../lib/mindmap/shape/shape.js"),
+        import("../lib/mindmap/ui/ui.js"),
       ]);
     actionsModule = actionsMod;
     appModule = appMod;
@@ -56,6 +59,8 @@ export default function PropertyPanel() {
     pubsubModule = pubsubMod;
     layoutRepo = layoutMod.repo;
     shapeRepo = shapeMod.repo;
+
+    uiMod.registerToggle({ toggle: () => setHidden((h) => !h) });
 
     pubsubModule.subscribe("item-change", (_message, publisher) => {
       if (publisher === currentItem()) {
@@ -188,7 +193,7 @@ export default function PropertyPanel() {
   }
 
   return (
-    <div id="ui" class="pane">
+    <div id="ui" class="pane" hidden={hidden()}>
       <div class="scrollable">
         <p class="row">
           <button class="icon-btn" data-command="new" title="New">
