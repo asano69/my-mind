@@ -1,5 +1,5 @@
 // src/command/command.ts
-import * as pubsub from "../pubsub.js";
+
 import * as history from "../history.js";
 import * as app from "../my-mind.js";
 import * as help from "../help.js";
@@ -77,7 +77,6 @@ new (class InsertSibling extends Command {
     }
     app.action(action);
     repo.get("edit").execute();
-    pubsub.publish("command-sibling");
   }
 })();
 new (class InsertChild extends Command {
@@ -90,7 +89,6 @@ new (class InsertChild extends Command {
     let action = new actions.InsertNewItem(item, item.children.length);
     app.action(action);
     repo.get("edit").execute();
-    pubsub.publish("command-child");
   }
 })();
 new (class Delete extends Command {

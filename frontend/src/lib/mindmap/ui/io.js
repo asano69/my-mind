@@ -46,7 +46,6 @@ export function init() {
   });
   pubsub.subscribe("map-new", (_) => setCurrentMap(null));
 
-  pubsub.subscribe("load-done", () => hide());
   statusTimer = setInterval(updateSaveStatus, 1000);
   // Auto-save: debounce item changes and save after a short delay.
   // Only kicks in once the map has been saved at least once (has an id).
@@ -98,7 +97,7 @@ export async function restore() {
     setCurrentMap(record);
     app.setThrobber(false);
     app.showMap(MindMap.fromJSON(record.mymind));
-    pubsub.publish("load-done");
+    hide();
   } catch (e) {
     error(e);
   }
