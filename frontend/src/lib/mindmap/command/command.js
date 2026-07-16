@@ -308,7 +308,7 @@ new (class GoToCatalog extends Command {
     this.keys = [{ code: "KeyP", ctrlKey: true }];
   }
   async execute() {
-    await io.quickSave();
+    await io.saveWithSvg();
     window.location.href = "/catalog";
   }
 })();

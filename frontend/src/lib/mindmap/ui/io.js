@@ -136,14 +136,14 @@ export function hide() {
 
 export function quickSave() {
   if (currentMapId) {
-    saveMapWithSvg();
+    saveWithSvg();
   } else {
     show();
   }
 }
 
 function submit() {
-  saveMapWithSvg();
+  saveWithSvg();
 }
 
 // Runs `task` (a performSave call) respecting the in-flight guard above.
@@ -173,8 +173,10 @@ function saveMap() {
 }
 
 // Explicit save: pushes the map JSON plus a freshly rendered SVG snapshot
-// (used for the catalog thumbnail). Used by quickSave()/submit().
-function saveMapWithSvg() {
+// (used for the catalog thumbnail). Used by quickSave()/submit(), and by
+// callers that need a fresh thumbnail before leaving the canvas (e.g.
+// navigating to the catalog).
+export function saveWithSvg() {
   return runGuarded(() => performSave(true));
 }
 
