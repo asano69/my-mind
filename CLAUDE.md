@@ -319,7 +319,27 @@ internally (signal setters instead of direct field writes) — the
 Risk: low, provided Phase 6 lands cleanly, since this phase is "keep the
 outer shape, swap the internals."
 
----
+### Phase 7 progress note
+
+Verified, no production code changes were needed. `action.js`'s `Set*`
+Actions already write through `item.js`'s public property setters
+(`item.status = x`, `item.color = x`, ...), and those setters were already
+swapped to call the underlying signal setters back in Phase 6. So "keep
+the outer shape, swap the internals" was already true by construction —
+there was no direct-field-write code left in `action.js` to convert.
+`item.side` (used by `SetSide`) intentionally stays a plain field, per the
+Phase 6 note about `MapLayout.getChildDirection`'s side-effect read.
+
+`history.js` itself needed no changes, as predicted, and now has real
+tests: `history.test.js` had accidentally duplicated `action.test.js`
+instead of testing `push`/`back`/`forward`/`canBack`/`canForward` (the
+Phase 0 goal) — fixed. Added `action.item.test.js` to characterize that
+`do()`/`undo()` correctly round-trips signal-backed properties along with
+their dependent `resolvedXxx` memos (`resolvedStatus`, `resolvedValue`,
+`resolvedColor`), closing out the Phase 7 risk note about re-verifying
+undo/redo behavior.
+
+
 
 ## Phase 8 — `map.js` and the layout/SVG engine
 
