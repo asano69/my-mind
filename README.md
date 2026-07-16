@@ -17,9 +17,10 @@ It has a catalog feature.
 - [x] Catalog遷移時に、svgデータの自動保存
 - [ ] Canvasで、Map削除ボタンを追加する
 - [ ] svg画像を配信するルートを作成。http://localhost:3001/img/UUID
-- [ ] catalogにおいて、タイトルをクリックしてもそのマップを開くようにする（現在イメージの部分しかクリック可能ではない）
+- [x] catalogにおいて、タイトルをクリックしてもそのマップを開くようにする（現在イメージの部分しかクリック可能ではない）
 - [ ] キャンバスで、右ペインが戻らなくなるバグの修正
 - [ ] CanvasのSave Asボタンで、マインドマップのpng画像をクリップボードにコピーする
+- [ ] canvasで、Catalogアイコンや、タイトル、エディターボタンなどのある細長い部分を、topbarなどのコンポーネント化する
 
 ## Work in Progress
 - [x] my-mind.js アンマウント安全化
