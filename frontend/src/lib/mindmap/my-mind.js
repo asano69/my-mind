@@ -9,6 +9,19 @@ import "./command/command.js";
 import "./command/edit.js";
 import "./command/select.js";
 
+// Registers every layout/shape kind into their respective repos (see
+// layout/layout.js's and shape/shape.js's `repo` Maps). This used to be a
+// side-effect import inside ui/layout.js and ui/shape.js, but those modules
+// were replaced by PropertyPanel.jsx (see CLAUDE.md, Solid migration
+// Phase 3); the registration itself is engine-wide (item.js's
+// resolvedShape/resolvedLayout depend on it), so it lives here now.
+import "./layout/graph.js";
+import "./layout/tree.js";
+import "./layout/map.js";
+import "./shape/box.js";
+import "./shape/ellipse.js";
+import "./shape/underline.js";
+
 import { repo as commandRepo } from "./command/command.js";
 import Map, { init as initMapCSS } from "./map.js";
 import * as history from "./history.js";
@@ -19,6 +32,7 @@ import * as clipboard from "./clipboard.js";
 import * as title from "./title.js";
 import * as help from "./help.js";
 import * as ui from "./ui/ui.js";
+import { setCurrentItem } from "./store.js";
 
 let port = null;
 let spinner = null;
@@ -108,6 +122,10 @@ export function selectItem(item) {
     currentItem.deselect();
   }
   currentItem = item;
+  // Keep store.js's Solid signal in sync so PropertyPanel.jsx (and any
+  // future Solid component) can react to selection changes directly,
+  // per the Solid migration plan's Phase 3 (see CLAUDE.md).
+  setCurrentItem(item);
   currentItem.select();
   currentMap.ensureItemVisibility(currentItem);
 }
@@ -173,6 +191,7 @@ export function unmount() {
   currentMap?.hide();
   currentMap = null;
   currentItem = null;
+  setCurrentItem(null);
   editing = false;
   selectedItems.clear();
   selectionCursor = null;

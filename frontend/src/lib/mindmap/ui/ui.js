@@ -1,9 +1,5 @@
 import * as pubsub from "../pubsub.js";
 import * as app from "../my-mind.js";
-import * as value from "./value.js";
-import * as layout from "./layout.js";
-import * as shape from "./shape.js";
-import * as status from "./status.js";
 import * as notes from "./notes.js";
 import * as io from "./io.js";
 import * as menu from "./context-menu.js";
@@ -82,9 +78,6 @@ export function toggle() {
 export function getWidth() {
   return node.hidden ? 0 : node.offsetWidth;
 }
-function update() {
-  [layout, shape, value, status].forEach((ui) => ui.update());
-}
 function onClick(e) {
   let target = e.target;
   if (target == node.querySelector("#toggle")) {
@@ -109,14 +102,12 @@ function onClick(e) {
 export function init(port) {
   node = document.querySelector("#ui");
   saveTimeEl = document.querySelector("#save-time");
-  [layout, shape, value, status, notes, io].forEach((ui) => ui.init());
+  // layout/shape/value/status no longer live here — see PropertyPanel.jsx,
+  // which reads store.js's `currentItem` signal directly instead of being
+  // driven by this module's init()/dispose()/pubsub wiring (Solid migration
+  // Phase 3, see CLAUDE.md).
+  [notes, io].forEach((ui) => ui.init());
   menu.init(port);
-  pubsub.subscribe("item-select", update);
-  pubsub.subscribe("item-change", (_message, publisher) => {
-    if (publisher == app.currentItem) {
-      update();
-    }
-  });
   pubsub.subscribe("save-done", onSaveDone);
   document.addEventListener("click", onClick);
   io.restore();
@@ -131,7 +122,7 @@ export function dispose() {
   elapsedTimer = null;
   lastSaveTime = null;
   menu.dispose();
-  [io, notes, status, value, shape, layout].forEach((ui) => ui.dispose());
+  [io, notes].forEach((ui) => ui.dispose());
   node = null;
   saveTimeEl = null;
 }

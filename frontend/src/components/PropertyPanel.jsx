@@ -1,48 +1,190 @@
-import { onMount } from "solid-js";
+import { createMemo, createSignal, For, onMount } from "solid-js";
+import { currentItem } from "../lib/mindmap/store";
 
-// The property panel (#ui) — layout/shape/value/status/color controls for
-// the currently selected item, the notes/menu toggle buttons, the save
-// spinner, and the save-status footer.
+const STATUS_MAP = { yes: true, no: false, "": null };
+
+function statusToString(status) {
+  for (let key in STATUS_MAP) {
+    if (STATUS_MAP[key] === status) {
+      return key;
+    }
+  }
+  return String(status);
+}
+
+// The property panel (#ui) — layout/shape/value/status controls for the
+// currently selected item, color pickers, the notes/menu toggle buttons,
+// the save spinner, and the save-status footer.
 //
-// Color and text-color swatches are handled directly here (see setColor/
-// setTextColor below) instead of through a ui/*.js module, since they only
-// need to dispatch an action on click and never read engine state back.
-// ui/*.js (layout.js, shape.js, value.js, status.js) still wire up the
-// remaining controls, which do need to read the current item's state.
+// layout/shape/value/status used to be backed by ui/layout.js, ui/shape.js,
+// ui/value.js, ui/status.js, each imperatively reading/writing a plain
+// <select>. They're now controlled Solid components reading store.js's
+// `currentItem` signal directly (see CLAUDE.md, Solid migration Phase 3).
+// Color/text-color swatches were already handled here before Phase 3, since
+// they only dispatch an action on click and never read engine state back.
 export default function PropertyPanel() {
   // Cached after the first dynamic import, see onMount. Loaded lazily
   // (like title.js/notes.js) so the engine bundle isn't pulled in before
   // the canvas actually mounts.
   let actionsModule;
   let appModule;
+  let commandRepo;
+  let layoutRepo;
+  let shapeRepo;
+  let pubsubModule;
+
+  const [ready, setReady] = createSignal(false);
+  // Bumped on every "item-change" pubsub event for the currently selected
+  // item. Item properties (layout, shape, value, status) are plain fields,
+  // not signals yet (that's Phase 6), so this is what makes the selects
+  // below re-read them after an action mutates the item.
+  const [tick, setTick] = createSignal(0);
 
   onMount(async () => {
-    [actionsModule, appModule] = await Promise.all([
-      import("../lib/mindmap/action.js"),
-      import("../lib/mindmap/my-mind.js"),
-    ]);
+    const [actionsMod, appMod, cmdMod, pubsubMod, layoutMod, shapeMod] =
+      await Promise.all([
+        import("../lib/mindmap/action.js"),
+        import("../lib/mindmap/my-mind.js"),
+        import("../lib/mindmap/command/command.js"),
+        import("../lib/mindmap/pubsub.js"),
+        import("../lib/mindmap/layout/layout.js"),
+        import("../lib/mindmap/shape/shape.js"),
+      ]);
+    actionsModule = actionsMod;
+    appModule = appMod;
+    commandRepo = cmdMod.repo;
+    pubsubModule = pubsubMod;
+    layoutRepo = layoutMod.repo;
+    shapeRepo = shapeMod.repo;
+
+    pubsubModule.subscribe("item-change", (_message, publisher) => {
+      if (publisher === currentItem()) {
+        setTick((t) => t + 1);
+      }
+    });
+    setReady(true);
   });
+
+  const layoutGroups = createMemo(() => {
+    if (!ready()) {
+      return null;
+    }
+    return {
+      map: layoutRepo.get("map"),
+      graph: ["right", "left", "bottom", "top"].map((name) =>
+        layoutRepo.get(`graph-${name}`),
+      ),
+      tree: ["right", "left"].map((name) => layoutRepo.get(`tree-${name}`)),
+    };
+  });
+
+  const shapeList = createMemo(() => {
+    if (!ready()) {
+      return [];
+    }
+    return [...shapeRepo.values()];
+  });
+
+  const isRoot = createMemo(() => {
+    tick();
+    return !!currentItem()?.isRoot;
+  });
+
+  const layoutValue = createMemo(() => {
+    tick();
+    const item = currentItem();
+    return item?.layout ? item.layout.id : "";
+  });
+
+  const shapeValue = createMemo(() => {
+    tick();
+    const item = currentItem();
+    return item?.shape ? item.shape.id : "";
+  });
+
+  const valueValue = createMemo(() => {
+    tick();
+    const item = currentItem();
+    if (!item) {
+      return "";
+    }
+    const v = item.value;
+    if (v === null) {
+      return "";
+    }
+    return typeof v === "number" ? "num" : v;
+  });
+
+  const statusValue = createMemo(() => {
+    tick();
+    const item = currentItem();
+    return item ? statusToString(item.status) : "";
+  });
+
+  function setLayout(e) {
+    const item = currentItem();
+    if (!item) {
+      return;
+    }
+    const layout = layoutRepo.get(e.target.value);
+    appModule.action(new actionsModule.SetLayout(item, layout));
+    e.target.blur(); // return focus to the canvas so shortcuts keep working
+  }
+
+  function setShape(e) {
+    const item = currentItem();
+    if (!item) {
+      return;
+    }
+    const shape = shapeRepo.get(e.target.value);
+    appModule.action(new actionsModule.SetShape(item, shape));
+    e.target.blur();
+  }
+
+  function setValue(e) {
+    const item = currentItem();
+    if (!item) {
+      return;
+    }
+    const raw = e.target.value;
+    if (raw === "num") {
+      // Same prompt()-based flow as the "value" keyboard shortcut/command.
+      commandRepo.get("value").execute();
+    } else {
+      appModule.action(new actionsModule.SetValue(item, raw || null));
+    }
+    e.target.blur();
+  }
+
+  function setStatus(e) {
+    const item = currentItem();
+    if (!item) {
+      return;
+    }
+    const raw = e.target.value;
+    const status = raw in STATUS_MAP ? STATUS_MAP[raw] : raw;
+    appModule.action(new actionsModule.SetStatus(item, status));
+    e.target.blur();
+  }
 
   function setColor(e) {
     e.preventDefault();
     const color = e.target.dataset.color;
-    if (color === undefined || !actionsModule) {
+    const item = currentItem();
+    if (color === undefined || !item || !actionsModule) {
       return;
     }
-    appModule.action(
-      new actionsModule.SetColor(appModule.currentItem, color),
-    );
+    appModule.action(new actionsModule.SetColor(item, color));
   }
 
   function setTextColor(e) {
     e.preventDefault();
     const color = e.target.dataset.color;
-    if (color === undefined || !actionsModule) {
+    const item = currentItem();
+    if (color === undefined || !item || !actionsModule) {
       return;
     }
-    appModule.action(
-      new actionsModule.SetTextColor(appModule.currentItem, color),
-    );
+    appModule.action(new actionsModule.SetTextColor(item, color));
   }
 
   return (
@@ -65,23 +207,60 @@ export default function PropertyPanel() {
         <p>
           <label>
             <span>Layout</span>
-            <select id="layout">
-              <option value="">(Inherit)</option>
+            <select
+              id="layout"
+              value={layoutValue()}
+              onChange={setLayout}
+              disabled={!ready() || !currentItem()}
+            >
+              <option value="" disabled={isRoot()}>
+                (Inherit)
+              </option>
+              {layoutGroups() && (
+                <>
+                  <option value="map" disabled={!isRoot()}>
+                    {layoutGroups().map.label}
+                  </option>
+                  <optgroup label="Graph">
+                    <For each={layoutGroups().graph}>
+                      {(l) => <option value={l.id}>{l.label}</option>}
+                    </For>
+                  </optgroup>
+                  <optgroup label="Tree">
+                    <For each={layoutGroups().tree}>
+                      {(l) => <option value={l.id}>{l.label}</option>}
+                    </For>
+                  </optgroup>
+                </>
+              )}
             </select>
           </label>
         </p>
         <p>
           <label>
             <span>Shape</span>
-            <select id="shape">
+            <select
+              id="shape"
+              value={shapeValue()}
+              onChange={setShape}
+              disabled={!ready() || !currentItem()}
+            >
               <option value="">(Automatic)</option>
+              <For each={shapeList()}>
+                {(s) => <option value={s.id}>{s.label}</option>}
+              </For>
             </select>
           </label>
         </p>
         <p>
           <label>
             <span>Value</span>
-            <select id="value">
+            <select
+              id="value"
+              value={valueValue()}
+              onChange={setValue}
+              disabled={!ready() || !currentItem()}
+            >
               <option value="">(None)</option>
               <option value="num">Number</option>
               <optgroup label="Formula">
@@ -96,7 +275,12 @@ export default function PropertyPanel() {
         <p>
           <label>
             <span>Status</span>
-            <select id="status">
+            <select
+              id="status"
+              value={statusValue()}
+              onChange={setStatus}
+              disabled={!ready() || !currentItem()}
+            >
               <option value="">None</option>
               <option value="yes">Yes</option>
               <option value="no">No</option>
