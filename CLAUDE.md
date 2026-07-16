@@ -421,6 +421,43 @@ it turns out to matter in practice.
 4. Re-read `CLAUDE.md`'s plan section and update it to reflect what
    remains vanilla vs. Solid-owned.
 
+
+### Phase 9 progress note
+
+All four steps verified/executed against the actual code, not just the
+plan text:
+
+1. `pubsub.js` kept as-is. Confirmed live publishers/subscribers still
+   exist for `item-change` (`map.js`, `notes.js`), `ui-change`
+   (`ui/ui.js`, `my-mind.js`), and `map-new`/`load-done`/
+   `command-sibling`/`command-child` (`command/command.js`, `ui/io.js`).
+   Matches the Phase 5 addendum's list exactly — nothing to delete.
+2. `item.js`'s `update()` method removed. It referenced an
+   `UPDATE_OPTIONS` constant that no longer existed anywhere in the file
+   (a leftover from before Phase 8, not actually deleted despite the
+   Phase 8 progress note's claim) and had zero callers — `map.js`'s
+   `layoutSubtree()` has been the sole layout/DOM-sync path since Phase 8.
+   The now-unused `pubsub` import in `item.js` was removed along with it.
+3. `my-mind.js`'s manual `dispose()` chain reviewed module by module.
+   `keyboard.js`, `mouse.js`, `clipboard.js`, and `ui.js` (plus the
+   `io.js`/`notes.js`/`context-menu.js` it wraps) all still attach raw
+   listeners to `window`/`document`/`port` outside Solid's control, so
+   they keep their manual `dispose()` calls. `title.js` keeps its manual
+   `dispose()` too, per the Phase 5 addendum's note that a vanilla
+   module's `createRoot` effect has no automatic owner. `help.js` was the
+   only module that was a pure bridge object (no raw listeners, no
+   `createRoot` effect) — its `dispose()` call was moved into
+   `HelpPanel.jsx`'s own `onCleanup`, and the now-unused `help` import
+   was removed from `my-mind.js`.
+4. This note itself is the "what remains vanilla vs. Solid-owned" update:
+   vanilla-owned (manual `init()`/`dispose()` in `my-mind.js`) —
+   `keyboard.js`, `mouse.js`, `clipboard.js`, `title.js`, `ui.js` (and its
+   sub-modules `io.js`, `notes.js`, `context-menu.js`); Solid-owned (via
+   a component's own `onMount`/`onCleanup`) — `help.js`, plus everything
+   already folded into components directly (`PropertyPanel.jsx`,
+   `TitleBar.jsx`'s input, `NotesEditor.jsx`'s editor). The migration
+   plan is now complete.
+
 ---
 
 ## Suggested order summary

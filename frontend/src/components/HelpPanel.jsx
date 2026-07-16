@@ -1,4 +1,4 @@
-import { createSignal, onMount, For } from "solid-js";
+import { createSignal, onMount, onCleanup, For } from "solid-js";
 
 // Static shape of the help table: section title + which commands make up
 // each row. commandRepo is only resolved at mount time (see onMount below),
@@ -132,6 +132,13 @@ export default function HelpPanel() {
       toggle: () => setHidden((h) => !h),
       close: () => setHidden(true),
     });
+  });
+  // help.js has no raw DOM listeners of its own — it's only a bridge
+  // object for this component's toggle state — so its cleanup can live
+  // directly in this component's onCleanup instead of my-mind.js's manual
+  // unmount() chain (see CLAUDE.md, Solid migration Phase 9).
+  onCleanup(() => {
+    helpModule?.dispose();
   });
 
   return (

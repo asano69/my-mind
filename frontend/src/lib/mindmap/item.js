@@ -1,7 +1,7 @@
 // src/item.ts
 import * as html from "./html.js";
 import * as svg from "./svg.js";
-import * as pubsub from "./pubsub.js";
+
 import * as app from "./my-mind.js";
 import { repo as commandRepo } from "./command/command.js";
 import { repo as shapeRepo } from "./shape/shape.js";
@@ -392,45 +392,6 @@ export default class Item {
   /** Remove the multi-selection mark from this item. */
   unmarkSelected() {
     this.dom.node.classList.remove("selected");
-  }
-  /*
-   * This item changed in some way (typically one of its attributes has been changed).
-   * We need to re-render its immediate DOM and also prehaps recurse upwards/downwards.
-   *
-   * Nothing happens if not part of a map (or the map is not visible).
-   */
-  update(options = {}) {
-    options = Object.assign({}, UPDATE_OPTIONS, options);
-    const { map, children, parent } = this;
-    if (!map || !map.isVisible) {
-      return;
-    }
-    if (options.children) {
-      // recurse downwards?
-      let childUpdateOptions = { parent: false, children: true };
-      children.forEach((child) => child.update(childUpdateOptions));
-    }
-    pubsub.publish("item-change", this);
-    const { resolvedLayout, resolvedShape, dom } = this;
-
-    const { content, node, connectors } = dom;
-    dom.text.style.color = this.resolvedTextColor;
-    node.dataset.shape = resolvedShape.id; // applies css => modifies dimensions (necessary for layout)
-    node.dataset.align = resolvedLayout.computeAlignment(this); // applies css => modifies dimensions (necessary for layout)
-    let fo = content.parentNode;
-    let size = [
-      Math.max(content.offsetWidth, content.scrollWidth),
-      Math.max(content.offsetHeight, content.scrollHeight),
-    ];
-    fo.setAttribute("width", String(size[0]));
-    fo.setAttribute("height", String(size[1]));
-    connectors.innerHTML = "";
-    resolvedLayout.update(this);
-    resolvedShape.update(this); // needs layout -> draws second
-    // recurse upwards?
-    if (options.parent && parent) {
-      parent.update({ children: false });
-    } // explicit children:false when the parent is a Map
   }
   get text() {
     return this._text();
