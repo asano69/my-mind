@@ -31,7 +31,7 @@ It has a catalog feature.
 - [ ] CanvasのSave Asボタンで、マインドマップのpng画像をクリップボードにコピーする
 - [ ] 落書き機能（フリーライティング）
 - [ ] ノードの移動をdnd-kitに変えられないか検討する
-
+- [ ] 誤った操作をしたあとCatalogに戻ることでデータが容易に壊れるリスクへの対処
 
 
 ## Work in Progress
