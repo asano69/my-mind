@@ -141,9 +141,12 @@ export default function Catalog() {
                         <Show
                           when={editMode()}
                           fallback={
-                            <span class="truncate font-sans text-sm">
+                            <A
+                              href={`/maps/${map.uuid}`}
+                              class="truncate font-sans text-sm"
+                            >
                               {map.title || "Untitled"}
-                            </span>
+                            </A>
                           }
                         >
                           <input
@@ -154,7 +157,7 @@ export default function Catalog() {
                               e.key === "Enter" && e.currentTarget.blur()
                             }
                             class="min-w-0 flex-1 rounded border border-pane-hover
-              bg-bg px-2 py-1 text-sm"
+      bg-bg px-2 py-1 text-sm"
                           />
                         </Show>
                       </div>
