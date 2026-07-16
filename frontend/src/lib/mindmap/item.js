@@ -1,5 +1,4 @@
 // src/item.ts
-// src/item.ts
 import * as html from "./html.js";
 import * as svg from "./svg.js";
 import * as pubsub from "./pubsub.js";
@@ -8,13 +7,10 @@ import { repo as commandRepo } from "./command/command.js";
 import { repo as shapeRepo } from "./shape/shape.js";
 import { repo as layoutRepo } from "./layout/layout.js";
 import Map from "./map.js";
-import { createSignal, createEffect, createMemo, createRoot } from "solid-js";
+import { createSignal, createMemo } from "solid-js";
 
 export const TOGGLE_SIZE = 7;
-const UPDATE_OPTIONS = {
-  parent: true,
-  children: false,
-};
+
 export default class Item {
   static fromJSON(data) {
     return new this().fromJSON(data);
@@ -178,30 +174,16 @@ export default class Item {
     dom.node.append(dom.connectors, fo);
     fo.append(dom.content);
     dom.content.append(dom.status, dom.value, dom.icon, dom.text, dom.notes);
-    /* toggle+children are appended when children exist */
     dom.toggle.addEventListener("click", (_) => {
       this.collapsed = !this.collapsed;
       app.selectItem(this);
     });
     this.updateToggle();
-
-    // Wrapped in createRoot because Item is a plain class, not a Solid
-    // component — there is no implicit owner to dispose this effect.
-    // Deliberately not disposed anywhere yet: an Item's real lifetime is
-    // tied to the undo/redo history stack (RemoveItem's undo revives the
-    // same instance), not to DOM removal, so there is no single correct
-    // place to call dispose() without risking a double-dispose on undo.
-    // Left as a known follow-up for a later Phase 6 step once history.js
-    // itself is reworked (Phase 7).
-    createRoot((dispose) => {
-      this._disposeItemEffects = dispose;
-      createEffect(() => this.updateText());
-      createEffect(() => this.updateStatus());
-      createEffect(() => this.updateValue());
-      createEffect(() => this.updateIcon());
-      createEffect(() => this.updateNotes());
-      createEffect(() => this.updateToggle());
-    });
+    // updateText/updateStatus/updateValue/updateIcon/updateNotes/updateToggle
+    // are no longer wrapped in per-item effects here — Map's single
+    // reactive layout computed (see map.js, Solid migration Phase 8) calls
+    // them directly while recomputing the whole tree, so DOM content sync
+    // and size measurement always happen in the same synchronous pass.
   }
   get id() {
     return this._id;
@@ -211,7 +193,6 @@ export default class Item {
   }
   set parent(parent) {
     this._setParent(parent);
-    this.update({ children: true });
   }
   get size() {
     const bbox = this.dom.node.getBBox();
@@ -335,35 +316,27 @@ export default class Item {
     return this;
   }
   mergeWith(data) {
-    var dirty = 0;
     if (this.text != data.text && !this.dom.text.contentEditable) {
       this.text = data.text;
     }
     if (this._side != data.side) {
       this._side = data.side || null;
-      dirty = 1;
     }
     if (this._color() != data.color) {
       this._setColor(data.color || "");
-      dirty = 2;
     }
     if (this._textColor() != data.textColor) {
       this._setTextColor(data.textColor || "");
-      dirty = 2;
     }
     if (this._icon() != data.icon) {
       this._setIcon(data.icon || "");
-      dirty = 1;
     }
     if (this._value() != data.value) {
       this._setValue(data.value || null);
-      dirty = 1;
     }
     if (this._status() != data.status) {
       this._setStatus(data.status);
-      dirty = 1;
     }
-
     if (this._collapsed() != !!data.collapsed) {
       this.collapsed = !!data.collapsed;
     }
@@ -371,41 +344,32 @@ export default class Item {
     let ourShapeId = this._shape() ? this._shape().id : null;
     if (ourShapeId != data.shape) {
       this._setShape(data.shape ? shapeRepo.get(data.shape) : null);
-      dirty = 1;
     }
     let ourLayoutId = this._layout() ? this._layout().id : null;
     if (ourLayoutId != data.layout) {
       this._setLayout(data.layout ? layoutRepo.get(data.layout) : null);
-      dirty = 2;
     }
     (data.children || []).forEach((child, index) => {
       if (index >= this.children.length) {
-        /* new child */
         this.insertChild(Item.fromJSON(child));
       } else {
-        /* existing child */
         var myChild = this.children[index];
         if (myChild.id == child.id) {
-          /* recursive merge */
           myChild.mergeWith(child);
         } else {
-          /* changed; replace */
           this.removeChild(this.children[index]);
           this.insertChild(Item.fromJSON(child), index);
         }
       }
     });
-    // remove dead children
     let newLength = (data.children || []).length;
     while (this.children.length > newLength) {
       this.removeChild(this.children[this.children.length - 1]);
     }
-    if (dirty == 1) {
-      this.update({ children: false });
-    }
-    if (dirty == 2) {
-      this.update({ children: true });
-    }
+    // `side` is a plain (non-reactive) field — per CLAUDE.md's Phase 6 note
+    // on MapLayout.getChildDirection — so it needs an explicit nudge here;
+    // simpler to do it unconditionally than to track which field changed.
+    this.map?.requestLayout();
   }
   clone() {
     var data = this.toJSON();
@@ -474,7 +438,6 @@ export default class Item {
   }
   set text(text) {
     this._setText(text);
-    this.update();
   }
   get notes() {
     return this._notes();
@@ -487,15 +450,12 @@ export default class Item {
   }
   set collapsed(collapsed) {
     this._setCollapsed(collapsed);
-    let children = !collapsed; // update children if expanded
-    this.update({ children });
   }
   get value() {
     return this._value();
   }
   set value(value) {
     this._setValue(value);
-    this.update();
   }
   get resolvedValue() {
     return this._resolvedValue();
@@ -505,7 +465,6 @@ export default class Item {
   }
   set status(status) {
     this._setStatus(status);
-    this.update();
   }
   get resolvedStatus() {
     return this._resolvedStatus();
@@ -515,7 +474,6 @@ export default class Item {
   }
   set icon(icon) {
     this._setIcon(icon);
-    this.update();
   }
   get side() {
     return this._side;
@@ -529,7 +487,6 @@ export default class Item {
   }
   set color(color) {
     this._setColor(color);
-    this.update({ children: true });
   }
   get resolvedColor() {
     return this._resolvedColor();
@@ -539,7 +496,6 @@ export default class Item {
   }
   set textColor(textColor) {
     this._setTextColor(textColor);
-    this.update({ children: true });
   }
   get resolvedTextColor() {
     return this._resolvedTextColor();
@@ -549,7 +505,6 @@ export default class Item {
   }
   set layout(layout) {
     this._setLayout(layout);
-    this.update({ children: true });
   }
   get resolvedLayout() {
     const layout = this._resolvedLayout();
@@ -563,7 +518,6 @@ export default class Item {
   }
   set shape(shape) {
     this._setShape(shape);
-    this.update();
   }
   get resolvedShape() {
     return this._resolvedShape();
@@ -611,7 +565,6 @@ export default class Item {
     child.dom.node.remove();
     child.parent = null;
     !this.children.length && this.dom.toggle.remove();
-    this.update();
   }
   startEditing() {
     this.originalText = this.text;
@@ -631,13 +584,12 @@ export default class Item {
     let result = this.dom.text.innerHTML;
     this.dom.text.innerHTML = this.originalText;
     this.originalText = "";
-    this.update(); // text changed
     return result;
   }
   handleEvent(e) {
     switch (e.type) {
       case "input":
-        this.update();
+        this.map.requestLayout();
         this.map.ensureItemVisibility(this);
         break;
       case "keydown":

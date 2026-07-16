@@ -47,7 +47,7 @@ new (class Newline extends Command {
     let br = document.createElement("br");
     range.insertNode(br);
     range.setStartAfter(br);
-    app.currentItem.update({ parent: true, children: true });
+    app.currentItem.map?.requestLayout();
   }
 })();
 new (class Cancel extends Command {

@@ -363,6 +363,46 @@ could cause more DOM thrashing than the current hand-tuned
 `parent`/`children` flags if dependencies aren't scoped tightly. Profile
 with a large map (50+ nodes) before and after.
 
+### Phase 8 progress note
+
+Implemented as a single `createComputed` owned by `Map` (not
+`createEffect` — it must run synchronously so `show()`/`center()` and
+other direct callers see up-to-date DOM measurements the moment they
+resume execution). The computed calls a new module-level
+`layoutSubtree()` helper in map.js that walks the tree depth-first
+(children before parent, matching the old `update()` recursion order,
+since a parent's rank size depends on its children's already-measured
+content boxes) and does, in one pass per item, both the DOM content sync
+(`updateText`/`updateStatus`/`updateValue`/`updateIcon`/`updateNotes`/
+`updateToggle` — previously each its own per-item effect from Phase 6,
+now called directly here so size measurement can't race them) and the
+dataset/size/connector/layout work `Item.prototype.update()` used to do.
+
+`item.js`'s `update()` method, its `UPDATE_OPTIONS` constant, and every
+explicit `.update(...)` call in its property setters are gone, exactly as
+step 2 anticipated — Solid's automatic dependency tracking (through
+`resolvedColor`/`resolvedTextColor`/`resolvedShape`/`resolvedLayout` and
+the existing per-item `_childrenVersion` signal from Phase 6) means the
+shared computed re-runs whenever anything relevant changes anywhere in
+the tree, with no manual `parent`/`children` bookkeeping left.
+
+Three call sites had no signal to hang off and still need an explicit
+nudge: `item.side` (intentionally non-reactive, per the Phase 6 note on
+`MapLayout.getChildDirection`), live text editing (contentEditable
+mutates the DOM directly, bypassing the `text` signal until "finish"),
+and `adjustFontSize` (a CSS-only change). All three now call a new
+`Map.prototype.requestLayout()`, which just bumps a version signal the
+computed also depends on.
+
+Known follow-up, called out by the phase's own risk note: the computed
+recomputes the *entire* tree on every change, anywhere — there is no
+per-item scoping yet. This matches the plan's literal "single
+createEffect per Map instance" wording, but on a large map it's more DOM
+work than the old hand-tuned `parent`/`children` flags did. Left as-is
+per the plan (profile before optimizing further); revisit in Phase 9 if
+it turns out to matter in practice.
+
+
 ---
 
 ## Phase 9 — Cleanup

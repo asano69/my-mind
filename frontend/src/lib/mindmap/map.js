@@ -5,10 +5,44 @@ import { br2nl } from "./format/format.js";
 import * as svg from "./svg.js";
 import * as html from "./html.js";
 import * as app from "./my-mind.js";
+import * as pubsub from "./pubsub.js";
+import { createSignal, createComputed, createRoot } from "solid-js";
 let css = "";
-const UPDATE_OPTIONS = {
-  children: true,
-};
+
+// Recomputes DOM content sync + layout + connectors for `item` and its
+// whole subtree, depth-first (children before parent — a parent's own
+// rank size depends on its children's already-measured content boxes,
+// same order the old Item.prototype.update({children:true}) recursion
+// used). This is the single place layout recomputation happens now (see
+// CLAUDE.md, Solid migration Phase 8); it's invoked from the reactive
+// computed set up in Map's constructor below.
+function layoutSubtree(item) {
+  item._childrenVersion(); // track child insertion/removal
+  item.children.forEach(layoutSubtree);
+  item.updateText();
+  item.updateStatus();
+  item.updateValue();
+  item.updateIcon();
+  item.updateNotes();
+  item.updateToggle();
+  const { resolvedLayout, resolvedShape, dom } = item;
+  const { content, node, connectors } = dom;
+  dom.text.style.color = item.resolvedTextColor;
+  node.dataset.shape = resolvedShape.id; // applies css => modifies dimensions (necessary for layout)
+  node.dataset.align = resolvedLayout.computeAlignment(item); // applies css => modifies dimensions (necessary for layout)
+  const fo = content.parentNode;
+  const size = [
+    Math.max(content.offsetWidth, content.scrollWidth),
+    Math.max(content.offsetHeight, content.scrollHeight),
+  ];
+  fo.setAttribute("width", String(size[0]));
+  fo.setAttribute("height", String(size[1]));
+  connectors.innerHTML = "";
+  resolvedLayout.update(item);
+  resolvedShape.update(item); // needs layout -> draws second
+  pubsub.publish("item-change", item);
+}
+
 export default class Map {
   constructor(options) {
     this.node = svg.node("svg");
@@ -36,7 +70,37 @@ export default class Map {
     root.text = resolvedOptions.root;
     root.layout = resolvedOptions.layout;
     this.root = root;
+
+    // Single reactive layout pass for the whole map (see CLAUDE.md, Solid
+    // migration Phase 8). createComputed — not createEffect — so both the
+    // first run and every re-run happen synchronously: show()/center() and
+    // other direct callers need the DOM already reflecting the latest
+    // layout the instant they resume execution, not on a deferred tick.
+    const [layoutVersion, setLayoutVersion] = createSignal(0);
+    this._setLayoutVersion = setLayoutVersion;
+    createRoot((dispose) => {
+      this._disposeLayout = dispose;
+      createComputed(() => {
+        layoutVersion();
+        if (!this.isVisible) {
+          return;
+        }
+        layoutSubtree(this._root);
+        this.node.setAttribute("width", String(this._root.size[0]));
+        this.node.setAttribute("height", String(this._root.size[1]));
+      });
+    });
   }
+
+  // Forces the layout computed above to re-run even when no item signal
+  // changed. Needed for the handful of triggers outside the reactive
+  // system: item.side (deliberately non-reactive, see item.js's mergeWith
+  // comment), live contentEditable typing (item.js's handleEvent), and
+  // pure CSS font-size changes (adjustFontSize below).
+  requestLayout() {
+    this._setLayoutVersion((v) => v + 1);
+  }
+
   static fromJSON(data) {
     return new this().fromJSON(data);
   }
@@ -63,7 +127,7 @@ export default class Map {
   adjustFontSize(diff) {
     this.fontSize = Math.max(8, this.fontSize + 2 * diff);
     this.node.style.fontSize = `${this.fontSize}px`;
-    this.update();
+    this.requestLayout();
     this.ensureItemVisibility(app.currentItem);
   }
   mergeWith(data) {
@@ -119,17 +183,9 @@ export default class Map {
   get isVisible() {
     return !!this.node.parentNode;
   }
-  update(options) {
-    options = Object.assign({}, UPDATE_OPTIONS, options);
-    options.children && this._root.update({ parent: false, children: true });
-    const { node } = this;
-    const { size } = this._root;
-    node.setAttribute("width", String(size[0]));
-    node.setAttribute("height", String(size[1]));
-  }
   show(where) {
     where.append(this.node);
-    this.update();
+    this.requestLayout();
     this.center();
     app.selectItem(this._root);
   }
