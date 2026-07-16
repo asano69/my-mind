@@ -252,6 +252,11 @@ undo/redo a batch of changes, confirm auto-save doesn't fire once per
 undone step; edit notes text, confirm auto-save still triggers via the
 `notes.js` path independent of the `map.js` path.
 
+
+9.5だけは設計判断が必要です。 特に「木全体の再計算1回につき何回signalをbumpするか」という点で、素朴に1:1変換するとlayoutSubtreeのツリーサイズ分bumpされてしまいます（Phase 8で既知の全体再計算コストがここにも波及する形）。
+上の案では「ループの外で1回だけbump」という設計にして、この機会にPhase 8の既知課題も一部緩和する形にしていますが、これは元のイベントの挙動を厳密に1:1で置き換えるものではない（意図的な改善を含む）。これで良い。
+
+
 ---
 
 ## Phase 9.6 — Delete pubsub.js
