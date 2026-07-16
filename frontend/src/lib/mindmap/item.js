@@ -7,8 +7,7 @@ import { repo as commandRepo } from "./command/command.js";
 import { repo as shapeRepo } from "./shape/shape.js";
 import { repo as layoutRepo } from "./layout/layout.js";
 import Map from "./map.js";
-import { createSignal, createMemo } from "solid-js";
-
+import { createSignal, createMemo, batch } from "solid-js";
 export const TOGGLE_SIZE = 7;
 
 export default class Item {
@@ -536,35 +535,47 @@ export default class Item {
     return this.parent instanceof Map;
   }
   insertChild(child, index) {
-    // Create or remove child as necessary. This must be done before computing the index (inserting own child)
-    if (!child) {
-      child = new Item();
-    } else if (child.parent && child.parent instanceof Item) {
-      // only when the child has non-map parent
-      child.parent.removeChild(child);
-    }
-    if (!this.children.length) {
-      this.dom.node.appendChild(this.dom.toggle);
-    }
-    if (index === undefined) {
-      index = this.children.length;
-    }
-    var next = null;
-    if (index < this.children.length) {
-      next = this.children[index].dom.node;
-    }
-    this.dom.node.insertBefore(child.dom.node, next);
-    this.children.splice(index, 0, child);
-    this._bumpChildrenVersion();
-    child.parent = this;
+    // Wrapped in batch() so Map's synchronous layout computed (see map.js,
+    // Solid migration Phase 8) never observes the intermediate state where
+    // `child` is already in this.children but child.parent still points
+    // elsewhere (or is null, via the removeChild() call below). Without
+    // this, moving an item to a new parent momentarily has the item listed
+    // as a child of the new parent while resolvedLayout/resolvedShape still
+    // resolve through the old (or no) parent, throwing
+    // "Non-connected item does not have layout".
+    batch(() => {
+      // Create or remove child as necessary. This must be done before computing the index (inserting own child)
+      if (!child) {
+        child = new Item();
+      } else if (child.parent && child.parent instanceof Item) {
+        // only when the child has non-map parent
+        child.parent.removeChild(child);
+      }
+      if (!this.children.length) {
+        this.dom.node.appendChild(this.dom.toggle);
+      }
+      if (index === undefined) {
+        index = this.children.length;
+      }
+      var next = null;
+      if (index < this.children.length) {
+        next = this.children[index].dom.node;
+      }
+      this.dom.node.insertBefore(child.dom.node, next);
+      this.children.splice(index, 0, child);
+      this._bumpChildrenVersion();
+      child.parent = this;
+    });
   }
   removeChild(child) {
-    var index = this.children.indexOf(child);
-    this.children.splice(index, 1);
-    this._bumpChildrenVersion();
-    child.dom.node.remove();
-    child.parent = null;
-    !this.children.length && this.dom.toggle.remove();
+    batch(() => {
+      var index = this.children.indexOf(child);
+      this.children.splice(index, 1);
+      this._bumpChildrenVersion();
+      child.dom.node.remove();
+      child.parent = null;
+      !this.children.length && this.dom.toggle.remove();
+    });
   }
   startEditing() {
     this.originalText = this.text;

@@ -75,3 +75,5 @@ function parseItems(lines) {
 function parsePrefix(line) {
   return line.match(/^\s*/)[0];
 }
+
+new Plaintext();

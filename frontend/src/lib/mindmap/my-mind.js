@@ -18,6 +18,9 @@ import "./command/select.js";
 import "./layout/graph.js";
 import "./layout/tree.js";
 import "./layout/map.js";
+
+import "./format/plaintext.js";
+
 import "./shape/box.js";
 import "./shape/ellipse.js";
 import "./shape/underline.js";
