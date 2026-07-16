@@ -280,6 +280,18 @@ the full manual test matrix (undo/redo, drag-drop, color inheritance
 through 3+ levels, collapse/expand) after each sub-step, not just at the
 end.
 
+### Phase 6 progress note
+
+`status` is now signal-backed (see item.js). The setter still calls the
+full `update()` — status changes the content box size (icon glyph),
+so layout recompute cannot be skipped safely, unlike the plan's literal
+wording. `updateStatus()` itself moved out of `update()`'s body into a
+`createEffect` (wrapped in `createRoot`, never disposed — see the comment
+in the constructor for why). Repeat this exact pattern for `value`, `icon`,
+`notes`, `collapsed` next, keeping each property's own `update()` call
+intact until Phase 8 proves it's safe to drop layout recompute entirely.
+
+
 ---
 
 ## Phase 7 — `history.js` (undo/redo) rework

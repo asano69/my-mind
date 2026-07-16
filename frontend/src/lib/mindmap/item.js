@@ -1,4 +1,5 @@
 // src/item.ts
+// src/item.ts
 import * as html from "./html.js";
 import * as svg from "./svg.js";
 import * as pubsub from "./pubsub.js";
@@ -7,6 +8,8 @@ import { repo as commandRepo } from "./command/command.js";
 import { repo as shapeRepo } from "./shape/shape.js";
 import { repo as layoutRepo } from "./layout/layout.js";
 import Map from "./map.js";
+import { createSignal, createEffect, createRoot } from "solid-js";
+
 export const TOGGLE_SIZE = 7;
 const UPDATE_OPTIONS = {
   parent: true,
@@ -25,7 +28,16 @@ export default class Item {
     this._color = "";
     this._textColor = "";
     this._value = null;
-    this._status = null;
+    // Phase 6 (Solid migration, see CLAUDE.md): status is the first Item
+    // property backed by a per-instance Solid signal instead of a plain
+    // field. The setter still calls the full update() for now (status
+    // affects the content box size, so layout must still be recomputed),
+    // but the DOM class/visibility sync itself (updateStatus()) is now
+    // driven reactively by the effect set up at the end of this
+    // constructor, not by a manual call inside update().
+    const [status, setStatus] = createSignal(null);
+    this._status = status;
+    this._setStatus = setStatus;
     this._side = null; // side preference
     this._shape = null;
     this._layout = null;
@@ -62,6 +74,19 @@ export default class Item {
       app.selectItem(this);
     });
     this.updateToggle();
+
+    // Wrapped in createRoot because Item is a plain class, not a Solid
+    // component — there is no implicit owner to dispose this effect.
+    // Deliberately not disposed anywhere yet: an Item's real lifetime is
+    // tied to the undo/redo history stack (RemoveItem's undo revives the
+    // same instance), not to DOM removal, so there is no single correct
+    // place to call dispose() without risking a double-dispose on undo.
+    // Left as a known follow-up for a later Phase 6 step once history.js
+    // itself is reworked (Phase 7).
+    createRoot((dispose) => {
+      this._disposeStatusEffect = dispose;
+      createEffect(() => this.updateStatus());
+    });
   }
   get id() {
     return this._id;
@@ -124,9 +149,11 @@ export default class Item {
     if (this._value !== null) {
       data.value = this._value;
     }
-    if (this._status !== null) {
-      data.status = this._status;
+
+    if (this._status() !== null) {
+      data.status = this._status();
     }
+
     if (this._layout) {
       data.layout = this._layout.id;
     }
@@ -170,13 +197,14 @@ export default class Item {
     if (data.status !== undefined) {
       // backwards compatibility for yes/no
       if (data.status == "yes") {
-        this._status = true;
+        this._setStatus(true);
       } else if (data.status == "no") {
-        this._status = false;
+        this._setStatus(false);
       } else {
-        this._status = data.status;
+        this._setStatus(data.status);
       }
     }
+
     if (data.collapsed) {
       this.collapsed = !!data.collapsed;
     } // invoke setter -> set text
@@ -216,10 +244,11 @@ export default class Item {
       this._value = data.value || null;
       dirty = 1;
     }
-    if (this._status != data.status) {
-      this._status = data.status;
+    if (this._status() != data.status) {
+      this._setStatus(data.status);
       dirty = 1;
     }
+
     if (this._collapsed != !!data.collapsed) {
       this.collapsed = !!data.collapsed;
     }
@@ -304,10 +333,10 @@ export default class Item {
       children.forEach((child) => child.update(childUpdateOptions));
     }
     pubsub.publish("item-change", this);
-    this.updateStatus();
     this.updateIcon();
     this.updateValue();
     const { resolvedLayout, resolvedShape, dom } = this;
+
     const { content, node, connectors } = dom;
     dom.text.style.color = this.resolvedTextColor;
     node.dataset.shape = resolvedShape.id; // applies css => modifies dimensions (necessary for layout)
@@ -384,14 +413,14 @@ export default class Item {
     }
   }
   get status() {
-    return this._status;
+    return this._status();
   }
   set status(status) {
-    this._status = status;
+    this._setStatus(status);
     this.update();
   }
   get resolvedStatus() {
-    let status = this._status;
+    let status = this._status();
     if (status == "computed") {
       return this.children.every((child) => {
         return child.resolvedStatus !== false;
