@@ -17,6 +17,7 @@ import * as keyboard from "./keyboard.js";
 import * as mouse from "./mouse.js";
 import * as clipboard from "./clipboard.js";
 import * as title from "./title.js";
+import * as help from "./help.js";
 import * as ui from "./ui/ui.js";
 
 let port = null;
@@ -163,13 +164,13 @@ export function unmount() {
   window.removeEventListener("resize", handleResize);
   ui.dispose();
   title.dispose();
+  help.dispose();
   mouse.dispose();
   keyboard.dispose();
   clipboard.dispose();
   pubsub.reset();
   history.reset();
   currentMap?.hide();
-
   currentMap = null;
   currentItem = null;
   editing = false;

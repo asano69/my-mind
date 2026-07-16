@@ -6,7 +6,6 @@ import * as value from "./value.js";
 import * as layout from "./layout.js";
 import * as shape from "./shape.js";
 import * as status from "./status.js";
-import * as help from "./help.js";
 import * as notes from "./notes.js";
 import * as io from "./io.js";
 import * as menu from "./context-menu.js";
@@ -112,8 +111,8 @@ function onClick(e) {
 export function init(port) {
   node = document.querySelector("#ui");
   saveTimeEl = document.querySelector("#save-time");
-  [layout, shape, value, status, color, textColor, help, notes, io].forEach(
-    (ui) => ui.init(),
+  [layout, shape, value, status, color, textColor, notes, io].forEach((ui) =>
+    ui.init(),
   );
   menu.init(port);
   pubsub.subscribe("item-select", update);
@@ -136,8 +135,8 @@ export function dispose() {
   elapsedTimer = null;
   lastSaveTime = null;
   menu.dispose();
-  [io, notes, help, textColor, color, status, value, shape, layout].forEach(
-    (ui) => ui.dispose(),
+  [io, notes, textColor, color, status, value, shape, layout].forEach((ui) =>
+    ui.dispose(),
   );
   node = null;
   saveTimeEl = null;
