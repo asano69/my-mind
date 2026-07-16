@@ -1,11 +1,50 @@
+import { onMount } from "solid-js";
+
 // The property panel (#ui) — layout/shape/value/status/color controls for
 // the currently selected item, the notes/menu toggle buttons, the save
 // spinner, and the save-status footer.
 //
-// Purely static markup: ui/*.js (layout.js, shape.js, value.js, status.js,
-// color.js, text-color.js) query these elements by id/selector and wire
-// them up once the mindmap engine boots.
+// Color and text-color swatches are handled directly here (see setColor/
+// setTextColor below) instead of through a ui/*.js module, since they only
+// need to dispatch an action on click and never read engine state back.
+// ui/*.js (layout.js, shape.js, value.js, status.js) still wire up the
+// remaining controls, which do need to read the current item's state.
 export default function PropertyPanel() {
+  // Cached after the first dynamic import, see onMount. Loaded lazily
+  // (like title.js/notes.js) so the engine bundle isn't pulled in before
+  // the canvas actually mounts.
+  let actionsModule;
+  let appModule;
+
+  onMount(async () => {
+    [actionsModule, appModule] = await Promise.all([
+      import("../lib/mindmap/action.js"),
+      import("../lib/mindmap/my-mind.js"),
+    ]);
+  });
+
+  function setColor(e) {
+    e.preventDefault();
+    const color = e.target.dataset.color;
+    if (color === undefined || !actionsModule) {
+      return;
+    }
+    appModule.action(
+      new actionsModule.SetColor(appModule.currentItem, color),
+    );
+  }
+
+  function setTextColor(e) {
+    e.preventDefault();
+    const color = e.target.dataset.color;
+    if (color === undefined || !actionsModule) {
+      return;
+    }
+    appModule.action(
+      new actionsModule.SetTextColor(appModule.currentItem, color),
+    );
+  }
+
   return (
     <div id="ui" class="pane">
       <div class="scrollable">
@@ -68,30 +107,100 @@ export default function PropertyPanel() {
         <p>
           <label>
             <span>Item color</span>
-            <span id="color" class="color-picker">
+            <span id="color" class="color-picker" onClick={setColor}>
               <a data-color="" title="Inherit" href="#"></a>
-              <a data-color="#000" title="Black" href="#"></a>
-              <a data-color="#d33" title="Red" href="#"></a>
-              <a data-color="#33d" title="Blue" href="#"></a>
-              <a data-color="#3d3" title="Green" href="#"></a>
-              <a data-color="#d3d" title="Magenta" href="#"></a>
-              <a data-color="#3dd" title="Cyan" href="#"></a>
-              <a data-color="#dd3" title="Yellow" href="#"></a>
+              <a
+                data-color="#000"
+                title="Black"
+                href="#"
+                style={{ "background-color": "#000" }}
+              ></a>
+              <a
+                data-color="#d33"
+                title="Red"
+                href="#"
+                style={{ "background-color": "#d33" }}
+              ></a>
+              <a
+                data-color="#33d"
+                title="Blue"
+                href="#"
+                style={{ "background-color": "#33d" }}
+              ></a>
+              <a
+                data-color="#3d3"
+                title="Green"
+                href="#"
+                style={{ "background-color": "#3d3" }}
+              ></a>
+              <a
+                data-color="#d3d"
+                title="Magenta"
+                href="#"
+                style={{ "background-color": "#d3d" }}
+              ></a>
+              <a
+                data-color="#3dd"
+                title="Cyan"
+                href="#"
+                style={{ "background-color": "#3dd" }}
+              ></a>
+              <a
+                data-color="#dd3"
+                title="Yellow"
+                href="#"
+                style={{ "background-color": "#dd3" }}
+              ></a>
             </span>
           </label>
         </p>
         <p>
           <label>
             <span>Text color</span>
-            <span id="text-color" class="color-picker">
+            <span id="text-color" class="color-picker" onClick={setTextColor}>
               <a data-color="" title="Inherit" href="#"></a>
-              <a data-color="#000" title="Black" href="#"></a>
-              <a data-color="#d33" title="Red" href="#"></a>
-              <a data-color="#33d" title="Blue" href="#"></a>
-              <a data-color="#3d3" title="Green" href="#"></a>
-              <a data-color="#d3d" title="Magenta" href="#"></a>
-              <a data-color="#3dd" title="Cyan" href="#"></a>
-              <a data-color="#dd3" title="Yellow" href="#"></a>
+              <a
+                data-color="#000"
+                title="Black"
+                href="#"
+                style={{ "background-color": "#000" }}
+              ></a>
+              <a
+                data-color="#d33"
+                title="Red"
+                href="#"
+                style={{ "background-color": "#d33" }}
+              ></a>
+              <a
+                data-color="#33d"
+                title="Blue"
+                href="#"
+                style={{ "background-color": "#33d" }}
+              ></a>
+              <a
+                data-color="#3d3"
+                title="Green"
+                href="#"
+                style={{ "background-color": "#3d3" }}
+              ></a>
+              <a
+                data-color="#d3d"
+                title="Magenta"
+                href="#"
+                style={{ "background-color": "#d3d" }}
+              ></a>
+              <a
+                data-color="#3dd"
+                title="Cyan"
+                href="#"
+                style={{ "background-color": "#3dd" }}
+              ></a>
+              <a
+                data-color="#dd3"
+                title="Yellow"
+                href="#"
+                style={{ "background-color": "#dd3" }}
+              ></a>
             </span>
           </label>
         </p>
