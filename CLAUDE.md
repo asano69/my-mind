@@ -364,11 +364,7 @@ the running app before starting the next, so the app is always in a
 working state and a regression can be bisected to a single phase.
 
 
-| 9 | Cleanup | low | Phase 8 |
 
- Each phase should be its own set of commits/PRs, landed and verified in
- the running app before starting the next, so the app is always in a
- working state and a regression can be bisected to a single phase.
 
 ---
 
