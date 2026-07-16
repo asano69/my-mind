@@ -1,5 +1,6 @@
 import { createResource, createSignal, For, Show } from "solid-js";
-import { A } from "@solidjs/router";
+
+import { A, useNavigate } from "@solidjs/router";
 
 import pb from "../lib/pb";
 import {
@@ -24,6 +25,7 @@ async function fetchMaps(query) {
 }
 
 export default function Catalog() {
+  const navigate = useNavigate();
   const [query, setQuery] = createSignal("");
   // Re-fetches from PocketBase whenever query() changes.
   const [maps, { mutate }] = createResource(query, fetchMaps);
@@ -93,17 +95,18 @@ export default function Catalog() {
               <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
                 <For each={maps()}>
                   {(map) => (
-                    <div class="flex flex-col overflow-hidden rounded-md border border-pane-hover bg-pane text-left shadow-card transition hover:bg-pane-hover">
+                    <div
+                      onClick={() =>
+                        !editMode() && navigate(`/maps/${map.uuid}`)
+                      }
+                      class="flex flex-col overflow-hidden rounded-md border border-pane-hover bg-pane text-left shadow-card transition hover:bg-pane-hover"
+                      classList={{ "cursor-pointer": !editMode() }}
+                    >
                       <div class="relative flex h-32 items-center justify-center overflow-hidden bg-white/50">
-                        {/* SVG only — innerHTML replaces this element's children on
-                    every render, so nothing else may live inside it. Pin
-                    badge/buttons are rendered as siblings below instead. */}
-                        <A
-                          href={`/maps/${map.uuid}`}
-                          onClick={(e) => editMode() && e.preventDefault()}
+                        <div
                           class="h-full w-full p-2 [&_svg]:!static [&_svg]:!h-full
-        [&_svg]:!w-full [&_svg]:!overflow-hidden"
-                          classList={{ "cursor-pointer": !editMode() }}
+              [&_svg]:!w-full [&_svg]:!overflow-hidden [&_svg]:pointer-events-none
+           [&_svg]:select-none"
                           innerHTML={map.svg || ""}
                         />
 
@@ -141,23 +144,21 @@ export default function Catalog() {
                         <Show
                           when={editMode()}
                           fallback={
-                            <A
-                              href={`/maps/${map.uuid}`}
-                              class="truncate font-sans text-sm"
-                            >
+                            <span class="truncate font-sans text-sm">
                               {map.title || "Untitled"}
-                            </A>
+                            </span>
                           }
                         >
                           <input
                             type="text"
                             value={map.title || ""}
+                            onClick={(e) => e.stopPropagation()}
                             onBlur={(e) => handleRename(map, e.target.value)}
                             onKeyDown={(e) =>
                               e.key === "Enter" && e.currentTarget.blur()
                             }
                             class="min-w-0 flex-1 rounded border border-pane-hover
-      bg-bg px-2 py-1 text-sm"
+              bg-bg px-2 py-1 text-sm"
                           />
                         </Show>
                       </div>
