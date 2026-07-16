@@ -17,6 +17,7 @@ It has a catalog feature.
 - [x] Catalog遷移時に、svgデータの自動保存
 - [x] catalogにおいて、タイトルをクリックしてもそのマップを開くようにする（現在イメージの部分しかクリック可能ではない）
 - [x] Catalogにおいて、SVGイメージに埋め込まれたURLなどを誤ってクリックしないように、マウスで選択不可能にする
+- [ ] エディタにおいて、既存のnoteを読み込むことができない
 - [ ] Canvasにおいて、URLはURLとわかるように色を変えて下線をひくCSSにする
 - [ ] canvasで、Catalogアイコンや、タイトル、エディターボタンなどのある細長い部分を、topbarなどのコンポーネント化する
 - [ ] Canvasで、Map削除ボタンを追加する
@@ -25,6 +26,7 @@ It has a catalog feature.
 - [ ] CanvasのSave Asボタンで、マインドマップのpng画像をクリップボードにコピーする
 - [ ] 落書き機能（フリーライティング）
 - [ ] ノードの移動をdnd-kitに変えられないか検討する
+
 
 
 ## Work in Progress
