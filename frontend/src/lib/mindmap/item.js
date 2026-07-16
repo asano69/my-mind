@@ -614,20 +614,24 @@ export default class Item {
     }
   }
   updateText() {
-    // While this item is being live-edited (contentEditable), the DOM is
-    // the source of truth until "finish" commits it back to the `text`
-    // signal (see command/edit.js's Finish command). Since Phase 8 folded
-    // every item's DOM sync into one shared layout computed, a keystroke's
-    // handleEvent("input") -> map.requestLayout() call now re-runs
-    // updateText() for the *whole tree*, including the item currently
-    // being typed into. Without this guard, that overwrites dom.text's
-    // live, uncommitted edit with the stale `_text()` signal value on
-    // every single keystroke, making typing (and execCommand-based
-    // formatting like Bold, which also fires an "input" event) impossible.
+    // Always read the signal (even while editing) so this item's `_text`
+    // dependency stays part of the shared layout computed's tracked set
+    // (see map.js, Solid migration Phase 8). Solid re-tracks dependencies
+    // fresh on every run, so returning before this read while
+    // contentEditable is "true" would silently drop the subscription —
+    // the eventual "finish" commit (`_setText` in the Finish command)
+    // would then not trigger a redraw until some *other*, unrelated
+    // signal happened to force the shared computed to rerun.
+    const text = this._text();
+    // While this item is being live-edited, the DOM is the source of
+    // truth until "finish" commits it back to the `text` signal (see
+    // command/edit.js's Finish command and stopEditing() below). Skipping
+    // the DOM write here (but still reading the signal above) keeps
+    // keystrokes and execCommand-based formatting like Bold from being
+    // wiped by every reactive rerun that happens mid-edit.
     if (this.dom.text.contentEditable === "true") {
       return;
     }
-    const text = this._text();
     if (this.dom.text.innerHTML == text) {
       return;
     }
