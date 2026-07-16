@@ -362,3 +362,79 @@ with a large map (50+ nodes) before and after.
 Each phase should be its own set of commits/PRs, landed and verified in
 the running app before starting the next, so the app is always in a
 working state and a regression can be bisected to a single phase.
+
+
+| 9 | Cleanup | low | Phase 8 |
+
+ Each phase should be its own set of commits/PRs, landed and verified in
+ the running app before starting the next, so the app is always in a
+ working state and a regression can be bisected to a single phase.
+
+---
+
+## Phase 5 — Bridge pattern addendum (docs only, no code)
+
+Phases 1–4 are done. Before Phase 6 touches `item.js` itself, here is the
+pattern that emerged, so later phases repeat it instead of inventing
+variations.
+
+### Stores, not one giant store
+
+`lib/mindmap/store.js` holds a few independent `createSignal`s, not one
+`createStore` blob: `currentItem`, `currentTitle`, `lastSaveTime`. Each is
+scoped to what actually changes together (selection vs. save-status vs.
+title), matching the "combine data updated together" guidance already
+used for the artifact storage API. Phase 6 should add new item-level
+signals here only if they're cross-cutting (like `currentItem`); anything
+scoped to a single `Item` instance belongs on the instance itself
+(per-instance `createSignal`, not a module-level store — see Phase 6).
+
+### Two consumption shapes
+
+1. **Read-only consumption — no bridge object.** If a Solid component
+   only needs to *read* engine/store state, it reads the signal directly.
+   No `registerXxx`/callback object needed. Example: `PropertyPanel.jsx`
+   reads `currentItem()` directly for its `<select>`s (Phase 3);
+   `ui/ui.js` and `ui/io.js` read `lastSaveTime()`/`currentTitle()`
+   directly instead of subscribing to a pubsub message (Phase 4).
+2. **Imperative push into engine-owned DOM — bridge object.** Only used
+   where a vanilla module truly owns a DOM node Solid doesn't render
+   (EasyMDE's textarea in `NotesEditor.jsx`, the title `<input>` in
+   `TitleBar.jsx`). The Solid component calls `registerXxx({ setValue,
+   ... })` on mount; the vanilla module calls those setters instead of
+   touching the DOM directly. Do **not** reach for this pattern for
+   ordinary read access — that's what signals are for (see #1).
+
+### Vanilla-module effects need `createRoot`
+
+A vanilla module (not a Solid component) that wants to `createEffect` off
+a store signal — e.g. `title.js` syncing `document.title` from
+`currentTitle()` — must wrap it in `createRoot(dispose => ...)` and keep
+the returned `dispose` so `mount()`/`unmount()`'s existing
+`init()`/`dispose()` lifecycle can tear it down explicitly. Effects
+created outside a component have no automatic owner to clean them up.
+
+### pubsub.js: what's left and why
+
+`item-select`, `title-change`, and `save-done` are gone (Phase 4).
+Still on `pubsub.js`, deliberately:
+
+- `item-change` — fires on every mutation, not just selection; stays
+  until Phase 6 makes `item.js` itself reactive and can expose a "dirty"
+  effect directly (per Phase 4 step 3).
+- `ui-change`, `map-new`, `load-done`, `command-sibling`, `command-child`
+  — a handful of genuinely one-off signals with a single
+  publisher/subscriber pair each. Per Phase 4 step 4, these are not worth
+  a bespoke replacement; re-evaluate in Phase 9 once Phase 6/8 land and
+  it's clear whether `item-change` also drops out.
+
+### Checklist for Phase 6+
+
+When converting the next module, prefer in this order:
+1. Can it just read an existing/new signal directly? (no bridge)
+2. Does it need to push into DOM Solid doesn't own? (bridge object,
+   `registerXxx`)
+3. Does a vanilla module need to react to a signal? (`createRoot` +
+   `createEffect`, with `dispose` wired into that module's `dispose()`)
+4. Is it still fundamentally a one-off fire-and-forget event with no
+   state to read back? (leave it on `pubsub.js`)
