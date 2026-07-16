@@ -22,19 +22,26 @@ export default class Item {
   constructor() {
     this._id = generateId();
     this._parent = null;
-    this._collapsed = false;
-    this._icon = "";
-    this._notes = "";
+    // Phase 6 (Solid migration, see CLAUDE.md): these leaf properties are
+    // backed by per-instance Solid signals instead of plain fields. Their
+    // setters still call the full update() for now because value/status/icon
+    // can affect content box size and collapsed can affect subtree layout, so
+    // layout must still be recomputed. The direct DOM sync for each property
+    // is driven by effects set up at the end of this constructor.
+    const [collapsed, setCollapsed] = createSignal(false);
+    this._collapsed = collapsed;
+    this._setCollapsed = setCollapsed;
+    const [icon, setIcon] = createSignal("");
+    this._icon = icon;
+    this._setIcon = setIcon;
+    const [notes, setNotes] = createSignal("");
+    this._notes = notes;
+    this._setNotes = setNotes;
     this._color = "";
     this._textColor = "";
-    this._value = null;
-    // Phase 6 (Solid migration, see CLAUDE.md): status is the first Item
-    // property backed by a per-instance Solid signal instead of a plain
-    // field. The setter still calls the full update() for now (status
-    // affects the content box size, so layout must still be recomputed),
-    // but the DOM class/visibility sync itself (updateStatus()) is now
-    // driven reactively by the effect set up at the end of this
-    // constructor, not by a manual call inside update().
+    const [value, setValue] = createSignal(null);
+    this._value = value;
+    this._setValue = setValue;
     const [status, setStatus] = createSignal(null);
     this._status = status;
     this._setStatus = setStatus;
@@ -63,7 +70,7 @@ export default class Item {
     dom.value.classList.add("value");
     dom.text.classList.add("text");
     dom.icon.classList.add("icon");
-    this.notes = ""; // hide the node
+    this.updateNotes(); // hide the node before the first effect run
     let fo = svg.foreignObject();
     dom.node.append(dom.connectors, fo);
     fo.append(dom.content);
@@ -84,8 +91,12 @@ export default class Item {
     // Left as a known follow-up for a later Phase 6 step once history.js
     // itself is reworked (Phase 7).
     createRoot((dispose) => {
-      this._disposeStatusEffect = dispose;
+      this._disposeItemEffects = dispose;
       createEffect(() => this.updateStatus());
+      createEffect(() => this.updateValue());
+      createEffect(() => this.updateIcon());
+      createEffect(() => this.updateNotes());
+      createEffect(() => this.updateToggle());
     });
   }
   get id() {
@@ -143,11 +154,11 @@ export default class Item {
     if (this._textColor) {
       data.textColor = this._textColor;
     }
-    if (this._icon) {
-      data.icon = this._icon;
+    if (this._icon()) {
+      data.icon = this._icon();
     }
-    if (this._value !== null) {
-      data.value = this._value;
+    if (this._value() !== null) {
+      data.value = this._value();
     }
 
     if (this._status() !== null) {
@@ -160,7 +171,7 @@ export default class Item {
     if (this._shape) {
       data.shape = this._shape.id;
     }
-    if (this._collapsed) {
+    if (this._collapsed()) {
       data.collapsed = true;
     }
     if (this.children.length) {
@@ -189,10 +200,10 @@ export default class Item {
       this._textColor = data.textColor;
     }
     if (data.icon) {
-      this._icon = data.icon;
+      this._setIcon(data.icon);
     }
     if (data.value !== undefined) {
-      this._value = data.value;
+      this._setValue(data.value);
     }
     if (data.status !== undefined) {
       // backwards compatibility for yes/no
@@ -236,12 +247,12 @@ export default class Item {
       this._textColor = data.textColor || "";
       dirty = 2;
     }
-    if (this._icon != data.icon) {
-      this._icon = data.icon || "";
+    if (this._icon() != data.icon) {
+      this._setIcon(data.icon || "");
       dirty = 1;
     }
-    if (this._value != data.value) {
-      this._value = data.value || null;
+    if (this._value() != data.value) {
+      this._setValue(data.value || null);
       dirty = 1;
     }
     if (this._status() != data.status) {
@@ -249,7 +260,7 @@ export default class Item {
       dirty = 1;
     }
 
-    if (this._collapsed != !!data.collapsed) {
+    if (this._collapsed() != !!data.collapsed) {
       this.collapsed = !!data.collapsed;
     }
     // fixme does not work
@@ -333,8 +344,6 @@ export default class Item {
       children.forEach((child) => child.update(childUpdateOptions));
     }
     pubsub.publish("item-change", this);
-    this.updateIcon();
-    this.updateValue();
     const { resolvedLayout, resolvedShape, dom } = this;
 
     const { content, node, connectors } = dom;
@@ -365,30 +374,28 @@ export default class Item {
     this.update();
   }
   get notes() {
-    return this._notes;
+    return this._notes();
   }
   set notes(notes) {
-    this._notes = notes;
-    this.dom.notes.hidden = !notes; // no update necessary
+    this._setNotes(notes);
   }
   get collapsed() {
-    return this._collapsed;
+    return this._collapsed();
   }
   set collapsed(collapsed) {
-    this._collapsed = collapsed;
-    this.updateToggle();
+    this._setCollapsed(collapsed);
     let children = !collapsed; // update children if expanded
     this.update({ children });
   }
   get value() {
-    return this._value;
+    return this._value();
   }
   set value(value) {
-    this._value = value;
+    this._setValue(value);
     this.update();
   }
   get resolvedValue() {
-    const value = this._value;
+    const value = this._value();
     if (typeof value == "number") {
       return value;
     }
@@ -430,10 +437,10 @@ export default class Item {
     }
   }
   get icon() {
-    return this._icon;
+    return this._icon();
   }
   set icon(icon) {
-    this._icon = icon;
+    this._setIcon(icon);
     this.update();
   }
   get side() {
@@ -619,7 +626,7 @@ export default class Item {
     }
   }
   updateIcon() {
-    var icon = this._icon;
+    var icon = this._icon();
     this.dom.icon.className = "icon"; // completely reset
     this.dom.icon.hidden = !icon;
     if (icon) {
@@ -628,15 +635,16 @@ export default class Item {
     }
   }
   updateValue() {
-    const { dom, _value } = this;
-    if (_value === null) {
+    const { dom } = this;
+    const value = this._value();
+    if (value === null) {
       dom.value.hidden = true;
       return;
     }
     dom.value.hidden = false;
-    if (typeof _value == "number") {
+    if (typeof value == "number") {
       // exact values are not rounded
-      dom.value.textContent = String(_value);
+      dom.value.textContent = String(value);
     } else {
       let resolved = this.resolvedValue; // computed values are rounded to 3 decimals if need rounding
       dom.value.textContent = String(
@@ -644,12 +652,16 @@ export default class Item {
       );
     }
   }
+  updateNotes() {
+    const notes = this._notes();
+    this.dom.notes.hidden = !notes;
+  }
   updateToggle() {
     const { node, toggle } = this.dom;
-    node.classList.toggle("collapsed", this._collapsed);
+    node.classList.toggle("collapsed", this._collapsed());
     toggle
       .querySelector("path")
-      .setAttribute("d", this._collapsed ? D_PLUS : D_MINUS);
+      .setAttribute("d", this._collapsed() ? D_PLUS : D_MINUS);
   }
 }
 function findLinks(node) {
