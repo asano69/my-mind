@@ -44,7 +44,6 @@ export function init() {
       hide();
     }
   });
-  pubsub.subscribe("map-new", (_) => setCurrentMap(null));
 
   statusTimer = setInterval(updateSaveStatus, 1000);
   // Auto-save: debounce item changes and save after a short delay.
@@ -215,6 +214,12 @@ function setCurrentMap(record) {
   currentMapUuid = record ? record.uuid : null;
   setCurrentTitle(record ? record.title || "" : "");
   updateURL();
+}
+// Called by command/command.js's New command after starting a fresh
+// blank map, so the save/title state resets along with the canvas
+// (replaces the old "map-new" pubsub message).
+export function resetCurrentMap() {
+  setCurrentMap(null);
 }
 
 function updateURL() {

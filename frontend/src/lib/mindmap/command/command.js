@@ -182,7 +182,6 @@ new (class New extends Command {
   }
   execute() {
     app.showMap(new MindMap());
-    pubsub.publish("map-new");
   }
 })();
 new (class Center extends Command {
