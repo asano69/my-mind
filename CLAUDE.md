@@ -175,6 +175,7 @@ just moved.
 
 ui/layout.js と ui/shape.js は、冒頭で layout/graph.js・layout/tree.js・layout/map.js・shape/box.js・shape/ellipse.js・shape/underline.js を副作用目的でimportしており、これによって各レイアウト/シェイプの実体が repo に登録されています。これはプロパティパネルのためだけでなく、アイテムの resolvedShape/resolvedLayout などエンジン全体が依存する登録処理です。この2ファイルを削除すると、この登録がどこからも行われなくなり、マップ全体が壊れます。そのため、この副作用importは my-mind.js 自体に移動させます(コマンドモジュールと同じ扱い)。まず store.js を新設します。
 
+CLAUDE.md のPhase 3リスク注記にある「子アイテムの value/status 変更が親の表示に反映されるか」については、今回の実装は旧実装と同じ制約を引き継いでいます（tick は選択中のアイテム自身への item-change にのみ反応し、子の変更では発火しません）。これは既存の挙動と同一で、今回のリファクタで新たに壊した部分ではありません。この点の解消は Phase 6（resolvedValue/resolvedStatus の createMemo 化）で対応するのが計画上も妥当です。
 
 ---
 
