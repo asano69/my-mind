@@ -57,7 +57,7 @@ export function init() {
     }
     autoSaveTimeout = setTimeout(() => {
       autoSaveTimeout = null;
-      save(false); // auto-save: skip SVG generation/transfer
+      saveMap(); // auto-save: mymind only, no SVG
     }, AUTO_SAVE_DELAY_MS);
   });
 }
@@ -136,17 +136,21 @@ export function hide() {
 
 export function quickSave() {
   if (currentMapId) {
-    save();
+    saveMapWithSvg();
   } else {
     show();
   }
 }
 
 function submit() {
-  save();
+  saveMapWithSvg();
 }
 
-async function save(includeSvg = true) {
+// Runs `task` (a performSave call) respecting the in-flight guard above.
+// If a save is already running, this just records that another run is
+// needed and returns immediately; the in-progress run re-executes `task`
+// once it finishes, so no update is lost even under rapid edits.
+async function runGuarded(task) {
   if (saveInFlight) {
     saveAgainRequested = true;
     return;
@@ -155,11 +159,23 @@ async function save(includeSvg = true) {
   try {
     do {
       saveAgainRequested = false;
-      await performSave(includeSvg);
+      await task();
     } while (saveAgainRequested);
   } finally {
     saveInFlight = false;
   }
+}
+
+// Auto-save: pushes the map JSON only, skipping the SVG snapshot.
+// Used on every debounced item-change.
+function saveMap() {
+  return runGuarded(() => performSave(false));
+}
+
+// Explicit save: pushes the map JSON plus a freshly rendered SVG snapshot
+// (used for the catalog thumbnail). Used by quickSave()/submit().
+function saveMapWithSvg() {
+  return runGuarded(() => performSave(true));
 }
 
 async function performSave(includeSvg) {
