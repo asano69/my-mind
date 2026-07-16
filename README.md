@@ -22,6 +22,7 @@ It has a catalog feature.
 - [ ] CanvasのSave Asボタンで、マインドマップのpng画像をクリップボードにコピーする
 - [ ] canvasで、Catalogアイコンや、タイトル、エディターボタンなどのある細長い部分を、topbarなどのコンポーネント化する
 - [ ] Catalogにおいて、SVGイメージに埋め込まれたURLなどを誤ってクリックしないように、マウスで選択不可能にする
+- [ ] Canvasにおいて、URLはURLとわかるように色を変えて下線をひくCSSにする
 
 ## Work in Progress
 - [x] my-mind.js アンマウント安全化
