@@ -30,6 +30,8 @@
 # Work in progress
 # Mindmap Engine → Solid Reactive State: Migration Plan
 
+詳細は、docs/mindmap-state-refactor.mdを参照
+
 ## Goal
 
 Replace the hand-rolled reactivity in `frontend/src/lib/mindmap/` (manual
