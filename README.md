@@ -1,5 +1,7 @@
 # My Mind
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/asano69/my-mind)
+>[!CAUTION]
+>This app is still under development, and the map schema may change. To keep the design simple, backward compatibility is not considered. Therefore, it is not suitable for general use, but you are free to fork it if needed.
 
 <img src="frontend/public/favicon.svg" width="100" align="right" />
 
