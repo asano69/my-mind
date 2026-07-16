@@ -257,6 +257,59 @@ undone step; edit notes text, confirm auto-save still triggers via the
 上の案では「ループの外で1回だけbump」という設計にして、この機会にPhase 8の既知課題も一部緩和する形にしていますが、これは元のイベントの挙動を厳密に1:1で置き換えるものではない（意図的な改善を含む）。これで良い。
 
 
+### Phase 9.5 progress note
+
+Two consumers, two different fates:
+
+- `io.js`'s auto-save debounce only ever needed "did anything change",
+  so it moved to `store.js`'s coarse `dirtyVersion` signal, bumped once
+  per `map.js` layout pass (not once per item — the deliberate
+  coarsening the user approved, trading strict 1:1 event parity for
+  fixing part of Phase 8's known "recomputes the whole tree" cost at
+  the source). The subscription itself became a `createRoot` +
+  `createEffect(on(dirtyVersion, ..., { defer: true }))` pair in
+  `io.js`, disposed alongside the module's other state in `dispose()`.
+  `{ defer: true }` matters here: without it the effect's first run at
+  `init()` time would fire immediately (Solid effects run once on
+  creation), unlike `pubsub.subscribe` which never fired until an
+  actual publish. Skipping the initial run keeps the semantics
+  equivalent rather than relying on `currentMapId` happening to be null
+  at every `init()` call site.
+- `PropertyPanel.jsx`'s subscription turned out to be dead weight
+  already, independent of this phase. It existed to catch "did *this
+  specific* item's properties change" by filtering
+  `publisher === currentItem()`, but since Phase 6 made `item.layout`/
+  `item.shape`/`item.value`/`item.status`/`item.isRoot` real per-item
+  signals, the four `createMemo`s already tracked those signals
+  directly the moment they read `item.layout.id` etc. — Solid's
+  fine-grained tracking already did exactly what the manual `tick()`
+  counter was reconstructing by hand, just more precisely (it also
+  fires on shape/value/status specifically, not "some item-change
+  event fired for this item"). Removed the `tick` signal and the
+  subscription entirely, matching how Phase 9.1 also found a live
+  `pubsub` call site whose subscriber no longer existed.
+
+`notes.js`'s explicit `bumpDirty()` call was kept even though it's
+provably redundant post-map.js-change (writing `item.notes` is a
+signal write that `map.js`'s shared computed already depends on via
+`updateNotes()`, so it already reruns and bumps dirty on its own).
+Removing it would save nothing at runtime and would make `notes.js`'s
+connection to auto-save invisible without tracing the reactive graph
+across modules — kept for local readability over strict non-redundancy.
+
+Regression checklist run: typing a character still triggers exactly one
+debounced save ~1s later; undoing/redoing a batch of changes still
+triggers the debounce (each undo/redo mutates signals, so each still
+causes one `map.js` pass and one bump — no change from before, since
+the old code also republished once per pass, just per-item within it);
+editing notes text still triggers auto-save via `notes.js`'s explicit
+call.
+
+After this phase, `pubsub.js` has exactly one remaining call site in
+the whole codebase: `my-mind.js`'s `unmount()` calls `pubsub.reset()`.
+Every subscribe/publish pair is gone. Phase 9.6 (delete `pubsub.js`) is
+now close to mechanical.
+
 ---
 
 ## Phase 9.6 — Delete pubsub.js

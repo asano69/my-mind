@@ -1,5 +1,5 @@
 import * as app from "../my-mind.js";
-import * as pubsub from "../pubsub.js";
+import { bumpDirty } from "../store.js";
 
 let previewEl = null;
 let previewInner = null;
@@ -60,7 +60,12 @@ export function onEditorChange(text) {
   }
   app.currentItem.notes = text.trim();
   updatePreview(app.currentItem.notes);
-  pubsub.publish("item-change", app.currentItem); // trigger auto-save
+  // Explicit call kept even though map.js's shared layout computed
+  // already reruns (and bumps dirtyVersion itself) whenever any item's
+  // notes signal changes — relying on that cross-module dependency
+  // alone would make this file's connection to auto-save invisible to
+  // someone reading only this file.
+  bumpDirty();
 }
 
 export function init() {

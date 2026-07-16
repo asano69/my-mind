@@ -17,3 +17,14 @@ export const [currentTitle, setCurrentTitle] = createSignal("");
 // message (see CLAUDE.md, Solid migration Phase 4) — ui/io.js and ui/ui.js
 // both read this instead of maintaining their own copies.
 export const [lastSaveTime, setLastSaveTime] = createSignal(null);
+
+// Bumped once per full layout pass (map.js) or explicit notes edit
+// (notes.js) to mean "something changed", for auto-save debouncing.
+// Nothing reads the value itself, only its change — a plain counter,
+// not a value carrying the changed item's identity like the old
+// "item-change" pubsub message did. Replaces that message (see
+// CLAUDE.md, Solid migration Phase 9.5).
+export const [dirtyVersion, setDirtyVersion] = createSignal(0);
+export function bumpDirty() {
+  setDirtyVersion((v) => v + 1);
+}

@@ -5,7 +5,7 @@ import { br2nl } from "./format/format.js";
 import * as svg from "./svg.js";
 import * as html from "./html.js";
 import * as app from "./my-mind.js";
-import * as pubsub from "./pubsub.js";
+import { bumpDirty } from "./store.js";
 import { createSignal, createComputed, createRoot } from "solid-js";
 let css = "";
 
@@ -40,7 +40,6 @@ function layoutSubtree(item) {
   connectors.innerHTML = "";
   resolvedLayout.update(item);
   resolvedShape.update(item); // needs layout -> draws second
-  pubsub.publish("item-change", item);
 }
 
 export default class Map {
@@ -88,6 +87,13 @@ export default class Map {
         layoutSubtree(this._root);
         this.node.setAttribute("width", String(this._root.size[0]));
         this.node.setAttribute("height", String(this._root.size[1]));
+        // Bump once per full pass, not once per item — layoutSubtree
+        // walks the whole tree on every recompute (known cost from
+        // Phase 8), but auto-save only needs "did anything change",
+        // never "how many items changed" (see CLAUDE.md, Solid
+        // migration Phase 9.5 — an intentional coarsening, not a
+        // strict 1:1 port of the old per-item publish).
+        bumpDirty();
       });
     });
   }

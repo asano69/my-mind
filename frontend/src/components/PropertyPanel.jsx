@@ -31,7 +31,6 @@ export default function PropertyPanel() {
   let commandRepo;
   let layoutRepo;
   let shapeRepo;
-  let pubsubModule;
 
   const [ready, setReady] = createSignal(false);
   // Mirrors #ui's show/hide state as Solid state instead of ui.js
@@ -40,15 +39,13 @@ export default function PropertyPanel() {
   // pattern as HelpPanel.jsx's `hidden` signal for #help.
   const [hidden, setHidden] = createSignal(false);
 
-  const [tick, setTick] = createSignal(0);
-
   onMount(async () => {
-    const [actionsMod, appMod, cmdMod, pubsubMod, layoutMod, shapeMod, uiMod] =
+    const [actionsMod, appMod, cmdMod, layoutMod, shapeMod, uiMod] =
       await Promise.all([
         import("../lib/mindmap/action.js"),
         import("../lib/mindmap/my-mind.js"),
         import("../lib/mindmap/command/command.js"),
-        import("../lib/mindmap/pubsub.js"),
+
         import("../lib/mindmap/layout/layout.js"),
         import("../lib/mindmap/shape/shape.js"),
         import("../lib/mindmap/ui/ui.js"),
@@ -56,17 +53,12 @@ export default function PropertyPanel() {
     actionsModule = actionsMod;
     appModule = appMod;
     commandRepo = cmdMod.repo;
-    pubsubModule = pubsubMod;
+
     layoutRepo = layoutMod.repo;
     shapeRepo = shapeMod.repo;
 
     uiMod.registerToggle({ toggle: () => setHidden((h) => !h) });
 
-    pubsubModule.subscribe("item-change", (_message, publisher) => {
-      if (publisher === currentItem()) {
-        setTick((t) => t + 1);
-      }
-    });
     setReady(true);
   });
 
@@ -91,24 +83,20 @@ export default function PropertyPanel() {
   });
 
   const isRoot = createMemo(() => {
-    tick();
     return !!currentItem()?.isRoot;
   });
 
   const layoutValue = createMemo(() => {
-    tick();
     const item = currentItem();
     return item?.layout ? item.layout.id : "";
   });
 
   const shapeValue = createMemo(() => {
-    tick();
     const item = currentItem();
     return item?.shape ? item.shape.id : "";
   });
 
   const valueValue = createMemo(() => {
-    tick();
     const item = currentItem();
     if (!item) {
       return "";
@@ -121,7 +109,6 @@ export default function PropertyPanel() {
   });
 
   const statusValue = createMemo(() => {
-    tick();
     const item = currentItem();
     return item ? statusToString(item.status) : "";
   });

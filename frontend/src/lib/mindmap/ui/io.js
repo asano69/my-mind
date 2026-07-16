@@ -1,4 +1,4 @@
-import * as pubsub from "../pubsub.js";
+import { createRoot, createEffect, on } from "solid-js";
 import * as app from "../my-mind.js";
 import * as backend from "../backend/pocketbase.js";
 import MindMap from "../map.js";
@@ -8,6 +8,7 @@ import {
   setCurrentTitle,
   lastSaveTime,
   setLastSaveTime,
+  dirtyVersion,
 } from "../store.js";
 
 let currentMapId = null; // PocketBase record id, used for save/update calls
@@ -18,6 +19,7 @@ let currentMapUuid = null; // public uuid, used in the URL
 
 let autoSaveTimeout = null;
 let statusTimer = null; // setInterval id for updateSaveStatus, cleared in dispose()
+let disposeAutoSaveEffect = null; // dispose fn for the createRoot below, cleared in dispose()
 
 // Guards against overlapping save() calls. With a short auto-save debounce,
 // a new save can be triggered before the previous request finishes; sending
@@ -48,17 +50,33 @@ export function init() {
   statusTimer = setInterval(updateSaveStatus, 1000);
   // Auto-save: debounce item changes and save after a short delay.
   // Only kicks in once the map has been saved at least once (has an id).
-  pubsub.subscribe("item-change", () => {
-    if (!currentMapId) {
-      return;
-    }
-    if (autoSaveTimeout !== null) {
-      clearTimeout(autoSaveTimeout);
-    }
-    autoSaveTimeout = setTimeout(() => {
-      autoSaveTimeout = null;
-      saveMap(); // auto-save: mymind only, no SVG
-    }, AUTO_SAVE_DELAY_MS);
+
+  // dirtyVersion is a store.js signal (see Phase 9.5), so this is a
+  // vanilla-module effect and needs its own createRoot per the Phase 5
+  // addendum's rule for effects created outside a component.
+  // on(..., { defer: true }) skips the initial run at creation time,
+  // matching pubsub.subscribe's old semantics of only firing on future
+  // changes, not on subscription itself.
+  createRoot((dispose) => {
+    disposeAutoSaveEffect = dispose;
+    createEffect(
+      on(
+        dirtyVersion,
+        () => {
+          if (!currentMapId) {
+            return;
+          }
+          if (autoSaveTimeout !== null) {
+            clearTimeout(autoSaveTimeout);
+          }
+          autoSaveTimeout = setTimeout(() => {
+            autoSaveTimeout = null;
+            saveMap(); // auto-save: mymind only, no SVG
+          }, AUTO_SAVE_DELAY_MS);
+        },
+        { defer: true },
+      ),
+    );
   });
 }
 
@@ -68,6 +86,8 @@ export function init() {
 export function dispose() {
   clearInterval(statusTimer);
   statusTimer = null;
+  disposeAutoSaveEffect?.();
+  disposeAutoSaveEffect = null;
   if (autoSaveTimeout !== null) {
     clearTimeout(autoSaveTimeout);
     autoSaveTimeout = null;
