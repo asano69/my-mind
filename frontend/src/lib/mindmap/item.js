@@ -614,6 +614,19 @@ export default class Item {
     }
   }
   updateText() {
+    // While this item is being live-edited (contentEditable), the DOM is
+    // the source of truth until "finish" commits it back to the `text`
+    // signal (see command/edit.js's Finish command). Since Phase 8 folded
+    // every item's DOM sync into one shared layout computed, a keystroke's
+    // handleEvent("input") -> map.requestLayout() call now re-runs
+    // updateText() for the *whole tree*, including the item currently
+    // being typed into. Without this guard, that overwrites dom.text's
+    // live, uncommitted edit with the stale `_text()` signal value on
+    // every single keystroke, making typing (and execCommand-based
+    // formatting like Bold, which also fires an "input" event) impossible.
+    if (this.dom.text.contentEditable === "true") {
+      return;
+    }
     const text = this._text();
     if (this.dom.text.innerHTML == text) {
       return;
