@@ -172,6 +172,10 @@ value" if one doesn't exist, since this is exactly the kind of stale-read
 bug Solid is meant to prevent — worth confirming it's actually fixed, not
 just moved.
 
+
+ui/layout.js と ui/shape.js は、冒頭で layout/graph.js・layout/tree.js・layout/map.js・shape/box.js・shape/ellipse.js・shape/underline.js を副作用目的でimportしており、これによって各レイアウト/シェイプの実体が repo に登録されています。これはプロパティパネルのためだけでなく、アイテムの resolvedShape/resolvedLayout などエンジン全体が依存する登録処理です。この2ファイルを削除すると、この登録がどこからも行われなくなり、マップ全体が壊れます。そのため、この副作用importは my-mind.js 自体に移動させます(コマンドモジュールと同じ扱い)。まず store.js を新設します。
+
+
 ---
 
 ## Phase 4 — Retire `pubsub.js` for item lifecycle events
