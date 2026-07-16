@@ -8,7 +8,7 @@ import { repo as commandRepo } from "./command/command.js";
 import { repo as shapeRepo } from "./shape/shape.js";
 import { repo as layoutRepo } from "./layout/layout.js";
 import Map from "./map.js";
-import { createSignal, createEffect, createRoot } from "solid-js";
+import { createSignal, createEffect, createMemo, createRoot } from "solid-js";
 
 export const TOGGLE_SIZE = 7;
 const UPDATE_OPTIONS = {
@@ -21,7 +21,9 @@ export default class Item {
   }
   constructor() {
     this._id = generateId();
-    this._parent = null;
+    const [parent, setParent] = createSignal(null);
+    this._parent = parent;
+    this._setParent = setParent;
     // Phase 6 (Solid migration, see CLAUDE.md): these leaf properties are
     // backed by per-instance Solid signals instead of plain fields. Their
     // setters still call the full update() for now because value/status/icon
@@ -37,8 +39,12 @@ export default class Item {
     const [notes, setNotes] = createSignal("");
     this._notes = notes;
     this._setNotes = setNotes;
-    this._color = "";
-    this._textColor = "";
+    const [color, setColor] = createSignal("");
+    this._color = color;
+    this._setColor = setColor;
+    const [textColor, setTextColor] = createSignal("");
+    this._textColor = textColor;
+    this._setTextColor = setTextColor;
     const [value, setValue] = createSignal(null);
     this._value = value;
     this._setValue = setValue;
@@ -46,8 +52,68 @@ export default class Item {
     this._status = status;
     this._setStatus = setStatus;
     this._side = null; // side preference
-    this._shape = null;
-    this._layout = null;
+    const [shape, setShape] = createSignal(null);
+    this._shape = shape;
+    this._setShape = setShape;
+    const [layout, setLayout] = createSignal(null);
+    this._layout = layout;
+    this._setLayout = setLayout;
+    this._resolvedColor = createMemo(() => {
+      const color = this._color();
+      if (color && color !== "#ffffff") {
+        return color;
+      }
+      const parent = this.parent;
+      if (parent instanceof Item) {
+        return parent.resolvedColor;
+      }
+      return COLOR;
+    });
+    this._resolvedTextColor = createMemo(() => {
+      const textColor = this._textColor();
+      if (textColor && textColor !== "#ffffff") {
+        return textColor;
+      }
+      const parent = this.parent;
+      if (parent instanceof Item) {
+        return parent.resolvedTextColor;
+      }
+      return "";
+    });
+    this._resolvedLayout = createMemo(() => {
+      const layout = this._layout();
+      if (layout) {
+        return layout;
+      }
+      const parent = this.parent;
+      if (parent instanceof Item) {
+        return parent._resolvedLayout();
+      }
+      return null;
+    });
+    this._depth = createMemo(() => {
+      let depth = 0;
+      let node = this;
+      while (node.parent instanceof Item) {
+        depth++;
+        node = node.parent;
+      }
+      return depth;
+    });
+    this._resolvedShape = createMemo(() => {
+      const shape = this._shape();
+      if (shape) {
+        return shape;
+      }
+      switch (this._depth()) {
+        case 0:
+          return shapeRepo.get("ellipse");
+        case 1:
+          return shapeRepo.get("box");
+        default:
+          return shapeRepo.get("underline");
+      }
+    });
     this.originalText = "";
     this.dom = {
       node: svg.group(),
@@ -103,10 +169,10 @@ export default class Item {
     return this._id;
   }
   get parent() {
-    return this._parent;
+    return this._parent();
   }
   set parent(parent) {
-    this._parent = parent;
+    this._setParent(parent);
     this.update({ children: true });
   }
   get size() {
@@ -148,11 +214,11 @@ export default class Item {
     if (this._side) {
       data.side = this._side;
     }
-    if (this._color) {
-      data.color = this._color;
+    if (this._color()) {
+      data.color = this._color();
     }
-    if (this._textColor) {
-      data.textColor = this._textColor;
+    if (this._textColor()) {
+      data.textColor = this._textColor();
     }
     if (this._icon()) {
       data.icon = this._icon();
@@ -165,11 +231,11 @@ export default class Item {
       data.status = this._status();
     }
 
-    if (this._layout) {
-      data.layout = this._layout.id;
+    if (this._layout()) {
+      data.layout = this._layout().id;
     }
-    if (this._shape) {
-      data.shape = this._shape.id;
+    if (this._shape()) {
+      data.shape = this._shape().id;
     }
     if (this._collapsed()) {
       data.collapsed = true;
@@ -194,10 +260,10 @@ export default class Item {
       this._side = data.side;
     }
     if (data.color) {
-      this._color = data.color;
+      this._setColor(data.color);
     }
     if (data.textColor) {
-      this._textColor = data.textColor;
+      this._setTextColor(data.textColor);
     }
     if (data.icon) {
       this._setIcon(data.icon);
@@ -220,7 +286,7 @@ export default class Item {
       this.collapsed = !!data.collapsed;
     } // invoke setter -> set text
     if (data.layout) {
-      this._layout = layoutRepo.get(data.layout);
+      this._setLayout(layoutRepo.get(data.layout));
     }
     if (data.shape) {
       this.shape = shapeRepo.get(data.shape);
@@ -239,12 +305,12 @@ export default class Item {
       this._side = data.side || null;
       dirty = 1;
     }
-    if (this._color != data.color) {
-      this._color = data.color || "";
+    if (this._color() != data.color) {
+      this._setColor(data.color || "");
       dirty = 2;
     }
-    if (this._textColor != data.textColor) {
-      this._textColor = data.textColor || "";
+    if (this._textColor() != data.textColor) {
+      this._setTextColor(data.textColor || "");
       dirty = 2;
     }
     if (this._icon() != data.icon) {
@@ -264,14 +330,14 @@ export default class Item {
       this.collapsed = !!data.collapsed;
     }
     // fixme does not work
-    let ourShapeId = this._shape ? this._shape.id : null;
+    let ourShapeId = this._shape() ? this._shape().id : null;
     if (ourShapeId != data.shape) {
-      this._shape = data.shape ? shapeRepo.get(data.shape) : null;
+      this._setShape(data.shape ? shapeRepo.get(data.shape) : null);
       dirty = 1;
     }
-    let ourLayoutId = this._layout ? this._layout.id : null;
+    let ourLayoutId = this._layout() ? this._layout().id : null;
     if (ourLayoutId != data.layout) {
-      this._layout = data.layout ? layoutRepo.get(data.layout) : null;
+      this._setLayout(data.layout ? layoutRepo.get(data.layout) : null);
       dirty = 2;
     }
     (data.children || []).forEach((child, index) => {
@@ -451,83 +517,48 @@ export default class Item {
     // no .update() call, because the whole map needs updating
   }
   get color() {
-    return this._color;
+    return this._color();
   }
   set color(color) {
-    this._color = color;
+    this._setColor(color);
     this.update({ children: true });
   }
   get resolvedColor() {
-    // 色を設定していない場合のデフォルトの色。
-    // box.tsとellips.tsとindex.htmlのineritを設定する必要あり
-    if (this._color && this._color !== "#ffffff") {
-      return this._color;
-    }
-    const { parent } = this;
-    if (parent instanceof Item) {
-      return parent.resolvedColor;
-    }
-    return COLOR;
+    return this._resolvedColor();
   }
   get textColor() {
-    return this._textColor;
+    return this._textColor();
   }
   set textColor(textColor) {
-    this._textColor = textColor;
+    this._setTextColor(textColor);
     this.update({ children: true });
   }
   get resolvedTextColor() {
-    if (this._textColor && this._textColor !== "#ffffff") {
-      return this._textColor;
-    }
-    const { parent } = this;
-    if (parent instanceof Item) {
-      return parent.resolvedTextColor;
-    }
-    return "";
+    return this._resolvedTextColor();
   }
   get layout() {
-    return this._layout;
+    return this._layout();
   }
   set layout(layout) {
-    this._layout = layout;
+    this._setLayout(layout);
     this.update({ children: true });
   }
   get resolvedLayout() {
-    if (this._layout) {
-      return this._layout;
-    }
-    const { parent } = this;
-    if (!(parent instanceof Item)) {
+    const layout = this._resolvedLayout();
+    if (!layout) {
       throw new Error("Non-connected item does not have layout");
     }
-    return parent.resolvedLayout;
+    return layout;
   }
   get shape() {
-    return this._shape;
+    return this._shape();
   }
   set shape(shape) {
-    this._shape = shape;
+    this._setShape(shape);
     this.update();
   }
   get resolvedShape() {
-    if (this._shape) {
-      return this._shape;
-    }
-    let depth = 0;
-    let node = this;
-    while (!node.isRoot) {
-      depth++;
-      node = node.parent; // always item, cannot be Map (would be root)
-    }
-    switch (depth) {
-      case 0:
-        return shapeRepo.get("ellipse");
-      case 1:
-        return shapeRepo.get("box");
-      default:
-        return shapeRepo.get("underline");
-    }
+    return this._resolvedShape();
   }
   get map() {
     let item = this.parent;
