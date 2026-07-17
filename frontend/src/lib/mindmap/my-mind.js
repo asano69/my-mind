@@ -1,4 +1,7 @@
 // src/my-mind.js
+import { createRoot, createEffect, on } from "solid-js";
+import { setCurrentItem, leftPanelHidden } from "./store.js";
+
 // Application entry point. Owns global editor state (current map/item/selection,
 // undo history) and boots all the input/UI subsystems on load.
 //
@@ -34,11 +37,11 @@ import * as mouse from "./mouse.js";
 import * as clipboard from "./clipboard.js";
 import * as title from "./title.js";
 import * as ui from "./ui/ui.js";
-import { setCurrentItem } from "./store.js";
 
 let port = null;
 let spinner = null;
 let mounted = false;
+let disposeLeftPanelEffect = null; // dispose fn for the effect below, cleared in unmount()
 
 export let currentMap = null;
 export let currentItem = null;
@@ -143,11 +146,29 @@ export function stopEditing() {
   return currentItem.stopEditing();
 }
 
+// Reads one of #left-panel's two width states directly from CSS (see
+// my-mind.css's :root), so the JS layout math never drifts out of sync
+// with the actual rendered panel width.
+function cssPixelVar(name) {
+  return parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue(name),
+  );
+}
+
 // Exported so ui.js can call it directly after toggling the property
 // panel, replacing the old "ui-change" pubsub message (see CLAUDE.md,
 // Solid migration Phase 9.4).
 export function handleResize() {
-  const size = [window.innerWidth - ui.getWidth(), window.innerHeight];
+  // #left-panel is a push panel, not an overlay: <main> is offset by
+  // its current width so the canvas never sits underneath it.
+  const leftWidth = leftPanelHidden()
+    ? cssPixelVar("--ribbon-width")
+    : cssPixelVar("--left-panel-width");
+  const size = [
+    window.innerWidth - leftWidth - ui.getWidth(),
+    window.innerHeight,
+  ];
+  port.style.marginLeft = `${leftWidth}px`;
   port.style.width = `${size[0]}px`;
   port.style.height = `${size[1]}px`;
   currentMap && currentMap.ensureItemVisibility(currentItem);
@@ -173,6 +194,15 @@ export async function mount(root) {
   mouse.init(port);
   title.init();
   ui.init(port); // also calls io.restore() internally
+
+  // leftPanelHidden is a store.js signal, not a DOM event, so it needs
+  // its own reactive subscription (same pattern as io.js's dirtyVersion
+  // effect) to keep the canvas offset in sync with the panel's state.
+  createRoot((dispose) => {
+    disposeLeftPanelEffect = dispose;
+    createEffect(on(leftPanelHidden, handleResize, { defer: true }));
+  });
+
   handleResize();
   showMap(new Map());
   setThrobber(false);
@@ -187,6 +217,9 @@ export function unmount() {
   window.removeEventListener("resize", handleResize);
   ui.dispose();
   title.dispose();
+
+  disposeLeftPanelEffect?.();
+  disposeLeftPanelEffect = null;
 
   mouse.dispose();
   keyboard.dispose();

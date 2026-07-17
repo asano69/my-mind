@@ -57,6 +57,11 @@ svg {
 
 main {
   position: relative;
+  /* Matches .pane-left's own width transition so the canvas edge and the
+     panel edge move together instead of one snapping ahead of the other. */
+  transition:
+    margin-left 280ms ease,
+    width 280ms ease;
 }
 
 button:not(:disabled) {
@@ -172,43 +177,6 @@ body:has(#ui:not([hidden])) .topbar-right {
   right: calc(var(--ui-pane-width) + 8px);
 }
 
-/* -------------------------------------------------------------
-   Pane — #left-panel (left sidebar, symmetric to #ui)
-   Unlike #ui (which slides fully off-screen via [hidden]), this pane
-   never leaves the screen: collapsing it animates its own width down
-   to --ribbon-width instead, so .left-ribbon's icons stay visible and
-   pinned to the left edge — a sidebar that opens/closes, not a panel
-   that slides out from behind a fixed strip.
-   ------------------------------------------------------------- */
-.pane-left {
-  right: auto;
-  left: 0;
-  width: var(--ribbon-width);
-  display: flex;
-  flex-direction: row;
-  overflow: hidden;
-  box-shadow: 3px 0 12px rgba(0, 0, 0, 0.2);
-  transition: width 280ms ease;
-}
-
-.pane-left.expanded {
-  width: var(--left-panel-width);
-}
-
-.left-ribbon {
-  flex: none;
-  width: var(--ribbon-width);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-top: 8px;
-  gap: 4px;
-}
-
-.left-panel-content {
-  flex: auto;
-  overflow: hidden;
-}
 /* Shift the left topbar buttons out of the way while the panel is open,
    mirroring .topbar-right's shift for #ui below. */
 body:has(#left-panel:not([hidden])) .topbar-left {
