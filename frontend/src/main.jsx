@@ -34,7 +34,7 @@ render(
   () => (
     <AuthGate>
       <Router>
-        <Route path="/" component={MindMapCanvas} />
+        <Route path="/" component={Catalog} />
         <Route path="/maps/:uuid" component={MindMapCanvas} />
         <Route path="/catalog" component={Catalog} />
       </Router>
