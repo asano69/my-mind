@@ -5,7 +5,7 @@ import Book from "lucide-solid/icons/book";
 import TextCursor from "lucide-solid/icons/text-cursor";
 import Palette from "lucide-solid/icons/palette";
 import Trash2 from "lucide-solid/icons/trash-2";
- import CircleQuestionMark from "lucide-solid/icons/circle-question-mark";
+import CircleQuestionMark from "lucide-solid/icons/circle-question-mark";
 
 // The floating strip across the top of the canvas: the catalog icon
 // (fixed top-left, via CSS) and the title input (fixed top-center,
@@ -39,7 +39,6 @@ export default function TopBar() {
       <div class="topbar-left">
         <A
           href="/catalog"
-          id="catalog-link"
           class="icon-btn"
           title="Catalog"
           onClick={goToCatalog}
@@ -47,11 +46,9 @@ export default function TopBar() {
           <Book size={28} />
         </A>
 
-   
-      <button class="icon-btn" data-command="help" title="Help">
-        <CircleQuestionMark size={28} />
-      </button>
-
+        <button class="icon-btn" data-command="help" title="Help">
+          <CircleQuestionMark size={28} />
+        </button>
       </div>
 
       <TitleBar />

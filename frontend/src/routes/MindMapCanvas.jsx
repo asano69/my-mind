@@ -29,7 +29,6 @@ export default function MindMapCanvas() {
       <HelpPanel />
       <NotesEditor />
       <ContextMenu />
-
     </>
   );
 }
