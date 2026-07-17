@@ -13,6 +13,14 @@ export function registerEditorAPI(api) {
   editorAPI = api;
   if (app.currentItem) {
     api.setContent(app.currentItem.notes);
+    // Also resync the background watermark here: onItemSelect() may have
+    // already run for the initially selected item before this registration
+    // completed (NotesEditor.jsx loads easymde/this module asynchronously),
+    // in which case its updatePreview() call was a no-op because editorAPI
+    // was still null at that point. Without this, the watermark only ever
+    // catches up as a side effect of the CodeMirror "change" event firing
+    // once the user happens to open the notes editor.
+    updatePreview(app.currentItem.notes);
   }
 }
 
@@ -42,9 +50,6 @@ export function close() {
   node.hidden = true;
 }
 
-// Called by NotesEditor's createEffect whenever the selected item changes
-// (see components/NotesEditor.jsx). Replaces the old "item-select" pubsub
-// subscription (see CLAUDE.md, Solid migration Phase 4).
 export function onItemSelect(item) {
   if (!item) {
     return;
