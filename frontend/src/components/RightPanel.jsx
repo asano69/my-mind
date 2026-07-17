@@ -1,13 +1,16 @@
-import { createMemo, createSignal, For, onMount } from "solid-js";
+import { createMemo, createSignal, For, onMount, Show } from "solid-js";
 import {
   currentItem,
   rightPanelHidden,
   toggleRightPanel,
 } from "../lib/mindmap/store";
-import Palette from "lucide-solid/icons/palette";
+import ChevronLeft from "lucide-solid/icons/chevron-left";
+import ChevronRight from "lucide-solid/icons/chevron-right";
 import TextCursor from "lucide-solid/icons/text-cursor";
-
+import Palette from "lucide-solid/icons/palette";
 const STATUS_MAP = { yes: true, no: false, "": null };
+
+
 
 const COLOR_SWATCHES = [
   { value: "", title: "Inherit" },
@@ -241,122 +244,132 @@ export default function RightPanel() {
     appModule.action(new actionsModule.SetTextColor(item, color));
   }
 
-  return (
-    <div
-      id="ui"
-      class="fixed inset-y-0 right-0 z-5 flex overflow-hidden bg-pane shadow-card transition-[width] duration-300 ease-in-out"
-      classList={{ "panel-expanded": !rightPanelHidden() }}
-      style={{
-        width: rightPanelHidden()
-          ? "var(--ribbon-width)"
-          : "var(--side-panel-width)",
-      }}
-    >
+return (
+    <>
       <div
-        class="flex min-h-0 min-w-0 flex-1 flex-col transition-opacity duration-200"
-        classList={{
-          "opacity-0": rightPanelHidden(),
-          "pointer-events-none": rightPanelHidden(),
+        id="ui"
+        class="fixed inset-y-0 right-0 z-5 flex overflow-hidden bg-pane shadow-card transition-[width] duration-300 ease-in-out"
+        classList={{ "panel-expanded": !rightPanelHidden() }}
+        style={{
+          width: rightPanelHidden() ? "0px" : "var(--side-panel-width)",
         }}
       >
-        <div class="flex-1 overflow-y-auto">
-          <div class="row">
-            <button class="icon-btn" data-command="notes" title="Notes">
-              <TextCursor size={20} />
-            </button>
+        <div
+          class="flex min-h-0 min-w-0 flex-1 flex-col transition-opacity duration-200"
+          classList={{
+            "opacity-0": rightPanelHidden(),
+            "pointer-events-none": rightPanelHidden(),
+          }}
+        >
+          <div class="flex-1 overflow-y-auto">
+            <div class="row">
+              <button class="icon-btn" data-command="notes" title="Notes">
+                <TextCursor size={20} />
+              </button>
+            </div>
+
+            <Field
+              label="Layout"
+              value={layoutValue()}
+              onChange={setLayout}
+              disabled={!ready() || !currentItem()}
+            >
+              <option value="" disabled={isRoot()}>
+                (Inherit)
+              </option>
+              {layoutGroups() && (
+                <>
+                  <option value="map" disabled={!isRoot()}>
+                    {layoutGroups().map.label}
+                  </option>
+                  <optgroup label="Graph">
+                    <For each={layoutGroups().graph}>
+                      {(l) => <option value={l.id}>{l.label}</option>}
+                    </For>
+                  </optgroup>
+                  <optgroup label="Tree">
+                    <For each={layoutGroups().tree}>
+                      {(l) => <option value={l.id}>{l.label}</option>}
+                    </For>
+                  </optgroup>
+                </>
+              )}
+            </Field>
+
+            <Field
+              label="Shape"
+              value={shapeValue()}
+              onChange={setShape}
+              disabled={!ready() || !currentItem()}
+            >
+              <option value="">(Automatic)</option>
+              <For each={shapeList()}>
+                {(s) => <option value={s.id}>{s.label}</option>}
+              </For>
+            </Field>
+
+            <Field
+              label="Value"
+              value={valueValue()}
+              onChange={setValue}
+              disabled={!ready() || !currentItem()}
+            >
+              <option value="">(None)</option>
+              <option value="num">Number</option>
+              <optgroup label="Formula">
+                <option value="sum">Sum</option>
+                <option value="avg">Average</option>
+                <option value="min">Minimum</option>
+                <option value="max">Maximum</option>
+              </optgroup>
+            </Field>
+
+            <Field
+              label="Status"
+              value={statusValue()}
+              onChange={setStatus}
+              disabled={!ready() || !currentItem()}
+            >
+              <option value="">None</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+              <option value="computed">Autocompute</option>
+            </Field>
+
+            <ColorPicker label="Item color" onClick={setColor} />
+            <ColorPicker label="Text color" onClick={setTextColor} />
           </div>
 
-          <Field
-            label="Layout"
-            value={layoutValue()}
-            onChange={setLayout}
-            disabled={!ready() || !currentItem()}
-          >
-            <option value="" disabled={isRoot()}>
-              (Inherit)
-            </option>
-            {layoutGroups() && (
-              <>
-                <option value="map" disabled={!isRoot()}>
-                  {layoutGroups().map.label}
-                </option>
-                <optgroup label="Graph">
-                  <For each={layoutGroups().graph}>
-                    {(l) => <option value={l.id}>{l.label}</option>}
-                  </For>
-                </optgroup>
-                <optgroup label="Tree">
-                  <For each={layoutGroups().tree}>
-                    {(l) => <option value={l.id}>{l.label}</option>}
-                  </For>
-                </optgroup>
-              </>
-            )}
-          </Field>
-
-          <Field
-            label="Shape"
-            value={shapeValue()}
-            onChange={setShape}
-            disabled={!ready() || !currentItem()}
-          >
-            <option value="">(Automatic)</option>
-            <For each={shapeList()}>
-              {(s) => <option value={s.id}>{s.label}</option>}
-            </For>
-          </Field>
-
-          <Field
-            label="Value"
-            value={valueValue()}
-            onChange={setValue}
-            disabled={!ready() || !currentItem()}
-          >
-            <option value="">(None)</option>
-            <option value="num">Number</option>
-            <optgroup label="Formula">
-              <option value="sum">Sum</option>
-              <option value="avg">Average</option>
-              <option value="min">Minimum</option>
-              <option value="max">Maximum</option>
-            </optgroup>
-          </Field>
-
-          <Field
-            label="Status"
-            value={statusValue()}
-            onChange={setStatus}
-            disabled={!ready() || !currentItem()}
-          >
-            <option value="">None</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-            <option value="computed">Autocompute</option>
-          </Field>
-
-          <ColorPicker label="Item color" onClick={setColor} />
-          <ColorPicker label="Text color" onClick={setTextColor} />
+          <footer class="flex min-h-[28px] flex-none items-end justify-between border-t border-black/10 px-3 py-1.5">
+            <span id="save-status" class="pl-0.5 text-base text-text"></span>
+          </footer>
         </div>
 
-        <footer class="flex min-h-[28px] flex-none items-end justify-between border-t border-black/10 px-3 py-1.5">
-          <span id="save-status" class="pl-0.5 text-base text-text"></span>
-        </footer>
+        <div class="spinner" hidden>
+          <div class="dot1"></div>
+          <div class="dot2"></div>
+        </div>
       </div>
 
-      <div class="flex w-[var(--ribbon-width)] flex-shrink-0 flex-col items-center gap-2 py-2">
-        <button
-          class="icon-btn"
-          onClick={toggleRightPanel}
-          title="Toggle sidebar"
-        >
-          <Palette size={20} />
-        </button>
-      </div>
-
-      <div class="spinner" hidden>
-        <div class="dot1"></div>
-        <div class="dot2"></div>
-      </div>
-    </div>
+      {/* Tab handle: lives outside #ui so it stays visible even when the
+          panel collapses to zero width (no ribbon column anymore). It
+          tracks the panel's left edge via the same `right` offset/duration
+          as #ui's own width transition, so it slides together with the
+          panel instead of jumping at the end of the animation. */}
+      <button
+        class="fixed top-1/2 z-10 flex h-14 w-5 -translate-y-1/2 items-center
+          justify-center rounded-l-lg bg-pane text-accent shadow-card
+          transition-[right] duration-300 ease-in-out hover:bg-pane-hover"
+        style={{
+          right: rightPanelHidden() ? "0px" : "var(--side-panel-width)",
+        }}
+        onClick={toggleRightPanel}
+        title="Toggle sidebar"
+      >
+        <Show when={rightPanelHidden()} fallback={<ChevronRight size={16} />}>
+          <ChevronLeft size={16} />
+        </Show>
+      </button>
+    </>
   );
 }

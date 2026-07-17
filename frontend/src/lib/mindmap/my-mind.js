@@ -163,12 +163,11 @@ export function handleResize() {
   const leftWidth = leftPanelHidden()
     ? cssPixelVar("--ribbon-width")
     : cssPixelVar("--side-panel-width");
-  // #ui (the right panel) is now the same ribbon-or-expanded shape as
-  // #left-panel, so its width comes from the same CSS vars instead of
-  // measuring the DOM via ui.getWidth().
-  const rightWidth = rightPanelHidden()
-    ? cssPixelVar("--ribbon-width")
-    : cssPixelVar("--side-panel-width");
+  // #ui (the right panel) no longer has a ribbon: it collapses fully to
+  // 0 width, and its open/close tab lives outside the flow (see
+  // RightPanel.jsx), so the canvas only needs to reserve space when the
+  // panel is actually expanded.
+  const rightWidth = rightPanelHidden() ? 0 : cssPixelVar("--side-panel-width");
 
   const size = [window.innerWidth - leftWidth - rightWidth, window.innerHeight];
   port.style.marginLeft = `${leftWidth}px`;
