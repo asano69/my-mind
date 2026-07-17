@@ -5,6 +5,7 @@ import (
 
 	"github.com/asano69/my-mind/internal/assets"
 	"github.com/asano69/my-mind/internal/config"
+	"github.com/asano69/my-mind/internal/db"
 
 	"github.com/google/uuid"
 	"github.com/pocketbase/pocketbase"
@@ -20,6 +21,11 @@ const mapsCollection = "maps"
 // starts listening. The database and collection are shared across all sessions.
 func Run(app *pocketbase.PocketBase, cfg *config.Config) error {
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
+
+	database, err := db.New(app)
+	if err != nil {
+		return err
+	}
 
 	// Every map gets a public uuid the moment it's first saved, so the
 	// frontend can address it as /maps/<uuid> instead of depending on
@@ -39,6 +45,16 @@ func Run(app *pocketbase.PocketBase, cfg *config.Config) error {
 		// Solid Router can take over client-side.
 		e.Router.GET("/{path...}", apis.Static(assets.FS, true))
 		return e.Next()
+	})
+
+	// Snapshot the working tier once a minute while maps are being
+	// edited. Daily/weekly/... tiers are simple enough to be handled by
+	// PocketBase's own cron-based collection rules instead (see
+	// docs/design.md).
+	app.Cron().MustAdd("workingSnapshotBackup", "* * * * *", func() {
+		if err := database.BackupWorkingSnapshots(); err != nil {
+			logrus.WithError(err).Error("working snapshot backup failed")
+		}
 	})
 
 	logrus.WithField("addr", addr).Info("listening")
