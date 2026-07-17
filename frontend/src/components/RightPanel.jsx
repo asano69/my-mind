@@ -5,8 +5,7 @@ import {
   toggleRightPanel,
 } from "../lib/mindmap/store";
 import Palette from "lucide-solid/icons/palette";
-
-
+import TextCursor from "lucide-solid/icons/text-cursor";
 
 const STATUS_MAP = { yes: true, no: false, "": null };
 
@@ -261,6 +260,12 @@ export default function RightPanel() {
         }}
       >
         <div class="flex-1 overflow-y-auto">
+          <div class="row">
+            <button class="icon-btn" data-command="notes" title="Notes">
+              <TextCursor size={20} />
+            </button>
+          </div>
+
           <Field
             label="Layout"
             value={layoutValue()}
@@ -346,8 +351,6 @@ export default function RightPanel() {
         >
           <Palette size={20} />
         </button>
-   
-     
       </div>
 
       <div class="spinner" hidden>

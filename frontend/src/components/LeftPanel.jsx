@@ -65,8 +65,7 @@ export default function LeftPanel() {
           <Book size={20} />
         </A>
 
-
-       <button class="icon-btn" data-command="save" title="Save">
+        <button class="icon-btn" data-command="save" title="Save">
           <CloudUpload size={20} />
         </button>
         <button class="icon-btn" data-command="save-as" title="Save as">
