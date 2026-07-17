@@ -1,66 +1,60 @@
 /* =============================================================
    theme.css — shared design tokens (loaded by every page)
    ============================================================= */
-/* Western fonts */
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap');
-
-/* CJK fonts — loaded separately to control weight */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&family=Noto+Sans+JP:wght@300;400;500&display=swap');
 
 :root {
-	/* Sans: readable and neutral for node labels */
-	--font-sans: "Inter", "Noto Sans JP", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+  /* Sans: readable and neutral for node labels */
+  --font-sans: "sans-serif";
+  /* Serif: literary — for notes/descriptions if used */
+  --font-serif: "serif";
 
-	/* Serif: literary — for notes/descriptions if used */
-	--font-serif: "EB Garamond", "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho", Georgia, serif;
-
-	/* Mono: unchanged */
-	--font-mono: "Menlo", "Consolas", "Monaco", "Courier New", monospace;
+  /* Mono: unchanged */
+  --font-mono: "Consolas", "Courier New", monospace;
 
   /* Palette — warm parchment family */
-  --color-bg:         #f5ede4;  /* page / canvas background   */
-  --color-pane:       #ede0d4;  /* panel / surface background */
-  --color-pane-hover: #d9c9bb;  /* hovered item inside panel  */
-  --color-accent:     #5a4a3a;  /* primary interactive/active */
-  --color-text:       #2c2015;  /* body text                  */
+  --color-bg: #f5ede4; /* page / canvas background   */
+  --color-pane: #ede0d4; /* panel / surface background */
+  --color-pane-hover: #d9c9bb; /* hovered item inside panel  */
+  --color-accent: #5a4a3a; /* primary interactive/active */
+  --color-text: #2c2015; /* body text                  */
   /* Shadows */
-  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.18), 0 1px 4px rgba(0, 0, 0, 0.10);
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.18), 0 1px 4px rgba(0, 0, 0, 0.1);
   /* soft hover highlight, shared across pages */
-  --color-hover: rgba(90, 74, 58, 0.30);
+  --color-hover: rgba(90, 74, 58, 0.3);
 
   /* ── Toast notification tokens ──────────────────────────────
    * Override any of these per-page to restyle toasts locally
    * without touching toast.ts.
    * ---------------------------------------------------------- */
-  --toast-bg:             var(--color-pane-hover);
-  --toast-color:          var(--color-text);
-  --toast-padding:        0.5rem 1rem;
-  --toast-radius:         8px;
-  --toast-font-size:      14px;
-  --toast-font-weight:    700;
+  --toast-bg: var(--color-pane-hover);
+  --toast-color: var(--color-text);
+  --toast-padding: 0.5rem 1rem;
+  --toast-radius: 8px;
+  --toast-font-size: 14px;
+  --toast-font-weight: 700;
   --toast-letter-spacing: 0.05em;
-  --toast-font-family:    var(--font-sans);
-  --toast-shadow:         var(--shadow-card);
-  --toast-bottom:         1.2rem;
-  --toast-linger:         2500ms; /* fully-visible duration before fade */
+  --toast-font-family: var(--font-sans);
+  --toast-shadow: var(--shadow-card);
+  --toast-bottom: 1.2rem;
+  --toast-linger: 2500ms; /* fully-visible duration before fade */
 
-	/* ── Shared button tokens ─────────────────────────────────────
+  /* ── Shared button tokens ─────────────────────────────────────
 	 * Used by toolbar buttons (editor), header buttons (catalog),
 	 * and any future interactive button-like elements.
 	 * ------------------------------------------------------------ */
-	--btn-font-size:        16px;
-	--btn-font-weight:      500;
-	--btn-font-family:      var(--font-sans);
-	--btn-letter-spacing:   0.04em;
-	--btn-text-transform:   uppercase;
-	--btn-padding:          4px 10px;
-	--btn-border-radius:    5px;
-	--btn-color:            var(--color-accent);
-	--btn-background:       transparent;
-	--btn-opacity:          0.8;
-	--btn-opacity-hover:    1;
-	--btn-opacity-disabled: 0.3;
-	--btn-transition:       opacity 80ms ease, background-color 80ms ease;
-	--btn-background-hover: var(--color-hover);
+  --btn-font-size: 16px;
+  --btn-font-weight: 500;
+  --btn-font-family: var(--font-sans);
+  --btn-letter-spacing: 0.04em;
+  --btn-text-transform: uppercase;
+  --btn-padding: 4px 10px;
+  --btn-border-radius: 5px;
+  --btn-color: var(--color-accent);
+  --btn-background: transparent;
+  --btn-opacity: 0.8;
+  --btn-opacity-hover: 1;
+  --btn-opacity-disabled: 0.3;
+  --btn-transition: opacity 80ms ease, background-color 80ms ease;
+  --btn-background-hover: var(--color-hover);
   --btn-opacity-active: 0.85;
 }
