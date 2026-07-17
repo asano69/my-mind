@@ -11,6 +11,9 @@
   /* Layout */
   --help-pane-width: 250px;
   --ui-pane-width: 200px; /* matches .pane's base width, used by #ui */
+  --ribbon-width: 60px; /* collapsed width of #left-panel; matches .icon-btn's own rendered size (1rem padding + 28px icon) */
+  --left-panel-width: 240px; /* expanded width of #left-panel */
+
   /* Note-preview watermark */
   --color-preview-ink: rgba(90, 60, 30, 0.95);
 
@@ -169,30 +172,43 @@ body:has(#ui:not([hidden])) .topbar-right {
   right: calc(var(--ui-pane-width) + 8px);
 }
 
-.topbar-left {
-  position: fixed;
-  top: 5px;
-  left: 8px;
-  z-index: 10;
-  display: flex;
-  gap: 1rem;
-  margin: 0.5rem;
-  transition: left 0.5s;
-}
-
 /* -------------------------------------------------------------
    Pane — #left-panel (left sidebar, symmetric to #ui)
+   Unlike #ui (which slides fully off-screen via [hidden]), this pane
+   never leaves the screen: collapsing it animates its own width down
+   to --ribbon-width instead, so .left-ribbon's icons stay visible and
+   pinned to the left edge — a sidebar that opens/closes, not a panel
+   that slides out from behind a fixed strip.
    ------------------------------------------------------------- */
 .pane-left {
   right: auto;
   left: 0;
+  width: var(--ribbon-width);
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
   box-shadow: 3px 0 12px rgba(0, 0, 0, 0.2);
+  transition: width 280ms ease;
 }
 
-.pane-left[hidden] {
-  transform: translate(-100%, 0);
+.pane-left.expanded {
+  width: var(--left-panel-width);
 }
 
+.left-ribbon {
+  flex: none;
+  width: var(--ribbon-width);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 8px;
+  gap: 4px;
+}
+
+.left-panel-content {
+  flex: auto;
+  overflow: hidden;
+}
 /* Shift the left topbar buttons out of the way while the panel is open,
    mirroring .topbar-right's shift for #ui below. */
 body:has(#left-panel:not([hidden])) .topbar-left {
