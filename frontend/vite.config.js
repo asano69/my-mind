@@ -5,6 +5,9 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [solid(), tailwindcss()],
+  optimizeDeps: {
+    include: ["lucide-solid"],
+  },
   publicDir: "public",
   server: {
     host: "0.0.0.0",
