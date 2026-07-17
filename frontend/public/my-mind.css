@@ -456,24 +456,6 @@ body:has(#ui:not([hidden])) .topbar-right {
   background: var(--color-hover);
 }
 
-.icon-btn img {
-  display: block;
-  width: 32px;
-  height: 32px;
-}
-
-/* Fixed-position buttons */
-#catalog-link,
-#help-btn {
-  position: fixed;
-}
-
-/* Individual positions */
-#catalog-link {
-  top: 5px;
-  left: 8px;
-}
-
 #help-btn {
   bottom: 8px;
   left: 8px;
