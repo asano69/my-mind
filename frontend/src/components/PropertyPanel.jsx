@@ -1,5 +1,7 @@
 import { createMemo, createSignal, For, onMount } from "solid-js";
 import { currentItem } from "../lib/mindmap/store";
+import { IconNew } from "./icons/New"
+
 
 const STATUS_MAP = { yes: true, no: false, "": null };
 
@@ -184,7 +186,7 @@ export default function PropertyPanel() {
       <div class="scrollable">
         <p class="row">
           <button class="icon-btn" data-command="new" title="New">
-            <img src="/icon/new.png" alt="New" />
+            <IconNew />
           </button>
           <button class="icon-btn" data-command="load" title="Open">
             <img src="/icon/open.png" alt="Open" />
