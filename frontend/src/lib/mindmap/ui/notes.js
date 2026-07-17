@@ -11,17 +11,6 @@ let editorAPI = null;
 
 export function registerEditorAPI(api) {
   editorAPI = api;
-  if (app.currentItem) {
-    api.setContent(app.currentItem.notes);
-    // Also resync the background watermark here: onItemSelect() may have
-    // already run for the initially selected item before this registration
-    // completed (NotesEditor.jsx loads easymde/this module asynchronously),
-    // in which case its updatePreview() call was a no-op because editorAPI
-    // was still null at that point. Without this, the watermark only ever
-    // catches up as a side effect of the CodeMirror "change" event firing
-    // once the user happens to open the notes editor.
-    updatePreview(app.currentItem.notes);
-  }
 }
 
 function updatePreview(notes) {

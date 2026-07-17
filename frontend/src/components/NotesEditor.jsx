@@ -18,13 +18,24 @@ import { currentItem } from "../lib/mindmap/store";
  * the document.
  */
 export default function NotesEditor() {
-  let textareaEl;
+
+ let textareaEl;
   let easyMDE;
   let notesModule; // cached after the first dynamic import, see onMount
 
   const [mode, setMode] = createSignal("edit"); // "edit" | "view"
   const [content, setContent] = createSignal("");
   const [previewHtml, setPreviewHtml] = createSignal("");
+  // Tracks whether notesModule/editorAPI are ready. The createEffect below
+  // needs to react to *both* "the engine selected an item" and "our own
+  // async setup finished" — whichever happens second. Without this signal,
+  // if an item gets selected (e.g. on map load) before this component's
+  // async easymde/notes.js imports resolve, onItemSelect() would run with
+  // an undefined notesModule and silently do nothing — and nothing would
+  // ever retrigger it afterwards, since currentItem() itself doesn't
+  // change again just because our setup finished.
+  const [ready, setReady] = createSignal(false);
+
 
   function toggleMode() {
     if (mode() === "edit") {
@@ -69,7 +80,7 @@ export default function NotesEditor() {
 
     notesModule = await import("../lib/mindmap/ui/notes.js");
 
-    easyMDE.codemirror.on("change", () => {
+   easyMDE.codemirror.on("change", () => {
       const text = easyMDE.value();
       setContent(text);
       notesModule.onEditorChange(text);
@@ -90,13 +101,18 @@ export default function NotesEditor() {
         return easyMDE.options.previewRender(text);
       },
     });
+
+     setReady(true);
   });
 
-  // Sync the notes editor whenever the selected item changes. Replaces the
-  // old "item-select" pubsub subscription that used to live in notes.js
-  // (see CLAUDE.md, Solid migration Phase 4).
+   // Sync the notes editor and background preview whenever the selected
+  // item changes, or once our async setup becomes ready — covers both
+  // possible orderings of "item selected" vs "editor initialized".
   createEffect(() => {
-    notesModule?.onItemSelect(currentItem());
+    if (!ready()) {
+      return;
+    }
+    notesModule.onItemSelect(currentItem());
   });
 
   onCleanup(() => easyMDE?.toTextArea());
