@@ -1,5 +1,7 @@
 import { A, useNavigate } from "@solidjs/router";
 import TitleBar from "./TitleBar";
+import { Book } from "lucide-solid";
+
 
 // The floating strip across the top of the canvas: the catalog icon
 // (fixed top-left, via CSS) and the title input (fixed top-center,
@@ -26,7 +28,7 @@ export default function TopBar() {
         title="Catalog"
         onClick={goToCatalog}
       >
-        <img src="/icon/catalog.png" alt="Catalog" />
+        <Book size={28} />
       </A>
       <TitleBar />
     </>

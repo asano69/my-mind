@@ -5,6 +5,9 @@ import HelpPanel from "./HelpPanel";
 import ContextMenu from "./ContextMenu";
 import TopBar from "./TopBar";
 import { onMount, onCleanup } from "solid-js";
+import { CircleQuestionMark  } from "lucide-solid";
+
+
 
 export default function MindMapCanvas() {
   let mainRef;
@@ -31,7 +34,7 @@ export default function MindMapCanvas() {
       <ContextMenu />
 
       <button id="help-btn" class="icon-btn" data-command="help" title="Help">
-        <img src="/icon/help.png" alt="Help" />
+        <CircleQuestionMark size={28} />
       </button>
     </>
   );

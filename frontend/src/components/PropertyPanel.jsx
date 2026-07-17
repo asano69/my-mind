@@ -1,8 +1,6 @@
 import { createMemo, createSignal, For, onMount } from "solid-js";
 import { currentItem } from "../lib/mindmap/store";
-import { IconNew } from "./icons/New"
-
-
+import { FilePlus, FolderOpen, Save, Images, TextCursor, Palette  } from "lucide-solid";
 const STATUS_MAP = { yes: true, no: false, "": null };
 
 function statusToString(status) {
@@ -185,17 +183,21 @@ export default function PropertyPanel() {
     <div id="ui" class="pane" hidden={hidden()}>
       <div class="scrollable">
         <p class="row">
-          <button class="icon-btn" data-command="new" title="New">
-            <IconNew />
-          </button>
+          
+
+
+    <button class="icon-btn" data-command="new" title="New">
+  <FilePlus size={28} />
+</button>
+
           <button class="icon-btn" data-command="load" title="Open">
-            <img src="/icon/open.png" alt="Open" />
+             <FolderOpen size={28} /> 
           </button>
           <button class="icon-btn" data-command="save" title="Save">
-            <img src="/icon/save.png" alt="Save" />
+            <Save size={28} /> 
           </button>
           <button class="icon-btn" data-command="save-as" title="Save as">
-            <img src="/icon/save-as.png" alt="Save as" />
+            <Images size={28} />
           </button>
         </p>
         <p>
@@ -388,10 +390,10 @@ export default function PropertyPanel() {
       </footer>
 
       <button class="icon-btn" data-command="notes" title="Notes">
-        <img src="/icon/notes.png" alt="Notes" />
+        <TextCursor size={28} />
       </button>
       <button class="icon-btn" id="toggle" data-command="ui" title="Toggle UI">
-        <img src="/icon/menu.png" alt="Menu" />
+        <Palette size={28} />
       </button>
       <div class="spinner" hidden>
         <div class="dot1"></div>
