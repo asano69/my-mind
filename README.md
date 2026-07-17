@@ -24,10 +24,12 @@ It has a catalog feature.
 - [x] Catalogにおいて、SVGイメージに埋め込まれたURLなどを誤ってクリックしないように、マウスで選択不可能にする
 - [x] my-mind.js アンマウント安全化
 - [x] Mindmap Engine → Solid Reactive State: Migration Plan
+- [x] canvasで、Catalogアイコンや、タイトル、エディターボタンなどのある細長い部分を、topbarなどのコンポーネント化する
+- [x] Canvasで、Map削除ボタンを追加する
 
 - [ ] Canvasにおいて、URLはURLとわかるように色を変えて下線をひくCSSにする
 - [ ] svg画像を配信するルートを作成。http://localhost:3001/img/UUID
-- [ ] キャンバスで、右ペインが戻らなくなるバグの修正
+
 - [ ] CanvasのSave Asボタンで、マインドマップのpng画像をクリップボードにコピーする
 - [ ] 落書き機能（フリーライティング）
 - [ ] ノードの移動をdnd-kitに変えられないか検討する
@@ -36,8 +38,6 @@ It has a catalog feature.
 - [ ] Undo/Redoボタンの設置
 
 ## Work in Progress
-- [ ] canvasで、Catalogアイコンや、タイトル、エディターボタンなどのある細長い部分を、topbarなどのコンポーネント化する
-- [ ] Canvasで、Map削除ボタンを追加する
 
 
 ## Ref
