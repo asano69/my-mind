@@ -965,13 +965,24 @@ func init() {
 						"type": "relation"
 					},
 					{
+						"help": "",
+						"hidden": false,
+						"id": "json3464561536",
+						"maxSize": 0,
+						"name": "mymind",
+						"presentable": false,
+						"required": false,
+						"system": false,
+						"type": "json"
+					},
+					{
 						"autogeneratePattern": "",
 						"help": "",
 						"hidden": false,
-						"id": "text3464561536",
+						"id": "text54863248",
 						"max": 0,
 						"min": 0,
-						"name": "mymind",
+						"name": "svg",
 						"pattern": "",
 						"presentable": false,
 						"primaryKey": false,
@@ -985,16 +996,6 @@ func init() {
 						"name": "created",
 						"onCreate": true,
 						"onUpdate": false,
-						"presentable": false,
-						"system": false,
-						"type": "autodate"
-					},
-					{
-						"hidden": false,
-						"id": "autodate3332085495",
-						"name": "updated",
-						"onCreate": true,
-						"onUpdate": true,
 						"presentable": false,
 						"system": false,
 						"type": "autodate"
