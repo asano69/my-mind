@@ -48,7 +48,7 @@ export default function TopBar() {
 
       <TitleBar />
       <div class="topbar-right">
-      <button class="icon-btn" title="Delete map" onClick={handleDelete}>
+        <button class="icon-btn" title="Delete map" onClick={handleDelete}>
           <Trash2 size={28} />
         </button>
         <button class="icon-btn" data-command="notes" title="Notes">
@@ -62,7 +62,6 @@ export default function TopBar() {
         >
           <Palette size={28} />
         </button>
-      
       </div>
     </>
   );

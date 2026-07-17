@@ -2,13 +2,17 @@ import { createResource, createSignal, For, Show } from "solid-js";
 
 import { A, useNavigate } from "@solidjs/router";
 
+import Search from "../components/Search";
+import FilePlus from "lucide-solid/icons/file-plus";
+import Settings2 from "lucide-solid/icons/settings-2";
+import Check from "lucide-solid/icons/check";
+
 import pb from "../lib/pb";
 import {
   updateTitle,
   updatePin,
   deleteMap,
 } from "../lib/mindmap/backend/pocketbase";
-import Search from "../components/Search";
 
 // query is empty for the initial/unfiltered list, or a title search term.
 // pb.filter() escapes the value for us; "~" is PocketBase's substring
@@ -62,19 +66,19 @@ export default function Catalog() {
     <div class="min-h-screen bg-bg p-8 text-text">
       <div class="mx-auto max-w-5xl">
         <div class="mb-6 flex items-center justify-between">
-          <h1 class="font-serif text-3xl">my-mind</h1>
+          <h1 class="font-serif text-3xl">My Mind</h1>
           <div class="flex gap-2">
             <button
               onClick={() => setEditMode(!editMode())}
-              class="rounded-md border border-pane-hover bg-pane px-4 py-2 text-sm hover:bg-pane-hover"
+              class="icon-btn"
+              title={editMode() ? "Done" : "Edit"}
             >
-              {editMode() ? "Done" : "Edit"}
+              <Show when={editMode()} fallback={<Settings2 size={28} />}>
+                <Check size={28} />
+              </Show>
             </button>
-            <A
-              href="/"
-              class="rounded-md border border-pane-hover bg-pane px-4 py-2 text-sm hover:bg-pane-hover"
-            >
-              New
+            <A href="/" class="icon-btn" title="New">
+              <FilePlus size={28} />
             </A>
           </div>
         </div>

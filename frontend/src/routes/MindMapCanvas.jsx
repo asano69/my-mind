@@ -7,7 +7,6 @@ import TopBar from "../components/TopBar";
 import { onMount, onCleanup } from "solid-js";
 import CircleQuestionMark from "lucide-solid/icons/circle-question-mark";
 
-
 export default function MindMapCanvas() {
   let mainRef;
   let engine;
