@@ -177,7 +177,26 @@ body:has(#ui:not([hidden])) .topbar-right {
   display: flex;
   gap: 1rem;
   margin: 0.5rem;
-  transition: right 0.5s;
+  transition: left 0.5s;
+}
+
+/* -------------------------------------------------------------
+   Pane — #left-panel (left sidebar, symmetric to #ui)
+   ------------------------------------------------------------- */
+.pane-left {
+  right: auto;
+  left: 0;
+  box-shadow: 3px 0 12px rgba(0, 0, 0, 0.2);
+}
+
+.pane-left[hidden] {
+  transform: translate(-100%, 0);
+}
+
+/* Shift the left topbar buttons out of the way while the panel is open,
+   mirroring .topbar-right's shift for #ui below. */
+body:has(#left-panel:not([hidden])) .topbar-left {
+  left: calc(var(--ui-pane-width) + 8px);
 }
 
 /* -------------------------------------------------------------

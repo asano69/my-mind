@@ -28,3 +28,14 @@ export const [dirtyVersion, setDirtyVersion] = createSignal(0);
 export function bumpDirty() {
   setDirtyVersion((v) => v + 1);
 }
+
+// Whether the left sidebar (#left-panel) is hidden. Mirrors the right
+// sidebar's own hidden state (see PropertyPanel.jsx), but this one needs
+// no bridge object: both reader (LeftPanel.jsx) and writer (TopBar.jsx)
+// are plain Solid components, so a shared signal is enough (see
+// CLAUDE.md's Phase 5 addendum, "read-only consumption — no bridge
+// object").
+export const [leftPanelHidden, setLeftPanelHidden] = createSignal(true);
+export function toggleLeftPanel() {
+  setLeftPanelHidden((h) => !h);
+}

@@ -1,4 +1,7 @@
 import { A, useNavigate } from "@solidjs/router";
+import History from "lucide-solid/icons/history";
+import { toggleLeftPanel } from "../lib/mindmap/store";
+
 import TitleBar from "./TitleBar";
 // icons
 import Book from "lucide-solid/icons/book";
@@ -50,7 +53,9 @@ export default function TopBar() {
           <CircleQuestionMark size={28} />
         </button>
       </div>
-
+ <button class="icon-btn" onClick={toggleLeftPanel} title="Snapshots">
+          <History size={28} />
+        </button>
       <TitleBar />
       <div class="topbar-right">
         <button class="icon-btn" title="Delete map" onClick={handleDelete}>
