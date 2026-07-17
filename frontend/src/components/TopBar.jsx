@@ -1,12 +1,13 @@
 import { A, useNavigate } from "@solidjs/router";
-import History from "lucide-solid/icons/history";
+
 import { toggleLeftPanel } from "../lib/mindmap/store";
 
 import TitleBar from "./TitleBar";
 // icons
+import PanelLeft from "lucide-solid/icons/panel-left";
+import PanelRight from "lucide-solid/icons/panel-right";
 import Book from "lucide-solid/icons/book";
 import TextCursor from "lucide-solid/icons/text-cursor";
-import Palette from "lucide-solid/icons/palette";
 import Trash2 from "lucide-solid/icons/trash-2";
 import CircleQuestionMark from "lucide-solid/icons/circle-question-mark";
 
@@ -52,10 +53,12 @@ export default function TopBar() {
         <button class="icon-btn" data-command="help" title="Help">
           <CircleQuestionMark size={28} />
         </button>
-      </div>
- <button class="icon-btn" onClick={toggleLeftPanel} title="Snapshots">
-          <History size={28} />
+
+     <button class="icon-btn" onClick={toggleLeftPanel} title="Snapshots">
+          <PanelLeft size={28} />
         </button>
+      </div>
+         
       <TitleBar />
       <div class="topbar-right">
         <button class="icon-btn" title="Delete map" onClick={handleDelete}>
@@ -70,7 +73,7 @@ export default function TopBar() {
           data-command="ui"
           title="Toggle UI"
         >
-          <Palette size={28} />
+          <PanelRight size={28} />
         </button>
       </div>
     </>
