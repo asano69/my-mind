@@ -9,7 +9,7 @@ let node = null;
 let saveTimeEl = null;
 let elapsedTimer = null;
 
-// Set by PropertyPanel's onMount (see components/PropertyPanel.jsx).
+// Set by RightPanel's onMount (see components/RightPanel.jsx).
 // Same bridge pattern as help.js's registerToggle: #ui is a Solid-owned
 // element, so show/hide forwards to Solid's own signal instead of this
 // module mutating node.hidden directly (replaces the old "ui-change"
@@ -108,7 +108,7 @@ function onClick(e) {
 export function init(port) {
   node = document.querySelector("#ui");
   saveTimeEl = document.querySelector("#save-time");
-  // layout/shape/value/status no longer live here — see PropertyPanel.jsx,
+  // layout/shape/value/status no longer live here — see RightPanel.jsx,
   // which reads store.js's `currentItem` signal directly instead of being
   // driven by this module's init()/dispose()/pubsub wiring (Solid migration
   // Phase 3, see CLAUDE.md).

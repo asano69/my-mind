@@ -12,7 +12,7 @@ import "./command/select.js";
 // Registers every layout/shape kind into their respective repos (see
 // layout/layout.js's and shape/shape.js's `repo` Maps). This used to be a
 // side-effect import inside ui/layout.js and ui/shape.js, but those modules
-// were replaced by PropertyPanel.jsx (see CLAUDE.md, Solid migration
+// were replaced by RightPanel.jsx (see CLAUDE.md, Solid migration
 // Phase 3); the registration itself is engine-wide (item.js's
 // resolvedShape/resolvedLayout depend on it), so it lives here now.
 import "./layout/graph.js";
@@ -124,7 +124,7 @@ export function selectItem(item) {
     currentItem.deselect();
   }
   currentItem = item;
-  // Keep store.js's Solid signal in sync so PropertyPanel.jsx (and any
+  // Keep store.js's Solid signal in sync so RightPanel.jsx (and any
   // future Solid component) can react to selection changes directly,
   // per the Solid migration plan's Phase 3 (see CLAUDE.md).
   setCurrentItem(item);

@@ -1,7 +1,7 @@
 import { createSignal } from "solid-js";
 
 // Mirrors my-mind.js's `currentItem` module state as a Solid signal, so
-// Solid components (see PropertyPanel.jsx) can react to selection changes
+// Solid components (see RightPanel.jsx) can react to selection changes
 // without going through pubsub. Written by my-mind.js's selectItem() and
 // unmount(); treat as read-only everywhere else.
 export const [currentItem, setCurrentItem] = createSignal(null);
@@ -30,7 +30,7 @@ export function bumpDirty() {
 }
 
 // Whether the left sidebar (#left-panel) is hidden. Mirrors the right
-// sidebar's own hidden state (see PropertyPanel.jsx), but this one needs
+// sidebar's own hidden state (see RightPanel.jsx), but this one needs
 // no bridge object: both reader (LeftPanel.jsx) and writer (TopBar.jsx)
 // are plain Solid components, so a shared signal is enough (see
 // CLAUDE.md's Phase 5 addendum, "read-only consumption — no bridge

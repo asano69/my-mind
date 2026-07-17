@@ -1,7 +1,7 @@
 import LeftPanel from "../components/LeftPanel";
 
 import NotesEditor from "../components/NotesEditor";
-import PropertyPanel from "../components/PropertyPanel";
+import RightPanel from "../components/RightPanel";
 
 import SaveDialog from "../components/SaveDialog";
 import HelpPanel from "../components/HelpPanel";
@@ -28,7 +28,7 @@ export default function MindMapCanvas() {
 
       <TopBar />
       <LeftPanel />
-      <PropertyPanel />
+      <RightPanel />
       <SaveDialog />
       <HelpPanel />
       <NotesEditor />
