@@ -1,8 +1,19 @@
 import { createMemo, createSignal, For, onMount } from "solid-js";
-import { currentItem } from "../lib/mindmap/store";
-
+import { currentItem, rightPanelHidden, toggleRightPanel } from "../lib/mindmap/store";
+import PanelRight from "lucide-solid/icons/panel-right";
 
 const STATUS_MAP = { yes: true, no: false, "": null };
+
+const COLOR_SWATCHES = [
+  { value: "", title: "Inherit" },
+  { value: "#000", title: "Black" },
+  { value: "#d33", title: "Red" },
+  { value: "#33d", title: "Blue" },
+  { value: "#3d3", title: "Green" },
+  { value: "#d3d", title: "Magenta" },
+  { value: "#3dd", title: "Cyan" },
+  { value: "#dd3", title: "Yellow" },
+];
 
 function statusToString(status) {
   for (let key in STATUS_MAP) {
@@ -13,16 +24,70 @@ function statusToString(status) {
   return String(status);
 }
 
+// A labeled <select> row. Shared by the Layout/Shape/Value/Status fields
+// below so their styling lives in one place instead of four.
+function Field(props) {
+  return (
+    <div class="border-b border-black/[0.07] px-3 py-2">
+      <label class="block">
+        <span class="mb-1 block text-[11px] font-semibold tracking-wider text-text/70 uppercase">
+          {props.label}
+        </span>
+        <select
+          value={props.value}
+          onChange={props.onChange}
+          disabled={props.disabled}
+          class="w-full rounded border border-black/20 bg-white px-2 py-1.5 text-sm text-text shadow-[inset_0_1px_2px_rgba(0,0,0,0.08)] outline-none transition-colors focus:border-accent disabled:opacity-50"
+        >
+          {props.children}
+        </select>
+      </label>
+    </div>
+  );
+}
+
+// A labeled row of clickable color swatches. Shared by the item-color and
+// text-color pickers below (props.onClick receives the raw click event,
+// same delegation pattern the old .color-picker markup used).
+function ColorPicker(props) {
+  return (
+    <div class="border-b border-black/[0.07] px-3 py-2">
+      <label class="block">
+        <span class="mb-1 block text-[11px] font-semibold tracking-wider text-text/70 uppercase">
+          {props.label}
+        </span>
+        <span
+          class="mt-1 flex flex-row flex-wrap gap-1.5"
+          onClick={props.onClick}
+        >
+          <For each={COLOR_SWATCHES}>
+            {(c) => (
+              
+                data-color={c.value}
+                title={c.title}
+                href="#"
+                class="h-5 w-5 rounded-[5px] shadow-[0_1px_4px_rgba(0,0,0,0.8)] transition-transform hover:scale-125"
+                style={c.value ? { "background-color": c.value } : {}}
+              ></a>
+            )}
+          </For>
+        </span>
+      </label>
+    </div>
+  );
+}
+
 // The property panel (#ui) — layout/shape/value/status controls for the
-// currently selected item, color pickers, the notes/menu toggle buttons,
-// the save spinner, and the save-status footer.
+// currently selected item, color pickers, the save-status footer, and the
+// save spinner. Structured as a ribbon-or-expanded sidebar, mirroring
+// LeftPanel.jsx: a slim always-visible icon column pinned to the screen
+// edge (here, the right edge) plus a wider content area that animates in
+// and out by width instead of the old `.pane` slide-off-screen behavior.
 //
-// layout/shape/value/status used to be backed by ui/layout.js, ui/shape.js,
-// ui/value.js, ui/status.js, each imperatively reading/writing a plain
-// <select>. They're now controlled Solid components reading store.js's
-// `currentItem` signal directly (see CLAUDE.md, Solid migration Phase 3).
-// Color/text-color swatches were already handled here before Phase 3, since
-// they only dispatch an action on click and never read engine state back.
+// Visibility is store.js's `rightPanelHidden` signal, read/written
+// directly — no bridge object needed (see CLAUDE.md's Phase 5 addendum,
+// "read-only consumption — no bridge object"), same as LeftPanel.jsx's
+// `leftPanelHidden`.
 export default function RightPanel() {
   // Cached after the first dynamic import, see onMount. Loaded lazily
   // (like title.js/notes.js) so the engine bundle isn't pulled in before
@@ -34,31 +99,21 @@ export default function RightPanel() {
   let shapeRepo;
 
   const [ready, setReady] = createSignal(false);
-  // Mirrors #ui's show/hide state as Solid state instead of ui.js
-  // reaching into the DOM directly (replaces the old "ui-change" pubsub
-  // message, see CLAUDE.md, Solid migration Phase 9.4). Same bridge
-  // pattern as HelpPanel.jsx's `hidden` signal for #help.
-  const [hidden, setHidden] = createSignal(false);
 
   onMount(async () => {
-    const [actionsMod, appMod, cmdMod, layoutMod, shapeMod, uiMod] =
+    const [actionsMod, appMod, cmdMod, layoutMod, shapeMod] =
       await Promise.all([
         import("../lib/mindmap/action.js"),
         import("../lib/mindmap/my-mind.js"),
         import("../lib/mindmap/command/command.js"),
-
         import("../lib/mindmap/layout/layout.js"),
         import("../lib/mindmap/shape/shape.js"),
-        import("../lib/mindmap/ui/ui.js"),
       ]);
     actionsModule = actionsMod;
     appModule = appMod;
     commandRepo = cmdMod.repo;
-
     layoutRepo = layoutMod.repo;
     shapeRepo = shapeMod.repo;
-
-    uiMod.registerToggle({ toggle: () => setHidden((h) => !h) });
 
     setReady(true);
   });
@@ -181,198 +236,106 @@ export default function RightPanel() {
   }
 
   return (
-    <div id="ui" class="pane" hidden={hidden()}>
-      <div class="scrollable">
-        <p class="row">
-                     </p>
-        <p>
-          <label>
-            <span>Layout</span>
-            <select
-              id="layout"
-              value={layoutValue()}
-              onChange={setLayout}
-              disabled={!ready() || !currentItem()}
-            >
-              <option value="" disabled={isRoot()}>
-                (Inherit)
-              </option>
-              {layoutGroups() && (
-                <>
-                  <option value="map" disabled={!isRoot()}>
-                    {layoutGroups().map.label}
-                  </option>
-                  <optgroup label="Graph">
-                    <For each={layoutGroups().graph}>
-                      {(l) => <option value={l.id}>{l.label}</option>}
-                    </For>
-                  </optgroup>
-                  <optgroup label="Tree">
-                    <For each={layoutGroups().tree}>
-                      {(l) => <option value={l.id}>{l.label}</option>}
-                    </For>
-                  </optgroup>
-                </>
-              )}
-            </select>
-          </label>
-        </p>
-        <p>
-          <label>
-            <span>Shape</span>
-            <select
-              id="shape"
-              value={shapeValue()}
-              onChange={setShape}
-              disabled={!ready() || !currentItem()}
-            >
-              <option value="">(Automatic)</option>
-              <For each={shapeList()}>
-                {(s) => <option value={s.id}>{s.label}</option>}
-              </For>
-            </select>
-          </label>
-        </p>
-        <p>
-          <label>
-            <span>Value</span>
-            <select
-              id="value"
-              value={valueValue()}
-              onChange={setValue}
-              disabled={!ready() || !currentItem()}
-            >
-              <option value="">(None)</option>
-              <option value="num">Number</option>
-              <optgroup label="Formula">
-                <option value="sum">Sum</option>
-                <option value="avg">Average</option>
-                <option value="min">Minimum</option>
-                <option value="max">Maximum</option>
-              </optgroup>
-            </select>
-          </label>
-        </p>
-        <p>
-          <label>
-            <span>Status</span>
-            <select
-              id="status"
-              value={statusValue()}
-              onChange={setStatus}
-              disabled={!ready() || !currentItem()}
-            >
-              <option value="">None</option>
-              <option value="yes">Yes</option>
-              <option value="no">No</option>
-              <option value="computed">Autocompute</option>
-            </select>
-          </label>
-        </p>
-        <p>
-          <label>
-            <span>Item color</span>
-            <span id="color" class="color-picker" onClick={setColor}>
-              <a data-color="" title="Inherit" href="#"></a>
-              <a
-                data-color="#000"
-                title="Black"
-                href="#"
-                style={{ "background-color": "#000" }}
-              ></a>
-              <a
-                data-color="#d33"
-                title="Red"
-                href="#"
-                style={{ "background-color": "#d33" }}
-              ></a>
-              <a
-                data-color="#33d"
-                title="Blue"
-                href="#"
-                style={{ "background-color": "#33d" }}
-              ></a>
-              <a
-                data-color="#3d3"
-                title="Green"
-                href="#"
-                style={{ "background-color": "#3d3" }}
-              ></a>
-              <a
-                data-color="#d3d"
-                title="Magenta"
-                href="#"
-                style={{ "background-color": "#d3d" }}
-              ></a>
-              <a
-                data-color="#3dd"
-                title="Cyan"
-                href="#"
-                style={{ "background-color": "#3dd" }}
-              ></a>
-              <a
-                data-color="#dd3"
-                title="Yellow"
-                href="#"
-                style={{ "background-color": "#dd3" }}
-              ></a>
-            </span>
-          </label>
-        </p>
-        <p>
-          <label>
-            <span>Text color</span>
-            <span id="text-color" class="color-picker" onClick={setTextColor}>
-              <a data-color="" title="Inherit" href="#"></a>
-              <a
-                data-color="#000"
-                title="Black"
-                href="#"
-                style={{ "background-color": "#000" }}
-              ></a>
-              <a
-                data-color="#d33"
-                title="Red"
-                href="#"
-                style={{ "background-color": "#d33" }}
-              ></a>
-              <a
-                data-color="#33d"
-                title="Blue"
-                href="#"
-                style={{ "background-color": "#33d" }}
-              ></a>
-              <a
-                data-color="#3d3"
-                title="Green"
-                href="#"
-                style={{ "background-color": "#3d3" }}
-              ></a>
-              <a
-                data-color="#d3d"
-                title="Magenta"
-                href="#"
-                style={{ "background-color": "#d3d" }}
-              ></a>
-              <a
-                data-color="#3dd"
-                title="Cyan"
-                href="#"
-                style={{ "background-color": "#3dd" }}
-              ></a>
-              <a
-                data-color="#dd3"
-                title="Yellow"
-                href="#"
-                style={{ "background-color": "#dd3" }}
-              ></a>
-            </span>
-          </label>
-        </p>
+    <div
+      id="ui"
+      class="fixed inset-y-0 right-0 z-5 flex overflow-hidden bg-pane shadow-card transition-[width] duration-300 ease-in-out"
+      classList={{ "panel-expanded": !rightPanelHidden() }}
+      style={{
+        width: rightPanelHidden()
+          ? "var(--ribbon-width)"
+          : "var(--side-panel-width)",
+      }}
+    >
+      <div
+        class="flex min-h-0 min-w-0 flex-1 flex-col transition-opacity duration-200"
+        classList={{
+          "opacity-0": rightPanelHidden(),
+          "pointer-events-none": rightPanelHidden(),
+        }}
+      >
+        <div class="flex-1 overflow-y-auto">
+          <Field
+            label="Layout"
+            value={layoutValue()}
+            onChange={setLayout}
+            disabled={!ready() || !currentItem()}
+          >
+            <option value="" disabled={isRoot()}>
+              (Inherit)
+            </option>
+            {layoutGroups() && (
+              <>
+                <option value="map" disabled={!isRoot()}>
+                  {layoutGroups().map.label}
+                </option>
+                <optgroup label="Graph">
+                  <For each={layoutGroups().graph}>
+                    {(l) => <option value={l.id}>{l.label}</option>}
+                  </For>
+                </optgroup>
+                <optgroup label="Tree">
+                  <For each={layoutGroups().tree}>
+                    {(l) => <option value={l.id}>{l.label}</option>}
+                  </For>
+                </optgroup>
+              </>
+            )}
+          </Field>
+
+          <Field
+            label="Shape"
+            value={shapeValue()}
+            onChange={setShape}
+            disabled={!ready() || !currentItem()}
+          >
+            <option value="">(Automatic)</option>
+            <For each={shapeList()}>
+              {(s) => <option value={s.id}>{s.label}</option>}
+            </For>
+          </Field>
+
+          <Field
+            label="Value"
+            value={valueValue()}
+            onChange={setValue}
+            disabled={!ready() || !currentItem()}
+          >
+            <option value="">(None)</option>
+            <option value="num">Number</option>
+            <optgroup label="Formula">
+              <option value="sum">Sum</option>
+              <option value="avg">Average</option>
+              <option value="min">Minimum</option>
+              <option value="max">Maximum</option>
+            </optgroup>
+          </Field>
+
+          <Field
+            label="Status"
+            value={statusValue()}
+            onChange={setStatus}
+            disabled={!ready() || !currentItem()}
+          >
+            <option value="">None</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+            <option value="computed">Autocompute</option>
+          </Field>
+
+          <ColorPicker label="Item color" onClick={setColor} />
+          <ColorPicker label="Text color" onClick={setTextColor} />
+        </div>
+
+        <footer class="flex min-h-[28px] flex-none items-end justify-between border-t border-black/10 px-3 py-1.5">
+          <span id="save-status" class="pl-0.5 text-base text-text"></span>
+        </footer>
       </div>
-      <footer>
-        <span id="save-status"></span>
-      </footer>
+
+      <div class="flex w-[var(--ribbon-width)] flex-shrink-0 flex-col items-center gap-2 py-2">
+        <button class="icon-btn" onClick={toggleRightPanel} title="Toggle sidebar">
+          <PanelRight size={20} />
+        </button>
+      </div>
 
       <div class="spinner" hidden>
         <div class="dot1"></div>

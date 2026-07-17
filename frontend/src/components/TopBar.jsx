@@ -2,7 +2,6 @@ import { useNavigate } from "@solidjs/router";
 
 import TitleBar from "./TitleBar";
 // icons
-import PanelRight from "lucide-solid/icons/panel-right";
 import TextCursor from "lucide-solid/icons/text-cursor";
 import Trash2 from "lucide-solid/icons/trash-2";
 
@@ -36,14 +35,7 @@ export default function TopBar() {
         <button class="icon-btn" data-command="notes" title="Notes">
           <TextCursor size={28} />
         </button>
-        <button
-          class="icon-btn"
-          id="toggle"
-          data-command="ui"
-          title="Toggle UI"
-        >
-          <PanelRight size={28} />
-        </button>
+       
       </div>
     </>
   );

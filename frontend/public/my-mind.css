@@ -11,9 +11,10 @@
 :root {
   /* Layout */
   --help-pane-width: 250px;
-  --ui-pane-width: 200px; /* matches .pane's base width, used by #ui */
+
   --ribbon-width: 45px; /* collapsed width of #left-panel; matches .icon-btn's own rendered size (1rem padding + 28px icon) */
-  --left-panel-width: 240px; /* expanded width of #left-panel */
+
+  --side-panel-width: 240px; /* expanded width of the left/right side panels */
 
   /* Note-preview watermark */
   --color-preview-ink: rgba(90, 60, 30, 0.95);
@@ -174,41 +175,9 @@ button:not(:disabled) {
   transition: right 0.5s;
 }
 
-body:has(#ui:not([hidden])) .topbar-right {
-  right: calc(var(--ui-pane-width) + 8px);
+body:has(#ui.panel-expanded) .topbar-right {
+  right: calc(var(--side-panel-width) + 8px);
 }
-
-/* -------------------------------------------------------------
-   Pane — #ui (property panel)
-   ------------------------------------------------------------- */
-.pane#ui {
-  display: flex;
-  flex-direction: column;
-}
-
-.pane#ui .scrollable {
-  flex: auto;
-  overflow: auto;
-}
-
-.pane#ui .color-picker {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 3px;
-  margin-top: 10px;
-}
-.pane#ui .color-picker [data-color] {
-  width: 19px;
-  height: 19px;
-  border-radius: 5px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
-  transition: transform 120ms ease;
-}
-.pane#ui .color-picker [data-color]:hover {
-  transform: scale(1.3);
-}
-
 /* -------------------------------------------------------------
    Pane — #ui footer (save timestamp display)
    ------------------------------------------------------------- */

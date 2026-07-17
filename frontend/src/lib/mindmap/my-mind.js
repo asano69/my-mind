@@ -1,7 +1,6 @@
 // src/my-mind.js
 import { createRoot, createEffect, on } from "solid-js";
-import { setCurrentItem, leftPanelHidden } from "./store.js";
-
+import { setCurrentItem, leftPanelHidden, rightPanelHidden } from "./store.js";
 // Application entry point. Owns global editor state (current map/item/selection,
 // undo history) and boots all the input/UI subsystems on load.
 //
@@ -41,7 +40,7 @@ import * as ui from "./ui/ui.js";
 let port = null;
 let spinner = null;
 let mounted = false;
-let disposeLeftPanelEffect = null; // dispose fn for the effect below, cleared in unmount()
+let disposePanelEffects = null; // dispose fn for the effects below, cleared in unmount()
 
 export let currentMap = null;
 export let currentItem = null;
@@ -163,11 +162,15 @@ export function handleResize() {
   // its current width so the canvas never sits underneath it.
   const leftWidth = leftPanelHidden()
     ? cssPixelVar("--ribbon-width")
-    : cssPixelVar("--left-panel-width");
-  const size = [
-    window.innerWidth - leftWidth - ui.getWidth(),
-    window.innerHeight,
-  ];
+    : cssPixelVar("--side-panel-width");
+  // #ui (the right panel) is now the same ribbon-or-expanded shape as
+  // #left-panel, so its width comes from the same CSS vars instead of
+  // measuring the DOM via ui.getWidth().
+  const rightWidth = rightPanelHidden()
+    ? cssPixelVar("--ribbon-width")
+    : cssPixelVar("--side-panel-width");
+
+  const size = [window.innerWidth - leftWidth - rightWidth, window.innerHeight];
   port.style.marginLeft = `${leftWidth}px`;
   port.style.width = `${size[0]}px`;
   port.style.height = `${size[1]}px`;
@@ -195,13 +198,16 @@ export async function mount(root) {
   title.init();
   ui.init(port); // also calls io.restore() internally
 
-  // leftPanelHidden is a store.js signal, not a DOM event, so it needs
-  // its own reactive subscription (same pattern as io.js's dirtyVersion
-  // effect) to keep the canvas offset in sync with the panel's state.
+  // leftPanelHidden/rightPanelHidden are store.js signals, not DOM events,
+  // so they need their own reactive subscription (same pattern as io.js's
+  // dirtyVersion effect) to keep the canvas offset in sync with either
+  // panel's state.
+
   createRoot((dispose) => {
-    disposeLeftPanelEffect = dispose;
+    disposePanelEffects = dispose;
     createEffect(on(leftPanelHidden, handleResize, { defer: true }));
   });
+  createEffect(on(rightPanelHidden, handleResize, { defer: true }));
 
   handleResize();
   showMap(new Map());
@@ -218,8 +224,8 @@ export function unmount() {
   ui.dispose();
   title.dispose();
 
-  disposeLeftPanelEffect?.();
-  disposeLeftPanelEffect = null;
+  disposePanelEffects?.();
+  disposePanelEffects = null;
 
   mouse.dispose();
   keyboard.dispose();

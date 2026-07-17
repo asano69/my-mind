@@ -3,22 +3,10 @@ import * as notes from "./notes.js";
 import * as io from "./io.js";
 import * as menu from "./context-menu.js";
 import { repo as commandRepo } from "../command/command.js";
-import { lastSaveTime } from "../store.js";
+import { lastSaveTime, toggleRightPanel } from "../store.js";
 
-let node = null;
 let saveTimeEl = null;
 let elapsedTimer = null;
-
-// Set by RightPanel's onMount (see components/RightPanel.jsx).
-// Same bridge pattern as help.js's registerToggle: #ui is a Solid-owned
-// element, so show/hide forwards to Solid's own signal instead of this
-// module mutating node.hidden directly (replaces the old "ui-change"
-// pubsub message, see CLAUDE.md, Solid migration Phase 9.4).
-let toggleAPI = null;
-
-export function registerToggle(api) {
-  toggleAPI = api;
-}
 
 /** Format a Date as HH:MM:SS. */
 function formatTime(d) {
@@ -77,20 +65,17 @@ export function isActive() {
   return io.isActive();
 }
 
+// #ui (RightPanel.jsx) reads/writes its own visibility directly from
+// store.js's rightPanelHidden signal — same "no bridge object needed for
+// read-only/self-owned state" pattern LeftPanel.jsx already uses for
+// leftPanelHidden. This command just flips that shared signal; the
+// createEffect in my-mind.js's mount() reacts to the change and recomputes
+// the canvas size, so no explicit handleResize() call is needed here.
 export function toggle() {
-  toggleAPI?.toggle();
-  app.handleResize();
-}
-export function getWidth() {
-  return node.hidden ? 0 : node.offsetWidth;
+  toggleRightPanel();
 }
 function onClick(e) {
   let target = e.target;
-  if (target == node.querySelector("#toggle")) {
-    // fixme nelibi
-    toggle();
-    return;
-  }
   let current = target;
   while (true) {
     let command = current.dataset.command;
@@ -106,7 +91,6 @@ function onClick(e) {
   }
 }
 export function init(port) {
-  node = document.querySelector("#ui");
   saveTimeEl = document.querySelector("#save-time");
   // layout/shape/value/status no longer live here — see RightPanel.jsx,
   // which reads store.js's `currentItem` signal directly instead of being
@@ -131,7 +115,5 @@ export function dispose() {
   elapsedTimer = null;
   menu.dispose();
   [io, notes].forEach((ui) => ui.dispose());
-  node = null;
   saveTimeEl = null;
-  toggleAPI = null;
 }

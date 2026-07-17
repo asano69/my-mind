@@ -39,3 +39,13 @@ export const [leftPanelHidden, setLeftPanelHidden] = createSignal(true);
 export function toggleLeftPanel() {
   setLeftPanelHidden((h) => !h);
 }
+
+// Whether the right sidebar (#ui, the property panel) is hidden/ribbon-only.
+// Mirrors leftPanelHidden exactly, now that RightPanel.jsx uses the same
+// ribbon+expand layout as LeftPanel.jsx instead of the old slide-off-screen
+// `.pane` behavior. No bridge object is needed: both reader (RightPanel.jsx)
+// and writer (ui.js's toggle command) touch this signal directly.
+export const [rightPanelHidden, setRightPanelHidden] = createSignal(false);
+export function toggleRightPanel() {
+  setRightPanelHidden((h) => !h);
+}

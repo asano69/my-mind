@@ -41,7 +41,7 @@ export default function LeftPanel() {
       style={{
         width: leftPanelHidden()
           ? "var(--ribbon-width)"
-          : "var(--left-panel-width)",
+          : "var(--side-panel-width)",
       }}
     >
       <div class="flex w-[var(--ribbon-width)] flex-shrink-0 flex-col items-center gap-2 py-2">
