@@ -932,8 +932,8 @@ func init() {
 				"viewRule": ""
 			},
 			{
-				"createRule": null,
-				"deleteRule": null,
+				"createRule": "",
+				"deleteRule": "",
 				"fields": [
 					{
 						"autogeneratePattern": "[a-z0-9]{15}",
@@ -951,7 +951,7 @@ func init() {
 						"type": "text"
 					},
 					{
-						"cascadeDelete": false,
+						"cascadeDelete": true,
 						"collectionId": "pbc_1612934933",
 						"help": "",
 						"hidden": false,
@@ -1031,12 +1031,12 @@ func init() {
 				],
 				"id": "pbc_700096677",
 				"indexes": [],
-				"listRule": null,
+				"listRule": "",
 				"name": "snapshots",
 				"system": false,
 				"type": "base",
-				"updateRule": null,
-				"viewRule": null
+				"updateRule": "",
+				"viewRule": ""
 			}
 		]`
 
