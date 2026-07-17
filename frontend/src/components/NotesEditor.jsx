@@ -1,111 +1,58 @@
 import { createSignal, createEffect, onMount, onCleanup } from "solid-js";
-import EasyMDE from "easymde";
-import "easymde/dist/easymde.min.css";
+import { Crepe } from "@milkdown/crepe";
+import { replaceAll } from "@milkdown/kit/utils";
+import "@milkdown/crepe/theme/common/style.css";
+import "@milkdown/crepe/theme/frame.css";
+import { marked } from "marked";
 import "./NotesEditor.css";
 import { currentItem } from "../lib/mindmap/store";
+
 /**
  * The markdown notes editor for the currently selected item.
  *
- * This used to be a separate editor.html document loaded in a sandboxed
- * iframe, talking to the mindmap engine over postMessage. Now that it's
- * just another Solid component in the same document, it registers itself
- * directly with ui/notes.js instead of going through a message protocol.
+ * Replaces the old EasyMDE-based editor with Milkdown's Crepe: a WYSIWYG
+ * editor that edits markdown directly, so there is no more separate
+ * edit/view toggle mode.
  *
- * ui/notes.js (and everything it pulls in) is imported dynamically, after
- * mount, for the same reason my-mind.js itself is in MindMapCanvas.jsx:
- * those modules query the DOM (e.g. `#notes`, `#ui`) at import time, so
- * they must not load before this component's elements are attached to
- * the document.
+ * A single Crepe instance lives for the whole component lifetime.
+ * Switching items replaces its content via Milkdown's replaceAll() action
+ * instead of destroying/recreating the editor. flush=true also resets
+ * undo history per item, matching the old per-item EasyMDE.value() swap.
  */
 export default function NotesEditor() {
-  let textareaEl;
-  let easyMDE;
+  let containerEl;
+  let crepe;
   let notesModule; // cached after the first dynamic import, see onMount
-
-  const [mode, setMode] = createSignal("edit"); // "edit" | "view"
-  const [content, setContent] = createSignal("");
-  const [previewHtml, setPreviewHtml] = createSignal("");
-  // Tracks whether notesModule/editorAPI are ready. The createEffect below
-  // needs to react to *both* "the engine selected an item" and "our own
-  // async setup finished" — whichever happens second. Without this signal,
-  // if an item gets selected (e.g. on map load) before this component's
-  // async easymde/notes.js imports resolve, onItemSelect() would run with
-  // an undefined notesModule and silently do nothing — and nothing would
-  // ever retrigger it afterwards, since currentItem() itself doesn't
-  // change again just because our setup finished.
   const [ready, setReady] = createSignal(false);
 
-  function toggleMode() {
-    if (mode() === "edit") {
-      setContent(easyMDE.value());
-      setPreviewHtml(content() ? easyMDE.options.previewRender(content()) : "");
-      setMode("view");
-    } else {
-      if (easyMDE.value() !== content()) {
-        easyMDE.value(content());
-      }
-      setMode("edit");
-      easyMDE.codemirror.refresh();
-    }
+  function setContent(text) {
+    crepe.editor.action(replaceAll(text || "", true));
   }
 
   onMount(async () => {
-    easyMDE = new EasyMDE({
-      element: textareaEl,
-      autosave: { enabled: false },
-      spellChecker: false,
-      status: false,
-      toolbar: [
-        "bold",
-        "italic",
-        "strikethrough",
-        "|",
-        "heading-1",
-        "heading-2",
-        "heading-3",
-        "|",
-        "quote",
-        "unordered-list",
-        "ordered-list",
-        "code",
-        "|",
-        "link",
-        "image",
-        "table",
-        "horizontal-rule",
-      ],
+    crepe = new Crepe({ root: containerEl, defaultValue: "" });
+    crepe.on((listener) => {
+      listener.markdownUpdated((_ctx, markdown) => {
+        notesModule?.onEditorChange(markdown);
+      });
     });
+    await crepe.create();
 
     notesModule = await import("../lib/mindmap/ui/notes.js");
-
-    easyMDE.codemirror.on("change", () => {
-      const text = easyMDE.value();
-      setContent(text);
-      notesModule.onEditorChange(text);
-    });
-
     notesModule.registerEditorAPI({
-      setContent(text) {
-        setContent(text || "");
-        if (mode() === "edit") {
-          if (easyMDE.value() !== content()) easyMDE.value(content());
-        } else {
-          setPreviewHtml(
-            content() ? easyMDE.options.previewRender(content()) : "",
-          );
-        }
-      },
-      renderMarkdown(text) {
-        return easyMDE.options.previewRender(text);
-      },
+      setContent,
+      // Only used for the background watermark preview (see ui/notes.js),
+      // which needs a plain markdown -> HTML string, not a live editor.
+      renderMarkdown: (text) => marked.parse(text || ""),
     });
 
     setReady(true);
   });
 
-  // Sync the notes editor and background preview whenever the selected
-  // item changes, or once our async setup becomes ready — covers both
-  // possible orderings of "item selected" vs "editor initialized".
+  // Sync the editor and background preview whenever the selected item
+  // changes, or once our async setup becomes ready — covers both possible
+  // orderings of "item selected" vs "editor initialized" (same reasoning
+  // as the old EasyMDE-based component).
   createEffect(() => {
     if (!ready()) {
       return;
@@ -113,25 +60,17 @@ export default function NotesEditor() {
     notesModule.onItemSelect(currentItem());
   });
 
-  onCleanup(() => easyMDE?.toTextArea());
+  onCleanup(() => {
+    crepe?.destroy();
+  });
+
   return (
     <div id="notes" class="pane" hidden>
       <div id="notes-editor">
         <div id="notes-editor-bar">
           <button onClick={() => notesModule?.close()}>Close</button>
-          <span class="spacer" />
-          <button onClick={toggleMode}>
-            {mode() === "edit" ? "View" : "Edit"}
-          </button>
         </div>
-        <div id="notes-editor-edit-pane" hidden={mode() !== "edit"}>
-          <textarea ref={textareaEl} />
-        </div>
-        <div
-          id="notes-editor-view-pane"
-          hidden={mode() !== "view"}
-          innerHTML={previewHtml()}
-        />
+        <div id="notes-editor-milkdown" ref={containerEl} />
       </div>
     </div>
   );
