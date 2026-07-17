@@ -10,8 +10,6 @@ import TextCursor from "lucide-solid/icons/text-cursor";
 import Palette from "lucide-solid/icons/palette";
 const STATUS_MAP = { yes: true, no: false, "": null };
 
-
-
 const COLOR_SWATCHES = [
   { value: "", title: "Inherit" },
   { value: "#000", title: "Black" },
@@ -244,7 +242,7 @@ export default function RightPanel() {
     appModule.action(new actionsModule.SetTextColor(item, color));
   }
 
-return (
+  return (
     <>
       <div
         id="ui"
