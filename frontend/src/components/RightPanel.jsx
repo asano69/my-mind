@@ -4,7 +4,9 @@ import {
   rightPanelHidden,
   toggleRightPanel,
 } from "../lib/mindmap/store";
-import PanelRight from "lucide-solid/icons/panel-right";
+import Palette from "lucide-solid/icons/palette";
+import TextCursor from "lucide-solid/icons/text-cursor";
+
 
 const STATUS_MAP = { yes: true, no: false, "": null };
 
@@ -342,8 +344,12 @@ export default function RightPanel() {
           onClick={toggleRightPanel}
           title="Toggle sidebar"
         >
-          <PanelRight size={20} />
+          <Palette size={20} />
         </button>
+        <button class="icon-btn" data-command="notes" title="Notes">
+          <TextCursor size={20} />
+        </button>
+     
       </div>
 
       <div class="spinner" hidden>

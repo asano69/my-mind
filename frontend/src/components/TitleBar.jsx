@@ -30,7 +30,7 @@ export default function TitleBar() {
       onBlur={commit}
       onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
       placeholder="Untitled"
-      class="fixed top-2 left-1/2 z-5 w-80 -translate-x-1/2 rounded-md
+      class="fixed top-2 left-1/2 z-0 w-80 -translate-x-1/2 rounded-md
         border border-transparent bg-transparent px-2 py-1 text-center
         font-serif text-lg text-text outline-none transition-colors
         hover:bg-pane-hover focus:border-pane-hover focus:bg-pane"
