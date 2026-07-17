@@ -177,12 +177,6 @@ body:has(#ui:not([hidden])) .topbar-right {
   right: calc(var(--ui-pane-width) + 8px);
 }
 
-/* Shift the left topbar buttons out of the way while the panel is open,
-   mirroring .topbar-right's shift for #ui below. */
-body:has(#left-panel:not([hidden])) .topbar-left {
-  left: calc(var(--ui-pane-width) + 8px);
-}
-
 /* -------------------------------------------------------------
    Pane — #ui (property panel)
    ------------------------------------------------------------- */

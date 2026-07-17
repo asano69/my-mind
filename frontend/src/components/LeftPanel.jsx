@@ -6,12 +6,17 @@ import Book from "lucide-solid/icons/book";
 import CircleQuestionMark from "lucide-solid/icons/circle-question-mark";
 import PanelLeft from "lucide-solid/icons/panel-left";
 
-// The left sidebar. Unlike #ui (which slides fully off-screen when
-// hidden), this panel never leaves the screen — toggling it animates
-// its own width between a narrow icons-only state and a wide state with
-// room for future content (a snapshot list), ChatGPT/Claude-sidebar
-// style. The icon column (.left-ribbon) stays pinned to the left edge
-// either way, so Catalog/Help/the toggle itself are always reachable.
+// The left sidebar. All positioning/animation lives here as Tailwind
+// utilities instead of my-mind.css's `.pane`/`.pane-left` — `.pane` is a
+// right-docked (right:0) base class shared by #ui/#io/#notes/#help, and
+// `.pane-left` never had any overriding rules, which is why this panel
+// used to render stacked on the *right* sidebar.
+//
+// Unlike the right panel (which slides fully off-screen when hidden), this
+// one never leaves the screen: toggling it animates its own width between
+// a narrow icons-only "ribbon" and a wide "panel", ChatGPT/Claude-sidebar
+// style. The icon column stays pinned to the left edge either way, so
+// Catalog/Help/the toggle itself are always reachable.
 export default function LeftPanel() {
   const navigate = useNavigate();
 
@@ -27,10 +32,14 @@ export default function LeftPanel() {
   return (
     <div
       id="left-panel"
-      class="pane pane-left"
-      classList={{ expanded: !leftPanelHidden() }}
+      class="fixed inset-y-0 left-0 z-5 flex overflow-hidden bg-pane shadow-card transition-[width] duration-300 ease-in-out"
+      style={{
+        width: leftPanelHidden()
+          ? "var(--ribbon-width)"
+          : "var(--left-panel-width)",
+      }}
     >
-      <div class="left-ribbon">
+      <div class="flex w-[var(--ribbon-width)] flex-shrink-0 flex-col items-center gap-1 py-2">
         <A
           href="/catalog"
           class="icon-btn"
@@ -50,7 +59,15 @@ export default function LeftPanel() {
           <PanelLeft size={28} />
         </button>
       </div>
-      <div class="left-panel-content" />
+      {/* Reserved for future content (e.g. a snapshot list). Fades in only
+          once the panel is wide enough to actually show it. */}
+      <div
+        class="min-w-0 flex-1 overflow-y-auto px-2 py-2 transition-opacity duration-200"
+        classList={{
+          "opacity-0": leftPanelHidden(),
+          "pointer-events-none": leftPanelHidden(),
+        }}
+      />
     </div>
   );
 }
