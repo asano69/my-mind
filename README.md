@@ -26,7 +26,7 @@ It has a catalog feature.
 - [x] Mindmap Engine → Solid Reactive State: Migration Plan
 - [x] canvasで、Catalogアイコンや、タイトル、エディターボタンなどのある細長い部分を、topbarなどのコンポーネント化する
 - [x] Canvasで、Map削除ボタンを追加する
-
+- [ ] 右サイドバーと対称な左サイドバーを作成する
 - [ ] Canvasにおいて、URLはURLとわかるように色を変えて下線をひくCSSにする
 - [ ] svg画像を配信するルートを作成。http://localhost:3001/img/UUID
 
