@@ -967,6 +967,24 @@ func init() {
 					{
 						"help": "",
 						"hidden": false,
+						"id": "select1002749145",
+						"maxSelect": 0,
+						"name": "tier",
+						"presentable": false,
+						"required": false,
+						"system": false,
+						"type": "select",
+						"values": [
+							"working",
+							"daily",
+							"weekly",
+							"monthly",
+							"yearly"
+						]
+					},
+					{
+						"help": "",
+						"hidden": false,
 						"id": "json3464561536",
 						"maxSize": 0,
 						"name": "mymind",
