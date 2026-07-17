@@ -9,27 +9,25 @@ import { bumpDirty } from "./store.js";
 import { createSignal, createComputed, createRoot } from "solid-js";
 let css = "";
 
-// Recomputes DOM content sync + layout + connectors for `item` and its
-// whole subtree, depth-first (children before parent — a parent's own
-// rank size depends on its children's already-measured content boxes,
-// same order the old Item.prototype.update({children:true}) recursion
-// used). This is the single place layout recomputation happens now (see
-// CLAUDE.md, Solid migration Phase 8); it's invoked from the reactive
-// computed set up in Map's constructor below.
 function layoutSubtree(item) {
   item._childrenVersion(); // track child insertion/removal
+  // Apply the collapsed class *before* recursing into children. Doing
+  // this after recursion (as before) meant that on the very pass that
+  // un-collapses an item, descendants were still hidden (display:none via
+  // ".item.collapsed .item") while their sizes were being measured here,
+  // caching zero-sized foreignObjects that only a full reload fixed.
+  item.updateToggle();
   item.children.forEach(layoutSubtree);
   item.updateText();
   item.updateStatus();
   item.updateValue();
   item.updateIcon();
   item.updateNotes();
-  item.updateToggle();
   const { resolvedLayout, resolvedShape, dom } = item;
   const { content, node, connectors } = dom;
   dom.text.style.color = item.resolvedTextColor;
-  node.dataset.shape = resolvedShape.id; // applies css => modifies dimensions (necessary for layout)
-  node.dataset.align = resolvedLayout.computeAlignment(item); // applies css => modifies dimensions (necessary for layout)
+  node.dataset.shape = resolvedShape.id;
+  node.dataset.align = resolvedLayout.computeAlignment(item);
   const fo = content.parentNode;
   const size = [
     Math.max(content.offsetWidth, content.scrollWidth),
@@ -39,9 +37,8 @@ function layoutSubtree(item) {
   fo.setAttribute("height", String(size[1]));
   connectors.innerHTML = "";
   resolvedLayout.update(item);
-  resolvedShape.update(item); // needs layout -> draws second
+  resolvedShape.update(item);
 }
-
 export default class Map {
   constructor(options) {
     this.node = svg.node("svg");
