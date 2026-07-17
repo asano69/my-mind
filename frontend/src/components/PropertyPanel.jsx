@@ -1,6 +1,13 @@
 import { createMemo, createSignal, For, onMount } from "solid-js";
 import { currentItem } from "../lib/mindmap/store";
-import { FilePlus, FolderOpen, Save, Images, TextCursor, Palette  } from "lucide-solid";
+import {
+  FilePlus,
+  FolderOpen,
+  Save,
+  Images,
+  TextCursor,
+  Palette,
+} from "lucide-solid";
 const STATUS_MAP = { yes: true, no: false, "": null };
 
 function statusToString(status) {
@@ -183,18 +190,15 @@ export default function PropertyPanel() {
     <div id="ui" class="pane" hidden={hidden()}>
       <div class="scrollable">
         <p class="row">
-          
-
-
-    <button class="icon-btn" data-command="new" title="New">
-  <FilePlus size={28} />
-</button>
+          <button class="icon-btn" data-command="new" title="New">
+            <FilePlus size={28} />
+          </button>
 
           <button class="icon-btn" data-command="load" title="Open">
-             <FolderOpen size={28} /> 
+            <FolderOpen size={28} />
           </button>
           <button class="icon-btn" data-command="save" title="Save">
-            <Save size={28} /> 
+            <Save size={28} />
           </button>
           <button class="icon-btn" data-command="save-as" title="Save as">
             <Images size={28} />

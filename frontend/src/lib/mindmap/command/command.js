@@ -175,15 +175,23 @@ new (class Load extends Command {
     fileSwitcher.toggle();
   }
 })();
+
 new (class New extends Command {
   constructor() {
     super("new", "New map");
     this.keys = [{ code: "KeyO", ctrlKey: true, shiftKey: true }];
   }
-  execute() {
+  async execute() {
+    // Persist the current map (with a fresh thumbnail) before switching
+    // away, mirroring GoToCatalog's save-before-navigate pattern.
+    await io.saveWithSvg();
+    // Forget the just-saved map's id/title/uuid so the new blank map
+    // starts as an unsaved map, not as an edit of the old record.
+    io.resetCurrentMap();
     app.showMap(new MindMap());
   }
 })();
+
 new (class Center extends Command {
   constructor() {
     super("center", "Center map");
