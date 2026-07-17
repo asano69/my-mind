@@ -1,7 +1,9 @@
 import { A, useNavigate } from "@solidjs/router";
 import TitleBar from "./TitleBar";
-import { Book, TextCursor, Palette } from "lucide-solid";
-
+// icons
+import Book from "lucide-solid/icons/book";
+import TextCursor from "lucide-solid/icons/text-cursor";
+import Palette from "lucide-solid/icons/palette";
 // The floating strip across the top of the canvas: the catalog icon
 // (fixed top-left, via CSS) and the title input (fixed top-center,
 // rendered by TitleBar). Extracted out of MindMapCanvas.jsx so the
@@ -31,7 +33,7 @@ export default function TopBar() {
           <Book size={28} />
         </A>
       </div>
-
+<p>testsetsts</p>
       <TitleBar />
       <div class="topbar-right">
         <button class="icon-btn" data-command="notes" title="Notes">

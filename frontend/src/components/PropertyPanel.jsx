@@ -1,6 +1,11 @@
 import { createMemo, createSignal, For, onMount } from "solid-js";
 import { currentItem } from "../lib/mindmap/store";
-import { FilePlus, FolderOpen, CloudUpload, Images } from "lucide-solid";
+
+import FilePlus from "lucide-solid/icons/file-plus";
+import FolderOpen from "lucide-solid/icons/folder-open";
+import CloudUpload from "lucide-solid/icons/cloud-upload";
+import Images from "lucide-solid/icons/images";
+
 const STATUS_MAP = { yes: true, no: false, "": null };
 
 function statusToString(status) {

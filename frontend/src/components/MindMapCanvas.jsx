@@ -5,7 +5,8 @@ import HelpPanel from "./HelpPanel";
 import ContextMenu from "./ContextMenu";
 import TopBar from "./TopBar";
 import { onMount, onCleanup } from "solid-js";
-import { CircleQuestionMark } from "lucide-solid";
+import CircleQuestionMark from "lucide-solid/icons/circle-question-mark";
+
 
 export default function MindMapCanvas() {
   let mainRef;
