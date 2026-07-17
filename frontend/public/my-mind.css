@@ -158,9 +158,9 @@ button:not(:disabled) {
   position: fixed;
   top: 5px;
   right: 8px;
-  z-index: 10;
+  z-index: 1;
   display: flex;
-  gap: 2rem;
+  gap: 1rem;
   margin: 0.5rem;
   transition: right 0.5s;
 }
@@ -436,8 +436,8 @@ body:has(#ui:not([hidden])) .topbar-right {
    position is NOT set here; fixed/absolute is declared per-element below.
    ------------------------------------------------------------- */
 .icon-btn {
-  z-index: 10;
-  padding: 4px;
+  z-index: 1;
+  padding: 1rem;
   background: transparent;
   border: none;
   border-radius: 6px;
@@ -454,6 +454,7 @@ body:has(#ui:not([hidden])) .topbar-right {
 .icon-btn:hover {
   opacity: 1;
   background: var(--color-hover);
+  transform: scale(1.1);
 }
 
 #help-btn {
