@@ -10,7 +10,7 @@
 :root {
   /* Layout */
   --help-pane-width: 250px;
-
+  --ui-pane-width: 200px; /* matches .pane's base width, used by #ui */
   /* Note-preview watermark */
   --color-preview-ink: rgba(90, 60, 30, 0.95);
 
@@ -149,6 +149,36 @@ button:not(:disabled) {
   color: var(--color-text);
   margin-bottom: 3px;
 }
+/* Fixed top-right button group (Notes, UI toggle) — see TopBar.jsx.
+   Buttons used to be positioned via .pane#ui-scoped absolute offsets,
+   back when they lived inside the #ui panel itself.
+   Shifted left while #ui is open so it never overlaps the panel,
+   mirroring how #catalog-link/#help-btn shift right for #help below. */
+.topbar-right {
+  position: fixed;
+  top: 5px;
+  right: 8px;
+  z-index: 10;
+  display: flex;
+  gap: 2rem;
+  margin: 0.5rem;
+  transition: right 0.5s;
+}
+
+body:has(#ui:not([hidden])) .topbar-right {
+  right: calc(var(--ui-pane-width) + 8px);
+}
+
+.topbar-left {
+  position: fixed;
+  top: 5px;
+  left: 8px;
+  z-index: 10;
+  display: flex;
+  gap: 2rem;
+  margin: 0.5rem;
+  transition: right 0.5s;
+}
 
 /* -------------------------------------------------------------
    Pane — #ui (property panel)
@@ -161,23 +191,6 @@ button:not(:disabled) {
 .pane#ui .scrollable {
   flex: auto;
   overflow: auto;
-}
-
-/* Appearance is handled entirely by .icon-btn; only position overrides live here. */
-.pane#ui button img {
-  display: block;
-}
-
-.pane#ui button[data-command="notes"] {
-  position: absolute;
-  left: -90px;
-  top: 5px;
-}
-
-.pane#ui #toggle {
-  position: absolute;
-  left: -50px;
-  top: 5px;
 }
 
 .pane#ui .color-picker {
@@ -209,10 +222,6 @@ button:not(:disabled) {
   justify-content: space-between;
   border-top: 1px solid var(--color-border-mid);
   min-height: 28px;
-}
-
-.pane#ui footer img {
-  display: block;
 }
 
 /* Save timestamp: subdued monospace text, right-aligned */

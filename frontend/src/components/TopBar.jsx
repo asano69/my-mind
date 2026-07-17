@@ -20,23 +20,32 @@ export default function TopBar() {
 
   return (
     <>
-      <A
-        href="/catalog"
-        id="catalog-link"
-        class="icon-btn"
-        title="Catalog"
-        onClick={goToCatalog}
-      >
-        <Book size={28} />
-      </A>
-      <TitleBar />
+      <div class="topbar-left">
+        <A
+          href="/catalog"
+          id="catalog-link"
+          class="icon-btn"
+          title="Catalog"
+          onClick={goToCatalog}
+        >
+          <Book size={28} />
+        </A>
+      </div>
 
-      <button class="icon-btn" data-command="notes" title="Notes">
-        <TextCursor size={28} />
-      </button>
-      <button class="icon-btn" id="toggle" data-command="ui" title="Toggle UI">
-        <Palette size={28} />
-      </button>
+      <TitleBar />
+      <div class="topbar-right">
+        <button class="icon-btn" data-command="notes" title="Notes">
+          <TextCursor size={28} />
+        </button>
+        <button
+          class="icon-btn"
+          id="toggle"
+          data-command="ui"
+          title="Toggle UI"
+        >
+          <Palette size={28} />
+        </button>
+      </div>
     </>
   );
 }
