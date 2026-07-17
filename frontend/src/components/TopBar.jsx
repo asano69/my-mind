@@ -35,7 +35,6 @@ export default function TopBar() {
         <button class="icon-btn" data-command="notes" title="Notes">
           <TextCursor size={28} />
         </button>
-       
       </div>
     </>
   );

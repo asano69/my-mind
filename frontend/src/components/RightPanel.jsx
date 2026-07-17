@@ -1,5 +1,9 @@
 import { createMemo, createSignal, For, onMount } from "solid-js";
-import { currentItem, rightPanelHidden, toggleRightPanel } from "../lib/mindmap/store";
+import {
+  currentItem,
+  rightPanelHidden,
+  toggleRightPanel,
+} from "../lib/mindmap/store";
 import PanelRight from "lucide-solid/icons/panel-right";
 
 const STATUS_MAP = { yes: true, no: false, "": null };
@@ -62,7 +66,7 @@ function ColorPicker(props) {
         >
           <For each={COLOR_SWATCHES}>
             {(c) => (
-              
+              <a
                 data-color={c.value}
                 title={c.title}
                 href="#"
@@ -101,14 +105,15 @@ export default function RightPanel() {
   const [ready, setReady] = createSignal(false);
 
   onMount(async () => {
-    const [actionsMod, appMod, cmdMod, layoutMod, shapeMod] =
-      await Promise.all([
+    const [actionsMod, appMod, cmdMod, layoutMod, shapeMod] = await Promise.all(
+      [
         import("../lib/mindmap/action.js"),
         import("../lib/mindmap/my-mind.js"),
         import("../lib/mindmap/command/command.js"),
         import("../lib/mindmap/layout/layout.js"),
         import("../lib/mindmap/shape/shape.js"),
-      ]);
+      ],
+    );
     actionsModule = actionsMod;
     appModule = appMod;
     commandRepo = cmdMod.repo;
@@ -332,7 +337,11 @@ export default function RightPanel() {
       </div>
 
       <div class="flex w-[var(--ribbon-width)] flex-shrink-0 flex-col items-center gap-2 py-2">
-        <button class="icon-btn" onClick={toggleRightPanel} title="Toggle sidebar">
+        <button
+          class="icon-btn"
+          onClick={toggleRightPanel}
+          title="Toggle sidebar"
+        >
           <PanelRight size={20} />
         </button>
       </div>

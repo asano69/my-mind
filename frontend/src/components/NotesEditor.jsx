@@ -18,8 +18,7 @@ import { currentItem } from "../lib/mindmap/store";
  * the document.
  */
 export default function NotesEditor() {
-
- let textareaEl;
+  let textareaEl;
   let easyMDE;
   let notesModule; // cached after the first dynamic import, see onMount
 
@@ -35,7 +34,6 @@ export default function NotesEditor() {
   // ever retrigger it afterwards, since currentItem() itself doesn't
   // change again just because our setup finished.
   const [ready, setReady] = createSignal(false);
-
 
   function toggleMode() {
     if (mode() === "edit") {
@@ -80,7 +78,7 @@ export default function NotesEditor() {
 
     notesModule = await import("../lib/mindmap/ui/notes.js");
 
-   easyMDE.codemirror.on("change", () => {
+    easyMDE.codemirror.on("change", () => {
       const text = easyMDE.value();
       setContent(text);
       notesModule.onEditorChange(text);
@@ -102,10 +100,10 @@ export default function NotesEditor() {
       },
     });
 
-     setReady(true);
+    setReady(true);
   });
 
-   // Sync the notes editor and background preview whenever the selected
+  // Sync the notes editor and background preview whenever the selected
   // item changes, or once our async setup becomes ready — covers both
   // possible orderings of "item selected" vs "editor initialized".
   createEffect(() => {

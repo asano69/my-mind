@@ -10,7 +10,6 @@ import FolderOpen from "lucide-solid/icons/folder-open";
 import CloudUpload from "lucide-solid/icons/cloud-upload";
 import Images from "lucide-solid/icons/images";
 
-
 // The left sidebar. All positioning/animation lives here as Tailwind
 // utilities instead of my-mind.css's `.pane`/`.pane-left` — `.pane` is a
 // right-docked (right:0) base class shared by #ui/#io/#notes/#help, and
@@ -45,7 +44,7 @@ export default function LeftPanel() {
       }}
     >
       <div class="flex w-[var(--ribbon-width)] flex-shrink-0 flex-col items-center gap-2 py-2">
-       <button
+        <button
           class="icon-btn"
           onClick={toggleLeftPanel}
           title="Toggle sidebar"
@@ -63,21 +62,19 @@ export default function LeftPanel() {
         <button class="icon-btn" data-command="help" title="Help">
           <CircleQuestionMark size={20} />
         </button>
-         <button class="icon-btn" data-command="new" title="New">
-            <FilePlus size={20} />
-          </button>
+        <button class="icon-btn" data-command="new" title="New">
+          <FilePlus size={20} />
+        </button>
 
         <button class="icon-btn" data-command="load" title="Open">
-            <FolderOpen size={20} />
-          </button>
-          <button class="icon-btn" data-command="save" title="Save">
-            <CloudUpload size={20} />
-          </button>
-          <button class="icon-btn" data-command="save-as" title="Save as">
-            <Images size={20} />
-          </button>
-
-
+          <FolderOpen size={20} />
+        </button>
+        <button class="icon-btn" data-command="save" title="Save">
+          <CloudUpload size={20} />
+        </button>
+        <button class="icon-btn" data-command="save-as" title="Save as">
+          <Images size={20} />
+        </button>
       </div>
       {/* Reserved for future content (e.g. a snapshot list). Fades in only
           once the panel is wide enough to actually show it. */}
