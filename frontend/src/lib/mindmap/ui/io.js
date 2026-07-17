@@ -242,6 +242,22 @@ export function resetCurrentMap() {
   setCurrentMap(null);
 }
 
+// Deletes the currently open map (if it has been saved at least once)
+// and resets local map-identity state, mirroring Catalog.jsx's
+// handleDelete. Does nothing for a never-saved map, since there is no
+// PocketBase record to delete yet.
+export async function deleteCurrentMap() {
+  if (!currentMapId) {
+    return;
+  }
+  try {
+    await backend.deleteMap(currentMapId);
+    setCurrentMap(null);
+  } catch (e) {
+    error(e);
+  }
+}
+
 function updateURL() {
   if (!currentMapUuid) {
     history.replaceState(null, "", "/");
