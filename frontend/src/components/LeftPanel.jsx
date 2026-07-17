@@ -5,6 +5,11 @@ import { leftPanelHidden, toggleLeftPanel } from "../lib/mindmap/store";
 import Book from "lucide-solid/icons/book";
 import CircleQuestionMark from "lucide-solid/icons/circle-question-mark";
 import PanelLeft from "lucide-solid/icons/panel-left";
+import FilePlus from "lucide-solid/icons/file-plus";
+import FolderOpen from "lucide-solid/icons/folder-open";
+import CloudUpload from "lucide-solid/icons/cloud-upload";
+import Images from "lucide-solid/icons/images";
+
 
 // The left sidebar. All positioning/animation lives here as Tailwind
 // utilities instead of my-mind.css's `.pane`/`.pane-left` — `.pane` is a
@@ -58,7 +63,21 @@ export default function LeftPanel() {
         <button class="icon-btn" data-command="help" title="Help">
           <CircleQuestionMark size={20} />
         </button>
-     
+         <button class="icon-btn" data-command="new" title="New">
+            <FilePlus size={20} />
+          </button>
+
+        <button class="icon-btn" data-command="load" title="Open">
+            <FolderOpen size={20} />
+          </button>
+          <button class="icon-btn" data-command="save" title="Save">
+            <CloudUpload size={20} />
+          </button>
+          <button class="icon-btn" data-command="save-as" title="Save as">
+            <Images size={20} />
+          </button>
+
+
       </div>
       {/* Reserved for future content (e.g. a snapshot list). Fades in only
           once the panel is wide enough to actually show it. */}

@@ -1,10 +1,6 @@
 import { createMemo, createSignal, For, onMount } from "solid-js";
 import { currentItem } from "../lib/mindmap/store";
 
-import FilePlus from "lucide-solid/icons/file-plus";
-import FolderOpen from "lucide-solid/icons/folder-open";
-import CloudUpload from "lucide-solid/icons/cloud-upload";
-import Images from "lucide-solid/icons/images";
 
 const STATUS_MAP = { yes: true, no: false, "": null };
 
@@ -188,20 +184,7 @@ export default function RightPanel() {
     <div id="ui" class="pane" hidden={hidden()}>
       <div class="scrollable">
         <p class="row">
-          <button class="icon-btn" data-command="new" title="New">
-            <FilePlus size={28} />
-          </button>
-
-          <button class="icon-btn" data-command="load" title="Open">
-            <FolderOpen size={28} />
-          </button>
-          <button class="icon-btn" data-command="save" title="Save">
-            <CloudUpload size={28} />
-          </button>
-          <button class="icon-btn" data-command="save-as" title="Save as">
-            <Images size={28} />
-          </button>
-        </p>
+                     </p>
         <p>
           <label>
             <span>Layout</span>
