@@ -175,7 +175,7 @@ body:has(#ui:not([hidden])) .topbar-right {
   left: 8px;
   z-index: 10;
   display: flex;
-  gap: 2rem;
+  gap: 1rem;
   margin: 0.5rem;
   transition: right 0.5s;
 }
@@ -230,42 +230,6 @@ body:has(#ui:not([hidden])) .topbar-right {
   color: #2c2015;
   opacity: 1;
   padding-left: 2px;
-}
-
-/* -------------------------------------------------------------
-   Pane — #help
-   ------------------------------------------------------------- */
-.pane#help {
-  overflow-y: auto;
-  right: auto;
-  left: 0;
-  background-color: var(--color-pane);
-  width: var(--help-pane-width);
-  z-index: 100;
-}
-
-.pane#help[hidden] {
-  transform: translate(-100%, 0);
-}
-
-.pane#help p {
-  text-transform: uppercase;
-  font-size: 80%;
-}
-
-.pane#help table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 80%;
-}
-
-.pane#help table td:first-child {
-  padding-left: 16px;
-}
-
-.pane#help table td:last-child {
-  text-align: right;
-  padding-right: 16px;
 }
 
 /* -------------------------------------------------------------
@@ -455,12 +419,6 @@ body:has(#ui:not([hidden])) .topbar-right {
   opacity: 1;
   background: var(--color-hover);
   transform: scale(1.1);
-}
-
-#help-btn {
-  bottom: 8px;
-  left: 8px;
-  top: unset;
 }
 
 /* Shift both buttons right when the help pane is open */
