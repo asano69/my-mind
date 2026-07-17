@@ -18,6 +18,7 @@ It has a catalog feature.
 <img src=".github/assets/sample-02.png" width="800">
 
 ## Plan
+### Frontend
 - [x] データ保存コードの整理: マインドマップを保存する経路が2, 3種類ある。自動保存によるmymind形式のみのデータ転送と手動保存によるmymind+svgのデータ転送。保存部分だけ、ファイルを分割したほうがよさそう。
 - [x] Catalog遷移時に、svgデータの自動保存
 - [x] catalogにおいて、タイトルをクリックしてもそのマップを開くようにする（現在イメージの部分しかクリック可能ではない）
@@ -26,22 +27,28 @@ It has a catalog feature.
 - [x] Mindmap Engine → Solid Reactive State: Migration Plan
 - [x] canvasで、Catalogアイコンや、タイトル、エディターボタンなどのある細長い部分を、topbarなどのコンポーネント化する
 - [x] Canvasで、Map削除ボタンを追加する
-- [ ] 右サイドバーと対称な左サイドバーを作成する
-- [ ] Canvasにおいて、URLはURLとわかるように色を変えて下線をひくCSSにする
-- [ ] svg画像を配信するルートを作成。http://localhost:3001/img/UUID
-- [ ] マークダウンエディタで、画像の貼り付けを無効化する（データベースの圧迫を防ぐため）
+
 - [ ] クライアントサイドでの自動転送（保存）機能の無効化と有効化を切り替えるトグルスイッチ（デフォルトでは無効化）
 - [ ] フロントエンドにおいて自動保存アルゴリズムの調整（スナップショットロード時に自動バックアップされないようにする）
+
+- [ ] Canvasにおいて、URLはURLとわかるように色を変えて下線をひくCSSにする
+
+- [ ] マークダウンエディタで、画像の貼り付けを無効化する（データベースの圧迫を防ぐため）
 
 - [ ] CanvasのSave Asボタンで、マインドマップのpng画像をクリップボードにコピーする
 - [ ] 落書き機能（フリーライティング）
 - [ ] ノードの移動をdnd-kitに変えられないか検討する
 
-- [ ] マインドマップのスナップショットのサーバサイドでの自動保存（例, 1分ごと30世代、10分ごと24世代、1時間ごと7日。変更がない場合はスキップ）
 - [ ] Undo/Redoボタンの設置
 - [ ] hotkeys-js でショートカットキーを扱えないか検討する
-## Work in Progress
 
+### Backend
+- [ ] UUIDv7へ移行
+- [ ] svg画像を配信するルートを作成。http://localhost:3001/img/UUID
+- [x] マインドマップのスナップショットのサーバサイドでの自動保存（例, 1分ごと30世代、10分ごと24世代、1時間ごと7日。変更がない場合はスキップ）
+
+## Work in Progress
+- [ ] MarkodwonエディタをMilkdownに変更
 
 ## Ref
 - [ondras/my-mind](https://github.com/ondras/my-mind)/ Demo: https://my-mind.github.io/
