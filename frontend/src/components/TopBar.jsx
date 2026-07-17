@@ -1,6 +1,6 @@
 import { A, useNavigate } from "@solidjs/router";
 import TitleBar from "./TitleBar";
-import { Book } from "lucide-solid";
+import { Book, TextCursor, Palette } from "lucide-solid";
 
 // The floating strip across the top of the canvas: the catalog icon
 // (fixed top-left, via CSS) and the title input (fixed top-center,
@@ -30,6 +30,13 @@ export default function TopBar() {
         <Book size={28} />
       </A>
       <TitleBar />
+
+      <button class="icon-btn" data-command="notes" title="Notes">
+        <TextCursor size={28} />
+      </button>
+      <button class="icon-btn" id="toggle" data-command="ui" title="Toggle UI">
+        <Palette size={28} />
+      </button>
     </>
   );
 }
