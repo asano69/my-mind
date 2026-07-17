@@ -9,7 +9,8 @@ import FilePlus from "lucide-solid/icons/file-plus";
 import CircleQuestionMark from "lucide-solid/icons/circle-question-mark";
 import CloudUpload from "lucide-solid/icons/cloud-upload";
 import Images from "lucide-solid/icons/images";
-import History from "lucide-solid/icons/history";
+//import History from "lucide-solid/icons/history";
+import DatabaseBackup from "lucide-solid/icons/database-backup";
 // The left sidebar. All positioning/animation lives here as Tailwind
 // utilities instead of my-mind.css's `.pane`/`.pane-left` — `.pane` is a
 // right-docked (right:0) base class shared by #ui/#io/#notes/#help, and
@@ -76,7 +77,7 @@ export default function LeftPanel() {
         </button>
 
         <button class="icon-btn" data-command="load" title="Open">
-          <History size={20} />
+          <DatabaseBackup size={20} />
         </button>
       </div>
       {/* Reserved for future content (e.g. a snapshot list). Fades in only
