@@ -1,4 +1,5 @@
 /* =============================================================
+ *
    my-mind.css — layout and UI styles for the mind-map page
    Requires: theme.css loaded first (provides font/color tokens)
    ============================================================= */
@@ -11,7 +12,7 @@
   /* Layout */
   --help-pane-width: 250px;
   --ui-pane-width: 200px; /* matches .pane's base width, used by #ui */
-  --ribbon-width: 60px; /* collapsed width of #left-panel; matches .icon-btn's own rendered size (1rem padding + 28px icon) */
+  --ribbon-width: 45px; /* collapsed width of #left-panel; matches .icon-btn's own rendered size (1rem padding + 28px icon) */
   --left-panel-width: 240px; /* expanded width of #left-panel */
 
   /* Note-preview watermark */
@@ -332,7 +333,6 @@ body:has(#ui:not([hidden])) .topbar-right {
    Note preview (background watermark)
    ------------------------------------------------------------- */
 #note-preview {
-  position: fixed;
   top: 0;
   left: 0;
   width: 100%;

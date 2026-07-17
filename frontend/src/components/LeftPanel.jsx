@@ -39,25 +39,26 @@ export default function LeftPanel() {
           : "var(--left-panel-width)",
       }}
     >
-      <div class="flex w-[var(--ribbon-width)] flex-shrink-0 flex-col items-center gap-1 py-2">
+      <div class="flex w-[var(--ribbon-width)] flex-shrink-0 flex-col items-center gap-2 py-2">
+       <button
+          class="icon-btn"
+          onClick={toggleLeftPanel}
+          title="Toggle sidebar"
+        >
+          <PanelLeft size={20} />
+        </button>
         <A
           href="/catalog"
           class="icon-btn"
           title="Catalog"
           onClick={goToCatalog}
         >
-          <Book size={28} />
+          <Book size={20} />
         </A>
         <button class="icon-btn" data-command="help" title="Help">
-          <CircleQuestionMark size={28} />
+          <CircleQuestionMark size={20} />
         </button>
-        <button
-          class="icon-btn"
-          onClick={toggleLeftPanel}
-          title="Toggle sidebar"
-        >
-          <PanelLeft size={28} />
-        </button>
+     
       </div>
       {/* Reserved for future content (e.g. a snapshot list). Fades in only
           once the panel is wide enough to actually show it. */}
