@@ -27,7 +27,7 @@ function statusToString(status) {
 // `currentItem` signal directly (see CLAUDE.md, Solid migration Phase 3).
 // Color/text-color swatches were already handled here before Phase 3, since
 // they only dispatch an action on click and never read engine state back.
-export default function PropertyPanel() {
+export default function RightPanel() {
   // Cached after the first dynamic import, see onMount. Loaded lazily
   // (like title.js/notes.js) so the engine bundle isn't pulled in before
   // the canvas actually mounts.
