@@ -1,12 +1,9 @@
 // frontend/src/components/MindMapCanvas.jsx
-import LeftPanel from "./LeftPanel";
-
 import RightPanel from "./RightPanel";
 
 import SaveDialog from "./SaveDialog";
 import HelpPanel from "./HelpPanel";
 import ContextMenu from "./ContextMenu";
-import TopBar from "./TopBar";
 import { onMount, onCleanup } from "solid-js";
 
 export default function MindMapCanvas() {
@@ -34,8 +31,6 @@ export default function MindMapCanvas() {
     <div ref={containerRef} tabIndex="-1" class="outline-none">
       <main ref={mainRef} />
 
-      <TopBar />
-      <LeftPanel />
       <RightPanel />
       <SaveDialog />
       <HelpPanel />
