@@ -77,15 +77,7 @@ NotesEditorが前面にある間、キャンバス側のショートカット（
 
 ---
 
-## Phase 5 — `file-switcher.js`の`document.body`直付けをコンテナスコープに寄せる
-
-`ui/file-switcher.js`だけは`containerEl`の外、`document.body`に直接オーバーレイをappendしている。Workspace化で前面/背面が入れ替わっても、このオーバーレイは常にどちらの上にも被さってしまう。
-
-- `show()`に`containerEl`引数を追加し、`document.body.appendChild(backdrop)`を`containerEl.appendChild(backdrop)`に変更する。
-- `toggle()`/`dispose()`にも`containerEl`を引き回す（`command/command.js`の`QuickLoad`/`Load`コマンドが呼び出し元なので、そこも`containerEl`を渡すよう修正）。
-- Phase 3の`isCanvasActive()`ガードも`toggle()`の先頭に追加し、背面から誤って開けないようにする。
-
-リスク: 低〜中。呼び出し元（`command.js`）のシグネチャ変更を伴うため、`Ctrl+K`/`Ctrl+O`の動作を手動確認する。
+## Phase 5 — skip
 
 ---
 
@@ -118,7 +110,6 @@ NotesEditorが前面にある間、キャンバス側のショートカット（
 | 2 | `window` resizeリスナーのガード | 低 | Phase 1 |
 | 3 | keyboard/mouse/clipboard/uiクリックのガード | 中 | Phase 1 |
 | 4 | シングルトンDOM-IDモジュールの棚卸し（コメントのみ） | なし | — |
-| 5 | `file-switcher.js`のコンテナスコープ化 | 低〜中 | Phase 3 |
 | 6 | `Workspace.jsx`の実装 | 中 | Phase 1–5 |
 | 7 | 回帰チェックリスト | — | Phase 6 |
 
