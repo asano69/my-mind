@@ -116,6 +116,26 @@
   font-size: 1.2em;
 }
 
+#notes-editor-view-pane ul {
+  list-style-type: disc;
+  padding-left: 2em;
+}
+
+#notes-editor-view-pane ol {
+  list-style-type: decimal;
+  padding-left: 2em;
+}
+
+#notes-editor-view-pane li {
+  display: list-item;
+}
+#notes-editor-view-pane ul ul {
+  list-style-type: circle;
+}
+
+#notes-editor-view-pane ul ul ul {
+  list-style-type: square;
+}
 .EasyMDEContainer {
   flex: 1;
   display: flex;
