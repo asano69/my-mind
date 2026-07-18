@@ -7,7 +7,7 @@ import * as notes from "../ui/notes.js";
 import * as ui from "../ui/ui.js";
 import * as io from "../ui/io.js";
 import { showToast } from "../ui/toast.js";
-import * as fileSwitcher from "../ui/file-switcher.js";
+
 import ImageBackend from "../backend/image.js";
 import * as actions from "../action.js";
 import MindMap from "../map.js";
@@ -171,15 +171,6 @@ new (class SaveAs extends Command {
     io.show("save");
   }
 })();
-new (class Load extends Command {
-  constructor() {
-    super("load", "Load map");
-    this.keys = [{ code: "KeyO", ctrlKey: true, shiftKey: false }];
-  }
-  execute() {
-    fileSwitcher.toggle();
-  }
-})();
 
 new (class New extends Command {
   constructor() {
@@ -307,15 +298,7 @@ new (class Fold extends Command {
     app.currentMap.ensureItemVisibility(item);
   }
 })();
-new (class QuickLoad extends Command {
-  constructor() {
-    super("quick-load", "File picker");
-    this.keys = [{ code: "KeyK", ctrlKey: true }];
-  }
-  execute() {
-    fileSwitcher.toggle();
-  }
-})();
+
 new (class GoToCatalog extends Command {
   constructor() {
     super("go-to-catalog", "Go to catalog");

@@ -38,7 +38,6 @@ vi.mock("../ui/io.js", () => ({
   resetCurrentMap: vi.fn(),
 }));
 vi.mock("../ui/toast.js", () => ({ showToast: vi.fn() }));
-vi.mock("../ui/file-switcher.js", () => ({ toggle: vi.fn() }));
 vi.mock("../backend/image.js", () => ({ default: vi.fn() }));
 vi.mock("../action.js", () => ({
   InsertNewItem: vi.fn(),
