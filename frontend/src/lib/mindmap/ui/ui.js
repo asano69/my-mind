@@ -90,7 +90,7 @@ function onClick(e) {
     }
   }
 }
-export function init(port) {
+export function init(port, containerEl) {
   saveTimeEl = document.querySelector("#save-time");
   // layout/shape/value/status no longer live here — see RightPanel.jsx,
   // which reads store.js's `currentItem` signal directly instead of being
@@ -102,15 +102,15 @@ export function init(port) {
   // subscribing to the old "save-done" pubsub message (Solid migration
   // Phase 4, see CLAUDE.md).
   elapsedTimer = setInterval(refreshElapsed, 1000);
-  document.addEventListener("click", onClick);
+  containerEl.addEventListener("click", onClick);
   io.restore();
 }
 
 // Called by my-mind.js's unmount(). Tears down this module's own listener
 // and timer, then disposes every child UI module in the reverse order
 // init() brought them up, mirroring standard stack-unwind teardown order.
-export function dispose() {
-  document.removeEventListener("click", onClick);
+export function dispose(containerEl) {
+  containerEl.removeEventListener("click", onClick);
   clearInterval(elapsedTimer);
   elapsedTimer = null;
   menu.dispose();

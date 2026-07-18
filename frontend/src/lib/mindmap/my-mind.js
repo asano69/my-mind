@@ -202,7 +202,7 @@ export async function mount(root, containerEl) {
   keyboard.init(containerEl);
   mouse.init(port, containerEl);
   title.init();
-  ui.init(port); // also calls io.restore() internally
+  ui.init(port, containerEl); // also calls io.restore() internally
 
   createRoot((dispose) => {
     disposePanelEffects = dispose;
@@ -222,7 +222,7 @@ export function unmount() {
     return;
   }
   window.removeEventListener("resize", handleResize);
-  ui.dispose();
+  ui.dispose(container);
   title.dispose();
 
   disposePanelEffects?.();
