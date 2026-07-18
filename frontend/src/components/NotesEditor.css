@@ -1,16 +1,48 @@
-#notes-editor-crepe .milkdown {
+/* Phase 4 of the Milkdown -> EasyMDE rollback: restyles EasyMDE's own
+   preview pane to match the tone of the old #note-preview-inner
+   watermark (see docs/03.2-workspace-mode-switch-refactor.md, Phase 5,
+   for the design this is reviving) -- a muted ink color, serif body
+   font, and no pointer interaction while it's just sitting as the
+   canvas-mode background. */
+
+#notes .EasyMDEContainer {
   height: 100%;
-  --crepe-color-background: var(--color-bg);
-  --crepe-color-on-background: var(--color-text);
-  --crepe-color-surface: var(--color-pane);
-  --crepe-color-surface-low: var(--color-pane-hover);
-  --crepe-color-on-surface: var(--color-text);
-  --crepe-color-on-surface-variant: var(--color-text);
-  --crepe-color-outline: var(--color-pane-hover);
-  --crepe-color-primary: var(--color-accent);
-  --crepe-color-hover: var(--color-hover);
-  --crepe-color-selected: var(--color-pane-hover);
-  --crepe-font-title: var(--font-serif);
-  --crepe-font-default: var(--font-sans);
-  --crepe-font-code: var(--font-mono);
+}
+
+#notes .CodeMirror {
+  height: 100%;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  border: none;
+}
+
+/* The rendered-HTML preview pane. Active whenever setPreviewMode(true)
+   has called togglePreview() -- i.e. whenever activeMode() !== "notes". */
+#notes .editor-preview,
+#notes .editor-preview-side {
+  background: var(--color-bg);
+  color: var(--color-preview-ink);
+  font-family: var(--font-serif);
+  padding: 2rem;
+}
+
+#notes .editor-preview * {
+  font-family: inherit;
+}
+
+/* Only the background/canvas-mode state needs to be click-through --
+   Workspace.jsx's pointer-events-none on the whole component already
+   covers this at the wrapper level, but the old watermark also disabled
+   pointer events on the ink itself (e.g. so accidental text selection
+   inside the preview couldn't happen while it's decorative). Kept here
+   for parity with the old design's own rule, not strictly required by
+   the current layering approach. */
+#notes .editor-preview {
+  pointer-events: none;
+}
+
+#notes .editor-toolbar {
+  background: var(--color-pane);
+  border-color: var(--color-pane-hover);
 }
