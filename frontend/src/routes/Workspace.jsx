@@ -1,4 +1,4 @@
-import { activeMode } from "../lib/mindmap/store";
+import { activeMode, leftPanelHidden } from "../lib/mindmap/store";
 import NotesEditor from "../components/NotesEditor";
 import MindMapCanvas from "../components/MindMapCanvas";
 import TopBar from "../components/TopBar";
@@ -26,9 +26,17 @@ export default function Workspace() {
         <MindMapCanvas />
       </div>
       <div
-        class="fixed inset-0"
+        class="fixed inset-0 transition-[margin-left] duration-300 ease-in-out"
         classList={{ "pointer-events-none": activeMode() !== "notes" }}
-        style={{ "z-index": activeMode() === "notes" ? 1 : 0 }}
+        style={{
+          "z-index": activeMode() === "notes" ? 1 : 0,
+          // Mirrors the offset MindMapCanvas's <main> gets from
+          // my-mind.js's handleResize(), so the notes pane slides in step
+          // with the left sidebar instead of sitting underneath it.
+          "margin-left": leftPanelHidden()
+            ? "var(--ribbon-width)"
+            : "var(--side-panel-width)",
+        }}
       >
         <NotesEditor />
       </div>
