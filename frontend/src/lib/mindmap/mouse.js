@@ -19,8 +19,10 @@ let current = {
   pinchDistance: 0,
 };
 let port;
-export function init(port_) {
+let container;
+export function init(port_, container_) {
   port = port_;
+  container = container_;
   port.addEventListener("touchstart", onDragStart);
   port.addEventListener("mousedown", onDragStart);
   port.addEventListener("click", onClick);
@@ -59,6 +61,7 @@ export function dispose() {
     pinchDistance: 0,
   };
   port = null;
+  container = null;
 }
 function onClick(e) {
   const me = e;
@@ -115,8 +118,9 @@ function onDragStart(e) {
     } // ignore dnd on edited node
     commandRepo.get("finish").execute(); // clicked elsewhere => finalize edit
   }
-  // ui loses focus, so that keyboard shortcuts can work
-  document.activeElement.blur();
+  // Move focus back into the mind map route so future scoped keyboard
+  // listeners can receive shortcuts after mouse interactions.
+  container.focus();
   // we can safely start drag
   current.cursor = point;
   if (item && !item.isRoot) {
