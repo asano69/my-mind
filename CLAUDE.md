@@ -9,8 +9,7 @@
 - All errors are user-facing, so messages should be clear.
 - Keep functions small and focused.
 - Module files should re-export what's needed, hide implementation details.
-- Don't persist changes to the database during drilling. Use the cache.
-- Don't use timezones: dates are naive for a reason. Due dates etc. are more like the dates in a journal entry than precise points in time.
+- 変更内容を git diff 形式で出力する。
 
 ## Tech Stack
 
@@ -26,12 +25,9 @@
 - 重複コード、未使用コードの削除を優先的に行う。
 
 
-
 # Work in progress
 
-
-
-
+docs/03.2 を実行中
 
 ## Markodwonエディタをマップの背景にもっていけないか検討
 - 現在、マップの背景にマークダウンがプレビューされている。これを廃止する
