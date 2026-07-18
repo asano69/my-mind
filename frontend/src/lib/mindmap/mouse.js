@@ -2,6 +2,8 @@ import * as menu from "./ui/context-menu.js";
 import * as app from "./my-mind.js";
 import * as actions from "./action.js";
 import { repo as commandRepo } from "./command/command.js";
+import { isCanvasActive } from "./scope.js";
+
 const TOUCH_DELAY = 500;
 const SHADOW_OFFSET = 5;
 // Minimum change in pinch distance (px) required to trigger one zoom step
@@ -64,6 +66,10 @@ export function dispose() {
   container = null;
 }
 function onClick(e) {
+  if (!isCanvasActive()) {
+    return;
+  }
+
   const me = e;
   let item = app.currentMap.getItemFor(e.target);
   if (app.editing && item == app.currentItem) {
@@ -80,10 +86,19 @@ function onClick(e) {
   }
 }
 function onDblClick(e) {
+  if (!isCanvasActive()) {
+    return;
+  }
+
   let item = app.currentMap.getItemFor(e.target);
   item && commandRepo.get("edit").execute();
 }
+
 function onWheel(e) {
+  if (!isCanvasActive()) {
+    return;
+  }
+
   const { deltaY } = e;
   if (!deltaY) {
     return;
@@ -92,6 +107,10 @@ function onWheel(e) {
   app.currentMap.adjustFontSize(dir);
 }
 function onContextMenu(e) {
+  if (!isCanvasActive()) {
+    return;
+  }
+
   onDragEnd(e);
   e.preventDefault();
   let item = app.currentMap.getItemFor(e.target);
@@ -99,6 +118,9 @@ function onContextMenu(e) {
   menu.open([e.clientX, e.clientY]);
 }
 function onDragStart(e) {
+  if (!isCanvasActive()) {
+    return;
+  }
   if (e.type == "touchstart" && "touches" in e && e.touches.length == 2) {
     // Two fingers down: enter pinch mode
     clearTimeout(touchContextTimeout);

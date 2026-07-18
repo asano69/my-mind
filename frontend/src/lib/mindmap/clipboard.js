@@ -3,6 +3,8 @@ import * as app from "./my-mind.js";
 import * as ui from "./ui/ui.js";
 import * as actions from "./action.js";
 import { repo as formatRepo } from "./format/format.js";
+import { isCanvasActive } from "./scope.js";
+
 let storedItems = [];
 let mode = "";
 export function init(containerEl) {
@@ -20,7 +22,7 @@ export function dispose(containerEl) {
   mode = "";
 }
 function onCopyCut(e) {
-  if (ui.isActive() || app.editing) {
+  if (!isCanvasActive() || ui.isActive() || app.editing) {
     return;
   }
   e.preventDefault();
@@ -48,7 +50,7 @@ function onCopyCut(e) {
   mode = e.type;
 }
 function onPaste(e) {
-  if (ui.isActive() || app.editing) {
+  if (!isCanvasActive() || ui.isActive() || app.editing) {
     return;
   }
   e.preventDefault();

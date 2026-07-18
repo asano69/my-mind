@@ -11,6 +11,7 @@ import { showToast } from "../ui/toast.js";
 import ImageBackend from "../backend/image.js";
 import * as actions from "../action.js";
 import MindMap from "../map.js";
+import { isCanvasActive } from "../scope.js";
 
 const PAN_AMOUNT = 15;
 let keyboardScope = globalThis.window ?? null;
@@ -258,6 +259,14 @@ new (class Pan extends Command {
     this.step();
   }
   step() {
+    // If the user switches away from canvas mode while a WASD key is
+    // still held down, the setInterval loop below keeps running (see
+    // docs/workspace-mode-switch-refactor.md, Phase 3) — guard here
+    // rather than in execute(), since execute() is already unreachable
+    // while backgrounded (keyboard.js gates the keydown that calls it).
+    if (!isCanvasActive()) {
+      return;
+    }
     const dirs = {
       KeyW: [0, 1],
       KeyA: [1, 0],

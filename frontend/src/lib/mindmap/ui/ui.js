@@ -4,6 +4,7 @@ import * as io from "./io.js";
 import * as menu from "./context-menu.js";
 import { repo as commandRepo } from "../command/command.js";
 import { lastSaveTime, toggleRightPanel } from "../store.js";
+import { isCanvasActive } from "../scope.js";
 
 let saveTimeEl = null;
 let elapsedTimer = null;
@@ -75,6 +76,9 @@ export function toggle() {
   toggleRightPanel();
 }
 function onClick(e) {
+  if (!isCanvasActive()) {
+    return;
+  }
   let target = e.target;
   let current = target;
   while (true) {

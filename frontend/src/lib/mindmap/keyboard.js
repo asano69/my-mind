@@ -1,7 +1,14 @@
 import * as ui from "./ui/ui.js";
 import { repo as commandRepo } from "./command/command.js";
+import { isCanvasActive } from "./scope.js";
 
 function handleEvent(e) {
+  // Ignore all mindmap shortcuts while the canvas is backgrounded (see
+  // docs/workspace-mode-switch-refactor.md, Phase 3).
+  if (!isCanvasActive()) {
+    return;
+  }
+
   // Ignore key events that are part of IME composition (e.g. Japanese input).
   // Without this check, pressing Enter to confirm an IME candidate would also
   // trigger the app's "finish editing" command — particularly visible in Firefox.
