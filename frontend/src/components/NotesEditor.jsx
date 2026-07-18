@@ -4,24 +4,6 @@ import "./NotesEditor.css";
 import { activeMode, currentItem } from "../lib/mindmap/store";
 import { createEffect, createSignal, on, onMount, onCleanup } from "solid-js";
 
-/**
- * The markdown notes editor for the currently selected item.
- *
- * Phase 2 of the Milkdown -> EasyMDE rollback (see
- * docs/03.2-workspace-mode-switch-refactor.md for the Milkdown-era design
- * this replaces). EasyMDE has no single "readonly" flag like Milkdown did;
- * it has two separate rendering paths (raw-Markdown CodeMirror textarea vs.
- * a rendered HTML preview via togglePreview()). This phase only verifies
- * that switching those paths works correctly in isolation, via the
- * temporary debug button below -- it is NOT yet wired to activeMode
- * (that's Phase 3).
- *
- * ui/notes.js (and everything it pulls in) is imported dynamically, after
- * mount, for the same reason my-mind.js itself is in MindMapCanvas.jsx:
- * those modules query the DOM (e.g. `#notes`, `#ui`) at import time, so
- * they must not load before this component's elements are attached to
- * the document.
- */
 export default function NotesEditor() {
   let textareaRef;
   let easyMDE;
@@ -49,11 +31,14 @@ export default function NotesEditor() {
     applyingExternalContent = false;
   }
 
-  // TEMPORARY (Phase 2 only): lets us confirm togglePreview() behaves
-  // correctly -- in particular whether it triggers a CodeMirror re-layout
-  // -- before wiring it to activeMode in Phase 3. Remove this button and
-  // handler once Phase 3 lands.
-  function debugTogglePreview() {
+  // Idempotent wrapper around togglePreview(): EasyMDE only exposes a
+  // toggle, not a "set to X" API, so callers (the createEffect below)
+  // can just declare the desired state without worrying about calling
+  // togglePreview() an odd number of times and ending up out of sync.
+  function setPreviewMode(shouldPreview) {
+    if (easyMDE.isPreviewActive() === shouldPreview) {
+      return;
+    }
     easyMDE.togglePreview();
   }
   // keyboard.js gates on isCanvasActive(), so Escape never reaches it
@@ -82,6 +67,7 @@ export default function NotesEditor() {
       notesModule?.onEditorChange(easyMDE.value());
     });
 
+    setPreviewMode(activeMode() !== "notes");
     notesModule = await import("../lib/mindmap/ui/notes.js");
 
     notesModule.registerEditorAPI({
@@ -110,6 +96,19 @@ export default function NotesEditor() {
     }),
   );
 
+  // Notes mode -> editable; canvas mode -> read-only preview shown as the
+  // background. Mirrors the Milkdown version's `crepe.setReadonly(mode !==
+  // "notes")` effect, but through EasyMDE's togglePreview() instead of a
+  // single readonly flag (see the module comment above).
+  createEffect(
+    on([ready, activeMode], ([isReady, mode]) => {
+      if (!isReady) {
+        return;
+      }
+      setPreviewMode(mode !== "notes");
+    }),
+  );
+
   onCleanup(() => {
     window.removeEventListener("keydown", handleEscape, true);
     easyMDE?.toTextArea();
@@ -118,15 +117,6 @@ export default function NotesEditor() {
 
   return (
     <div id="notes" class="h-full">
-      {/* TEMPORARY (Phase 2 only): manual preview toggle for verification.
-          Removed once Phase 3 hooks togglePreview() up to activeMode. */}
-      <button
-        type="button"
-        onClick={debugTogglePreview}
-        class="fixed top-2 right-2 z-10 rounded bg-pane px-2 py-1 text-xs shadow-card"
-      >
-        [debug] toggle preview
-      </button>
       <textarea ref={textareaRef} />
     </div>
   );
