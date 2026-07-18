@@ -29,6 +29,12 @@
 
 # Work in progress
 
-## Notes Editorのバグ修正
+## Markodwonエディタをマップの背景にもっていけないか検討
+- 現在、マップの背景にマークダウンがプレビューされている。これを廃止する
+- かわりにEasyMDEのViewモードをマップの背景に常に表示させてこれをプレビューモードとして使いたい。
+- 現在、data-command="notes" を実行すると、手前に、EastMDEが表示されるが、それを廃止する。
+- かわりに、 data-command="notes" を実行すると、背後にあるViewモードのEasyMDEがEditモードに切りかわり、MindMapCanvasの手前に表示したい
+
+
 
 
