@@ -19,7 +19,12 @@
 
 #notes .CodeMirror {
   height: 100%;
-  background: var(--color-bg);
+  /* Translucent, not opaque: lets the mind-map canvas show faintly
+     behind the notes editor while notes is the active mode, mirroring
+     how the canvas's own transparent background lets the note preview
+     show through while canvas is the active mode (see .editor-preview
+     below). */
+  background: color-mix(in srgb, var(--color-bg) 75%, transparent);
   color: var(--color-text);
   /* Serif, not monospace: the raw markdown source is meant to read like
      prose, matching the preview's reading font. Monospace is reserved
