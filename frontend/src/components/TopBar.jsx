@@ -24,11 +24,20 @@ export default function TopBar() {
     navigate("/catalog");
   }
 
+  // Runs a command directly instead of relying on ui/ui.js's data-command
+  // click delegation, since TopBar moves out of MindMapCanvas.jsx's
+  // container and must keep working while Notes mode is active (see
+  // CLAUDE.md, Workspace shared-chrome refactor).
+  async function runCommand(name) {
+    const { execute } = await import("../lib/mindmap/command/command.js");
+    execute(name);
+  }
+
   return (
     <>
       <TitleBar />
       <div class="topbar-right">
-        <button class="icon-btn" data-command="notes" title="Notes">
+        <button class="icon-btn" onClick={() => runCommand("notes")} title="Notes">
           <TextCursor size={28} />
         </button>
 

@@ -23,6 +23,15 @@ export function isMac() {
   return !!(globalThis.navigator?.platform ?? "").match(/mac/i);
 }
 export let repo = new Map();
+
+// Executes a command by id. Small shared helper so components outside
+// ui/ui.js's data-command click delegation (e.g. LeftPanel/TopBar, which
+// will live outside the canvas-scoped container once moved to
+// Workspace.jsx) can trigger a command the same way a delegated click
+// would, without duplicating "repo.get(id).execute()" in each caller.
+export function execute(id) {
+  repo.get(id).execute();
+}
 export default class Command {
   constructor(id, label) {
     this.label = label;

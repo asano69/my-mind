@@ -34,6 +34,16 @@ export default function LeftPanel() {
     navigate("/catalog");
   }
 
+  // Runs a command directly, the same way ui/ui.js's data-command click
+  // delegation would. Used instead of that delegation because this panel
+  // is moving out of MindMapCanvas.jsx's container (see CLAUDE.md,
+  // Workspace shared-chrome refactor), so its buttons need to work
+  // whether or not the canvas is the active workspace mode.
+  async function runCommand(name) {
+    const { execute } = await import("../lib/mindmap/command/command.js");
+    execute(name);
+  }
+
   return (
     <div
       id="left-panel"
@@ -53,7 +63,7 @@ export default function LeftPanel() {
           <PanelLeft size={20} />
         </button>
 
-        <button class="icon-btn" data-command="new" title="New">
+        <button class="icon-btn" onClick={() => runCommand("new")} title="New">
           <FilePlus size={20} />
         </button>
 
@@ -66,17 +76,17 @@ export default function LeftPanel() {
           <Book size={20} />
         </A>
 
-        <button class="icon-btn" data-command="save" title="Save">
+        <button class="icon-btn" onClick={() => runCommand("save")} title="Save">
           <CloudUpload size={20} />
         </button>
-        <button class="icon-btn" data-command="save-as" title="Save as">
+        <button class="icon-btn" onClick={() => runCommand("save-as")} title="Save as">
           <Images size={20} />
         </button>
-        <button class="icon-btn" data-command="help" title="Help">
+        <button class="icon-btn" onClick={() => runCommand("help")} title="Help">
           <CircleQuestionMark size={20} />
         </button>
 
-        <button class="icon-btn" data-command="load" title="Open">
+        <button class="icon-btn" onClick={() => runCommand("load")} title="Open">
           <DatabaseBackup size={20} />
         </button>
       </div>
