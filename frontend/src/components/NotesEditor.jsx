@@ -53,9 +53,10 @@ export default function NotesEditor() {
   onMount(async () => {
     easyMDE = new EasyMDE({
       element: textareaEl,
-      autosave: { enabled: false },
+      autosave: { enabled: true },
       spellChecker: false,
       status: false,
+      autoDownloadFontAwesome: false,
       toolbar: [
         "bold",
         "italic",
@@ -71,7 +72,6 @@ export default function NotesEditor() {
         "code",
         "|",
         "link",
-        "image",
         "table",
         "horizontal-rule",
       ],
