@@ -62,6 +62,12 @@ export function onEditorChange(text) {
   bumpDirty();
 }
 
+// Assumes a single instance in the DOM (see
+// docs/workspace-mode-switch-refactor.md, Phase 4) — `#note-preview`
+// is created fresh here and `onItemSelect`/`registerEditorAPI` assume
+// there is exactly one notes pane. Safe under the current "one canvas,
+// toggle visibility" model; revisit if multiple canvases are ever
+// mounted simultaneously.
 export function init() {
   previewEl = document.createElement("div");
   previewEl.id = "note-preview";

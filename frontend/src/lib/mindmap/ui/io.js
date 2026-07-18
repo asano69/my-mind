@@ -37,6 +37,12 @@ export function isActive() {
   return !node.hidden && node.contains(document.activeElement);
 }
 
+// Assumes a single instance in the DOM (see
+// docs/workspace-mode-switch-refactor.md, Phase 4) — `#io` is looked
+// up by id, and currentMapId/currentMapUuid are module-level state for
+// exactly one open map. Safe under the current "one canvas, toggle
+// visibility" model; revisit if multiple canvases are ever mounted
+// simultaneously.
 export function init() {
   node = document.querySelector("#io");
   node.querySelector(".cancel").addEventListener("click", (_) => hide());

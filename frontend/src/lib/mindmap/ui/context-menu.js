@@ -1,6 +1,12 @@
 import { repo as commandRepo } from "../command/command.js";
 let node = null;
 let port = null;
+
+// Assumes a single instance in the DOM (see
+// docs/workspace-mode-switch-refactor.md, Phase 4) — `#context-menu`
+// is looked up by id. Safe under the current "one canvas, toggle
+// visibility" model; revisit if multiple canvases are ever mounted
+// simultaneously.
 export function init(port_) {
   node = document.querySelector("#context-menu");
   port = port_;
