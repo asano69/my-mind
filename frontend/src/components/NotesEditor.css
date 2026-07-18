@@ -43,139 +43,46 @@
   background: var(--btn-background-hover);
 }
 
-#notes-editor-bar .spacer {
-  margin-left: auto;
-}
-
-#notes-editor-edit-pane {
+#notes-editor-crepe {
   flex: 1;
-  display: flex;
-  flex-direction: column;
   min-height: 0;
+  overflow: auto;
+  background: var(--color-bg);
 }
 
-#notes-editor-view-pane {
-  flex: 1;
-  overflow-y: auto;
+#notes-editor-crepe .milkdown {
+  min-height: 100%;
+}
+
+#notes-editor-crepe .ProseMirror {
+  min-height: calc(100vh - 48px);
   padding: 20px 24px;
-  font-family: var(
-    --font-serif
-  ); /* serif preserved: note body is reading content */
+  font-family: var(--font-serif);
   font-size: 18px;
   line-height: 1.8;
-  background: var(--color-bg);
   color: #3a2e24;
+  outline: none;
 }
 
-#notes-editor-view-pane a {
-  color: #7a5c3e;
-  text-decoration: underline;
+#notes-editor-crepe .ProseMirror code {
+  font-family: var(--font-mono);
+  font-size: 15px;
 }
-#notes-editor-view-pane img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  margin: 0.5em 0;
-}
-#notes-editor-view-pane pre {
+
+#notes-editor-crepe .ProseMirror pre {
   background: var(--color-pane);
   border-radius: 4px;
   padding: 0.8em 1em;
   overflow-x: auto;
   font-size: 15px;
 }
-#notes-editor-view-pane code {
-  font-family: var(--font-mono);
-  font-size: 15px;
-}
-#notes-editor-view-pane blockquote {
+
+#notes-editor-crepe .ProseMirror blockquote {
   border-left: 4px solid var(--color-pane-hover);
-  margin: 0;
-  padding-left: 1em;
   color: #7a6a5a;
 }
-#notes-editor-view-pane table {
-  border-collapse: collapse;
-  width: 100%;
-}
-#notes-editor-view-pane table th,
-#notes-editor-view-pane table td {
-  border: 1px solid var(--color-pane-hover);
-  padding: 0.5em 0.9em;
-}
-#notes-editor-view-pane table th {
-  background: var(--color-pane);
-}
-#notes-editor-view-pane h1 {
-  font-size: 1.8em;
-}
-#notes-editor-view-pane h2 {
-  font-size: 1.4em;
-}
-#notes-editor-view-pane h3 {
-  font-size: 1.2em;
-}
 
-#notes-editor-view-pane ul {
-  list-style-type: disc;
-  padding-left: 2em;
-}
-
-#notes-editor-view-pane ol {
-  list-style-type: decimal;
-  padding-left: 2em;
-}
-
-#notes-editor-view-pane li {
-  display: list-item;
-}
-#notes-editor-view-pane ul ul {
-  list-style-type: circle;
-}
-
-#notes-editor-view-pane ul ul ul {
-  list-style-type: square;
-}
-.EasyMDEContainer {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.editor-toolbar {
-  flex: none;
-  background: var(--color-pane) !important;
-  border-bottom: 1px solid var(--color-pane-hover) !important;
-}
-
-.editor-toolbar button {
-  color: var(--color-accent) !important;
-}
-.editor-toolbar button:hover {
-  background: var(--color-pane-hover) !important;
-}
-.editor-toolbar i.separator {
-  border-left-color: var(--color-pane-hover) !important;
-}
-
-.CodeMirror {
-  flex: 1;
-  height: auto;
-  font-family: var(--font-mono);
-  font-size: 18px !important;
-  line-height: 1.8 !important;
-  background: var(--color-bg) !important;
-  color: #3a2e24 !important;
-}
-
-.CodeMirror-cursor {
-  border-left-color: var(--color-accent) !important;
-}
-.CodeMirror-selected {
-  background: var(--color-pane-hover) !important;
-}
-.fa-close::before {
-  content: "x";
-  font-style: normal;
+#notes-editor-crepe .ProseMirror a {
+  color: #7a5c3e;
+  text-decoration: underline;
 }

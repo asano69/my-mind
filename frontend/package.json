@@ -9,9 +9,12 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@milkdown/crepe": "^7.21.3",
+    "@milkdown/kit": "^7.21.3",
+    "@milkdown/utils": "^7.21.3",
     "@solidjs/router": "^0.16.1",
-    "easymde": "^2.20.0",
     "lucide-solid": "^1.24.0",
+    "marked": "^18.0.6",
     "pocketbase": "^0.27.0",
     "solid-js": "^1.9.12"
   },
