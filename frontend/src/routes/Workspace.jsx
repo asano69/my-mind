@@ -1,17 +1,28 @@
-import MindMapCanvas from "./MindMapCanvas";
+import { activeMode } from "../lib/mindmap/store";
 import NotesEditor from "../components/NotesEditor";
+import MindMapCanvas from "./MindMapCanvas";
 
-// Wraps MindMapCanvas and NotesEditor as siblings, both mounted at once,
-// instead of NotesEditor living inside MindMapCanvas.jsx. This is the
-// first step toward switching which one is on top via activeMode (see
-// docs/03.2-workspace-mode-switch-refactor.md, Phase 2) — front/back
-// CSS layering is not applied yet, so this should look identical to
-// before.
+// Keeps the canvas and notes editor mounted together, then switches
+// which layer is interactive via z-index and pointer-events only.
+// Avoid display:none so Milkdown/ProseMirror does not need to recalculate
+// its layout every time the workspace mode changes.
 export default function Workspace() {
   return (
     <>
-      <MindMapCanvas />
-      <NotesEditor />
+      <div
+        class="fixed inset-0"
+        classList={{ "pointer-events-none": activeMode() !== "canvas" }}
+        style={{ "z-index": activeMode() === "canvas" ? 1 : 0 }}
+      >
+        <MindMapCanvas />
+      </div>
+      <div
+        class="fixed inset-0"
+        classList={{ "pointer-events-none": activeMode() !== "notes" }}
+        style={{ "z-index": activeMode() === "notes" ? 1 : 0 }}
+      >
+        <NotesEditor />
+      </div>
     </>
   );
 }

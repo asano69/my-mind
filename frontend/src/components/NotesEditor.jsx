@@ -4,7 +4,7 @@ import "@milkdown/crepe/theme/frame.css";
 import { replaceAll } from "@milkdown/utils";
 import { marked } from "marked";
 import "./NotesEditor.css";
-import { currentItem } from "../lib/mindmap/store";
+import { activeMode, currentItem } from "../lib/mindmap/store";
 import { createEffect, createSignal, on, onMount, onCleanup } from "solid-js";
 
 /**
@@ -61,6 +61,7 @@ export default function NotesEditor() {
     });
 
     await crepe.create();
+    crepe.setReadonly(activeMode() !== "notes");
     notesModule = await import("../lib/mindmap/ui/notes.js");
 
     notesModule.registerEditorAPI({
@@ -91,12 +92,21 @@ export default function NotesEditor() {
     }),
   );
 
+  createEffect(
+    on([ready, activeMode], ([isReady, mode]) => {
+      if (!isReady) {
+        return;
+      }
+      crepe.setReadonly(mode !== "notes");
+    }),
+  );
+
   onCleanup(() => {
     crepe?.destroy();
   });
 
   return (
-    <div id="notes" class="pane" hidden>
+    <div id="notes" class="h-full">
       <div id="notes-editor">
         <div id="notes-editor-bar">
           <button onClick={() => notesModule?.close()}>Close</button>

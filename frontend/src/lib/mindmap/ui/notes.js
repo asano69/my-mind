@@ -1,5 +1,5 @@
 import * as app from "../my-mind.js";
-import { bumpDirty, setActiveMode } from "../store.js";
+import { activeMode, bumpDirty, setActiveMode } from "../store.js";
 
 let previewEl = null;
 let previewInner = null;
@@ -24,19 +24,14 @@ function updatePreview(notes) {
 }
 
 export function toggle() {
-  const node = document.querySelector("#notes");
-  node.hidden = !node.hidden;
-  if (!node.hidden && app.currentItem) {
+  const nextMode = activeMode() === "notes" ? "canvas" : "notes";
+  setActiveMode(nextMode);
+  if (nextMode === "notes" && app.currentItem) {
     editorAPI?.setContent(app.currentItem.notes);
   }
 }
 
 export function close() {
-  const node = document.querySelector("#notes");
-  if (node.hidden) {
-    return;
-  }
-  node.hidden = true;
   setActiveMode("canvas");
 }
 

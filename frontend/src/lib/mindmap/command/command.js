@@ -12,7 +12,6 @@ import ImageBackend from "../backend/image.js";
 import * as actions from "../action.js";
 import MindMap from "../map.js";
 import { isCanvasActive } from "../scope.js";
-import { toggleNotesMode } from "../store.js";
 
 const PAN_AMOUNT = 15;
 let keyboardScope = globalThis.window ?? null;
@@ -41,7 +40,6 @@ new (class Notes extends Command {
   }
   execute() {
     notes.toggle();
-    toggleNotesMode();
   }
 })();
 new (class Undo extends Command {
