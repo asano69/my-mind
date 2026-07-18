@@ -27,7 +27,7 @@ import "./shape/box.js";
 import "./shape/ellipse.js";
 import "./shape/underline.js";
 
-import { repo as commandRepo } from "./command/command.js";
+import { repo as commandRepo, setKeyboardScope } from "./command/command.js";
 import Map, { init as initMapCSS } from "./map.js";
 import * as history from "./history.js";
 
@@ -196,7 +196,8 @@ export async function mount(root, containerEl) {
 
   window.addEventListener("resize", handleResize);
   clipboard.init();
-  keyboard.init();
+  setKeyboardScope(containerEl);
+  keyboard.init(containerEl);
   mouse.init(port, containerEl);
   title.init();
   ui.init(port); // also calls io.restore() internally
@@ -226,7 +227,9 @@ export function unmount() {
   disposePanelEffects = null;
 
   mouse.dispose();
-  keyboard.dispose();
+  commandRepo.get("pan")?.dispose?.();
+  keyboard.dispose(containerEl);
+  setKeyboardScope();
   clipboard.dispose();
 
   history.reset();

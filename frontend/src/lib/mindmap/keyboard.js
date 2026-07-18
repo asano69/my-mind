@@ -43,15 +43,15 @@ function handleEvent(e) {
   }
 }
 
-export function init() {
-  window.addEventListener("keydown", handleEvent);
-  window.focus();
+export function init(containerEl) {
+  containerEl.addEventListener("keydown", handleEvent);
+  containerEl.focus();
 }
 
 // Called by my-mind.js's unmount(). Without this, remounting would leave
 // the previous mount's listener attached, firing every shortcut twice.
-export function dispose() {
-  window.removeEventListener("keydown", handleEvent);
+export function dispose(containerEl) {
+  containerEl.removeEventListener("keydown", handleEvent);
 }
 
 function keyOK(key, e) {

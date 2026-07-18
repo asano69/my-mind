@@ -13,8 +13,13 @@ import * as actions from "../action.js";
 import MindMap from "../map.js";
 
 const PAN_AMOUNT = 15;
+let keyboardScope = globalThis.window ?? null;
+
+export function setKeyboardScope(scope) {
+  keyboardScope = scope ?? globalThis.window ?? null;
+}
 export function isMac() {
-  return !!navigator.platform.match(/mac/i);
+  return !!(globalThis.navigator?.platform ?? "").match(/mac/i);
 }
 export let repo = new Map();
 export default class Command {
@@ -255,7 +260,7 @@ new (class Pan extends Command {
       return;
     }
     if (!this.codes.length) {
-      window.addEventListener("keyup", this);
+      keyboardScope.addEventListener("keyup", this);
       this.interval = setInterval(() => this.step(), 50);
     }
     this.codes.push(code);
@@ -281,10 +286,14 @@ new (class Pan extends Command {
     if (index > -1) {
       this.codes.splice(index, 1);
       if (!this.codes.length) {
-        window.removeEventListener("keyup", this);
-        clearInterval(this.interval);
+        this.dispose();
       }
     }
+  }
+  dispose() {
+    keyboardScope?.removeEventListener("keyup", this);
+    clearInterval(this.interval);
+    this.codes = [];
   }
 })();
 new (class Fold extends Command {
