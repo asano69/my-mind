@@ -38,6 +38,7 @@ import * as title from "./title.js";
 import * as ui from "./ui/ui.js";
 
 let port = null;
+let container = null;
 let spinner = null;
 let mounted = false;
 let disposePanelEffects = null; // dispose fn for the effects below, cleared in unmount()
@@ -189,13 +190,14 @@ export async function mount(root, containerEl) {
   }
   mounted = true;
   port = root;
+  container = containerEl;
   spinner = document.querySelector(".spinner");
 
   setThrobber(true);
   await initMapCSS();
 
   window.addEventListener("resize", handleResize);
-  clipboard.init();
+  clipboard.init(containerEl);
   setKeyboardScope(containerEl);
   keyboard.init(containerEl);
   mouse.init(port, containerEl);
@@ -228,14 +230,15 @@ export function unmount() {
 
   mouse.dispose();
   commandRepo.get("pan")?.dispose?.();
-  keyboard.dispose(containerEl);
+  keyboard.dispose(container);
   setKeyboardScope();
-  clipboard.dispose();
+  clipboard.dispose(container);
 
   history.reset();
   currentMap?.hide();
   currentMap = null;
   currentItem = null;
+  container = null;
   setCurrentItem(null);
   editing = false;
   selectedItems.clear();

@@ -5,17 +5,17 @@ import * as actions from "./action.js";
 import { repo as formatRepo } from "./format/format.js";
 let storedItems = [];
 let mode = "";
-export function init() {
-  document.body.addEventListener("cut", onCopyCut);
-  document.body.addEventListener("copy", onCopyCut);
-  document.body.addEventListener("paste", onPaste);
+export function init(containerEl) {
+  containerEl.addEventListener("cut", onCopyCut);
+  containerEl.addEventListener("copy", onCopyCut);
+  containerEl.addEventListener("paste", onPaste);
 }
 // Called by my-mind.js's unmount(). Also clears any cut-in-progress state
 // so a remount does not resume an old cut/copy from the previous map.
-export function dispose() {
-  document.body.removeEventListener("cut", onCopyCut);
-  document.body.removeEventListener("copy", onCopyCut);
-  document.body.removeEventListener("paste", onPaste);
+export function dispose(containerEl) {
+  containerEl.removeEventListener("cut", onCopyCut);
+  containerEl.removeEventListener("copy", onCopyCut);
+  containerEl.removeEventListener("paste", onPaste);
   storedItems = [];
   mode = "";
 }
