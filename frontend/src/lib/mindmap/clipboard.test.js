@@ -9,6 +9,10 @@ vi.mock("./my-mind.js", () => ({
 }));
 vi.mock("./ui/ui.js", () => ({ isActive: vi.fn(() => false) }));
 vi.mock("./action.js", () => ({}));
+
+const mockActiveMode = { value: "canvas" };
+vi.mock("./store.js", () => ({ activeMode: () => mockActiveMode.value }));
+
 vi.mock("./format/format.js", () => ({
   repo: new Map([
     [
@@ -41,6 +45,7 @@ function eventTarget() {
 describe("clipboard listener scope", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockActiveMode.value = "canvas";
   });
 
   it("registers clipboard events on the provided container", () => {
@@ -75,5 +80,20 @@ describe("clipboard listener scope", () => {
       "paste",
       expect.any(Function),
     );
+  });
+  it("ignores copy events while the canvas is backgrounded", () => {
+    const container = eventTarget();
+    clipboard.init(container);
+    mockActiveMode.value = "notes";
+
+    const setData = vi.fn();
+    container.dispatch("copy", {
+      preventDefault: vi.fn(),
+      clipboardData: { setData },
+    });
+
+    expect(setData).not.toHaveBeenCalled();
+
+    clipboard.dispose(container);
   });
 });

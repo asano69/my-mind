@@ -47,6 +47,8 @@ vi.mock("../action.js", () => ({
   SetSide: vi.fn(),
 }));
 vi.mock("../map.js", () => ({ default: vi.fn() }));
+const mockActiveMode = { value: "canvas" };
+vi.mock("../store.js", () => ({ activeMode: () => mockActiveMode.value }));
 
 const { repo, setKeyboardScope } = await import("./command.js");
 
@@ -70,6 +72,7 @@ describe("pan command keyboard scope", () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     repo.get("pan").dispose();
+    mockActiveMode.value = "canvas";
   });
 
   it("registers and removes keyup on the configured container", () => {
@@ -90,5 +93,21 @@ describe("pan command keyboard scope", () => {
       "keyup",
       repo.get("pan"),
     );
+  });
+  it("stops moving the map once the canvas is backgrounded mid-hold", () => {
+    const container = eventTarget();
+    setKeyboardScope(container);
+
+    repo.get("pan").execute({ code: "KeyW" });
+    expect(moveBy).toHaveBeenCalledTimes(1);
+
+    mockActiveMode.value = "notes";
+    vi.advanceTimersByTime(50);
+
+    // The setInterval loop is still running, but step() should now be a
+    // no-op, so moveBy must not have been called again.
+    expect(moveBy).toHaveBeenCalledTimes(1);
+
+    container.dispatch("keyup", { code: "KeyW" });
   });
 });

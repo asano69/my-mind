@@ -24,9 +24,11 @@ vi.mock("../command/command.js", () => ({
 vi.mock("../store.js", () => ({
   lastSaveTime: vi.fn(() => null),
   toggleRightPanel: vi.fn(),
+  activeMode: vi.fn(() => "canvas"),
 }));
 
 const ui = await import("./ui.js");
+const { activeMode } = await import("../store.js");
 
 function eventTarget() {
   const listeners = new Map();
@@ -90,5 +92,21 @@ describe("ui click delegation scope", () => {
       "click",
       expect.any(Function),
     );
+  });
+  it("ignores delegated clicks while the canvas is backgrounded", () => {
+    const port = eventTarget();
+    const container = eventTarget();
+    const button = Object.assign(new Element(), {
+      dataset: { command: "notes" },
+      parentNode: null,
+    });
+
+    ui.init(port, container);
+    activeMode.mockReturnValueOnce("notes");
+
+    container.dispatch("click", { target: button });
+    expect(execute).not.toHaveBeenCalled();
+
+    ui.dispose(container);
   });
 });

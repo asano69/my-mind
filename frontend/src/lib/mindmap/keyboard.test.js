@@ -11,6 +11,10 @@ const command = {
 
 vi.mock("./ui/ui.js", () => ({ isActive: vi.fn(() => false) }));
 vi.mock("./command/command.js", () => ({ repo: new Map([["undo", command]]) }));
+// mockActiveMode: mutable holder so individual tests can flip it, per
+// docs/workspace-mode-switch-refactor.md's Phase 3 guard.
+const mockActiveMode = { value: "canvas" };
+vi.mock("./store.js", () => ({ activeMode: () => mockActiveMode.value }));
 
 const keyboard = await import("./keyboard.js");
 
@@ -33,6 +37,7 @@ function eventTarget() {
 describe("keyboard listener scope", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockActiveMode.value = "canvas";
   });
 
   it("registers shortcuts on the provided container, not window", () => {
@@ -60,5 +65,24 @@ describe("keyboard listener scope", () => {
       "keydown",
       expect.any(Function),
     );
+  });
+  it("ignores shortcuts while the canvas is backgrounded (activeMode !== 'canvas')", () => {
+    const container = eventTarget();
+    keyboard.init(container);
+    mockActiveMode.value = "notes";
+
+    const preventDefault = vi.fn();
+    container.dispatch("keydown", {
+      code: "KeyZ",
+      ctrlKey: true,
+      metaKey: false,
+      isComposing: false,
+      preventDefault,
+    });
+
+    expect(execute).not.toHaveBeenCalled();
+    expect(preventDefault).not.toHaveBeenCalled();
+
+    keyboard.dispose(container);
   });
 });
