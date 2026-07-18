@@ -2,6 +2,23 @@ import { repo as commandRepo } from "../command/command.js";
 let node = null;
 let port = null;
 
+// A menu command already runs on "mousedown" (handleEvent below) rather
+// than "click", so the menu can close and stopPropagation() before
+// mouse.js's onDragStart/onClick react to the same press. Browsers still
+// fire a normal "click" event after the mouseup that follows, though, and
+// that click bubbles up into containerEl, where ui/ui.js's delegated
+// data-command click listener would otherwise execute the same command a
+// second time. This flag + capture-phase listener swallows exactly that
+// one follow-up click.
+let suppressNextClick = false;
+function suppressClick(e) {
+  if (!suppressNextClick) {
+    return;
+  }
+  suppressNextClick = false;
+  e.stopPropagation();
+}
+
 // Assumes a single instance in the DOM (see
 // docs/workspace-mode-switch-refactor.md, Phase 4) — `#context-menu`
 // is looked up by id. Safe under the current "one canvas, toggle
@@ -16,11 +33,14 @@ export function init(port_) {
   });
   port.addEventListener("mousedown", handleEvent);
   node.addEventListener("mousedown", handleEvent);
+  document.addEventListener("click", suppressClick, true);
   close();
 }
 export function dispose() {
   port.removeEventListener("mousedown", handleEvent);
   node.removeEventListener("mousedown", handleEvent);
+  document.removeEventListener("click", suppressClick, true);
+  suppressNextClick = false;
   node = null;
   port = null;
 }
@@ -54,6 +74,7 @@ function handleEvent(e) {
   if (!command.isValid) {
     return;
   }
+  suppressNextClick = true;
   command.execute();
   close();
 }
