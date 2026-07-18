@@ -57,3 +57,11 @@ export function toggleRightPanel() {
 // listeners (keyboard/mouse/clipboard/resize) will gate on this in
 // later phases so they don't fire while backgrounded.
 export const [activeMode, setActiveMode] = createSignal("canvas");
+
+// Toggles between the canvas and the notes editor as the active
+// workspace mode. See docs/notes-background-editor-refactor-milkdown.md,
+// Phase 1 — currently called alongside the existing ui/notes.js
+// toggle()/close() pane-hidden logic, not yet unified with it.
+export function toggleNotesMode() {
+  setActiveMode((m) => (m === "notes" ? "canvas" : "notes"));
+}

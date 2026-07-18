@@ -1,5 +1,5 @@
 import * as app from "../my-mind.js";
-import { bumpDirty } from "../store.js";
+import { bumpDirty, setActiveMode } from "../store.js";
 
 let previewEl = null;
 let previewInner = null;
@@ -37,6 +37,7 @@ export function close() {
     return;
   }
   node.hidden = true;
+  setActiveMode("canvas");
 }
 
 export function onItemSelect(item) {
