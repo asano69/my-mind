@@ -1,101 +1,16 @@
-/* =============================================================
-   NotesEditor.css — the markdown notes editor embedded in the
-   #notes pane (formerly editor.css, loaded by the standalone
-   editor.html iframe page)
-   Requires: theme.css tokens (loaded globally via style.css)
-   ============================================================= */
-
-#notes-editor {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background: var(--color-bg);
-}
-
-#notes-editor-bar {
-  flex: none;
-  display: flex;
-  align-items: center;
-  background: var(--color-pane);
-  border-bottom: 1px solid var(--color-pane-hover);
-  padding: 4px 10px;
-  gap: 4px;
-}
-
-#notes-editor-bar button {
-  background: var(--btn-background);
-  border: none;
-  cursor: pointer;
-  font-size: var(--btn-font-size);
-  font-weight: var(--btn-font-weight);
-  font-family: var(--btn-font-family);
-  letter-spacing: var(--btn-letter-spacing);
-  text-transform: var(--btn-text-transform);
-  padding: var(--btn-padding);
-  opacity: var(--btn-opacity);
-  border-radius: var(--btn-border-radius);
-  color: var(--btn-color);
-  transition: var(--btn-transition);
-}
-
-#notes-editor-bar button:hover {
-  opacity: var(--btn-opacity-hover);
-  background: var(--btn-background-hover);
-}
-
-#notes-editor-crepe {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  background: var(--color-bg);
-}
-
 #notes-editor-crepe .milkdown {
-  min-height: 100%;
-}
-
-/* Background (readonly) tone — replaces the old #note-preview watermark
-   element (see docs/03.2-workspace-mode-switch-refactor.md, Phase 5).
-   Applied directly to the Milkdown root instead of a separate preview
-   element, since Milkdown always live-renders and there is no separate
-   raw-text vs. rendered-HTML pipeline to keep in sync anymore. Tone
-   values (--color-preview-ink, serif font, pointer-events: none) are
-   carried over unchanged from the old #note-preview-inner rule. */
-#notes-editor-crepe.readonly .ProseMirror {
-  color: var(--color-preview-ink);
-  font-family: var(--font-serif);
-  pointer-events: none;
-}
-
-#notes-editor-crepe .ProseMirror {
-  min-height: calc(100vh - 48px);
-  padding: 20px 24px;
-  font-family: var(--font-serif);
-  font-size: 18px;
-  line-height: 1.8;
-  color: #3a2e24;
-  outline: none;
-}
-
-#notes-editor-crepe .ProseMirror code {
-  font-family: var(--font-mono);
-  font-size: 15px;
-}
-
-#notes-editor-crepe .ProseMirror pre {
-  background: var(--color-pane);
-  border-radius: 4px;
-  padding: 0.8em 1em;
-  overflow-x: auto;
-  font-size: 15px;
-}
-
-#notes-editor-crepe .ProseMirror blockquote {
-  border-left: 4px solid var(--color-pane-hover);
-  color: #7a6a5a;
-}
-
-#notes-editor-crepe .ProseMirror a {
-  color: #7a5c3e;
-  text-decoration: underline;
+  height: 100%;
+  --crepe-color-background: var(--color-bg);
+  --crepe-color-on-background: var(--color-text);
+  --crepe-color-surface: var(--color-pane);
+  --crepe-color-surface-low: var(--color-pane-hover);
+  --crepe-color-on-surface: var(--color-text);
+  --crepe-color-on-surface-variant: var(--color-text);
+  --crepe-color-outline: var(--color-pane-hover);
+  --crepe-color-primary: var(--color-accent);
+  --crepe-color-hover: var(--color-hover);
+  --crepe-color-selected: var(--color-pane-hover);
+  --crepe-font-title: var(--font-serif);
+  --crepe-font-default: var(--font-sans);
+  --crepe-font-code: var(--font-mono);
 }

@@ -118,16 +118,13 @@ export default function NotesEditor() {
 
   return (
     <div id="notes" class="h-full">
-      <div id="notes-editor">
-        <div id="notes-editor-bar">
-          <button onClick={() => notesModule?.close()}>Close</button>
-        </div>
+     
         <div
           id="notes-editor-crepe"
           ref={editorRootEl}
           classList={{ readonly: activeMode() !== "notes" }}
         />
-      </div>
+    
     </div>
   );
 }
