@@ -29,44 +29,11 @@
 
 # Work in progress
 
-# グローバルスコープにイベントリスナーを登録しているモジュールのリファクタリング
+Phase 6 — Workspace.jsxの実装
 
-MindMapCanvas.jsxと、NotesEdiotr.jsxを、Workspace.jsxの子コンポーネントとしてもたせ、スイッチの切り替えにおうじて編集モードを切り替えるような用途を考えたとき、グロバールリスナーはスコープの制御が難しく、バグの温床になりやすい。グローバルリスナーをローカルスコープに変更するには、SolidJSのコンポーネントライフサイクルを活用し、各モジュールのリスナー登録先を適切なスコープに変更する必要があります。
+MindMapCanvas.jsxとNotesEditor.jsxを子として常時マウントし、activeMode()に応じてCSSで前面/背面を切り替える（display:noneではなく、z-indexとpointer-events: noneで切り替える。display:noneだとNotesEditor内のCodeMirrorがレイアウト計算をやり直す羽目になるため）。
+スイッチ操作（data-command="notes"実行時など）はsetActiveMode()を呼ぶだけにする。既存のui/notes.jsのtoggle()はそのまま「NotesEditorの表示/非表示」を担当し、Workspace側のactiveModeとは独立に保つ（CLAUDE.mdの元々の設計案「背面のViewモードEasyMDEが前面のEditモードに切り替わる」に相当する部分は別途検討）。
 
-
-現在のアーキテクチャでは、`MindMapCanvas.jsx`がマウントされると、以下のグローバルリスナーが登録されます：
-
-- `keyboard.js`: `window`に`keydown`リスナー
-- `clipboard.js`: `document.body`に`cut`/`copy`/`paste`リスナー
-- `ui.js`: `document`に`click`リスナー
-- `my-mind.js`: `window`に`resize`リスナー
-
-Workspace.jsxでスイッチングすると、非表示のコンポーネントのリスナーが残り続け、バグの原因になります。
-
-## 事前分析（コード変更なし）
-
-**問題1: スコープ先の取り違え**
-`ui.js`のクリック委譲は`data-command`属性を持つボタンを拾っていますが、それらのボタン(`LeftPanel`/`RightPanel`/`TopBar`/`HelpPanel`/`ContextMenu`)は`MindMapCanvas.jsx`内で`<main ref={mainRef} />`の**兄弟要素**です。CLAUDE.mdの提案通り`port`(=mainRef)だけにスコープを絞ると、これらのボタンのクリックが届かなくなります。→ 全部を包む共通の祖先要素が必要です。
-
-**問題2: フォーカスとバブリングの相性**
-`keydown`はイベントターゲット(=現在フォーカスされている要素)からDOMツリーを**上に**バブルします。`mouse.js`の`onDragStart`は現在 `document.activeElement.blur()` でフォーカスを`<body>`(デフォルト)に戻していますが、`body`はコンテナ要素の**祖先**であり子孫ではないため、スコープをコンテナに絞った瞬間、フォーカスなし状態でのショートカットがすべて無反応になります。→ 「blurする」から「コンテナへ明示的にfocusする」への設計変更が必須です。
-
-## フェーズ計画
-
-| Phase | 内容 | リスク |
-|---|---|---|
-| 1 | `MindMapCanvas.jsx`に共通ラッパー要素(`containerRef`, `tabIndex=-1`)を追加。まだ何にも接続しない、純粋な足場 | なし |
-| 2 | `mouse.js`の`document.activeElement.blur()`を`containerEl.focus()`に置換。`my-mind.js`の`mount(port, containerEl)`経由で伝搬 | 低（フォーカス経路の変更のみ） |
-| 3 | `keyboard.js`のリスナーを`window`→`containerEl`へ。`command.js`の`Pan`コマンドの`window`keyupリスナーも同様に対応 | 中（ショートカット全体に影響するため回帰確認必須） |
-| 4 | `clipboard.js`のリスナーを`document.body`→`containerEl`へ | 低 |
-| 5 | `ui.js`のクリック委譲を`document`→`containerEl`へ | 低 |
-| 6 | 回帰チェックリスト実施（ショートカット、Undo/Redo、コピペ、パネルボタン、Notes内Escape、ドラッグ後のフォーカス復帰） | — |
-
-各フェーズは独立してマージ可能で、前のフェーズの動作確認が終わってから次に進みます。
-
-- 現在の`ui.isActive()`はDOM構造に依存していますが、SolidJSのシグナルベースの状態管理に置き換えることで、DOM依存を減らせます。
-- `Pan`コマンドのように動的に`window`にリスナーを登録するケースは、ポート要素に変更する必要があります。 
-- `my-mind.js`の`resize`リスナーは、ウィンドウサイズがアプリ全体で共有されるため、グローバルのままでも問題ない可能性があります。ただし、リサイズ時の処理をアクティブなコンポーネントに限定する必要があります。 
 
 
 
