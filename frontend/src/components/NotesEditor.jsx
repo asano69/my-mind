@@ -47,6 +47,19 @@ export default function NotesEditor() {
     applyingExternalContent = false;
   }
 
+    // keyboard.js gates on isCanvasActive(), so Escape never reaches it
+  // while notes is the active mode (see
+  // docs/03.2-workspace-mode-switch-refactor.md, Phase 6). Registered on
+  // window with capture:true so it runs before ProseMirror's own keydown
+  // handling, which can otherwise consume Escape itself (e.g. while a
+  // slash-menu or block menu is open).
+  function handleEscape(e) {
+    if (e.key !== "Escape" || activeMode() !== "notes") {
+      return;
+    }
+    notesModule?.close();
+  }
+
   onMount(async () => {
     crepe = new Crepe({ root: editorRootEl, defaultValue: "" });
 
@@ -67,6 +80,7 @@ export default function NotesEditor() {
       setContent: setMarkdown,
     });
 
+     window.addEventListener("keydown", handleEscape, true);
     setReady(true);
   });
 
@@ -98,6 +112,7 @@ export default function NotesEditor() {
   );
 
   onCleanup(() => {
+    window.removeEventListener("keydown", handleEscape, true);
     crepe?.destroy();
   });
 
