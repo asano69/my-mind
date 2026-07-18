@@ -49,3 +49,11 @@ export const [rightPanelHidden, setRightPanelHidden] = createSignal(false);
 export function toggleRightPanel() {
   setRightPanelHidden((h) => !h);
 }
+
+// Which pane is the active workspace mode: the mind-map canvas or the
+// notes editor. Added ahead of Workspace.jsx keeping both mounted at
+// once and switching which one is on top (see
+// docs/workspace-mode-switch-refactor.md, Phase 1) — engine-only
+// listeners (keyboard/mouse/clipboard/resize) will gate on this in
+// later phases so they don't fire while backgrounded.
+export const [activeMode, setActiveMode] = createSignal("canvas");
