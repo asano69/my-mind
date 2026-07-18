@@ -2,7 +2,6 @@ import { Crepe } from "@milkdown/crepe";
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
 import { replaceAll } from "@milkdown/utils";
-import { marked } from "marked";
 import "./NotesEditor.css";
 import { activeMode, currentItem } from "../lib/mindmap/store";
 import { createEffect, createSignal, on, onMount, onCleanup } from "solid-js";
@@ -66,9 +65,6 @@ export default function NotesEditor() {
 
     notesModule.registerEditorAPI({
       setContent: setMarkdown,
-      renderMarkdown(text) {
-        return marked.parse(text || "");
-      },
     });
 
     setReady(true);
@@ -111,7 +107,11 @@ export default function NotesEditor() {
         <div id="notes-editor-bar">
           <button onClick={() => notesModule?.close()}>Close</button>
         </div>
-        <div id="notes-editor-crepe" ref={editorRootEl} />
+        <div
+          id="notes-editor-crepe"
+          ref={editorRootEl}
+          classList={{ readonly: activeMode() !== "notes" }}
+        />
       </div>
     </div>
   );

@@ -54,6 +54,19 @@
   min-height: 100%;
 }
 
+/* Background (readonly) tone — replaces the old #note-preview watermark
+   element (see docs/03.2-workspace-mode-switch-refactor.md, Phase 5).
+   Applied directly to the Milkdown root instead of a separate preview
+   element, since Milkdown always live-renders and there is no separate
+   raw-text vs. rendered-HTML pipeline to keep in sync anymore. Tone
+   values (--color-preview-ink, serif font, pointer-events: none) are
+   carried over unchanged from the old #note-preview-inner rule. */
+#notes-editor-crepe.readonly .ProseMirror {
+  color: var(--color-preview-ink);
+  font-family: var(--font-serif);
+  pointer-events: none;
+}
+
 #notes-editor-crepe .ProseMirror {
   min-height: calc(100vh - 48px);
   padding: 20px 24px;
