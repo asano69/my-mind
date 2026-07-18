@@ -1,12 +1,12 @@
-// frontend/src/routes/MindMapCanvas.jsx
-import LeftPanel from "../components/LeftPanel";
+// frontend/src/components/MindMapCanvas.jsx
+import LeftPanel from "./LeftPanel";
 
-import RightPanel from "../components/RightPanel";
+import RightPanel from "./RightPanel";
 
-import SaveDialog from "../components/SaveDialog";
-import HelpPanel from "../components/HelpPanel";
-import ContextMenu from "../components/ContextMenu";
-import TopBar from "../components/TopBar";
+import SaveDialog from "./SaveDialog";
+import HelpPanel from "./HelpPanel";
+import ContextMenu from "./ContextMenu";
+import TopBar from "./TopBar";
 import { onMount, onCleanup } from "solid-js";
 
 export default function MindMapCanvas() {

@@ -1,6 +1,6 @@
 import { activeMode } from "../lib/mindmap/store";
 import NotesEditor from "../components/NotesEditor";
-import MindMapCanvas from "./MindMapCanvas";
+import MindMapCanvas from "../components/MindMapCanvas";
 
 // Keeps the canvas and notes editor mounted together, then switches
 // which layer is interactive via z-index and pointer-events only.
