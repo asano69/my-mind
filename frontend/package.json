@@ -12,6 +12,7 @@
     "@milkdown/crepe": "^7.21.3",
     "@milkdown/kit": "^7.21.3",
     "@milkdown/utils": "^7.21.3",
+    "easymde": "^2.21.0",
     "@solidjs/router": "^0.16.1",
     "lucide-solid": "^1.24.0",
     "pocketbase": "^0.27.0",

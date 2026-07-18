@@ -1,7 +1,5 @@
-import { Crepe } from "@milkdown/crepe";
-import "@milkdown/crepe/theme/common/style.css";
-import "@milkdown/crepe/theme/frame.css";
-import { replaceAll } from "@milkdown/utils";
+import EasyMDE from "easymde";
+import "easymde/dist/easymde.min.css";
 import "./NotesEditor.css";
 import { activeMode, currentItem } from "../lib/mindmap/store";
 import { createEffect, createSignal, on, onMount, onCleanup } from "solid-js";
@@ -9,10 +7,14 @@ import { createEffect, createSignal, on, onMount, onCleanup } from "solid-js";
 /**
  * The markdown notes editor for the currently selected item.
  *
- * This used to be a separate editor.html document loaded in a sandboxed
- * iframe, talking to the mindmap engine over postMessage. Now that it's
- * just another Solid component in the same document, it registers itself
- * directly with ui/notes.js instead of going through a message protocol.
+ * Phase 2 of the Milkdown -> EasyMDE rollback (see
+ * docs/03.2-workspace-mode-switch-refactor.md for the Milkdown-era design
+ * this replaces). EasyMDE has no single "readonly" flag like Milkdown did;
+ * it has two separate rendering paths (raw-Markdown CodeMirror textarea vs.
+ * a rendered HTML preview via togglePreview()). This phase only verifies
+ * that switching those paths works correctly in isolation, via the
+ * temporary debug button below -- it is NOT yet wired to activeMode
+ * (that's Phase 3).
  *
  * ui/notes.js (and everything it pulls in) is imported dynamically, after
  * mount, for the same reason my-mind.js itself is in MindMapCanvas.jsx:
@@ -21,8 +23,8 @@ import { createEffect, createSignal, on, onMount, onCleanup } from "solid-js";
  * the document.
  */
 export default function NotesEditor() {
-  let editorRootEl;
-  let crepe;
+  let textareaRef;
+  let easyMDE;
   let notesModule; // cached after the first dynamic import, see onMount
   let applyingExternalContent = false;
 
@@ -30,7 +32,7 @@ export default function NotesEditor() {
   // needs to react to *both* "the engine selected an item" and "our own
   // async setup finished" — whichever happens second. Without this signal,
   // if an item gets selected (e.g. on map load) before this component's
-  // async milkdown/notes.js imports resolve, onItemSelect() would run with
+  // async notes.js import resolves, onItemSelect() would run with
   // an undefined notesModule and silently do nothing — and nothing would
   // ever retrigger it afterwards, since currentItem() itself doesn't
   // change again just because our setup finished.
@@ -38,42 +40,48 @@ export default function NotesEditor() {
 
   function setMarkdown(text) {
     const next = text || "";
-    if (crepe.getMarkdown() === next) {
+    if (easyMDE.value() === next) {
       return;
     }
 
     applyingExternalContent = true;
-    crepe.editor.action(replaceAll(next, true));
+    easyMDE.value(next);
     applyingExternalContent = false;
   }
 
+  // TEMPORARY (Phase 2 only): lets us confirm togglePreview() behaves
+  // correctly -- in particular whether it triggers a CodeMirror re-layout
+  // -- before wiring it to activeMode in Phase 3. Remove this button and
+  // handler once Phase 3 lands.
+  function debugTogglePreview() {
+    easyMDE.togglePreview();
+  }
   // keyboard.js gates on isCanvasActive(), so Escape never reaches it
   // while notes is the active mode (see
   // docs/03.2-workspace-mode-switch-refactor.md, Phase 6). Registered on
-  // window with capture:true so it runs before ProseMirror's own keydown
-  // handling, which can otherwise consume Escape itself (e.g. while a
-  // slash-menu or block menu is open).
+  // window with capture:true so it runs before CodeMirror's own keydown
+  // handling. Ported unchanged from the Milkdown implementation; whether
+  // CodeMirror ever swallows Escape itself is rechecked in Phase 5 of the
+  // EasyMDE rollback plan.
   function handleEscape(e) {
     if (e.key !== "Escape" || activeMode() !== "notes") {
       return;
     }
     notesModule?.close();
   }
-
   onMount(async () => {
-    crepe = new Crepe({ root: editorRootEl, defaultValue: "" });
-
-    crepe.on((listener) => {
-      listener.markdownUpdated((_, markdown) => {
-        if (applyingExternalContent) {
-          return;
-        }
-        notesModule?.onEditorChange(markdown);
-      });
+    easyMDE = new EasyMDE({
+      element: textareaRef,
+      autofocus: false,
+      spellChecker: false,
+    });
+    easyMDE.codemirror.on("change", () => {
+      if (applyingExternalContent) {
+        return;
+      }
+      notesModule?.onEditorChange(easyMDE.value());
     });
 
-    await crepe.create();
-    crepe.setReadonly(activeMode() !== "notes");
     notesModule = await import("../lib/mindmap/ui/notes.js");
 
     notesModule.registerEditorAPI({
@@ -102,27 +110,24 @@ export default function NotesEditor() {
     }),
   );
 
-  createEffect(
-    on([ready, activeMode], ([isReady, mode]) => {
-      if (!isReady) {
-        return;
-      }
-      crepe.setReadonly(mode !== "notes");
-    }),
-  );
-
   onCleanup(() => {
     window.removeEventListener("keydown", handleEscape, true);
-    crepe?.destroy();
+    easyMDE?.toTextArea();
+    easyMDE = null;
   });
 
   return (
     <div id="notes" class="h-full">
-      <div
-        id="notes-editor-crepe"
-        ref={editorRootEl}
-        classList={{ readonly: activeMode() !== "notes" }}
-      />
+      {/* TEMPORARY (Phase 2 only): manual preview toggle for verification.
+          Removed once Phase 3 hooks togglePreview() up to activeMode. */}
+      <button
+        type="button"
+        onClick={debugTogglePreview}
+        class="fixed top-2 right-2 z-10 rounded bg-pane px-2 py-1 text-xs shadow-card"
+      >
+        [debug] toggle preview
+      </button>
+      <textarea ref={textareaRef} />
     </div>
   );
 }
