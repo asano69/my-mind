@@ -106,6 +106,17 @@ export default function NotesEditor() {
         return;
       }
       setPreviewMode(mode !== "notes");
+      // Unlike Milkdown's ProseMirror, EasyMDE's CodeMirror textarea does
+      // not lose keyboard focus just because it's no longer editable or
+      // is covered by pointer-events-none (that only blocks mouse input).
+      // Without an explicit blur here, switching back to canvas mode
+      // would leave document.activeElement inside the notes editor,
+      // and keyboard.js's ui.isActive() check (which treats any focused
+      // <textarea> as "some other UI has focus") would keep blocking
+      // every mindmap shortcut even though notes is now backgrounded.
+      if (mode !== "notes") {
+        easyMDE.codemirror.getInputField().blur();
+      }
     }),
   );
 
