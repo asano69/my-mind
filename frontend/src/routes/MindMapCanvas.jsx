@@ -1,3 +1,4 @@
+// frontend/src/routes/MindMapCanvas.jsx
 import LeftPanel from "../components/LeftPanel";
 
 import NotesEditor from "../components/NotesEditor";
@@ -11,11 +12,19 @@ import { onMount, onCleanup } from "solid-js";
 
 export default function MindMapCanvas() {
   let mainRef;
+  // Wraps every element this route renders (main canvas + all fixed
+  // panels), so future phases can scope keyboard/clipboard/click
+  // listeners here instead of window/document. tabIndex makes it
+  // focusable: keydown only bubbles from whatever element currently
+  // has focus, so this container must be able to hold focus itself
+  // for shortcuts to work when nothing else is focused.
+  let containerRef;
   let engine;
 
   onMount(async () => {
+    containerRef.focus();
     engine = await import("../lib/mindmap/my-mind.js");
-    engine.mount(mainRef);
+    engine.mount(mainRef, containerRef);
   });
 
   onCleanup(() => {
@@ -23,7 +32,7 @@ export default function MindMapCanvas() {
   });
 
   return (
-    <>
+    <div ref={containerRef} tabIndex="-1" class="outline-none">
       <main ref={mainRef} />
 
       <TopBar />
@@ -33,6 +42,6 @@ export default function MindMapCanvas() {
       <HelpPanel />
       <NotesEditor />
       <ContextMenu />
-    </>
+    </div>
   );
 }

@@ -176,10 +176,14 @@ export function handleResize() {
   currentMap && currentMap.ensureItemVisibility(currentItem);
 }
 
-// Boots the whole engine into `root` (the <main> element). Safe to call
-// only once per unmount(): a second call while already mounted is a no-op,
-// since remounting on top of live listeners/state would double them up.
-export async function mount(root) {
+// Boots the whole engine into `root` (the <main> element). `containerEl`
+// is the shared focusable wrapper around the whole route (see
+// MindMapCanvas.jsx), used as the focus target for keyboard shortcuts
+// once mouse/keyboard interactions move off the canvas element itself.
+// Safe to call only once per unmount(): a second call while already
+// mounted is a no-op, since remounting on top of live listeners/state
+// would double them up.
+export async function mount(root, containerEl) {
   if (mounted) {
     return;
   }
@@ -193,14 +197,9 @@ export async function mount(root) {
   window.addEventListener("resize", handleResize);
   clipboard.init();
   keyboard.init();
-  mouse.init(port);
+  mouse.init(port, containerEl);
   title.init();
   ui.init(port); // also calls io.restore() internally
-
-  // leftPanelHidden/rightPanelHidden are store.js signals, not DOM events,
-  // so they need their own reactive subscription (same pattern as io.js's
-  // dirtyVersion effect) to keep the canvas offset in sync with either
-  // panel's state.
 
   createRoot((dispose) => {
     disposePanelEffects = dispose;
