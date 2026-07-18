@@ -29,7 +29,7 @@
 
 # Work in progress
 
-## グローバルスコープにイベントリスナーを登録しているモジュールのリファクタリング
+# グローバルスコープにイベントリスナーを登録しているモジュールのリファクタリング
 
 MindMapCanvas.jsxと、NotesEdiotr.jsxを、Workspace.jsxの子コンポーネントとしてもたせ、スイッチの切り替えにおうじて編集モードを切り替えるような用途を考えたとき、グロバールリスナーはスコープの制御が難しく、バグの温床になりやすい。グローバルリスナーをローカルスコープに変更するには、SolidJSのコンポーネントライフサイクルを活用し、各モジュールのリスナー登録先を適切なスコープに変更する必要があります。
 
@@ -43,106 +43,30 @@ MindMapCanvas.jsxと、NotesEdiotr.jsxを、Workspace.jsxの子コンポーネ�
 
 Workspace.jsxでスイッチングすると、非表示のコンポーネントのリスナーが残り続け、バグの原因になります。
 
-### ローカルスコープへの変更方法の例
+## 事前分析（コード変更なし）
 
-### 1. keyboard.jsのスコープ制限
+**問題1: スコープ先の取り違え**
+`ui.js`のクリック委譲は`data-command`属性を持つボタンを拾っていますが、それらのボタン(`LeftPanel`/`RightPanel`/`TopBar`/`HelpPanel`/`ContextMenu`)は`MindMapCanvas.jsx`内で`<main ref={mainRef} />`の**兄弟要素**です。CLAUDE.mdの提案通り`port`(=mainRef)だけにスコープを絞ると、これらのボタンのクリックが届かなくなります。→ 全部を包む共通の祖先要素が必要です。
 
-**変更前:**
-```javascript
-export function init() {
-  window.addEventListener("keydown", handleEvent);
-  window.focus();
-}
-```
+**問題2: フォーカスとバブリングの相性**
+`keydown`はイベントターゲット(=現在フォーカスされている要素)からDOMツリーを**上に**バブルします。`mouse.js`の`onDragStart`は現在 `document.activeElement.blur()` でフォーカスを`<body>`(デフォルト)に戻していますが、`body`はコンテナ要素の**祖先**であり子孫ではないため、スコープをコンテナに絞った瞬間、フォーカスなし状態でのショートカットがすべて無反応になります。→ 「blurする」から「コンテナへ明示的にfocusする」への設計変更が必須です。
 
-**変更後:**
-```javascript
-export function init(port) {
-  port.addEventListener("keydown", handleEvent);
-  port.focus();
-}
-```
+## フェーズ計画
 
-`handleEvent`内の`ui.isActive()`チェックを、SolidJSのシグナルベースの状態管理に置き換え、コンポーネントの表示状態に応じて処理を分岐します。 [6](#5-5) 
+| Phase | 内容 | リスク |
+|---|---|---|
+| 1 | `MindMapCanvas.jsx`に共通ラッパー要素(`containerRef`, `tabIndex=-1`)を追加。まだ何にも接続しない、純粋な足場 | なし |
+| 2 | `mouse.js`の`document.activeElement.blur()`を`containerEl.focus()`に置換。`my-mind.js`の`mount(port, containerEl)`経由で伝搬 | 低（フォーカス経路の変更のみ） |
+| 3 | `keyboard.js`のリスナーを`window`→`containerEl`へ。`command.js`の`Pan`コマンドの`window`keyupリスナーも同様に対応 | 中（ショートカット全体に影響するため回帰確認必須） |
+| 4 | `clipboard.js`のリスナーを`document.body`→`containerEl`へ | 低 |
+| 5 | `ui.js`のクリック委譲を`document`→`containerEl`へ | 低 |
+| 6 | 回帰チェックリスト実施（ショートカット、Undo/Redo、コピペ、パネルボタン、Notes内Escape、ドラッグ後のフォーカス復帰） | — |
 
-### 2. clipboard.jsのスコープ制限
-
-**変更前:**
-```javascript
-export function init() {
-  document.body.addEventListener("cut", onCopyCut);
-  document.body.addEventListener("copy", onCopyCut);
-  document.body.addEventListener("paste", onPaste);
-}
-```
-
-**変更後:**
-```javascript
-export function init(port) {
-  port.addEventListener("cut", onCopyCut);
-  port.addEventListener("copy", onCopyCut);
-  port.addEventListener("paste", onPaste);
-}
-```
-
-`onCopyCut`/`onPaste`内の`ui.isActive()`チェックを、アクティブなコンポーネントを示すシグナルに基づく判定に変更します。
-
-### 3. ui.jsのスコープ制限
-
-**変更前:**
-```javascript
-export function init(port) {
-  // ...
-  document.addEventListener("click", onClick);
-}
-```
-
-**変更後:**
-```javascript
-export function init(port) {
-  // ...
-  port.addEventListener("click", onClick);
-}
-```
-
-UIパネル自体にリスナーを登録し、イベントバブリングを利用して処理します。 
-
-### 4. SolidJSコンポーネントへの統合
-
-MindMapCanvas.jsxで、コンポーネントの表示状態に応じてリスナーを管理：
-
-```javascript
-export default function MindMapCanvas() {
-  let mainRef;
-  let engine;
-  const [isActive, setIsActive] = createSignal(true);
-
-  onMount(async () => {
-    engine = await import("../lib/mindmap/my-mind.js");
-    engine.mount(mainRef);
-  });
-
-  createEffect(() => {
-    if (isActive()) {
-      engine?.keyboard?.init(mainRef);
-      engine?.clipboard?.init(mainRef);
-    } else {
-      engine?.keyboard?.dispose();
-      engine?.clipboard?.dispose();
-    }
-  });
-
-  onCleanup(() => {
-    engine?.unmount();
-  });
-}
-```
-
+各フェーズは独立してマージ可能で、前のフェーズの動作確認が終わってから次に進みます。
 
 - 現在の`ui.isActive()`はDOM構造に依存していますが、SolidJSのシグナルベースの状態管理に置き換えることで、DOM依存を減らせます。
 - `Pan`コマンドのように動的に`window`にリスナーを登録するケースは、ポート要素に変更する必要があります。 
 - `my-mind.js`の`resize`リスナーは、ウィンドウサイズがアプリ全体で共有されるため、グローバルのままでも問題ない可能性があります。ただし、リサイズ時の処理をアクティブなコンポーネントに限定する必要があります。 
-
 
 
 
