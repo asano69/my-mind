@@ -49,7 +49,7 @@ It has a catalog feature.
 
 
 ## Work in Progress
-- [ ] MarkodwonエディタをMilkdownに変更
+- [ ] Markodwonエディタをマップの背景にもっていけないか検討
 
 ## Ref
 - [ondras/my-mind](https://github.com/ondras/my-mind)/ Demo: https://my-mind.github.io/
