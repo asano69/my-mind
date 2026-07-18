@@ -34,6 +34,7 @@
 - かわりにEasyMDEのViewモードをマップの背景に常に表示させてこれをプレビューモードとして使いたい。
 - 現在、data-command="notes" を実行すると、手前に、EastMDEが表示されるが、それを廃止する。
 - かわりに、 data-command="notes" を実行すると、背後にあるViewモードのEasyMDEがEditモードに切りかわり、MindMapCanvasの手前に表示したい
+- 設計上、そのほうが扱いやすいならば、MindMapCanvas.jsxと、NotesEdiotr.jsxを、Workspace.jsxの子コンポーネントとしてもたせ、スイッチの切り替えにおうじて全面背面を切り替えるようにするとよい。
 
 
 
