@@ -1,7 +1,6 @@
 // frontend/src/routes/MindMapCanvas.jsx
 import LeftPanel from "../components/LeftPanel";
 
-import NotesEditor from "../components/NotesEditor";
 import RightPanel from "../components/RightPanel";
 
 import SaveDialog from "../components/SaveDialog";
@@ -40,7 +39,6 @@ export default function MindMapCanvas() {
       <RightPanel />
       <SaveDialog />
       <HelpPanel />
-      <NotesEditor />
       <ContextMenu />
     </div>
   );

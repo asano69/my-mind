@@ -2,12 +2,11 @@ import { render } from "solid-js/web";
 import { Router, Route } from "@solidjs/router";
 import { createSignal, onCleanup, Show } from "solid-js";
 import Catalog from "./routes/Catalog";
-import MindMapCanvas from "./routes/MindMapCanvas";
+import Workspace from "./routes/Workspace";
 
 // Order matters: style.css defines the CSS custom properties every other
 // stylesheet consumes via var().
 import "./style.css";
-import MindMapCanvs from "./routes/MindMapCanvas";
 
 import Login from "./routes/Login";
 
@@ -35,7 +34,7 @@ render(
     <AuthGate>
       <Router>
         <Route path="/" component={Catalog} />
-        <Route path="/maps/:uuid" component={MindMapCanvas} />
+        <Route path="/maps/:uuid" component={Workspace} />
         <Route path="/catalog" component={Catalog} />
       </Router>
     </AuthGate>
