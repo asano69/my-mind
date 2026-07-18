@@ -24,7 +24,7 @@
      how the canvas's own transparent background lets the note preview
      show through while canvas is the active mode (see .editor-preview
      below). */
-  background: color-mix(in srgb, var(--color-bg) 75%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
   color: var(--color-text);
   /* Serif, not monospace: the raw markdown source is meant to read like
      prose, matching the preview's reading font. Monospace is reserved
