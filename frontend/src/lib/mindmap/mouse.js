@@ -1,12 +1,12 @@
-// import * as menu from "./ui/context-menu.js";
-// import * as app from "./my-mind.js";
-// import * as actions from "./action.js";
-// import { repo as commandRepo } from "./command/command.js";
+import * as menu from "./ui/context-menu.js";
+import * as app from "./my-mind.js";
+import * as actions from "./action.js";
+import { repo as commandRepo } from "./command/command.js";
 const TOUCH_DELAY = 500;
 const SHADOW_OFFSET = 5;
+// Minimum change in pinch distance (px) required to trigger one zoom step
 const PINCH_THRESHOLD = 30;
 let touchContextTimeout;
-
 let current = {
   mode: "",
   cursor: [],
@@ -18,19 +18,9 @@ let current = {
   previousDragState: null,
   pinchDistance: 0,
 };
-
 let port;
-// containerEl is the shared focus target for the whole route (see
-// MindMapCanvas.jsx's Phase 1 wrapper). Drag start used to blur the
-// active element to let keyboard shortcuts take over; now that
-// keyboard.js's listener is scoped to containerEl instead of window
-// (Phase 3), focus must land ON containerEl instead of nowhere, or
-// keydown has no element to bubble from.
-let containerEl;
-
-export function init(port_, containerEl_) {
+export function init(port_) {
   port = port_;
-  containerEl = containerEl_;
   port.addEventListener("touchstart", onDragStart);
   port.addEventListener("mousedown", onDragStart);
   port.addEventListener("click", onClick);
@@ -38,7 +28,9 @@ export function init(port_, containerEl_) {
   port.addEventListener("wheel", onWheel);
   port.addEventListener("contextmenu", onContextMenu);
 }
-
+// Called by my-mind.js's unmount(). Removes every listener registered by
+// init(), force-ends any drag in progress (so an orphaned ghost element
+// does not survive the unmount), and resets all module state.
 export function dispose() {
   clearTimeout(touchContextTimeout);
   if (current.ghost) {
@@ -67,9 +59,7 @@ export function dispose() {
     pinchDistance: 0,
   };
   port = null;
-  containerEl = null;
 }
-
 function onClick(e) {
   const me = e;
   let item = app.currentMap.getItemFor(e.target);
@@ -125,14 +115,8 @@ function onDragStart(e) {
     } // ignore dnd on edited node
     commandRepo.get("finish").execute(); // clicked elsewhere => finalize edit
   }
-
-  // ui loses focus (to the container, not nowhere), so that keyboard
-  // shortcuts can work. Focusing containerEl instead of blurring is
-  // required now that keyboard.js listens on containerEl rather than
-  // window (see CLAUDE.md's global-listener refactor, Phase 3) — a
-  // blurred document has no element for keydown to bubble from.
-  containerEl.focus();
-
+  // ui loses focus, so that keyboard shortcuts can work
+  document.activeElement.blur();
   // we can safely start drag
   current.cursor = point;
   if (item && !item.isRoot) {
