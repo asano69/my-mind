@@ -23,14 +23,12 @@ new (class Finish extends Command {
     this.editMode = true;
   }
   execute() {
+    // Enter always confirms, even with empty text — matching typical
+    // outliner behavior where pressing Enter repeatedly creates several
+    // (initially empty) sibling nodes. Canceling an unwanted insertion is
+    // Escape's job (see the Cancel command below), not Enter's.
     let text = app.stopEditing();
-    let action;
-    if (text) {
-      action = new actions.SetText(app.currentItem, text);
-    } else {
-      action = new actions.RemoveItem(app.currentItem);
-    }
-    app.action(action);
+    app.action(new actions.SetText(app.currentItem, text));
   }
 })();
 new (class Newline extends Command {
