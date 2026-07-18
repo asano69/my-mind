@@ -29,3 +29,6 @@
 
 # Work in progress
 
+## Notes Editorのバグ修正
+
+
