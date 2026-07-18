@@ -1,4 +1,5 @@
-// src/item.ts
+// src/item.js
+import { createSignal, createMemo, createRoot, batch } from "solid-js";
 import * as html from "./html.js";
 import * as svg from "./svg.js";
 
@@ -7,7 +8,7 @@ import { repo as commandRepo } from "./command/command.js";
 import { repo as shapeRepo } from "./shape/shape.js";
 import { repo as layoutRepo } from "./layout/layout.js";
 import Map from "./map.js";
-import { createSignal, createMemo, batch } from "solid-js";
+
 export const TOGGLE_SIZE = 7;
 
 export default class Item {
@@ -61,92 +62,106 @@ export default class Item {
     const [layout, setLayout] = createSignal(null);
     this._layout = layout;
     this._setLayout = setLayout;
-    this._resolvedColor = createMemo(() => {
-      const color = this._color();
-      if (color && color !== "#ffffff") {
-        return color;
-      }
-      const parent = this.parent;
-      if (parent instanceof Item) {
-        return parent.resolvedColor;
-      }
-      return COLOR;
-    });
-    this._resolvedTextColor = createMemo(() => {
-      const textColor = this._textColor();
-      if (textColor && textColor !== "#ffffff") {
-        return textColor;
-      }
-      const parent = this.parent;
-      if (parent instanceof Item) {
-        return parent.resolvedTextColor;
-      }
-      return "";
-    });
-    this._resolvedValue = createMemo(() => {
-      this._childrenVersion();
-      const value = this._value();
-      if (typeof value == "number") {
-        return value;
-      }
-      let childValues = this.children.map((child) => child.resolvedValue);
-      switch (value) {
-        case "max":
-          return Math.max(...childValues);
-        case "min":
-          return Math.min(...childValues);
-        case "sum":
-          return childValues.reduce((prev, cur) => prev + cur, 0);
-        case "avg": {
-          const sum = childValues.reduce((prev, cur) => prev + cur, 0);
-          return childValues.length ? sum / childValues.length : 0;
+
+    // The memos below are computations, so Solid needs an owning root or
+    // it warns "computations created outside a createRoot or render will
+    // never be disposed" (see CLAUDE.md's "vanilla module effects need
+    // createRoot" rule — item.js was the one place not following it,
+    // since Items are constructed directly, not from within a Solid
+    // component tree). Items aren't explicitly torn down today (they're
+    // just dropped from the tree and garbage collected, same as Map's own
+    // layout computed in map.js), so `dispose` is kept for future use
+    // rather than called anywhere right now.
+    createRoot((dispose) => {
+      this._disposeMemos = dispose;
+      this._resolvedColor = createMemo(() => {
+        const color = this._color();
+        if (color && color !== "#ffffff") {
+          return color;
         }
-        default:
-          return 0;
-      }
+        const parent = this.parent;
+        if (parent instanceof Item) {
+          return parent.resolvedColor;
+        }
+        return COLOR;
+      });
+      this._resolvedTextColor = createMemo(() => {
+        const textColor = this._textColor();
+        if (textColor && textColor !== "#ffffff") {
+          return textColor;
+        }
+        const parent = this.parent;
+        if (parent instanceof Item) {
+          return parent.resolvedTextColor;
+        }
+        return "";
+      });
+      this._resolvedValue = createMemo(() => {
+        this._childrenVersion();
+        const value = this._value();
+        if (typeof value == "number") {
+          return value;
+        }
+        let childValues = this.children.map((child) => child.resolvedValue);
+        switch (value) {
+          case "max":
+            return Math.max(...childValues);
+          case "min":
+            return Math.min(...childValues);
+          case "sum":
+            return childValues.reduce((prev, cur) => prev + cur, 0);
+          case "avg": {
+            const sum = childValues.reduce((prev, cur) => prev + cur, 0);
+            return childValues.length ? sum / childValues.length : 0;
+          }
+          default:
+            return 0;
+        }
+      });
+      this._resolvedStatus = createMemo(() => {
+        this._childrenVersion();
+        const status = this._status();
+        if (status == "computed") {
+          return this.children.every((child) => child.resolvedStatus !== false);
+        }
+        return status;
+      });
+      this._resolvedLayout = createMemo(() => {
+        const layout = this._layout();
+        if (layout) {
+          return layout;
+        }
+        const parent = this.parent;
+        if (parent instanceof Item) {
+          return parent._resolvedLayout();
+        }
+        return null;
+      });
+      this._depth = createMemo(() => {
+        let depth = 0;
+        let node = this;
+        while (node.parent instanceof Item) {
+          depth++;
+          node = node.parent;
+        }
+        return depth;
+      });
+      this._resolvedShape = createMemo(() => {
+        const shape = this._shape();
+        if (shape) {
+          return shape;
+        }
+        switch (this._depth()) {
+          case 0:
+            return shapeRepo.get("ellipse");
+          case 1:
+            return shapeRepo.get("box");
+          default:
+            return shapeRepo.get("underline");
+        }
+      });
     });
-    this._resolvedStatus = createMemo(() => {
-      this._childrenVersion();
-      const status = this._status();
-      if (status == "computed") {
-        return this.children.every((child) => child.resolvedStatus !== false);
-      }
-      return status;
-    });
-    this._resolvedLayout = createMemo(() => {
-      const layout = this._layout();
-      if (layout) {
-        return layout;
-      }
-      const parent = this.parent;
-      if (parent instanceof Item) {
-        return parent._resolvedLayout();
-      }
-      return null;
-    });
-    this._depth = createMemo(() => {
-      let depth = 0;
-      let node = this;
-      while (node.parent instanceof Item) {
-        depth++;
-        node = node.parent;
-      }
-      return depth;
-    });
-    this._resolvedShape = createMemo(() => {
-      const shape = this._shape();
-      if (shape) {
-        return shape;
-      }
-      switch (this._depth()) {
-        case 0:
-          return shapeRepo.get("ellipse");
-        case 1:
-          return shapeRepo.get("box");
-        default:
-          return shapeRepo.get("underline");
-      }
-    });
+
     this.originalText = "";
     this.dom = {
       node: svg.group(),
