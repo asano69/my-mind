@@ -1,6 +1,12 @@
 // src/my-mind.js
 import { createRoot, createEffect, on } from "solid-js";
-import { setCurrentItem, leftPanelHidden, rightPanelHidden } from "./store.js";
+import {
+  setCurrentItem,
+  leftPanelHidden,
+  rightPanelHidden,
+  activeMode,
+} from "./store.js";
+
 // Application entry point. Owns global editor state (current map/item/selection,
 // undo history) and boots all the input/UI subsystems on load.
 //
@@ -159,6 +165,14 @@ function cssPixelVar(name) {
 // panel, replacing the old "ui-change" pubsub message (see CLAUDE.md,
 // Solid migration Phase 9.4).
 export function handleResize() {
+  // Skip while the canvas is backgrounded (see
+  // docs/workspace-mode-switch-refactor.md, Phase 2) — no point
+  // recomputing layout for something the user can't see, and this
+  // avoids DOM reads competing with whatever mode is in front.
+  if (activeMode() !== "canvas") {
+    return;
+  }
+
   // #left-panel is a push panel, not an overlay: <main> is offset by
   // its current width so the canvas never sits underneath it.
   const leftWidth = leftPanelHidden()
@@ -208,6 +222,23 @@ export async function mount(root, containerEl) {
     disposePanelEffects = dispose;
     createEffect(on(leftPanelHidden, handleResize, { defer: true }));
     createEffect(on(rightPanelHidden, handleResize, { defer: true }));
+    // Re-run once whenever the canvas becomes the active mode again —
+    // handleResize() itself is a no-op while backgrounded (see above),
+    // so without this the layout would stay stale from before the
+    // switch to notes mode. defer: true matches the two effects above:
+    // it only needs to fire on actual mode *changes*, not on the
+    // initial "canvas" value this signal already has at mount time.
+    createEffect(
+      on(
+        activeMode,
+        (mode) => {
+          if (mode === "canvas") {
+            handleResize();
+          }
+        },
+        { defer: true },
+      ),
+    );
   });
 
   handleResize();
