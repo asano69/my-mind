@@ -64,13 +64,10 @@ export default function Catalog() {
 
   return (
     <div class="min-h-screen bg-bg p-8 text-text">
-   
       <div class="mx-auto max-w-5xl">
-
         <div class="mb-6 flex items-center justify-between">
-    
           <A href="/catalog" title="Catalog">
-             <h1 class="text-3xl">My Mind</h1>
+            <h1 class="text-3xl">My Mind</h1>
           </A>
 
           <div class="flex gap-2">

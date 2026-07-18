@@ -6,8 +6,7 @@ import {
 } from "../lib/mindmap/store";
 import ChevronLeft from "lucide-solid/icons/chevron-left";
 import ChevronRight from "lucide-solid/icons/chevron-right";
-import TextCursor from "lucide-solid/icons/text-cursor";
-import Palette from "lucide-solid/icons/palette";
+
 const STATUS_MAP = { yes: true, no: false, "": null };
 
 const COLOR_SWATCHES = [
@@ -260,12 +259,6 @@ export default function RightPanel() {
           }}
         >
           <div class="flex-1 overflow-y-auto">
-            <div class="row">
-              <button class="icon-btn" data-command="notes" title="Notes">
-                <TextCursor size={20} />
-              </button>
-            </div>
-
             <Field
               label="Layout"
               value={layoutValue()}

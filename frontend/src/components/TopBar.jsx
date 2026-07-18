@@ -3,7 +3,7 @@ import { useNavigate } from "@solidjs/router";
 import TitleBar from "./TitleBar";
 // icons
 import Trash2 from "lucide-solid/icons/trash-2";
-
+import TextCursor from "lucide-solid/icons/text-cursor";
 // The floating strip across the top of the canvas: the title input
 // (fixed top-center, rendered by TitleBar) and the right-hand icon
 // group (delete/notes/property-panel toggle). Catalog/Help/the left
@@ -28,6 +28,10 @@ export default function TopBar() {
     <>
       <TitleBar />
       <div class="topbar-right">
+        <button class="icon-btn" data-command="notes" title="Notes">
+          <TextCursor size={28} />
+        </button>
+
         <button class="icon-btn" title="Delete map" onClick={handleDelete}>
           <Trash2 size={28} />
         </button>
