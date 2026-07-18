@@ -18,8 +18,14 @@ vi.mock("./io.js", () => ({
   restore,
 }));
 vi.mock("./context-menu.js", () => ({ init: initMenu, dispose: disposeMenu }));
+// Uses "insert-child" rather than "notes" because TopBar's notes button
+// no longer goes through this delegation (see CLAUDE.md, Workspace
+// shared-chrome refactor) — it calls command/command.js's execute()
+// directly instead, since it now lives outside this container. The
+// remaining real consumer of this click delegation is ContextMenu.jsx's
+// data-command buttons, so this test uses one of its command ids.
 vi.mock("../command/command.js", () => ({
-  repo: new Map([["notes", { execute }]]),
+  repo: new Map([["insert-child", { execute }]]),
 }));
 vi.mock("../store.js", () => ({
   lastSaveTime: vi.fn(() => null),
@@ -66,7 +72,7 @@ describe("ui click delegation scope", () => {
     const documentAdd = document.addEventListener;
     const documentRemove = document.removeEventListener;
     const button = Object.assign(new Element(), {
-      dataset: { command: "notes" },
+      dataset: { command: "insert-child" },
       parentNode: null,
     });
 
@@ -97,7 +103,7 @@ describe("ui click delegation scope", () => {
     const port = eventTarget();
     const container = eventTarget();
     const button = Object.assign(new Element(), {
-      dataset: { command: "notes" },
+      dataset: { command: "insert-child" },
       parentNode: null,
     });
 
