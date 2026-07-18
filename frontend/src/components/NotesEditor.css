@@ -9,12 +9,36 @@
   height: 100%;
 }
 
+/* Font-size/line-height are set once here and shared by both modes
+   (see .editor-preview below) so switching modes doesn't shift text
+   size or spacing. */
+#notes {
+  --notes-font-size: 16px;
+  --notes-line-height: 1.7;
+}
+
 #notes .CodeMirror {
   height: 100%;
   background: var(--color-bg);
   color: var(--color-text);
-  font-family: var(--font-mono);
+  /* Serif, not monospace: the raw markdown source is meant to read like
+     prose, matching the preview's reading font. Monospace is reserved
+     for actual code spans (see .cm-comment below). */
+  font-family: var(--font-serif);
+  font-size: var(--notes-font-size);
+  line-height: var(--notes-line-height);
   border: none;
+}
+
+/* CodeMirror's own line padding must be set on .CodeMirror-lines (not
+   .CodeMirror itself), matching the preview's 2rem padding so text
+   starts at the same on-screen position in both modes. */
+#notes .CodeMirror-lines {
+  padding: 2rem;
+}
+#notes .CodeMirror pre.CodeMirror-line,
+#notes .CodeMirror pre.CodeMirror-line-like {
+  padding: 0;
 }
 
 /* The rendered-HTML preview pane. Active whenever setPreviewMode(true)
@@ -24,6 +48,8 @@
   background: var(--color-bg);
   color: var(--color-preview-ink);
   font-family: var(--font-serif);
+  font-size: var(--notes-font-size);
+  line-height: var(--notes-line-height);
   padding: 2rem;
 }
 
@@ -45,4 +71,211 @@
 #notes .editor-toolbar {
   background: var(--color-pane);
   border-color: var(--color-pane-hover);
+}
+
+/* ---------------------------------------------------------------
+   Markdown typography — gives the raw CodeMirror source (edit mode)
+   and the rendered HTML (preview mode) a consistent look, driven by
+   the same design tokens from theme.css instead of EasyMDE/CodeMirror
+   defaults.
+   ------------------------------------------------------------- */
+
+/* Edit mode: CodeMirror's own markdown-mode token classes */
+/* Sizes match the preview's h1/h2/h3 rules exactly, so a heading looks
+   the same size right before and right after toggling preview. */
+#notes .cm-header {
+  font-weight: 700;
+}
+#notes .cm-header-1 {
+  font-size: 1.8em;
+}
+#notes .cm-header-2 {
+  font-size: 1.5em;
+}
+#notes .cm-header-3 {
+  font-size: 1.25em;
+}
+#notes .cm-header-4,
+#notes .cm-header-5,
+#notes .cm-header-6 {
+  font-size: 1.05em;
+}
+
+#notes .cm-strong {
+  font-weight: 700;
+}
+#notes .cm-em {
+  font-style: italic;
+}
+#notes .cm-strikethrough {
+  text-decoration: line-through;
+}
+
+#notes .cm-link {
+  color: var(--color-accent);
+}
+#notes .cm-url {
+  color: var(--color-text);
+  opacity: 0.5;
+}
+
+#notes .cm-quote {
+  color: var(--color-text);
+  opacity: 0.65;
+  font-style: italic;
+}
+
+/* CodeMirror's markdown mode tags inline code/code blocks as "comment" */
+#notes .cm-comment {
+  font-family: var(--font-mono);
+  background: var(--color-pane-hover);
+  border-radius: 3px;
+}
+
+#notes .cm-hr {
+  color: var(--color-pane-hover);
+}
+
+/* Preview mode: rendered HTML */
+#notes .editor-preview h1,
+#notes .editor-preview h2,
+#notes .editor-preview h3,
+#notes .editor-preview h4,
+#notes .editor-preview h5,
+#notes .editor-preview h6,
+#notes .editor-preview-side h1,
+#notes .editor-preview-side h2,
+#notes .editor-preview-side h3,
+#notes .editor-preview-side h4,
+#notes .editor-preview-side h5,
+#notes .editor-preview-side h6 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 1em 0 0.4em;
+}
+#notes .editor-preview h1,
+#notes .editor-preview-side h1 {
+  font-size: 1.8em;
+}
+#notes .editor-preview h2,
+#notes .editor-preview-side h2 {
+  font-size: 1.5em;
+}
+#notes .editor-preview h3,
+#notes .editor-preview-side h3 {
+  font-size: 1.25em;
+}
+
+/* line-height comes from the container rule above, shared with edit
+   mode; only the paragraph spacing is specific here. */
+#notes .editor-preview p,
+#notes .editor-preview-side p {
+  margin: 0 0 0.8em;
+}
+
+#notes .editor-preview ul,
+#notes .editor-preview-side ul {
+  list-style: disc;
+  margin: 0 0 0.8em;
+  padding-left: 1.4em;
+}
+
+#notes .editor-preview ol,
+#notes .editor-preview-side ol {
+  list-style: decimal;
+  margin: 0 0 0.8em;
+  padding-left: 1.4em;
+}
+
+/* Nested lists: switch bullet style per level, like most markdown
+   renderers, instead of repeating the same disc at every depth. */
+#notes .editor-preview ul ul,
+#notes .editor-preview-side ul ul {
+  list-style: circle;
+  margin: 0.2em 0 0;
+}
+#notes .editor-preview ul ul ul,
+#notes .editor-preview-side ul ul ul {
+  list-style: square;
+}
+
+#notes .editor-preview li,
+#notes .editor-preview-side li {
+  margin: 0.2em 0;
+}
+
+#notes .editor-preview li::marker,
+#notes .editor-preview-side li::marker {
+  color: var(--color-accent);
+}
+
+/* GitHub-style task list checkboxes ([ ] / [x]) that EasyMDE renders as
+   real <input type="checkbox"> elements inside <li>. */
+#notes .editor-preview li.task-list-item,
+#notes .editor-preview-side li.task-list-item {
+  list-style: none;
+  margin-left: -1.4em;
+}
+#notes .editor-preview li.task-list-item input[type="checkbox"],
+#notes .editor-preview-side li.task-list-item input[type="checkbox"] {
+  margin-right: 0.5em;
+  accent-color: var(--color-accent);
+}
+
+#notes .editor-preview blockquote,
+#notes .editor-preview-side blockquote {
+  margin: 0 0 0.8em;
+  padding-left: 0.9em;
+  border-left: 3px solid var(--color-pane-hover);
+  opacity: 0.75;
+  font-style: italic;
+}
+
+#notes .editor-preview code,
+#notes .editor-preview-side code {
+  font-family: var(--font-mono);
+  background: var(--color-pane-hover);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+#notes .editor-preview pre,
+#notes .editor-preview-side pre {
+  background: var(--color-pane-hover);
+  padding: 0.8em 1em;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+#notes .editor-preview pre code,
+#notes .editor-preview-side pre code {
+  background: none;
+  padding: 0;
+}
+
+#notes .editor-preview a,
+#notes .editor-preview-side a {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+#notes .editor-preview hr,
+#notes .editor-preview-side hr {
+  border: none;
+  border-top: 1px solid var(--color-pane-hover);
+  margin: 1.2em 0;
+}
+
+#notes .editor-preview table,
+#notes .editor-preview-side table {
+  border-collapse: collapse;
+  margin: 0 0 0.8em;
+}
+#notes .editor-preview th,
+#notes .editor-preview td,
+#notes .editor-preview-side th,
+#notes .editor-preview-side td {
+  border: 1px solid var(--color-pane-hover);
+  padding: 0.3em 0.6em;
 }
