@@ -17,7 +17,7 @@ def main():
             print(
                 "Usage: apply-diff.py <file>\n"
                 "Example:\n"
-                "  wl-paste | apply-diff.py mathweb/flask/app.py",
+                "wl-paste | scripts/.venv/bin/python scripts/apply-diff.py mathweb/flask/app.py",
                 file=sys.stderr,
             )
             sys.exit(2)
