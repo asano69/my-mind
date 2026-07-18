@@ -59,6 +59,7 @@ export default function NotesEditor() {
       element: textareaRef,
       autofocus: false,
       spellChecker: false,
+      toolbar: false,
     });
     easyMDE.codemirror.on("change", () => {
       if (applyingExternalContent) {
