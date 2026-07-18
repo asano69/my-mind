@@ -1,8 +1,9 @@
-import { createSignal, createEffect, onMount, onCleanup } from "solid-js";
+
 import EasyMDE from "easymde";
 import "easymde/dist/easymde.min.css";
 import "./NotesEditor.css";
 import { currentItem } from "../lib/mindmap/store";
+import { createSignal, createEffect, on, onMount, onCleanup } from "solid-js";
 /**
  * The markdown notes editor for the currently selected item.
  *
@@ -103,15 +104,26 @@ export default function NotesEditor() {
     setReady(true);
   });
 
-  // Sync the notes editor and background preview whenever the selected
+
+// Sync the notes editor and background preview whenever the selected
   // item changes, or once our async setup becomes ready — covers both
   // possible orderings of "item selected" vs "editor initialized".
-  createEffect(() => {
-    if (!ready()) {
-      return;
-    }
-    notesModule.onItemSelect(currentItem());
-  });
+  //
+  // Uses on() to track ONLY `ready` and `currentItem` explicitly.
+  // Without this, createEffect would also implicitly depend on
+  // `item.notes` (read inside onItemSelect -> editorAPI.setContent),
+  // causing every keystroke to re-run this effect and force-reset
+  // CodeMirror's value — which resets the cursor to the start and
+  // swallows newlines from Enter.
+  createEffect(
+    on([ready, currentItem], ([isReady, item]) => {
+      if (!isReady) {
+        return;
+      }
+      notesModule.onItemSelect(item);
+    }),
+  );
+
 
   onCleanup(() => easyMDE?.toTextArea());
   return (

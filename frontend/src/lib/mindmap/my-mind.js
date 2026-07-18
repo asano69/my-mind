@@ -205,8 +205,8 @@ export async function mount(root) {
   createRoot((dispose) => {
     disposePanelEffects = dispose;
     createEffect(on(leftPanelHidden, handleResize, { defer: true }));
+    createEffect(on(rightPanelHidden, handleResize, { defer: true }));
   });
-  createEffect(on(rightPanelHidden, handleResize, { defer: true }));
 
   handleResize();
   showMap(new Map());

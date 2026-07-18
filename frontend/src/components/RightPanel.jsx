@@ -355,7 +355,7 @@ export default function RightPanel() {
           as #ui's own width transition, so it slides together with the
           panel instead of jumping at the end of the animation. */}
       <button
-        class="fixed top-1/2 z-10 flex h-14 w-5 -translate-y-1/2 items-center
+        class="fixed top-1/2 z-4 flex h-14 w-5 -translate-y-1/2 items-center
           justify-center rounded-l-lg bg-pane text-accent shadow-card
           transition-[right] duration-300 ease-in-out hover:bg-pane-hover"
         style={{
