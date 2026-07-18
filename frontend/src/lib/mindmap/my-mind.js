@@ -149,16 +149,7 @@ export function startEditing() {
 
 export function stopEditing() {
   editing = false;
-  let result = currentItem.stopEditing();
-  // item.js's stopEditing() blurs the contentEditable text node but does
-  // not focus anything afterward, so keydown events stop reaching
-  // containerEl's keyboard.js listener entirely (they only bubble from
-  // whatever element currently has focus). Without this, every shortcut
-  // (Enter for a new sibling, Ctrl+B for bold, ...) falls through to the
-  // browser's own handling instead of the app's. Same fix mouse.js
-  // already applies after drag interactions, for the same reason.
-  container.focus();
-  return result;
+  return currentItem.stopEditing();
 }
 
 // Reads one of #left-panel's two width states directly from CSS (see

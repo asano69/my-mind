@@ -52,6 +52,7 @@ function handleEvent(e) {
 
 export function init(containerEl) {
   containerEl.addEventListener("keydown", handleEvent);
+  containerEl.addEventListener("focusout", handleFocusOut);
   containerEl.focus();
 }
 
@@ -59,8 +60,29 @@ export function init(containerEl) {
 // the previous mount's listener attached, firing every shortcut twice.
 export function dispose(containerEl) {
   containerEl.removeEventListener("keydown", handleEvent);
+  containerEl.removeEventListener("focusout", handleFocusOut);
 }
 
 function keyOK(key, e) {
   return Object.entries(key).every(([key, value]) => e[key] == value);
+}
+
+// Self-healing focus guard: if focus leaves containerEl without landing
+// on another real element (e.g. item.js's stopEditing() calls blur()
+// without focusing anything afterward), the browser drops focus to
+// document.body, and every subsequent keydown -- including browser
+// defaults like Ctrl+B -- stops reaching this listener entirely.
+// Rather than remembering to call containerEl.focus() at every call
+// site that might blur (mouse.js's onDragStart already needs this for
+// drag interactions), this single listener restores focus whenever it
+// notices nothing else claimed it, covering every current and future
+// case uniformly. Deferred one microtask so the browser finishes
+// assigning the new focus target (e.g. a legitimate <input>) first.
+function handleFocusOut(e) {
+  const container = e.currentTarget;
+  queueMicrotask(() => {
+    if (document.activeElement === document.body) {
+      container.focus();
+    }
+  });
 }
