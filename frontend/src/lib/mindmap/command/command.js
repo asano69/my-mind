@@ -173,13 +173,37 @@ new (class Save extends Command {
     io.quickSave();
   }
 })();
+// Renders the current map as a transparent PNG and copies it to the
+// system clipboard, falling back to opening it in a new tab if the
+// Clipboard API isn't available. Shared by SaveAs and CopyImage below,
+// since they now do the same thing under different keybindings.
+async function copyMapImageToClipboard() {
+  app.setThrobber(true);
+  try {
+    const backend = new ImageBackend();
+    const url = await backend.save("png");
+    if (navigator.clipboard?.write) {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      URL.revokeObjectURL(url);
+      await navigator.clipboard.write([
+        new ClipboardItem({ "image/png": blob }),
+      ]);
+      showToast("Copied", app.currentMap.name);
+    } else {
+      window.open(url, "_blank");
+    }
+  } finally {
+    app.setThrobber(false);
+  }
+}
 new (class SaveAs extends Command {
   constructor() {
     super("save-as", "Save as…");
     this.keys = [];
   }
   execute() {
-    io.show("save");
+    copyMapImageToClipboard();
   }
 })();
 
@@ -350,27 +374,7 @@ new (class CopyImage extends Command {
     super("copy-image", "Copy image");
     this.keys = [{ code: "KeyC", ctrlKey: true, shiftKey: true }];
   }
-  async execute() {
-    var _a;
-    app.setThrobber(true);
-    try {
-      const backend = new ImageBackend();
-      const url = await backend.save("png");
-      if (
-        (_a = navigator.clipboard) === null || _a === void 0 ? void 0 : _a.write
-      ) {
-        const res = await fetch(url);
-        const blob = await res.blob();
-        URL.revokeObjectURL(url);
-        await navigator.clipboard.write([
-          new ClipboardItem({ "image/png": blob }),
-        ]);
-        showToast("Copied", app.currentMap.name);
-      } else {
-        window.open(url, "_blank");
-      }
-    } finally {
-      app.setThrobber(false);
-    }
+  execute() {
+    copyMapImageToClipboard();
   }
 })();
