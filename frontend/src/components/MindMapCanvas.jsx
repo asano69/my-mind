@@ -17,12 +17,15 @@ export default function MindMapCanvas(props) {
   let engine;
 
   onMount(async () => {
+    console.log("[MindMapCanvas] onMount, uuid =", props.uuid);
     containerRef.focus();
     engine = await import("../lib/mindmap/my-mind.js");
     engine.mount(mainRef, containerRef, props.uuid);
+    console.log("[MindMapCanvas] mount() finished, uuid =", props.uuid);
   });
 
   onCleanup(() => {
+    console.log("[MindMapCanvas] onCleanup, uuid =", props.uuid);
     engine?.unmount();
   });
 

@@ -116,6 +116,7 @@ export function dispose() {
 // already knows the current uuid reactively, so re-deriving it from the
 // URL string was redundant and could read a stale path during navigation.
 export async function restore(uuid) {
+  console.log("[io.restore] called with uuid =", uuid);
   if (!uuid) {
     app.setThrobber(false);
     return false;
@@ -123,12 +124,14 @@ export async function restore(uuid) {
   app.setThrobber(true);
   try {
     const record = await backend.loadByUuid(uuid);
+    console.log("[io.restore] loaded record id =", record.id, "uuid =", record.uuid, "title =", record.title);
     setCurrentMap(record);
     app.setThrobber(false);
     app.showMap(MindMap.fromJSON(record.mymind));
     hide();
     return true;
   } catch (e) {
+    console.log("[io.restore] error", e);
     error(e);
     return false;
   }

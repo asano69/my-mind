@@ -1,24 +1,17 @@
 import { useParams } from "@solidjs/router";
-import { Show } from "solid-js";
+import { Show, createEffect } from "solid-js";
 import { activeMode, leftPanelHidden } from "../lib/mindmap/store";
 import NotesEditor from "../components/NotesEditor";
 import MindMapCanvas from "../components/MindMapCanvas";
 import TopBar from "../components/TopBar";
 import LeftPanel from "../components/LeftPanel";
 
-// Keeps the canvas and notes editor mounted together, then switches
-// which layer is interactive via z-index and pointer-events only.
-// Avoid display:none so Milkdown/ProseMirror does not need to recalculate
-// its layout every time the workspace mode changes.
-//
-// TopBar/LeftPanel live here, outside both per-mode wrappers, because
-// they are shared chrome: both canvas and notes mode need working
-// new/save/help/notes/delete controls, not just canvas mode (see
-// CLAUDE.md, Workspace shared-chrome refactor). Both render only
-// position:fixed content, so lifting them out of MindMapCanvas's DOM
-// subtree does not change their on-screen position or stacking order.
 export default function Workspace() {
   const params = useParams();
+
+  createEffect(() => {
+    console.log("[Workspace] params.uuid changed to", params.uuid);
+  });
 
   return (
     <>
@@ -27,23 +20,19 @@ export default function Workspace() {
         classList={{ "pointer-events-none": activeMode() !== "canvas" }}
         style={{ "z-index": activeMode() === "canvas" ? 1 : 0 }}
       >
-        {/* Keyed on the route's uuid (or a fixed placeholder for "/") so
-            Solid disposes and recreates MindMapCanvas whenever the open
-            map changes. This re-runs my-mind.js's mount()/unmount()
-            lifecycle for the new map -- the same clean reinitialization a
-            full page reload used to provide -- without leaving the SPA. */}
         <Show when={params.uuid ?? "__new__"} keyed>
-          {() => <MindMapCanvas uuid={params.uuid} />}
+          {(key) => {
+            console.log("[Workspace] Show children re-created, key =", key);
+            return <MindMapCanvas uuid={params.uuid} />;
+          }}
         </Show>
       </div>
+
       <div
         class="fixed inset-0 transition-[margin-left] duration-300 ease-in-out"
         classList={{ "pointer-events-none": activeMode() !== "notes" }}
         style={{
           "z-index": activeMode() === "notes" ? 1 : 0,
-          // Mirrors the offset MindMapCanvas's <main> gets from
-          // my-mind.js's handleResize(), so the notes pane slides in step
-          // with the left sidebar instead of sitting underneath it.
           "margin-left": leftPanelHidden()
             ? "var(--ribbon-width)"
             : "var(--side-panel-width)",
