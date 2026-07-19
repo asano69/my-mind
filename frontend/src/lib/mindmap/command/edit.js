@@ -2,8 +2,8 @@
 import * as app from "../my-mind.js";
 import * as actions from "../action.js";
 import * as notes from "../ui/notes.js";
-import * as help from "../help.js";
 import * as io from "../ui/io.js";
+import { closeHelp } from "../store.js";
 import Command, { repo as commandRepo } from "./command.js";
 new (class Edit extends Command {
   constructor() {
@@ -67,7 +67,7 @@ new (class Cancel extends Command {
       // Clear multi-selection before closing panels
       app.clearMultiSelection();
       notes.close();
-      help.close();
+      closeHelp();
       io.hide();
     }
   }

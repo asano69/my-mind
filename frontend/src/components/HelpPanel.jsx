@@ -107,8 +107,10 @@ function buildRow(commandRepo, commandNames) {
 }
 
 export default function HelpPanel() {
-  let helpModule; // cached after the first dynamic import, see onMount
-  const [hidden, setHidden] = createSignal(true);
+  // Local signal for the derived section data (command labels/keys) only.
+  // Visibility itself now lives in store.js's helpHidden signal, so no
+  // bridge object is needed to toggle it (see CLAUDE.md's Phase 5
+  // addendum, "read-only consumption — no bridge object").
   const [sections, setSections] = createSignal([]);
 
   onMount(async () => {

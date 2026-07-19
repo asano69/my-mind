@@ -149,6 +149,62 @@ button:not(:disabled) {
   justify-content: space-between;
 }
 
+/* -------------------------------------------------------------
+   Pane — #help (keyboard-shortcut reference)
+   Widened from .pane's default 200px via the already-existing
+   --help-pane-width token (previously only used to shift the
+   catalog/help buttons, never applied to the panel itself — the
+   mismatch is why the table used to wrap/overlap inside 200px).
+   Small text + horizontal scroll keeps long rows readable regardless.
+   ------------------------------------------------------------- */
+.pane#help {
+  width: var(--help-pane-width);
+}
+
+.help-scroll {
+  overflow-y: auto;
+  overflow-x: auto;
+  padding: 0 12px 12px;
+}
+
+.help-section {
+  margin-bottom: 12px;
+}
+
+.help-section-title {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--color-text);
+  opacity: 0.6;
+  margin: 8px 0 4px;
+  padding: 0;
+  border-bottom: none;
+}
+
+.help-table {
+  width: 100%;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.help-table td {
+  padding: 2px 0;
+}
+
+.help-table td:first-child {
+  padding-right: 12px;
+}
+
+.help-table td:last-child {
+  color: var(--color-text);
+  opacity: 0.5;
+  text-align: right;
+}
+
 .pane label span {
   display: block;
   font-family: var(--font-sans);

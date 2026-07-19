@@ -2,11 +2,11 @@
 
 import * as history from "../history.js";
 import * as app from "../my-mind.js";
-import * as help from "../help.js";
 import * as notes from "../ui/notes.js";
 import * as ui from "../ui/ui.js";
 import * as io from "../ui/io.js";
 import { showToast } from "../ui/toast.js";
+import { toggleHelp } from "../store.js";
 
 import ImageBackend from "../backend/image.js";
 import * as actions from "../action.js";
@@ -243,7 +243,7 @@ new (class Help extends Command {
     this.keys = [{ key: "?" }];
   }
   execute() {
-    help.toggle();
+    toggleHelp();
   }
 })();
 new (class UI extends Command {
