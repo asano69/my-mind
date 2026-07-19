@@ -33,7 +33,7 @@ render(
   () => (
     <AuthGate>
       <Router>
-        <Route path="/" component={Workspace} />
+        <Route path="/" component={Catalog} />
         <Route path="/maps/:uuid" component={Workspace} />
         <Route path="/catalog" component={Catalog} />
       </Router>
