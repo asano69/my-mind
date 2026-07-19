@@ -1,4 +1,4 @@
-import { createSignal, onMount } from "solid-js";
+import { createSignal, onMount, onCleanup } from "solid-js";
 
 /**
  * Floating title bar shown at the top of the canvas, where a header or
@@ -20,6 +20,15 @@ export default function TitleBar() {
   onMount(async () => {
     titleModule = await import("../lib/mindmap/title.js");
     titleModule.registerInput({ setValue });
+  });
+
+  // TitleBar lives at the Workspace level and stays mounted across map
+  // switches (only MindMapCanvas remounts, see Workspace.jsx's keyed
+  // <Show>). It only truly unregisters when it unmounts itself, e.g.
+  // leaving Workspace entirely for /catalog — not on every engine
+  // mount()/unmount() cycle (see title.js's dispose()).
+  onCleanup(() => {
+    titleModule?.unregisterInput();
   });
 
   return (

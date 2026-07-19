@@ -18,6 +18,17 @@ export function registerInput(api) {
   api.setValue(currentTitle());
 }
 
+// Called by TitleBar's onCleanup. TitleBar lives at the Workspace level
+// and stays mounted across map switches (engine mount()/unmount() cycles
+// via CatalogList/LeftPanel), so it registers once and only unregisters
+// when it actually unmounts (e.g. navigating away to /catalog). Engine
+// unmount() must NOT clear inputAPI itself, or a later map switch's
+// title.init() would run with no registered input to sync (see dispose()
+// below).
+export function unregisterInput() {
+  inputAPI = null;
+}
+
 export function rename(text) {
   io.setTitle(text.trim());
 }
@@ -36,14 +47,19 @@ export function init() {
   });
 }
 
-// Called by my-mind.js's unmount(). Disposes the effect started by init(),
-// drops the reference to the (now-unmounted) TitleBar's API, and resets the
-// browser tab title. Without this, navigating back to the catalog via SPA
-// routing (no full page reload) would leave the last opened map's title
-// showing in the tab.
+// Called by my-mind.js's unmount(). Disposes the effect started by init()
+// and resets the browser tab title. Without resetting document.title,
+// navigating back to the catalog via SPA routing (no full page reload)
+// would leave the last opened map's title showing in the tab.
+//
+// Does NOT clear inputAPI: TitleBar (the component that registered it)
+// does not unmount when the engine unmounts for a map switch, only when
+// it leaves Workspace entirely (handled by TitleBar's own onCleanup via
+// unregisterInput() above). Clearing it here silently broke the title
+// display after the first map switch, since init()'s new effect would
+// then have nothing to call setValue() on.
 export function dispose() {
   disposeEffect?.();
   disposeEffect = null;
   document.title = "my-mind";
-  inputAPI = null;
 }
