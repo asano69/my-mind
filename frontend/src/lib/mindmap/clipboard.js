@@ -7,17 +7,29 @@ import { isCanvasActive } from "./scope.js";
 
 let storedItems = [];
 let mode = "";
+// Listened on `document` (capture phase), not containerEl. Unlike
+// keydown, clipboard events (cut/copy/paste) target wherever the
+// browser resolves the current Selection to be, not simply
+// document.activeElement -- a plain non-editable, focused
+// tabIndex="-1" div (containerEl) has no real Selection inside it, so
+// the browser dispatches paste with target=document.body instead.
+// Since containerEl is a descendant of body, not an ancestor, that
+// event could never bubble up to a listener attached on containerEl,
+// silently breaking paste until some unrelated action (e.g. editing a
+// node) happened to leave a stray Selection behind. Listening on
+// document sidesteps target resolution entirely; isCanvasActive() still
+// gates it exactly the same as before.
 export function init(containerEl) {
-  containerEl.addEventListener("cut", onCopyCut);
-  containerEl.addEventListener("copy", onCopyCut);
-  containerEl.addEventListener("paste", onPaste);
+  document.addEventListener("cut", onCopyCut, true);
+  document.addEventListener("copy", onCopyCut, true);
+  document.addEventListener("paste", onPaste, true);
 }
 // Called by my-mind.js's unmount(). Also clears any cut-in-progress state
 // so a remount does not resume an old cut/copy from the previous map.
 export function dispose(containerEl) {
-  containerEl.removeEventListener("cut", onCopyCut);
-  containerEl.removeEventListener("copy", onCopyCut);
-  containerEl.removeEventListener("paste", onPaste);
+  document.removeEventListener("cut", onCopyCut, true);
+  document.removeEventListener("copy", onCopyCut, true);
+  document.removeEventListener("paste", onPaste, true);
   storedItems = [];
   mode = "";
 }
