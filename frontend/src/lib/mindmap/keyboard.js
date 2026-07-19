@@ -53,6 +53,9 @@ function handleEvent(e) {
 export function init(containerEl) {
   containerEl.addEventListener("keydown", handleEvent);
   containerEl.addEventListener("focusout", handleFocusOut);
+  if (hasDocument()) {
+    document.addEventListener("focusin", handleFocusIn);
+  }
   containerEl.focus();
 }
 
@@ -61,6 +64,10 @@ export function init(containerEl) {
 export function dispose(containerEl) {
   containerEl.removeEventListener("keydown", handleEvent);
   containerEl.removeEventListener("focusout", handleFocusOut);
+  if (hasDocument()) {
+    document.removeEventListener("focusin", handleFocusIn);
+  }
+  cancelRestore();
 }
 
 function keyOK(key, e) {
@@ -78,18 +85,44 @@ function keyOK(key, e) {
 // notices nothing else claimed it, covering every current and future
 // case uniformly. Deferred one microtask so the browser finishes
 // assigning the new focus target (e.g. a legitimate <input>) first.
-// Deferred to the next animation frame (rather than a microtask) so a
-// slower focus transition — e.g. onto TopBar's title <input>, which
-// lives outside containerEl — has time to actually land before this
-// check runs. A microtask can fire while document.activeElement is
-// still transiently document.body, incorrectly stealing focus back to
-// the canvas before the real target claims it (see CLAUDE.md, "タイト
-// ル編集不可バグ" Phase 2).
+// Structural fix for the title-input-unfocusable bug (see CLAUDE.md,
+// "タイトル編集不可バグ" Phase 2): rather than guessing how many
+// animation frames a focus transition might take, listen for the
+// browser's own "focusin" event (which bubbles, unlike "focus") at the
+// document level. Any real element claiming focus — no matter how long
+// the transition takes, and regardless of whether it lives inside or
+// outside containerEl (e.g. TopBar's title <input>) — cancels the
+// pending restore immediately. The rAF-scheduled restore is only a
+// last-resort fallback for the case where focus is genuinely dropped
+// (e.g. item.js's stopEditing() calling blur() without focusing
+// anything else afterward), which is this guard's original intent.
+let pendingRestore = null;
+
+function cancelRestore() {
+  if (pendingRestore !== null) {
+    cancelAnimationFrame(pendingRestore);
+    pendingRestore = null;
+  }
+}
+
 function handleFocusOut(e) {
   const container = e.currentTarget;
-  requestAnimationFrame(() => {
+  cancelRestore();
+  pendingRestore = requestAnimationFrame(() => {
+    pendingRestore = null;
     if (document.activeElement === document.body) {
       container.focus();
     }
   });
+}
+
+// Any element anywhere in the document actually receiving focus means
+// the transition succeeded, however long it took — cancel the pending
+// restore so it never fires against a stale check.
+function handleFocusIn() {
+  cancelRestore();
+}
+
+function hasDocument() {
+  return typeof document !== "undefined";
 }

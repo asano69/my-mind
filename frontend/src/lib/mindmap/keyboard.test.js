@@ -34,23 +34,43 @@ function eventTarget() {
   };
 }
 
-describe("keyboard focusout self-heal guard (rAF-deferred)", () => {
+describe("keyboard focusout self-heal guard (focusin-cancelled)", () => {
   // Regression test for the title-input-unfocusable bug (see CLAUDE.md,
-  // "タイトル編集不可バグ" Phase 2). handleFocusOut used to check
-  // document.activeElement inside a microtask, which can fire before a
-  // slower focus transition (e.g. onto TopBar's title <input>) actually
-  // completes, incorrectly stealing focus back to the canvas container.
+  // "タイトル編集不可バグ" Phase 2). The guard used to check
+  // document.activeElement after a fixed delay (a microtask, then one
+  // rAF), which assumes a focus transition always completes within that
+  // window. A real element claiming focus — however long it takes —
+  // must cancel the pending restore; this suite proves the guard no
+  // longer depends on a specific number of frames.
   let rafCallbacks;
+  let focusinListeners;
   const bodySentinel = {};
 
   beforeEach(() => {
     rafCallbacks = [];
+    focusinListeners = [];
     globalThis.requestAnimationFrame = vi.fn((cb) => rafCallbacks.push(cb));
-    globalThis.document = { activeElement: bodySentinel, body: bodySentinel };
+    globalThis.cancelAnimationFrame = vi.fn((id) => {
+      rafCallbacks = rafCallbacks.filter((cb) => cb !== id);
+    });
+    globalThis.document = {
+      activeElement: bodySentinel,
+      body: bodySentinel,
+      addEventListener: vi.fn((type, listener) => {
+        if (type === "focusin") focusinListeners.push(listener);
+      }),
+      removeEventListener: vi.fn((type, listener) => {
+        if (type === "focusin") {
+          const i = focusinListeners.indexOf(listener);
+          if (i > -1) focusinListeners.splice(i, 1);
+        }
+      }),
+    };
   });
 
   afterEach(() => {
     delete globalThis.requestAnimationFrame;
+    delete globalThis.cancelAnimationFrame;
     delete globalThis.document;
   });
 
@@ -60,23 +80,27 @@ describe("keyboard focusout self-heal guard (rAF-deferred)", () => {
     cbs.forEach((cb) => cb());
   }
 
-  it("does not steal focus back if a real element claims it before the rAF check runs", () => {
+  function dispatchFocusIn() {
+    focusinListeners.forEach((l) => l());
+  }
+
+  it("does not steal focus back once a real focusin lands, even if the rAF check has not fired yet", () => {
     const container = eventTarget();
     keyboard.init(container);
     container.focus.mockClear(); // init() itself calls container.focus() once
 
     container.dispatch("focusout", { currentTarget: container });
-    // Simulate a slower focus transition landing on a real element (e.g.
-    // TopBar's title input) after the focusout fires but before the
-    // rAF-deferred check runs.
+    // A real element (e.g. TopBar's title input) claims focus. This is
+    // authoritative regardless of how many frames it took to happen.
     document.activeElement = {};
+    dispatchFocusIn();
     runRaf();
 
     expect(container.focus).not.toHaveBeenCalled();
     keyboard.dispose(container);
   });
 
-  it("still restores focus to the container if nothing claimed it by the rAF check", () => {
+  it("still restores focus to the container if nothing ever claims it", () => {
     const container = eventTarget();
     keyboard.init(container);
     container.focus.mockClear(); // init() itself calls container.focus() once
@@ -86,6 +110,17 @@ describe("keyboard focusout self-heal guard (rAF-deferred)", () => {
 
     expect(container.focus).toHaveBeenCalledOnce();
     keyboard.dispose(container);
+  });
+
+  it("dispose() removes the document-level focusin listener", () => {
+    const container = eventTarget();
+    keyboard.init(container);
+    keyboard.dispose(container);
+
+    expect(document.removeEventListener).toHaveBeenCalledWith(
+      "focusin",
+      expect.any(Function),
+    );
   });
 });
 
