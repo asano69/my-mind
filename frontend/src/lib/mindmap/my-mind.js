@@ -164,12 +164,19 @@ function cssPixelVar(name) {
 // Exported so ui.js can call it directly after toggling the property
 // panel, replacing the old "ui-change" pubsub message (see CLAUDE.md,
 // Solid migration Phase 9.4).
-export function handleResize() {
+export function handleResize(force = false) {
   // Skip while the canvas is backgrounded (see
   // docs/workspace-mode-switch-refactor.md, Phase 2) — no point
   // recomputing layout for something the user can't see, and this
   // avoids DOM reads competing with whatever mode is in front.
-  if (activeMode() !== "canvas") {
+  // `force` bypasses this for the one-time initial sizing in mount()
+  // below, since Map.show()'s center() needs a correctly sized port
+  // even if canvas mode isn't active yet (e.g. switching maps from the
+  // catalog while Notes is open) — otherwise the root node centers
+  // against the unsized default box and never gets corrected later,
+  // since switching back to canvas only re-runs handleResize(), not
+  // center().
+  if (!force && activeMode() !== "canvas") {
     return;
   }
 
@@ -223,7 +230,10 @@ export async function mount(root, containerEl, uuid) {
   // dimensions -- so this must run first, or the root node centers
   // against main's default (not-yet-sized) box instead of the actual
   // visible area, which is only correct after handleResize() runs.
-  handleResize();
+  // Forced because activeMode may still be "notes" here (e.g. switching
+  // maps from the catalog while Notes is open) — see handleResize()'s
+  // comment.
+  handleResize(true);
 
   // Waits for ui.init()'s io.restore() call to finish so we know whether
   // an existing map was loaded, instead of unconditionally creating a
