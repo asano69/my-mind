@@ -178,6 +178,7 @@ export default class Item {
     dom.node.classList.add("item");
     dom.content.classList.add("content");
     dom.notes.classList.add("notes");
+    dom.notes.append(buildNotesIcon());
     dom.status.classList.add("status");
     dom.icon.classList.add("icon");
     dom.value.classList.add("value");
@@ -719,6 +720,27 @@ function buildToggle() {
   g.classList.add("toggle");
   g.append(svg.node("circle", circleAttrs), svg.node("path"));
   return g;
+}
+// Notes indicator icon (lucide "paperclip"), built the same way as
+// buildToggle() above instead of being loaded via a CSS background-image
+// (see map.css's old ".item .notes" rule). Same viewBox/attributes as
+// lucide-solid's Paperclip icon, so it renders identically and now
+// inherits color via currentColor like every other inline icon here.
+function buildNotesIcon() {
+  let s = svg.node("svg", {
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    "stroke-width": "2",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round",
+  });
+  s.append(
+    svg.node("path", {
+      d: "m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551",
+    }),
+  );
+  return s;
 }
 const COLOR = "#999";
 /* RE explanation:
