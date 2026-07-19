@@ -75,3 +75,15 @@ export const [currentMapId, setCurrentMapId] = createSignal(null);
 // list instead of its default reserved content area. Set by the
 // "recover" command (see command/command.js), read by LeftPanel.jsx.
 export const [showSnapshots, setShowSnapshots] = createSignal(false);
+
+// Whether the help panel (#help) is hidden. Replaces the old help.js
+// bridge module (registerToggle/dispose) now that command.js and
+// HelpPanel.jsx are both plain consumers of a shared signal, same
+// pattern as leftPanelHidden/rightPanelHidden.
+export const [helpHidden, setHelpHidden] = createSignal(true);
+export function toggleHelp() {
+  setHelpHidden((h) => !h);
+}
+export function closeHelp() {
+  setHelpHidden(true);
+}

@@ -1,4 +1,5 @@
-import { createSignal, onMount, onCleanup, For } from "solid-js";
+import { createSignal, onMount, For } from "solid-js";
+import { helpHidden } from "../lib/mindmap/store";
 
 // Static shape of the help table: section title + which commands make up
 // each row. commandRepo is only resolved at mount time (see onMount below),
@@ -108,9 +109,10 @@ function buildRow(commandRepo, commandNames) {
 
 export default function HelpPanel() {
   // Local signal for the derived section data (command labels/keys) only.
-  // Visibility itself now lives in store.js's helpHidden signal, so no
-  // bridge object is needed to toggle it (see CLAUDE.md's Phase 5
-  // addendum, "read-only consumption — no bridge object").
+  // Visibility itself lives in store.js's helpHidden signal, read/written
+  // directly — no bridge object needed (see CLAUDE.md's Phase 5 addendum,
+  // "read-only consumption — no bridge object"). command.js's Help command
+  // and edit.js's Cancel command write to it directly.
   const [sections, setSections] = createSignal([]);
 
   onMount(async () => {
@@ -128,23 +130,10 @@ export default function HelpPanel() {
         rows: section.rows.map((names) => buildRow(commandRepo, names)),
       })),
     );
-
-    helpModule = await import("../lib/mindmap/help.js");
-    helpModule.registerToggle({
-      toggle: () => setHidden((h) => !h),
-      close: () => setHidden(true),
-    });
-  });
-  // help.js has no raw DOM listeners of its own — it's only a bridge
-  // object for this component's toggle state — so its cleanup can live
-  // directly in this component's onCleanup instead of my-mind.js's manual
-  // unmount() chain (see CLAUDE.md, Solid migration Phase 9).
-  onCleanup(() => {
-    helpModule?.dispose();
   });
 
   return (
-    <div id="help" class="pane" hidden={hidden()}>
+    <div id="help" class="pane" hidden={helpHidden()}>
       <h3>Help</h3>
       <For each={sections()}>
         {(section) => (
