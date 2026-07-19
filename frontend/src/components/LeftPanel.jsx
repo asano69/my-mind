@@ -19,7 +19,7 @@ import FilePlus from "lucide-solid/icons/file-plus";
 
 
 import CircleQuestionMark from "lucide-solid/icons/circle-question-mark";
-import CloudUpload from "lucide-solid/icons/cloud-upload";
+
 import Images from "lucide-solid/icons/images";
 //import History from "lucide-solid/icons/history";
 import DatabaseBackup from "lucide-solid/icons/database-backup";
@@ -89,13 +89,7 @@ export default function LeftPanel() {
           <Book size={20} />
         </button>
 
-        <button
-          class="icon-btn"
-          onClick={() => runCommand("save")}
-          title="Save"
-        >
-          <CloudUpload size={20} />
-        </button>
+     
         <button
           class="icon-btn"
           onClick={() => runCommand("save-as")}
@@ -133,7 +127,11 @@ export default function LeftPanel() {
         <Show when={showSnapshots()}>
           <SnapshotsList />
         </Show>
-           <Show when={showCatalogList()}>
+        {/* Default fallback: when neither snapshots nor help is being
+            shown, display the maps browser instead of leaving the panel
+            blank (covers both the explicit "catalog-list" command and
+            the panel's default just-opened state). */}
+        <Show when={showCatalogList() || (!showSnapshots() && helpHidden())}>
           <CatalogList />
         </Show>
         <Show when={!helpHidden()}>
