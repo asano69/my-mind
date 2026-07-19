@@ -16,7 +16,7 @@ import Book from "lucide-solid/icons/book";
 
 import PanelLeft from "lucide-solid/icons/panel-left";
 import FilePlus from "lucide-solid/icons/file-plus";
-import LayoutGrid from "lucide-solid/icons/layout-grid";
+
 
 import CircleQuestionMark from "lucide-solid/icons/circle-question-mark";
 import CloudUpload from "lucide-solid/icons/cloud-upload";
@@ -68,14 +68,7 @@ export default function LeftPanel() {
     >
       <div class="flex w-[var(--ribbon-width)] flex-shrink-0 flex-col items-center gap-2 py-2">
         
-        <A
-          href="/catalog"
-          class="icon-btn"
-          title="Catalog"
-          onClick={goToCatalog}
-        >
-          <Book size={20} />
-        </A>
+  
         <button
           class="icon-btn"
           onClick={toggleLeftPanel}
@@ -93,7 +86,7 @@ export default function LeftPanel() {
           onClick={() => runCommand("catalog-list")}
           title="Browse maps"
         >
-          <LayoutGrid size={20} />
+          <Book size={20} />
         </button>
 
         <button
