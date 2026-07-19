@@ -37,7 +37,11 @@ export default function TopBar() {
     <>
       <TitleBar />
       <div class="topbar-right">
-        <button class="icon-btn" onClick={() => runCommand("notes")} title="Notes">
+        <button
+          class="icon-btn"
+          onClick={() => runCommand("notes")}
+          title="Notes"
+        >
           <TextCursor size={28} />
         </button>
 

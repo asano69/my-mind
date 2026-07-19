@@ -33,9 +33,7 @@ export default function SnapshotsList() {
       >
         <Show
           when={snapshots()?.length}
-          fallback={
-            <p class="px-1 text-sm text-text/50">No snapshots yet.</p>
-          }
+          fallback={<p class="px-1 text-sm text-text/50">No snapshots yet.</p>}
         >
           <div class="flex flex-col gap-2">
             <For each={snapshots()}>

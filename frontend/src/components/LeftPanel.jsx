@@ -1,7 +1,12 @@
 import { A, useNavigate } from "@solidjs/router";
 import { Show } from "solid-js";
 
-import { leftPanelHidden, toggleLeftPanel, showSnapshots, helpHidden } from "../lib/mindmap/store";
+import {
+  leftPanelHidden,
+  toggleLeftPanel,
+  showSnapshots,
+  helpHidden,
+} from "../lib/mindmap/store";
 import SnapshotsList from "./SnapshotsList";
 import HelpPanel from "./HelpPanel";
 
@@ -79,18 +84,34 @@ export default function LeftPanel() {
           <Book size={20} />
         </A>
 
-        <button class="icon-btn" onClick={() => runCommand("save")} title="Save">
+        <button
+          class="icon-btn"
+          onClick={() => runCommand("save")}
+          title="Save"
+        >
           <CloudUpload size={20} />
         </button>
-        <button class="icon-btn" onClick={() => runCommand("save-as")} title="Save as">
+        <button
+          class="icon-btn"
+          onClick={() => runCommand("save-as")}
+          title="Save as"
+        >
           <Images size={20} />
         </button>
-        <button class="icon-btn" onClick={() => runCommand("help")} title="Help">
-          <CircleQuestionMark size={20} />
-        </button>
 
-        <button class="icon-btn" onClick={() => runCommand("recover")} title="Restore snapshot">
+        <button
+          class="icon-btn"
+          onClick={() => runCommand("recover")}
+          title="Restore snapshot"
+        >
           <DatabaseBackup size={20} />
+        </button>
+        <button
+          class="icon-btn"
+          onClick={() => runCommand("help")}
+          title="Help"
+        >
+          <CircleQuestionMark size={20} />
         </button>
       </div>
       {/* Fades in only once the panel is wide enough to actually show its
