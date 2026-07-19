@@ -281,11 +281,19 @@ function buildGhost(item, count) {
   }
   port.append(ghost);
   current.ghost = ghost;
+  // The ghost is `position: absolute`, and port (<main>) is its
+  // positioned ancestor (`position: relative` in my-mind.css). So the
+  // ghost's left/top are relative to port's own box, not to the
+  // viewport. current.cursor holds viewport coordinates (clientX/clientY),
+  // so port's own offset (e.g. the left panel's width, via main's
+  // margin-left) must be subtracted here, or the ghost renders shifted
+  // away from the actual cursor position.
+  const portRect = port.getBoundingClientRect();
   // Center the ghost on the cursor so dragging feels natural regardless of
   // where within the node the user clicked.
   current.ghostPosition = [
-    current.cursor[0] - ghost.offsetWidth / 2,
-    current.cursor[1] - ghost.offsetHeight / 2,
+    current.cursor[0] - portRect.left - ghost.offsetWidth / 2,
+    current.cursor[1] - portRect.top - ghost.offsetHeight / 2,
   ];
 }
 function moveGhost(delta) {
