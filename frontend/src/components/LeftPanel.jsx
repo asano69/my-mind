@@ -1,8 +1,9 @@
 import { A, useNavigate } from "@solidjs/router";
 import { Show } from "solid-js";
 
-import { leftPanelHidden, toggleLeftPanel, showSnapshots } from "../lib/mindmap/store";
+import { leftPanelHidden, toggleLeftPanel, showSnapshots, helpHidden } from "../lib/mindmap/store";
 import SnapshotsList from "./SnapshotsList";
+import HelpPanel from "./HelpPanel";
 
 import Book from "lucide-solid/icons/book";
 
@@ -105,6 +106,9 @@ export default function LeftPanel() {
       >
         <Show when={showSnapshots()}>
           <SnapshotsList />
+        </Show>
+        <Show when={!helpHidden()}>
+          <HelpPanel />
         </Show>
       </div>
     </div>

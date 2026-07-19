@@ -6,7 +6,7 @@ import * as notes from "../ui/notes.js";
 import * as ui from "../ui/ui.js";
 import * as io from "../ui/io.js";
 import { showToast } from "../ui/toast.js";
-import { toggleHelp } from "../store.js";
+import { toggleHelp, helpHidden } from "../store.js";
 
 import ImageBackend from "../backend/image.js";
 import * as actions from "../action.js";
@@ -243,7 +243,13 @@ new (class Help extends Command {
     this.keys = [{ key: "?" }];
   }
   execute() {
+    // Help content now renders inside the left sidebar (see
+    // LeftPanel.jsx), same as the Recover command below: opening it
+    // also expands the sidebar so the content is actually visible.
     toggleHelp();
+    if (!helpHidden()) {
+      setLeftPanelHidden(false);
+    }
   }
 })();
 new (class UI extends Command {

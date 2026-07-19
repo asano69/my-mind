@@ -1,5 +1,4 @@
 import { createSignal, onMount, For } from "solid-js";
-import { helpHidden } from "../lib/mindmap/store";
 
 // Static shape of the help table: section title + which commands make up
 // each row. commandRepo is only resolved at mount time (see onMount below),
@@ -132,19 +131,24 @@ export default function HelpPanel() {
     );
   });
 
+  // Rendered inline inside LeftPanel.jsx's scrollable content area (see
+  // LeftPanel.jsx), the same way SnapshotsList.jsx is — no more fixed
+  // `.pane` wrapper of its own. Small text + horizontal scroll so long
+  // key combinations don't wrap or overflow the sidebar.
   return (
-    <div id="help" class="pane" hidden={helpHidden()}>
-      <h3>Help</h3>
+    <div class="overflow-x-auto text-xs">
       <For each={sections()}>
         {(section) => (
-          <div>
-            <p>{section.title}</p>
-            <table>
+          <div class="mb-3">
+            <p class="mb-1 text-[11px] font-semibold tracking-wider text-text/60 uppercase">
+              {section.title}
+            </p>
+            <table class="w-full whitespace-nowrap text-xs leading-tight">
               <For each={section.rows}>
                 {(row) => (
                   <tr>
-                    <td>{row.labels}</td>
-                    <td>{row.keys}</td>
+                    <td class="py-0.5 pr-3">{row.labels}</td>
+                    <td class="py-0.5 text-right text-text/50">{row.keys}</td>
                   </tr>
                 )}
               </For>

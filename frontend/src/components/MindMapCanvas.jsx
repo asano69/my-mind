@@ -2,7 +2,6 @@
 import RightPanel from "./RightPanel";
 
 import SaveDialog from "./SaveDialog";
-import HelpPanel from "./HelpPanel";
 import ContextMenu from "./ContextMenu";
 import { onMount, onCleanup } from "solid-js";
 
@@ -33,7 +32,6 @@ export default function MindMapCanvas() {
 
       <RightPanel />
       <SaveDialog />
-      <HelpPanel />
       <ContextMenu />
     </div>
   );
