@@ -1,5 +1,4 @@
 import * as app from "../my-mind.js";
-import * as notes from "./notes.js";
 import * as io from "./io.js";
 import * as menu from "./context-menu.js";
 import { repo as commandRepo } from "../command/command.js";
@@ -104,7 +103,10 @@ export async function init(port, containerEl, uuid) {
   // which reads store.js's `currentItem` signal directly instead of being
   // driven by this module's init()/dispose()/pubsub wiring (Solid migration
   // Phase 3, see CLAUDE.md).
-  [notes, io].forEach((ui) => ui.init());
+  // notes.js no longer has init()/dispose(): its editorAPI registration
+  // lives in NotesEditor.jsx for the whole Workspace lifetime, independent
+  // of the canvas's own mount/unmount cycle (see notes.js's comment).
+  io.init();
   menu.init(port);
   // Poll store.js's `lastSaveTime` signal once a second instead of
   // subscribing to the old "save-done" pubsub message (Solid migration
@@ -122,6 +124,6 @@ export function dispose(containerEl) {
   clearInterval(elapsedTimer);
   elapsedTimer = null;
   menu.dispose();
-  [io, notes].forEach((ui) => ui.dispose());
+  io.dispose();
   saveTimeEl = null;
 }

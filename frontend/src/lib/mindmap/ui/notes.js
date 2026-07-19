@@ -49,13 +49,10 @@ export function onEditorChange(text) {
 // the current "one canvas, toggle visibility" model; revisit if multiple
 // canvases are ever mounted simultaneously.
 //
-// No DOM setup needed here anymore: the old #note-preview watermark
-// element is gone (see docs/03.2-workspace-mode-switch-refactor.md,
-// Phase 5) — the background/readonly tone is now handled by CSS on the
-// Milkdown root itself (see NotesEditor.css), since Milkdown always
-// live-renders and no longer needs a separate preview element.
-export function init() {}
-// Called by my-mind.js's unmount().
-export function dispose() {
-  editorAPI = null;
-}
+// No init()/dispose() anymore: NotesEditor.jsx registers editorAPI once
+// for the whole Workspace lifetime (it lives outside the canvas-scoped
+// container, see Workspace.jsx), while this module used to be torn down
+// on every canvas mount/unmount. That mismatch nulled out editorAPI the
+// first time the canvas remounted (e.g. switching maps from the left
+// panel's catalog list) and it was never registered again, silently
+// breaking the background notes preview for every map after the first.
