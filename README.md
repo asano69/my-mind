@@ -13,9 +13,22 @@ New to Mind maps? They are useful, aesthetic and cool! Read more about these spe
 
 <img src=".github/assets/sample-01.png" width="800">
 
+## Usage
+
+* Research notes
+* Lecture notes
+* Document drafting
+* Brainstorming concerns and thoughts
+* Priority setting and decision-making
+
+
+## Features
 It has a catalog feature.
 
 <img src=".github/assets/sample-02.png" width="800">
+
+
+
 
 ## Plan
 ### Frontend
