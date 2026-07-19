@@ -78,9 +78,16 @@ function keyOK(key, e) {
 // notices nothing else claimed it, covering every current and future
 // case uniformly. Deferred one microtask so the browser finishes
 // assigning the new focus target (e.g. a legitimate <input>) first.
+// Deferred to the next animation frame (rather than a microtask) so a
+// slower focus transition — e.g. onto TopBar's title <input>, which
+// lives outside containerEl — has time to actually land before this
+// check runs. A microtask can fire while document.activeElement is
+// still transiently document.body, incorrectly stealing focus back to
+// the canvas before the real target claims it (see CLAUDE.md, "タイト
+// ル編集不可バグ" Phase 2).
 function handleFocusOut(e) {
   const container = e.currentTarget;
-  queueMicrotask(() => {
+  requestAnimationFrame(() => {
     if (document.activeElement === document.body) {
       container.focus();
     }

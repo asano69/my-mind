@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const execute = vi.fn();
 const command = {
@@ -33,6 +33,61 @@ function eventTarget() {
     },
   };
 }
+
+describe("keyboard focusout self-heal guard (rAF-deferred)", () => {
+  // Regression test for the title-input-unfocusable bug (see CLAUDE.md,
+  // "タイトル編集不可バグ" Phase 2). handleFocusOut used to check
+  // document.activeElement inside a microtask, which can fire before a
+  // slower focus transition (e.g. onto TopBar's title <input>) actually
+  // completes, incorrectly stealing focus back to the canvas container.
+  let rafCallbacks;
+  const bodySentinel = {};
+
+  beforeEach(() => {
+    rafCallbacks = [];
+    globalThis.requestAnimationFrame = vi.fn((cb) => rafCallbacks.push(cb));
+    globalThis.document = { activeElement: bodySentinel, body: bodySentinel };
+  });
+
+  afterEach(() => {
+    delete globalThis.requestAnimationFrame;
+    delete globalThis.document;
+  });
+
+  function runRaf() {
+    const cbs = rafCallbacks.slice();
+    rafCallbacks = [];
+    cbs.forEach((cb) => cb());
+  }
+
+  it("does not steal focus back if a real element claims it before the rAF check runs", () => {
+    const container = eventTarget();
+    keyboard.init(container);
+    container.focus.mockClear(); // init() itself calls container.focus() once
+
+    container.dispatch("focusout", { currentTarget: container });
+    // Simulate a slower focus transition landing on a real element (e.g.
+    // TopBar's title input) after the focusout fires but before the
+    // rAF-deferred check runs.
+    document.activeElement = {};
+    runRaf();
+
+    expect(container.focus).not.toHaveBeenCalled();
+    keyboard.dispose(container);
+  });
+
+  it("still restores focus to the container if nothing claimed it by the rAF check", () => {
+    const container = eventTarget();
+    keyboard.init(container);
+    container.focus.mockClear(); // init() itself calls container.focus() once
+
+    container.dispatch("focusout", { currentTarget: container });
+    runRaf();
+
+    expect(container.focus).toHaveBeenCalledOnce();
+    keyboard.dispose(container);
+  });
+});
 
 describe("keyboard listener scope", () => {
   beforeEach(() => {
