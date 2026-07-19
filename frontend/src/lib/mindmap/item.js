@@ -96,6 +96,13 @@ export default class Item {
         }
         return "";
       });
+      // Memoized boolean, not the raw notes text: map.js's shared
+      // layout computed only reruns when a tracked memo's *value*
+      // changes, so depending on this (rather than _notes() itself)
+      // keeps every keystroke in the notes editor from retriggering a
+      // full-tree layout recompute. Only an empty<->non-empty
+      // transition needs to redraw the badge.
+      this._hasNotes = createMemo(() => !!this._notes());
       this._resolvedValue = createMemo(() => {
         this._childrenVersion();
         const value = this._value();
@@ -660,8 +667,7 @@ export default class Item {
     }
   }
   updateNotes() {
-    const notes = this._notes();
-    this.dom.notes.hidden = !notes;
+    this.dom.notes.hidden = !this._hasNotes();
   }
   updateToggle() {
     const { node, toggle } = this.dom;
