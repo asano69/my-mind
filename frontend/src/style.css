@@ -5,7 +5,7 @@
    * Tailwind utility classes (bg-bg, text-text, font-sans, ...) can be
    * generated from the same tokens. */
 @import url("/theme.css");
-@import "font-awesome/css/font-awesome.min.css";
+
 /* Tailwind v4 entry point */
 @import "tailwindcss";
 
