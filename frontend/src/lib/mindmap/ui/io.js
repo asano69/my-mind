@@ -111,13 +111,15 @@ export function dispose() {
   node = null;
 }
 
-export async function restore() {
-  const match = location.pathname.match(/^\/maps\/([^/]+)$/);
-  if (!match) {
+// uuid comes from the router's params (see Workspace.jsx/MindMapCanvas.jsx)
+// instead of being re-parsed from location.pathname here — the router
+// already knows the current uuid reactively, so re-deriving it from the
+// URL string was redundant and could read a stale path during navigation.
+export async function restore(uuid) {
+  if (!uuid) {
     app.setThrobber(false);
-    return;
+    return false;
   }
-  const uuid = match[1];
   app.setThrobber(true);
   try {
     const record = await backend.loadByUuid(uuid);
@@ -125,8 +127,10 @@ export async function restore() {
     app.setThrobber(false);
     app.showMap(MindMap.fromJSON(record.mymind));
     hide();
+    return true;
   } catch (e) {
     error(e);
+    return false;
   }
 }
 

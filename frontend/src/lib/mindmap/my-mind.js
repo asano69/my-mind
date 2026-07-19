@@ -198,7 +198,7 @@ export function handleResize() {
 // Safe to call only once per unmount(): a second call while already
 // mounted is a no-op, since remounting on top of live listeners/state
 // would double them up.
-export async function mount(root, containerEl) {
+export async function mount(root, containerEl, uuid) {
   if (mounted) {
     return;
   }
@@ -216,7 +216,10 @@ export async function mount(root, containerEl) {
   keyboard.init(containerEl);
   mouse.init(port, containerEl);
   title.init();
-  ui.init(port, containerEl); // also calls io.restore() internally
+  // Waits for ui.init()'s io.restore() call to finish so we know whether
+  // an existing map was loaded, instead of unconditionally creating a
+  // blank map right after and racing with the async restore.
+  const loaded = await ui.init(port, containerEl, uuid);
 
   createRoot((dispose) => {
     disposePanelEffects = dispose;
@@ -242,7 +245,9 @@ export async function mount(root, containerEl) {
   });
 
   handleResize();
-  showMap(new Map());
+  if (!loaded) {
+    showMap(new Map());
+  }
   setThrobber(false);
 }
 

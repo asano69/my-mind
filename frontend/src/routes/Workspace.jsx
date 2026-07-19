@@ -33,7 +33,7 @@ export default function Workspace() {
             lifecycle for the new map -- the same clean reinitialization a
             full page reload used to provide -- without leaving the SPA. */}
         <Show when={params.uuid ?? "__new__"} keyed>
-          {() => <MindMapCanvas />}
+          {() => <MindMapCanvas uuid={params.uuid} />}
         </Show>
       </div>
       <div

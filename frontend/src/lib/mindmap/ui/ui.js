@@ -94,7 +94,11 @@ function onClick(e) {
     }
   }
 }
-export function init(port, containerEl) {
+// Returns whether io.restore() actually loaded and displayed an existing
+// map, so my-mind.js's mount() knows whether it still needs to create a
+// blank one — avoids the old race where a blank map was created
+// unconditionally and then (maybe) overwritten once restore() resolved.
+export async function init(port, containerEl, uuid) {
   saveTimeEl = document.querySelector("#save-time");
   // layout/shape/value/status no longer live here — see RightPanel.jsx,
   // which reads store.js's `currentItem` signal directly instead of being
@@ -107,7 +111,7 @@ export function init(port, containerEl) {
   // Phase 4, see CLAUDE.md).
   elapsedTimer = setInterval(refreshElapsed, 1000);
   containerEl.addEventListener("click", onClick);
-  io.restore();
+  return io.restore(uuid);
 }
 
 // Called by my-mind.js's unmount(). Tears down this module's own listener

@@ -5,7 +5,7 @@ import SaveDialog from "./SaveDialog";
 import ContextMenu from "./ContextMenu";
 import { onMount, onCleanup } from "solid-js";
 
-export default function MindMapCanvas() {
+export default function MindMapCanvas(props) {
   let mainRef;
   // Wraps every element this route renders (main canvas + all fixed
   // panels), so future phases can scope keyboard/clipboard/click
@@ -19,7 +19,7 @@ export default function MindMapCanvas() {
   onMount(async () => {
     containerRef.focus();
     engine = await import("../lib/mindmap/my-mind.js");
-    engine.mount(mainRef, containerRef);
+    engine.mount(mainRef, containerRef, props.uuid);
   });
 
   onCleanup(() => {
