@@ -6,7 +6,7 @@ import * as notes from "../ui/notes.js";
 import * as ui from "../ui/ui.js";
 import * as io from "../ui/io.js";
 import { showToast } from "../ui/toast.js";
-import { openHelp, openSnapshots } from "../store.js";
+import { openHelp, openSnapshots, openCatalogList } from "../store.js";
 
 import ImageBackend from "../backend/image.js";
 import * as actions from "../action.js";
@@ -215,6 +215,17 @@ new (class Recover extends Command {
   execute() {
     setLeftPanelHidden(false);
     openSnapshots();
+  }
+})();
+
+new (class CatalogList extends Command {
+  constructor() {
+    super("catalog-list", "Browse maps");
+    this.keys = [];
+  }
+  execute() {
+    setLeftPanelHidden(false);
+    openCatalogList();
   }
 })();
 

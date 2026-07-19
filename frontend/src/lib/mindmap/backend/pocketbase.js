@@ -41,6 +41,18 @@ export async function updatePin(id, pin) {
   return pb.collection(COLLECTION).update(id, { pin });
 }
 
+// Lightweight list of every saved map (used by both Catalog.jsx and
+// CatalogList.jsx's inline sidebar view). Pinned maps sort first, then
+// most-recently-updated first. svg is included directly so callers can
+// render a thumbnail without a second request.
+export async function listMaps(query) {
+  return pb.collection(COLLECTION).getFullList({
+    sort: "-pin,-updated",
+    fields: "id,uuid,title,svg,pin",
+    filter: query ? pb.filter("title ~ {:q}", { q: query }) : "",
+  });
+}
+
 const SNAPSHOTS_COLLECTION = "snapshots";
 
 // Lightweight list of a map's restorable past snapshots, newest first.

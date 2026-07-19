@@ -5,15 +5,19 @@ import {
   leftPanelHidden,
   toggleLeftPanel,
   showSnapshots,
+  showCatalogList,
   helpHidden,
 } from "../lib/mindmap/store";
 import SnapshotsList from "./SnapshotsList";
+import CatalogList from "./CatalogList";
 import HelpPanel from "./HelpPanel";
 
 import Book from "lucide-solid/icons/book";
 
 import PanelLeft from "lucide-solid/icons/panel-left";
 import FilePlus from "lucide-solid/icons/file-plus";
+import LayoutGrid from "lucide-solid/icons/layout-grid";
+
 import CircleQuestionMark from "lucide-solid/icons/circle-question-mark";
 import CloudUpload from "lucide-solid/icons/cloud-upload";
 import Images from "lucide-solid/icons/images";
@@ -63,6 +67,15 @@ export default function LeftPanel() {
       }}
     >
       <div class="flex w-[var(--ribbon-width)] flex-shrink-0 flex-col items-center gap-2 py-2">
+        
+        <A
+          href="/catalog"
+          class="icon-btn"
+          title="Catalog"
+          onClick={goToCatalog}
+        >
+          <Book size={20} />
+        </A>
         <button
           class="icon-btn"
           onClick={toggleLeftPanel}
@@ -75,14 +88,13 @@ export default function LeftPanel() {
           <FilePlus size={20} />
         </button>
 
-        <A
-          href="/catalog"
+        <button
           class="icon-btn"
-          title="Catalog"
-          onClick={goToCatalog}
+          onClick={() => runCommand("catalog-list")}
+          title="Browse maps"
         >
-          <Book size={20} />
-        </A>
+          <LayoutGrid size={20} />
+        </button>
 
         <button
           class="icon-btn"
@@ -127,6 +139,9 @@ export default function LeftPanel() {
       >
         <Show when={showSnapshots()}>
           <SnapshotsList />
+        </Show>
+           <Show when={showCatalogList()}>
+          <CatalogList />
         </Show>
         <Show when={!helpHidden()}>
           <HelpPanel />

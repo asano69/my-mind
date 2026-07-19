@@ -7,32 +7,20 @@ import FilePlus from "lucide-solid/icons/file-plus";
 import Settings2 from "lucide-solid/icons/settings-2";
 import Check from "lucide-solid/icons/check";
 
-import pb from "../lib/pb";
+
 import {
+  listMaps,
   updateTitle,
   updatePin,
   deleteMap,
 } from "../lib/mindmap/backend/pocketbase";
 
-// query is empty for the initial/unfiltered list, or a title search term.
-// pb.filter() escapes the value for us; "~" is PocketBase's substring
-// match operator. Pinned maps ("-pin") always sort before unpinned ones,
-// then newest-updated first.
-async function fetchMaps(query) {
-  // svg is stored directly on the record, so no extra request is needed
-  // to render a thumbnail.
-  return pb.collection("maps").getFullList({
-    sort: "-pin,-updated",
-    fields: "id,uuid,title,svg,pin",
-    filter: query ? pb.filter("title ~ {:q}", { q: query }) : "",
-  });
-}
 
 export default function Catalog() {
   const navigate = useNavigate();
   const [query, setQuery] = createSignal("");
   // Re-fetches from PocketBase whenever query() changes.
-  const [maps, { mutate }] = createResource(query, fetchMaps);
+  const [maps, { mutate }] = createResource(query, listMaps);
   const [editMode, setEditMode] = createSignal(false);
 
   async function handleDelete(id) {

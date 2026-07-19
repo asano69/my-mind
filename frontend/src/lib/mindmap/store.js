@@ -75,6 +75,11 @@ export const [currentMapId, setCurrentMapId] = createSignal(null);
 // list instead of its default reserved content area. Set by the
 // "recover" command (see command/command.js), read by LeftPanel.jsx.
 export const [showSnapshots, setShowSnapshotsRaw] = createSignal(false);
+// Whether the left sidebar is currently showing the inline "browse all
+// maps" list instead of its default reserved content area. Set by the
+// "catalog-list" command (see command/command.js), read by
+// LeftPanel.jsx/CatalogList.jsx.
+export const [showCatalogList, setShowCatalogListRaw] = createSignal(false);
 
 // Whether the help panel (#help) is hidden. Replaces the old help.js
 // bridge module (registerToggle/dispose) now that command.js and
@@ -82,13 +87,15 @@ export const [showSnapshots, setShowSnapshotsRaw] = createSignal(false);
 // pattern as leftPanelHidden/rightPanelHidden.
 export const [helpHidden, setHelpHiddenRaw] = createSignal(true);
 
-// Help and the snapshot recovery list act as mutually exclusive tabs in
-// the left sidebar's content area: opening one always closes the other,
-// and opening the one that's already open is a no-op rather than a
-// toggle-away (unlike leftPanelHidden/rightPanelHidden, which really are
-// simple show/hide toggles).
+// Help, the snapshot recovery list, and the maps browser act as
+// mutually exclusive tabs in the left sidebar's content area: opening
+// one always closes the others, and opening the one that's already
+// open is a no-op rather than a toggle-away (unlike
+// leftPanelHidden/rightPanelHidden, which really are simple show/hide
+// toggles).
 export function openHelp() {
   setShowSnapshotsRaw(false);
+  setShowCatalogListRaw(false);
   setHelpHiddenRaw(false);
 }
 export function closeHelp() {
@@ -96,5 +103,11 @@ export function closeHelp() {
 }
 export function openSnapshots() {
   setHelpHiddenRaw(true);
+  setShowCatalogListRaw(false);
   setShowSnapshotsRaw(true);
+}
+export function openCatalogList() {
+  setHelpHiddenRaw(true);
+  setShowSnapshotsRaw(false);
+  setShowCatalogListRaw(true);
 }
