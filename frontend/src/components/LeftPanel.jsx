@@ -12,7 +12,7 @@ import SnapshotsList from "./SnapshotsList";
 import CatalogList from "./CatalogList";
 import HelpPanel from "./HelpPanel";
 
-import Book from "lucide-solid/icons/book";
+import FolderOpen from "lucide-solid/icons/folder-open";
 
 import PanelLeft from "lucide-solid/icons/panel-left";
 import FilePlus from "lucide-solid/icons/file-plus";
@@ -86,7 +86,7 @@ export default function LeftPanel() {
           onClick={() => runCommand("catalog-list")}
           title="Browse maps"
         >
-          <Book size={20} />
+          <FolderOpen size={20} />
         </button>
 
      
