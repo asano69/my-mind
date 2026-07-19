@@ -697,6 +697,11 @@ function findLinks(node) {
       let after = str.substring(result.index + result[0].length);
       var link = document.createElement("a");
       link.innerHTML = link.href = result[0];
+      // Open detected links in a new tab. rel="noopener noreferrer" is
+      // required alongside target="_blank" so the opened page cannot
+      // access window.opener (reverse tabnabbing).
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
       if (before) {
         node.insertBefore(document.createTextNode(before), child);
       }

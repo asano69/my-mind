@@ -100,6 +100,15 @@ svg > .item > .item > foreignObject > .content {
   outline: none;
 }
 
+.item .text a {
+  color: #1a73e8;
+  text-decoration: underline;
+}
+
+.item .text a:hover {
+  color: #1558b0;
+}
+
 .item .value {
   opacity: 0.7;
 }
