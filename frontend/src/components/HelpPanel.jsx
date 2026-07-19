@@ -45,7 +45,7 @@ const SECTIONS = [
       ["undo", "redo"],
       ["save"],
       ["copy-image"],
-      ["load"],
+      ["recover"],
       ["new"],
       ["help"],
       ["notes"],

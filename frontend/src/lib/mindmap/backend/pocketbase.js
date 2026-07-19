@@ -40,3 +40,22 @@ export async function deleteMap(id) {
 export async function updatePin(id, pin) {
   return pb.collection(COLLECTION).update(id, { pin });
 }
+
+const SNAPSHOTS_COLLECTION = "snapshots";
+
+// Lightweight list of a map's restorable past snapshots, newest first.
+// Excludes "mymind" (the full map JSON) since the list view only needs
+// enough to render a thumbnail; see getSnapshot() for restoring one.
+export async function listSnapshots(mapId) {
+  return pb.collection(SNAPSHOTS_COLLECTION).getFullList({
+    filter: pb.filter("map = {:map}", { map: mapId }),
+    sort: "-created",
+    fields: "id,tier,svg,created",
+  });
+}
+
+// Fetches a single snapshot's full record (including "mymind"), used
+// right before restoring it.
+export async function getSnapshot(id) {
+  return pb.collection(SNAPSHOTS_COLLECTION).getOne(id);
+}

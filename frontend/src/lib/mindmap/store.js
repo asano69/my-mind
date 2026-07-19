@@ -65,3 +65,13 @@ export const [activeMode, setActiveMode] = createSignal("canvas");
 export function toggleNotesMode() {
   setActiveMode((m) => (m === "notes" ? "canvas" : "notes"));
 }
+
+// PocketBase record id of the currently open map, mirrored from
+// ui/io.js's setCurrentMap() so components (e.g. SnapshotsList.jsx) can
+// react to which map is open without importing io.js directly.
+export const [currentMapId, setCurrentMapId] = createSignal(null);
+
+// Whether the left sidebar is currently showing the snapshot recovery
+// list instead of its default reserved content area. Set by the
+// "recover" command (see command/command.js), read by LeftPanel.jsx.
+export const [showSnapshots, setShowSnapshots] = createSignal(false);

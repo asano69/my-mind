@@ -1,6 +1,8 @@
 import { A, useNavigate } from "@solidjs/router";
+import { Show } from "solid-js";
 
-import { leftPanelHidden, toggleLeftPanel } from "../lib/mindmap/store";
+import { leftPanelHidden, toggleLeftPanel, showSnapshots } from "../lib/mindmap/store";
+import SnapshotsList from "./SnapshotsList";
 
 import Book from "lucide-solid/icons/book";
 
@@ -86,19 +88,25 @@ export default function LeftPanel() {
           <CircleQuestionMark size={20} />
         </button>
 
-        <button class="icon-btn" onClick={() => runCommand("load")} title="restore">
+        <button class="icon-btn" onClick={() => runCommand("recover")} title="Restore snapshot">
           <DatabaseBackup size={20} />
         </button>
       </div>
-      {/* Reserved for future content (e.g. a snapshot list). Fades in only
-          once the panel is wide enough to actually show it. */}
+      {/* Fades in only once the panel is wide enough to actually show its
+          content. Shows the snapshot recovery list once the "recover"
+          command has been triggered (see command/command.js); empty
+          otherwise. */}
       <div
         class="min-w-0 flex-1 overflow-y-auto px-2 py-2 transition-opacity duration-200"
         classList={{
           "opacity-0": leftPanelHidden(),
           "pointer-events-none": leftPanelHidden(),
         }}
-      />
+      >
+        <Show when={showSnapshots()}>
+          <SnapshotsList />
+        </Show>
+      </div>
     </div>
   );
 }

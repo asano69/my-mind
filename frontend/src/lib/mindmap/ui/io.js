@@ -9,6 +9,7 @@ import {
   lastSaveTime,
   setLastSaveTime,
   dirtyVersion,
+  setCurrentMapId,
 } from "../store.js";
 
 let currentMapId = null; // PocketBase record id, used for save/update calls
@@ -103,6 +104,7 @@ export function dispose() {
 
   setCurrentTitle("");
   setLastSaveTime(null);
+  setCurrentMapId(null);
 
   saveInFlight = false;
   saveAgainRequested = false;
@@ -239,6 +241,7 @@ function setCurrentMap(record) {
   currentMapId = record ? record.id : null;
   currentMapUuid = record ? record.uuid : null;
   setCurrentTitle(record ? record.title || "" : "");
+  setCurrentMapId(currentMapId);
   updateURL();
 }
 // Called by command/command.js's New command after starting a fresh
@@ -246,6 +249,15 @@ function setCurrentMap(record) {
 // (replaces the old "map-new" pubsub message).
 export function resetCurrentMap() {
   setCurrentMap(null);
+}
+
+// Replaces the currently open map's root with a past snapshot's content
+// (see SnapshotsList.jsx). The map's identity (currentMapId/currentMapUuid)
+// is left untouched, so a subsequent save overwrites the same record with
+// the restored content instead of creating a new map. Does not save by
+// itself — the user must explicitly save afterwards.
+export function restoreSnapshot(snapshot) {
+  app.showMap(MindMap.fromJSON(snapshot.mymind));
 }
 
 // Deletes the currently open map (if it has been saved at least once)

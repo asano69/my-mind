@@ -12,6 +12,7 @@ import ImageBackend from "../backend/image.js";
 import * as actions from "../action.js";
 import MindMap from "../map.js";
 import { isCanvasActive } from "../scope.js";
+import { setLeftPanelHidden, setShowSnapshots } from "../store.js";
 
 const PAN_AMOUNT = 15;
 let keyboardScope = globalThis.window ?? null;
@@ -179,6 +180,17 @@ new (class SaveAs extends Command {
   }
   execute() {
     io.show("save");
+  }
+})();
+
+new (class Recover extends Command {
+  constructor() {
+    super("recover", "Restore a past snapshot");
+    this.keys = [];
+  }
+  execute() {
+    setLeftPanelHidden(false);
+    setShowSnapshots(true);
   }
 })();
 
