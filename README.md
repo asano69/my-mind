@@ -49,7 +49,7 @@ It has a catalog feature.
 
 
 ## Work in Progress
-- [ ] Markodwonエディタをマップの背景にもっていけないか検討
+- [ ] Notesモードで、マークダウンエディタで、テキストを編集するとき、かなり入力から画面表示がもっさりしている。なにか無駄な処理が入っている気がする。高速化できないか検討してほしい。とくにマインドマップ側のノードが大きくなったとき、入力が非常に重たくなる。
 
 ## Ref
 - [ondras/my-mind](https://github.com/ondras/my-mind)/ Demo: https://my-mind.github.io/
