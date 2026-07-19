@@ -86,7 +86,7 @@ export default function LeftPanel() {
           <CircleQuestionMark size={20} />
         </button>
 
-        <button class="icon-btn" onClick={() => runCommand("load")} title="Open">
+        <button class="icon-btn" onClick={() => runCommand("load")} title="restore">
           <DatabaseBackup size={20} />
         </button>
       </div>
