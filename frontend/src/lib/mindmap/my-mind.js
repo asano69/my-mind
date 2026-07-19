@@ -216,6 +216,15 @@ export async function mount(root, containerEl, uuid) {
   keyboard.init(containerEl);
   mouse.init(port, containerEl);
   title.init();
+
+  // Size the canvas before any map is shown. io.restore() (called by
+  // ui.init() below) shows a restored map synchronously as soon as it
+  // loads, and Map.show() calls center() using port's current
+  // dimensions -- so this must run first, or the root node centers
+  // against main's default (not-yet-sized) box instead of the actual
+  // visible area, which is only correct after handleResize() runs.
+  handleResize();
+
   // Waits for ui.init()'s io.restore() call to finish so we know whether
   // an existing map was loaded, instead of unconditionally creating a
   // blank map right after and racing with the async restore.
@@ -244,7 +253,6 @@ export async function mount(root, containerEl, uuid) {
     );
   });
 
-  handleResize();
   if (!loaded) {
     showMap(new Map());
   }

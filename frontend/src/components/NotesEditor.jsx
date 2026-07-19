@@ -27,7 +27,17 @@ export default function NotesEditor() {
     }
 
     applyingExternalContent = true;
+    const wasPreview = easyMDE.isPreviewActive();
     easyMDE.value(next);
+    // EasyMDE's preview pane is a static render generated the moment
+    // togglePreview() runs; changing the underlying value via value()
+    // while preview is already active does not refresh it. Without this,
+    // switching maps while backgrounded left the notes preview showing
+    // the previous map's content. Toggle off/on to force a fresh render.
+    if (wasPreview) {
+      easyMDE.togglePreview();
+      easyMDE.togglePreview();
+    }
     applyingExternalContent = false;
   }
 
