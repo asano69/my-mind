@@ -74,16 +74,27 @@ export const [currentMapId, setCurrentMapId] = createSignal(null);
 // Whether the left sidebar is currently showing the snapshot recovery
 // list instead of its default reserved content area. Set by the
 // "recover" command (see command/command.js), read by LeftPanel.jsx.
-export const [showSnapshots, setShowSnapshots] = createSignal(false);
+export const [showSnapshots, setShowSnapshotsRaw] = createSignal(false);
 
 // Whether the help panel (#help) is hidden. Replaces the old help.js
 // bridge module (registerToggle/dispose) now that command.js and
 // HelpPanel.jsx are both plain consumers of a shared signal, same
 // pattern as leftPanelHidden/rightPanelHidden.
-export const [helpHidden, setHelpHidden] = createSignal(true);
-export function toggleHelp() {
-  setHelpHidden((h) => !h);
+export const [helpHidden, setHelpHiddenRaw] = createSignal(true);
+
+// Help and the snapshot recovery list act as mutually exclusive tabs in
+// the left sidebar's content area: opening one always closes the other,
+// and opening the one that's already open is a no-op rather than a
+// toggle-away (unlike leftPanelHidden/rightPanelHidden, which really are
+// simple show/hide toggles).
+export function openHelp() {
+  setShowSnapshotsRaw(false);
+  setHelpHiddenRaw(false);
 }
 export function closeHelp() {
-  setHelpHidden(true);
+  setHelpHiddenRaw(true);
+}
+export function openSnapshots() {
+  setHelpHiddenRaw(true);
+  setShowSnapshotsRaw(true);
 }

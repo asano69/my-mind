@@ -6,13 +6,13 @@ import * as notes from "../ui/notes.js";
 import * as ui from "../ui/ui.js";
 import * as io from "../ui/io.js";
 import { showToast } from "../ui/toast.js";
-import { toggleHelp, helpHidden } from "../store.js";
+import { openHelp, openSnapshots } from "../store.js";
 
 import ImageBackend from "../backend/image.js";
 import * as actions from "../action.js";
 import MindMap from "../map.js";
 import { isCanvasActive } from "../scope.js";
-import { setLeftPanelHidden, setShowSnapshots } from "../store.js";
+import { setLeftPanelHidden } from "../store.js";
 
 const PAN_AMOUNT = 15;
 let keyboardScope = globalThis.window ?? null;
@@ -190,7 +190,7 @@ new (class Recover extends Command {
   }
   execute() {
     setLeftPanelHidden(false);
-    setShowSnapshots(true);
+    openSnapshots();
   }
 })();
 
@@ -246,10 +246,10 @@ new (class Help extends Command {
     // Help content now renders inside the left sidebar (see
     // LeftPanel.jsx), same as the Recover command below: opening it
     // also expands the sidebar so the content is actually visible.
-    toggleHelp();
-    if (!helpHidden()) {
-      setLeftPanelHidden(false);
-    }
+    // Always opens (rather than toggling) so it behaves like a tab:
+    // repeated presses just keep help open instead of hiding it again.
+    openHelp();
+    setLeftPanelHidden(false);
   }
 })();
 new (class UI extends Command {
