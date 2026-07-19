@@ -1,3 +1,5 @@
+import { useParams } from "@solidjs/router";
+import { Show } from "solid-js";
 import { activeMode, leftPanelHidden } from "../lib/mindmap/store";
 import NotesEditor from "../components/NotesEditor";
 import MindMapCanvas from "../components/MindMapCanvas";
@@ -16,6 +18,8 @@ import LeftPanel from "../components/LeftPanel";
 // position:fixed content, so lifting them out of MindMapCanvas's DOM
 // subtree does not change their on-screen position or stacking order.
 export default function Workspace() {
+  const params = useParams();
+
   return (
     <>
       <div
@@ -23,7 +27,14 @@ export default function Workspace() {
         classList={{ "pointer-events-none": activeMode() !== "canvas" }}
         style={{ "z-index": activeMode() === "canvas" ? 1 : 0 }}
       >
-        <MindMapCanvas />
+        {/* Keyed on the route's uuid (or a fixed placeholder for "/") so
+            Solid disposes and recreates MindMapCanvas whenever the open
+            map changes. This re-runs my-mind.js's mount()/unmount()
+            lifecycle for the new map -- the same clean reinitialization a
+            full page reload used to provide -- without leaving the SPA. */}
+        <Show when={params.uuid ?? "__new__"} keyed>
+          {() => <MindMapCanvas />}
+        </Show>
       </div>
       <div
         class="fixed inset-0 transition-[margin-left] duration-300 ease-in-out"

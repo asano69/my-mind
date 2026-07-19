@@ -8,17 +8,18 @@ import { A, useNavigate } from "@solidjs/router";
 // SnapshotsList.jsx's layout, but for maps instead of snapshots, and with
 // no edit affordances (renaming/pinning/deleting stay on /catalog).
 export default function CatalogList() {
+  const navigate = useNavigate();
   const [maps] = createResource(() => listMaps());
 
   // Persist the current map first (mirrors LeftPanel.jsx's own
-  // goToCatalog handler), then do a full navigation so the mindmap
-  // engine reinitializes cleanly for the newly opened map, instead of
-  // relying on Workspace's route params changing under an already
-  // mounted instance.
+  // goToCatalog handler), then navigate via the router. Workspace.jsx
+  // keys MindMapCanvas on the route's uuid, so this client-side
+  // navigation still gets a clean engine unmount()/mount() cycle for
+  // the newly opened map -- a full page reload is no longer needed.
   async function handleOpen(uuid) {
     const io = await import("../lib/mindmap/ui/io.js");
     await io.saveWithSvg();
-    window.location.href = `/maps/${uuid}`;
+    navigate(`/maps/${uuid}`);
   }
 
   return (
