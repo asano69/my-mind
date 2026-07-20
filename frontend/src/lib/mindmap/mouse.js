@@ -229,6 +229,7 @@ function onDragEnd(_e) {
   port.removeEventListener("mouseup", onDragEnd);
   const { mode, ghost } = current;
   if (mode == "pan" || mode == "pinch") {
+    current.mode = ""; // otherwise isDragging() would stay stuck on a stale mode
     return;
   } // no cleanup after panning or pinching
   if (ghost) {
@@ -238,6 +239,39 @@ function onDragEnd(_e) {
     current.ghost = null;
   }
   current.items = [];
+  current.mode = "";
+}
+
+// Whether a node drag is currently in progress (mousedown/touchstart on a
+// non-root item started a drag session that hasn't ended yet). Used by
+// edit.js's Cancel command so pressing Escape mid-drag cancels it instead
+// of closing panels.
+export function isDragging() {
+  return current.mode === "drag";
+}
+
+// Cancels an in-progress node drag without committing any move, restoring
+// the map to its pre-drag state. Called by edit.js's Cancel command.
+export function cancelDrag() {
+  if (current.mode !== "drag") {
+    return;
+  }
+  clearTimeout(touchContextTimeout);
+  port.removeEventListener("mousemove", onDragMove);
+  port.removeEventListener("mouseup", onDragEnd);
+  port.removeEventListener("touchmove", onDragMove);
+  port.removeEventListener("touchend", onDragEnd);
+  port.style.cursor = "";
+  visualizeDragState(null);
+  if (current.ghost) {
+    current.ghost.remove();
+  }
+  current.mode = "";
+  current.ghost = null;
+  current.items = [];
+  current.ghostPosition = [];
+  current.ctrlHeld = false;
+  current.previousDragState = null;
 }
 /**
  * Handle a two-finger pinch gesture to zoom in or out.

@@ -3,6 +3,7 @@ import * as app from "../my-mind.js";
 import * as actions from "../action.js";
 import * as notes from "../ui/notes.js";
 import * as io from "../ui/io.js";
+import * as mouse from "../mouse.js";
 import { closeHelp } from "../store.js";
 import Command, { repo as commandRepo } from "./command.js";
 new (class Edit extends Command {
@@ -63,6 +64,9 @@ new (class Cancel extends Command {
         var action = new actions.RemoveItem(app.currentItem);
         app.action(action);
       }
+    } else if (mouse.isDragging()) {
+      // A node drag is in progress: cancel it instead of closing panels.
+      mouse.cancelDrag();
     } else {
       // Clear multi-selection before closing panels
       app.clearMultiSelection();
