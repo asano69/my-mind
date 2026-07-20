@@ -131,9 +131,16 @@ export default class Map {
     root.parent = this;
   }
   adjustFontSize(diff) {
+    // Capture the root's bounding box before the font-size change so the
+    // map can be re-centered on the same point afterwards. Without this,
+    // the map's local (0,0) anchor stays screen-fixed while the bounding
+    // box grows/shrinks, making the map appear to drift on every zoom step.
+    const before = this._root.size;
     this.fontSize = Math.max(8, this.fontSize + 2 * diff);
     this.node.style.fontSize = `${this.fontSize}px`;
     this.requestLayout();
+    const after = this._root.size;
+    this.moveBy([(before[0] - after[0]) / 2, (before[1] - after[1]) / 2]);
     this.ensureItemVisibility(app.currentItem);
   }
 
