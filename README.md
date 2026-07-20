@@ -53,6 +53,7 @@ The demo takes about 50 seconds to start.
 - [x] Canvasで、Map削除ボタンを追加する
 - [x] Canvasにおいて、URLはURLとわかるように色を変えて下線をひくCSSにする
 - [x] CanvasのSave Asボタンで、マインドマップのpng画像をクリップボードにコピーする
+- [x] 手動保存ボタンの設置
 - [ ] フロントエンドにおいて自動保存アルゴリズムの調整（スナップショットロード時に自動バックアップされないようにする）
 - [ ] 落書き機能（フリーライティング）
 - [ ] ノードの移動をdnd-kitに変えられないか検討する
@@ -66,7 +67,7 @@ The demo takes about 50 seconds to start.
 ## Work in Progress
 - [ ] Undo/Redoボタンの設置
 - [ ] クライアントサイドでの自動転送（保存）機能の無効化と有効化を切り替えるトグルスイッチ（デフォルトでは無効化）
-- [ ] 手動保存ボタンの設置
+
 
 ## Ref
 - [ondras/my-mind](https://github.com/ondras/my-mind)/ Demo: https://my-mind.github.io/
