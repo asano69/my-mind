@@ -40,15 +40,13 @@ It has a catalog feature.
 - [x] Mindmap Engine → Solid Reactive State: Migration Plan
 - [x] canvasで、Catalogアイコンや、タイトル、エディターボタンなどのある細長い部分を、topbarなどのコンポーネント化する
 - [x] Canvasで、Map削除ボタンを追加する
+- [x] Canvasにおいて、URLはURLとわかるように色を変えて下線をひくCSSにする
+- [x] CanvasのSave Asボタンで、マインドマップのpng画像をクリップボードにコピーする
+
 
 - [ ] クライアントサイドでの自動転送（保存）機能の無効化と有効化を切り替えるトグルスイッチ（デフォルトでは無効化）
 - [ ] フロントエンドにおいて自動保存アルゴリズムの調整（スナップショットロード時に自動バックアップされないようにする）
-
-- [x] Canvasにおいて、URLはURLとわかるように色を変えて下線をひくCSSにする
-
 - [ ] マークダウンエディタで、画像の貼り付けを無効化する（データベースの圧迫を防ぐため）
-
-- [x] CanvasのSave Asボタンで、マインドマップのpng画像をクリップボードにコピーする
 - [ ] 落書き機能（フリーライティング）
 - [ ] ノードの移動をdnd-kitに変えられないか検討する
 
@@ -57,8 +55,8 @@ It has a catalog feature.
 
 ### Backend
 - [x] マインドマップのスナップショットのサーバサイドでの自動保存（例, 1分ごと30世代、10分ごと24世代、1時間ごと7日。変更がない場合はスキップ）
-- [ ] UUIDv7へ移行
-- [ ] svg画像を配信するルートを作成。http://localhost:3001/img/UUID
+- [x] UUIDv7へ移行
+- [ ] svg画像を配信するルートを作成。http://localhost:3001/maps/UUID/svg
 
 
 ## Work in Progress
