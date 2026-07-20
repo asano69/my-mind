@@ -45,6 +45,10 @@ export default class Map {
     this.style = html.node("style");
     this.position = [0, 0];
     this.fontSize = 15;
+    // Pending wheel/pinch zoom not yet committed to fontSize (see
+    // previewZoom/commitZoom below).
+    this._zoomAccum = 0;
+    this._zoomTimeout = null;
     let resolvedOptions = Object.assign(
       {
         root: (() => {
@@ -132,6 +136,40 @@ export default class Map {
     this.requestLayout();
     this.ensureItemVisibility(app.currentItem);
   }
+
+  // Called on every wheel/pinch tick. adjustFontSize() triggers a
+  // synchronous full-tree relayout (see requestLayout in this file),
+  // which is too slow to run on every tick for maps with many nodes and
+  // causes visible jank. Instead, apply an instant CSS transform for
+  // smooth visual feedback, and only commit the real (expensive) relayout
+  // once the user stops scrolling/pinching.
+  previewZoom(diff) {
+    this._zoomAccum += diff;
+    // Mirror adjustFontSize's floor here, otherwise a fast zoom-out can
+    // drive the preview scale to zero or negative (map appears to
+    // collapse/flip), then snap once commitZoom() applies the real,
+    // clamped fontSize.
+    const targetFontSize = Math.max(8, this.fontSize + 2 * this._zoomAccum);
+    const scale = targetFontSize / this.fontSize;
+    this.node.style.transform = `scale(${scale})`;
+    if (this._zoomTimeout !== null) {
+      clearTimeout(this._zoomTimeout);
+    }
+    this._zoomTimeout = setTimeout(() => this.commitZoom(), 150);
+  }
+
+  // Applies the accumulated preview zoom for real (one relayout pass)
+  // and clears the temporary transform, since the node's actual size now
+  // reflects the new fontSize.
+  commitZoom() {
+    this._zoomTimeout = null;
+    const diff = this._zoomAccum;
+    this._zoomAccum = 0;
+    this.node.style.transform = "";
+    if (diff) {
+      this.adjustFontSize(diff);
+    }
+  }
   mergeWith(data) {
     // store a sequence of nodes to be selected when merge is over
     let ids = [];
@@ -192,6 +230,13 @@ export default class Map {
     app.selectItem(this._root);
   }
   hide() {
+    // Don't leave a pending zoom commit firing against a map that's no
+    // longer shown.
+    if (this._zoomTimeout !== null) {
+      clearTimeout(this._zoomTimeout);
+      this._zoomTimeout = null;
+      this._zoomAccum = 0;
+    }
     this.node.remove();
   }
   center() {
