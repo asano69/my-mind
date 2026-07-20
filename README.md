@@ -3,10 +3,6 @@
 
 <img src="frontend/public/favicon.svg" width="100" align="right" />
 
->[!CAUTION]
->This app is still under development, and the mymap schema may change. To keep the design simple, backward compatibility is not considered. Therefore, it is not suitable for general use, but you are free to fork it if needed.
-
-
 
 My Mind is a web application for creating and managing Mind maps.  
 New to Mind maps? They are useful, aesthetic and cool! Read more about these special diagrams in [the Wikipedia article](https://en.wikipedia.org/wiki/Mind_map).
@@ -37,6 +33,9 @@ https://my-mind-31or.onrender.com/
 
 - Email: `admin@mail.internal`
 - Password: `password`
+
+>[!TIP]
+>Currently, a new mind map can be saved using Ctrl + Shift + S.
 
 ## Plan
 ### Frontend
