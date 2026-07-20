@@ -13,10 +13,10 @@ import CatalogList from "./CatalogList";
 import HelpPanel from "./HelpPanel";
 
 import FolderOpen from "lucide-solid/icons/folder-open";
+import Book from "lucide-solid/icons/book";
 
 import PanelLeft from "lucide-solid/icons/panel-left";
 import FilePlus from "lucide-solid/icons/file-plus";
-
 
 import CircleQuestionMark from "lucide-solid/icons/circle-question-mark";
 
@@ -67,8 +67,6 @@ export default function LeftPanel() {
       }}
     >
       <div class="flex w-[var(--ribbon-width)] flex-shrink-0 flex-col items-center gap-2 py-2">
-        
-  
         <button
           class="icon-btn"
           onClick={toggleLeftPanel}
@@ -89,7 +87,15 @@ export default function LeftPanel() {
           <FolderOpen size={20} />
         </button>
 
-     
+        <A
+          href="/catalog"
+          class="icon-btn"
+          title="Catalog"
+          onClick={goToCatalog}
+        >
+          <Book size={20} />
+        </A>
+
         <button
           class="icon-btn"
           onClick={() => runCommand("save-as")}

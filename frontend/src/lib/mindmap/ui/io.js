@@ -105,7 +105,14 @@ export async function restore(uuid) {
   app.setThrobber(true);
   try {
     const record = await backend.loadByUuid(uuid);
-    console.log("[io.restore] loaded record id =", record.id, "uuid =", record.uuid, "title =", record.title);
+    console.log(
+      "[io.restore] loaded record id =",
+      record.id,
+      "uuid =",
+      record.uuid,
+      "title =",
+      record.title,
+    );
     setCurrentMap(record);
     app.setThrobber(false);
     app.showMap(MindMap.fromJSON(record.mymind));

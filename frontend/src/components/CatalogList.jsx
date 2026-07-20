@@ -31,7 +31,6 @@ export default function CatalogList() {
   }
 
   return (
-
     <Show
       when={!maps.loading}
       fallback={<p class="px-1 text-sm text-text/50">Loading…</p>}
@@ -41,12 +40,9 @@ export default function CatalogList() {
         fallback={<p class="px-1 text-sm text-text/50">No maps yet.</p>}
       >
         <div class="flex flex-col gap-2">
-        <A
-          href="/catalog"
-          title="Catalog"
-        >
-          <h2> My mind </h2>
-        </A>
+          <A href="/catalog" title="Catalog">
+            <h2> My mind </h2>
+          </A>
 
           <For each={maps()}>
             {(map) => (

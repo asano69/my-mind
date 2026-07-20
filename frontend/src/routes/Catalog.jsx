@@ -7,14 +7,12 @@ import FilePlus from "lucide-solid/icons/file-plus";
 import Settings2 from "lucide-solid/icons/settings-2";
 import Check from "lucide-solid/icons/check";
 
-
 import {
   listMaps,
   updateTitle,
   updatePin,
   deleteMap,
 } from "../lib/mindmap/backend/pocketbase";
-
 
 export default function Catalog() {
   const navigate = useNavigate();
