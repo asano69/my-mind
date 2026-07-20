@@ -35,7 +35,8 @@ https://my-mind-31or.onrender.com/
 - Password: `password`
 
 >[!TIP]
->Currently, a new mind map can be saved using Ctrl + Shift + S.
+>1. Currently, a new mind map can be saved using Ctrl + Shift + S.
+>2. To navigate to the Catalog page, click "My mind" in the left sidebar.
 
 ## Plan
 ### Frontend
