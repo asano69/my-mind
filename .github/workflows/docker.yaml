@@ -1,13 +1,8 @@
 name: Docker
 on:
   push:
-    branches: [main]
-    tags: ["v*"]
-    paths:
-      - main.go
-      - Dockerfile
-      - entrypoint.sh
-
+    tags:
+      - "v*"
 env:
   IMAGE_NAME: ${{ github.repository }}
 jobs:
