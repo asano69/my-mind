@@ -330,7 +330,7 @@ export default class Map {
   }
   get name() {
     let name = this._root.text;
-    return br2nl(name).replace(/\n/g, " ").replace(/<.*?>/g, "").trim();
+    return br2nl(name).replace(/\n/g, " ").replace(/[<>]/g, "").trim();
   }
   get id() {
     return this._root.id;
