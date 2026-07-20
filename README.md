@@ -29,6 +29,8 @@ It has a catalog feature.
 Demo URL:
 https://my-mind-31or.onrender.com/
 
+The demo takes about 50 seconds to start.
+
 ### Login Credentials
 
 - Email: `admin@mail.internal`
