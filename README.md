@@ -42,9 +42,6 @@ It has a catalog feature.
 - [x] Canvasで、Map削除ボタンを追加する
 - [x] Canvasにおいて、URLはURLとわかるように色を変えて下線をひくCSSにする
 - [x] CanvasのSave Asボタンで、マインドマップのpng画像をクリップボードにコピーする
-- [ ] Undo/Redoボタンの設置
-- [ ] クライアントサイドでの自動転送（保存）機能の無効化と有効化を切り替えるトグルスイッチ（デフォルトでは無効化）
-- [ ] 手動保存ボタンの設置
 - [ ] フロントエンドにおいて自動保存アルゴリズムの調整（スナップショットロード時に自動バックアップされないようにする）
 - [ ] 落書き機能（フリーライティング）
 - [ ] ノードの移動をdnd-kitに変えられないか検討する
@@ -55,8 +52,10 @@ It has a catalog feature.
 - [x] UUIDv7へ移行
 - [ ] svg画像を配信するルートを作成。http://localhost:3001/maps/UUID/svg
 
-
 ## Work in Progress
+- [ ] Undo/Redoボタンの設置
+- [ ] クライアントサイドでの自動転送（保存）機能の無効化と有効化を切り替えるトグルスイッチ（デフォルトでは無効化）
+- [ ] 手動保存ボタンの設置
 
 ## Ref
 - [ondras/my-mind](https://github.com/ondras/my-mind)/ Demo: https://my-mind.github.io/
