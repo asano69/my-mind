@@ -34,8 +34,8 @@ render(
     <AuthGate>
       <Router>
         <Route path="/" component={Catalog} />
+        <Route path="/maps/new" component={Workspace} />
         <Route path="/maps/:uuid" component={Workspace} />
-        <Route path="/catalog" component={Catalog} />
       </Router>
     </AuthGate>
   ),

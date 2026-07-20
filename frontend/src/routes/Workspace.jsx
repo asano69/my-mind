@@ -9,6 +9,11 @@ import LeftPanel from "../components/LeftPanel";
 export default function Workspace() {
   const params = useParams();
 
+  // "/maps/new" is not a real map id — treat it the same as no uuid at
+  // all, so MindMapCanvas/io.restore() create a fresh, unsaved map
+  // instead of trying to look up a map literally named "new".
+  const uuid = () => (params.uuid === "new" ? undefined : params.uuid);
+
   createEffect(() => {
     console.log("[Workspace] params.uuid changed to", params.uuid);
   });

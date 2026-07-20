@@ -68,7 +68,7 @@ export default function Catalog() {
                 <Check size={28} />
               </Show>
             </button>
-            <A href="/" class="icon-btn" title="New">
+            <A href="/maps/new" class="icon-btn" title="New">
               <FilePlus size={28} />
             </A>
           </div>
