@@ -37,8 +37,9 @@ The demo takes about 50 seconds to start.
 - Password: `password`
 
 >[!TIP]
->1. Currently, a new mind map can be saved using Ctrl + Shift + S.
->2. To navigate to the Catalog page, click "My mind" in the left sidebar.
+>1. Currently, a new mind map can be saved using **Ctrl + Shift + S.**
+>2. To navigate to the Catalog page, click "My mind" in the left sidebar
+>3. If the demo site is not displaying correctly or seems to be behaving unexpectedly, please try pressing **Ctrl + Shift + R** to perform a hard refresh.
 
 ## Plan
 ### Frontend
