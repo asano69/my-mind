@@ -28,7 +28,15 @@ It has a catalog feature.
 <img src=".github/assets/sample-02.png" width="800">
 
 
+## Demo
 
+Demo URL:
+https://my-mind-31or.onrender.com/
+
+### Login Credentials
+
+- Email: `admin@mail.internal`
+- Password: `password`
 
 ## Plan
 ### Frontend
