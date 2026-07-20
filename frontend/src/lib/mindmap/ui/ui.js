@@ -59,10 +59,13 @@ export function isActive() {
   // The mindmap engine's own item-text editing is a contentEditable div;
   // any other contentEditable region belongs to some other part of the UI
   // (and should not receive mindmap shortcuts).
+  // The #io save panel was removed (saving is now instant, see
+  // ui/io.js's quickSave()), so there is no longer a panel focus state
+  // to check here.
   if (active?.isContentEditable && active !== app.currentItem?.dom.text) {
     return true;
   }
-  return io.isActive();
+  return false;
 }
 
 // #ui (RightPanel.jsx) reads/writes its own visibility directly from

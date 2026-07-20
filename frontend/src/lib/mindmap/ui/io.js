@@ -30,30 +30,12 @@ let disposeAutoSaveEffect = null; // dispose fn for the createRoot below, cleare
 let saveInFlight = false;
 let saveAgainRequested = false;
 
-let node = null;
-
 const AUTO_SAVE_DELAY_MS = 1000;
 
-export function isActive() {
-  return !node.hidden && node.contains(document.activeElement);
-}
-
-// Assumes a single instance in the DOM (see
-// docs/workspace-mode-switch-refactor.md, Phase 4) — `#io` is looked
-// up by id, and currentMapId/currentMapUuid are module-level state for
-// exactly one open map. Safe under the current "one canvas, toggle
-// visibility" model; revisit if multiple canvases are ever mounted
-// simultaneously.
+// The #io save-confirmation panel was removed: Ctrl+Shift+S now saves
+// directly (see quickSave() below), so there is no longer a DOM node
+// or focus state for this module to track.
 export function init() {
-  node = document.querySelector("#io");
-  node.querySelector(".cancel").addEventListener("click", (_) => hide());
-  node.querySelector(".go").addEventListener("click", (_) => submit());
-  node.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      hide();
-    }
-  });
-
   statusTimer = setInterval(updateSaveStatus, 1000);
   // Auto-save: debounce item changes and save after a short delay.
   // Only kicks in once the map has been saved at least once (has an id).
@@ -108,7 +90,6 @@ export function dispose() {
 
   saveInFlight = false;
   saveAgainRequested = false;
-  node = null;
 }
 
 // uuid comes from the router's params (see Workspace.jsx/MindMapCanvas.jsx)
@@ -128,7 +109,6 @@ export async function restore(uuid) {
     setCurrentMap(record);
     app.setThrobber(false);
     app.showMap(MindMap.fromJSON(record.mymind));
-    hide();
     return true;
   } catch (e) {
     console.log("[io.restore] error", e);
@@ -159,26 +139,7 @@ export async function setTitle(title) {
   }
 }
 
-export function show() {
-  node.hidden = false;
-}
-
-export function hide() {
-  if (node.contains(document.activeElement)) {
-    document.activeElement.blur();
-  }
-  node.hidden = true;
-}
-
 export function quickSave() {
-  if (currentMapId) {
-    saveWithSvg();
-  } else {
-    show();
-  }
-}
-
-function submit() {
   saveWithSvg();
 }
 
@@ -239,7 +200,6 @@ async function performSave(includeSvg) {
     setCurrentMap(record);
     setLastSaveTime(Date.now());
     updateSaveStatus();
-    hide();
   } catch (e) {
     error(e);
   }

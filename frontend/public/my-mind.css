@@ -255,33 +255,6 @@ body:has(#ui.panel-expanded) .topbar-right {
   padding-left: 2px;
 }
 
-/* -------------------------------------------------------------
-   Pane — #io (close / save)
-   ------------------------------------------------------------- */
-.pane#io button {
-  width: 45%;
-  background: transparent;
-  border: none;
-  font-size: 16px;
-  font-family: var(--font-sans);
-  padding: 4px 10px;
-  opacity: 0.6;
-  border-radius: 3px;
-  color: var(--color-accent);
-  transition:
-    opacity 80ms ease,
-    background-color 80ms ease;
-}
-
-.pane#io button:hover {
-  opacity: 1;
-  background: var(--color-hover);
-}
-
-.pane#io button.go {
-  font-weight: bold;
-  opacity: 0.85;
-}
 
 /* -------------------------------------------------------------
    Pane — #notes (notes editor)

@@ -1,7 +1,6 @@
 // frontend/src/components/MindMapCanvas.jsx
 import RightPanel from "./RightPanel";
 
-import SaveDialog from "./SaveDialog";
 import ContextMenu from "./ContextMenu";
 import { onMount, onCleanup } from "solid-js";
 
@@ -34,7 +33,6 @@ export default function MindMapCanvas(props) {
       <main ref={mainRef} />
 
       <RightPanel />
-      <SaveDialog />
       <ContextMenu />
     </div>
   );

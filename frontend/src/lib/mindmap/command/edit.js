@@ -2,7 +2,6 @@
 import * as app from "../my-mind.js";
 import * as actions from "../action.js";
 import * as notes from "../ui/notes.js";
-import * as io from "../ui/io.js";
 import * as mouse from "../mouse.js";
 import { closeHelp } from "../store.js";
 import Command, { repo as commandRepo } from "./command.js";
@@ -72,7 +71,6 @@ new (class Cancel extends Command {
       app.clearMultiSelection();
       notes.close();
       closeHelp();
-      io.hide();
     }
   }
 })();
