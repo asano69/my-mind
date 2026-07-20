@@ -4,11 +4,11 @@ services:
     container_name: my-mind
     #ports:
     #  - "3001:3000"
-    expose: 
+    expose:
       - 3000
     volumes:
       #- data:/app/maps
-      - ./data:/app/maps
+      - ./data:/my-mind/data
     restart: unless-stopped
     environment:
       TZ: Europe/London
