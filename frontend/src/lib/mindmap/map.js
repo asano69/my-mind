@@ -131,16 +131,26 @@ export default class Map {
     root.parent = this;
   }
   adjustFontSize(diff) {
-    // Capture the root's bounding box before the font-size change so the
-    // map can be re-centered on the same point afterwards. Without this,
-    // the map's local (0,0) anchor stays screen-fixed while the bounding
-    // box grows/shrinks, making the map appear to drift on every zoom step.
-    const before = this._root.size;
+    // Anchor the zoom on the currently selected item's on-screen position,
+    // not the root's bounding-box center. The old approach assumed the
+    // whole tree grows/shrinks symmetrically around its center, which only
+    // holds for a balanced map — for an off-center leaf selection the
+    // relayout (requestLayout(), see map.js's shared layout computed)
+    // grows asymmetrically, so the half-the-bbox-diff compensation left
+    // the view visibly drifting. Measuring the anchor's actual screen
+    // position before/after and compensating for the exact delta keeps
+    // whatever the user is looking at fixed regardless of how the tree
+    // grows.
+    const anchor = app.currentItem || this._root;
+    const before = anchor.dom.content.getBoundingClientRect();
     this.fontSize = Math.max(8, this.fontSize + 2 * diff);
     this.node.style.fontSize = `${this.fontSize}px`;
     this.requestLayout();
-    const after = this._root.size;
-    this.moveBy([(before[0] - after[0]) / 2, (before[1] - after[1]) / 2]);
+    const after = anchor.dom.content.getBoundingClientRect();
+    this.moveBy([
+      before.left + before.width / 2 - (after.left + after.width / 2),
+      before.top + before.height / 2 - (after.top + after.height / 2),
+    ]);
     this.ensureItemVisibility(app.currentItem);
   }
 
