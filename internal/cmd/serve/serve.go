@@ -29,10 +29,15 @@ func Run(app *pocketbase.PocketBase, cfg *config.Config) error {
 
 	// Every map gets a public uuid the moment it's first saved, so the
 	// frontend can address it as /maps/<uuid> instead of depending on
-	// PocketBase's own record id.
+	// PocketBase's own record id. UUIDv7 is used instead of v4 so ids are
+	// time-ordered, which keeps the "uuid" index roughly insertion-sorted.
 	app.OnRecordCreate(mapsCollection).BindFunc(func(e *core.RecordEvent) error {
 		if e.Record.GetString("uuid") == "" {
-			e.Record.Set("uuid", uuid.NewString())
+			id, err := uuid.NewV7()
+			if err != nil {
+				return err
+			}
+			e.Record.Set("uuid", id.String())
 		}
 		return e.Next()
 	})
