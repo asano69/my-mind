@@ -29,7 +29,7 @@ func main() {
 
 	root := app.RootCmd
 	root.Use = "my-mind"
-	root.Short = "my tool"
+	root.Short = "my-mind"
 	root.SilenceUsage = true
 	root.Version = "0.0.1-beta.1"
 
@@ -47,7 +47,7 @@ func main() {
 func serveCmd(app *pocketbase.PocketBase) *cobra.Command {
 	return &cobra.Command{
 		Use:   "serve",
-		Short: "Start the web server for all configured drill sessions",
+		Short: "Start the web server",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := config.Load()
