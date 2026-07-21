@@ -291,6 +291,17 @@ export default class Map {
     this.requestLayout();
     this.center();
     app.selectItem(this._root);
+    // Foreign-object-in-SVG first-paint quirk: right after inserting a
+    // brand-new SVG (with all its foreignObject/HTML content) into the
+    // document, the very first offsetWidth/scrollWidth reads inside
+    // layoutSubtree can be measured before the browser's first real paint,
+    // making everything render shrunk until some later relayout (e.g.
+    // zooming) recomputes real sizes. Force one more full recompute once
+    // the browser has had a chance to paint.
+    requestAnimationFrame(() => {
+      this.requestLayout();
+      this.center();
+    });
   }
   hide() {
     // Don't leave a pending zoom commit firing against a map that's no
