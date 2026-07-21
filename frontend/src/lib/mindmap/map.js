@@ -9,7 +9,10 @@ import { bumpDirty } from "./store.js";
 import { createSignal, createComputed, createRoot } from "solid-js";
 let css = "";
 
-function layoutSubtree(item) {
+// Phase 1 of layoutSubtree: DOM-content writes only, whole tree, before
+// any layout-driving read. Recursion order (children before self) is
+// unchanged from the old single-pass version.
+function updateContent(item) {
   item._childrenVersion(); // track child insertion/removal
   // Apply the collapsed class *before* recursing into children. Doing
   // this after recursion (as before) meant that on the very pass that
@@ -17,27 +20,58 @@ function layoutSubtree(item) {
   // ".item.collapsed .item") while their sizes were being measured here,
   // caching zero-sized foreignObjects that only a full reload fixed.
   item.updateToggle();
-  item.children.forEach(layoutSubtree);
+  item.children.forEach(updateContent);
   item.updateText();
   item.updateStatus();
   item.updateValue();
   item.updateIcon();
   item.updateNotes();
+}
+
+// Phase 2 of layoutSubtree: measurement reads only, whole tree. Runs
+// only after updateContent() has finished for every item, so the
+// browser needs to flush layout once for the first read here instead of
+// once per item (avoids read/write/read/write reflow thrashing).
+function measureSizes(item) {
+  const { content } = item.dom;
+  item._measuredSize = [
+    Math.max(content.offsetWidth, content.scrollWidth),
+    Math.max(content.offsetHeight, content.scrollHeight),
+  ];
+  item.children.forEach(measureSizes);
+}
+
+// Phase 3 of layoutSubtree: layout writes, post-order (children before
+// parent) since a parent's rank size depends on each child's already-
+// finalized DOM bbox. resolvedLayout.update() below still reads
+// child.size (a live getBBox() call), so this phase alone still forces
+// one reflow per item — removing that fully would mean computing sizes
+// analytically in JS instead of asking the DOM, a larger follow-up.
+function writeLayout(item) {
+  item.children.forEach(writeLayout);
   const { resolvedLayout, resolvedShape, dom } = item;
   const { content, node, connectors } = dom;
   dom.text.style.color = item.resolvedTextColor;
   node.dataset.shape = resolvedShape.id;
   node.dataset.align = resolvedLayout.computeAlignment(item);
   const fo = content.parentNode;
-  const size = [
-    Math.max(content.offsetWidth, content.scrollWidth),
-    Math.max(content.offsetHeight, content.scrollHeight),
-  ];
+  const size = item._measuredSize;
   fo.setAttribute("width", String(size[0]));
   fo.setAttribute("height", String(size[1]));
   connectors.innerHTML = "";
   resolvedLayout.update(item);
   resolvedShape.update(item);
+}
+
+// Entry point for one full layout pass (see the createComputed in Map's
+// constructor below). Split into three tree-wide phases — content
+// writes, size reads, then layout writes — instead of one interleaved
+// recursive pass, so the browser batches its reflows instead of
+// recomputing layout once per item (forced synchronous layout).
+function layoutSubtree(item) {
+  updateContent(item);
+  measureSizes(item);
+  writeLayout(item);
 }
 export default class Map {
   constructor(options) {
