@@ -28,17 +28,31 @@ function updateContent(item) {
   item.updateNotes();
 }
 
-// Phase 2 of layoutSubtree: measurement reads only, whole tree. Runs
-// only after updateContent() has finished for every item, so the
-// browser needs to flush layout once for the first read here instead of
-// once per item (avoids read/write/read/write reflow thrashing).
-function measureSizes(item) {
+// Phase 2 of layoutSubtree: measure each item's own content box and
+// commit it to that item's <foreignObject> right away, post-order
+// (children before parent). This must NOT be split into a separate
+// "measure the whole tree" pass followed later by a "write all the
+// foreignObjects" pass: every <foreignObject> starts out at the
+// placeholder width="1" height="1" set by svg.foreignObject() (see
+// item.js) until its very first layout. On an item's first-ever layout
+// pass, measuring the *entire* tree while every foreignObject nearby is
+// still stuck at that 1x1 placeholder can yield an incorrectly small
+// intrinsic size, which then gets locked in — this is what caused newly
+// loaded maps to render visibly shrunken. Measuring and writing each
+// item's own size in the same bottom-up pass means that whenever a
+// node's box is read (here, or later via getBBox() in writeLayout), its
+// descendants' foreignObjects have already been committed to their real
+// size, matching the invariant layout depends on.
+function measureAndSizeContent(item) {
+  item.children.forEach(measureAndSizeContent);
   const { content } = item.dom;
-  item._measuredSize = [
+  const size = [
     Math.max(content.offsetWidth, content.scrollWidth),
     Math.max(content.offsetHeight, content.scrollHeight),
   ];
-  item.children.forEach(measureSizes);
+  const fo = content.parentNode;
+  fo.setAttribute("width", String(size[0]));
+  fo.setAttribute("height", String(size[1]));
 }
 
 // Phase 3 of layoutSubtree: layout writes, post-order (children before
@@ -50,27 +64,25 @@ function measureSizes(item) {
 function writeLayout(item) {
   item.children.forEach(writeLayout);
   const { resolvedLayout, resolvedShape, dom } = item;
-  const { content, node, connectors } = dom;
+  const { node, connectors } = dom;
   dom.text.style.color = item.resolvedTextColor;
   node.dataset.shape = resolvedShape.id;
   node.dataset.align = resolvedLayout.computeAlignment(item);
-  const fo = content.parentNode;
-  const size = item._measuredSize;
-  fo.setAttribute("width", String(size[0]));
-  fo.setAttribute("height", String(size[1]));
   connectors.innerHTML = "";
   resolvedLayout.update(item);
   resolvedShape.update(item);
 }
 
 // Entry point for one full layout pass (see the createComputed in Map's
-// constructor below). Split into three tree-wide phases — content
-// writes, size reads, then layout writes — instead of one interleaved
-// recursive pass, so the browser batches its reflows instead of
-// recomputing layout once per item (forced synchronous layout).
+// constructor below). Content writes are still batched as their own
+// whole-tree pass first (Phase 1), since that part genuinely has no
+// reads to interleave with. Size measurement and layout stay two
+// separate post-order passes (Phase 2, Phase 3) rather than one, so the
+// (already unavoidable) per-item reflow from getBBox() in Phase 3 isn't
+// made worse by re-mixing it with the content writes from Phase 1.
 function layoutSubtree(item) {
   updateContent(item);
-  measureSizes(item);
+  measureAndSizeContent(item);
   writeLayout(item);
 }
 export default class Map {
