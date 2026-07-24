@@ -65,6 +65,7 @@ The demo takes about 50 seconds to start.
 - [ ] svg画像を配信するルートを作成。http://localhost:3001/maps/UUID/svg
 
 ## Work in Progress
+- [ ] 大量ノードの場合パフォーマンスに問題がでるという深刻な問題。
 - [ ] Undo/Redoボタンの設置
 - [ ] クライアントサイドでの自動転送（保存）機能の無効化と有効化を切り替えるトグルスイッチ（デフォルトでは無効化）
 
