@@ -550,6 +550,18 @@ export default class Item {
       this._bumpChildrenVersion();
       child.parent = this;
     });
+    // Foreign-object-in-SVG first-paint quirk (see map.js's show() for the
+    // full explanation): a foreignObject just inserted into an already-
+    // visible SVG can still measure shrunk on this pass, since the browser
+    // has not painted it yet. Without this, a newly inserted node (e.g. via
+    // Enter/Tab) can render collapsed onto its parent until some unrelated
+    // relayout (like zooming) happens to fix it. Force one more recompute
+    // after the browser paints, exactly like show() does for the initial
+    // full-map insertion.
+    const map = this.map;
+    if (map?.isVisible) {
+      requestAnimationFrame(() => map.requestLayout());
+    }
   }
   removeChild(child) {
     batch(() => {
