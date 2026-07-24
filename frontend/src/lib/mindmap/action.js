@@ -26,6 +26,10 @@ export class InsertNewItem extends Action {
     this.parent = parent;
     this.index = index;
     this.item = new Item();
+    // Marks this item as freshly inserted so Finish (see
+    // command/edit.js) can discard it instead of committing empty text,
+    // without affecting existing items that already had empty text.
+    this.item.isNew = true;
   }
   do() {
     this.parent.collapsed = false; // FIXME remember?

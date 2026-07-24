@@ -28,7 +28,19 @@ new (class Finish extends Command {
     // (initially empty) sibling nodes. Canceling an unwanted insertion is
     // Escape's job (see the Cancel command below), not Enter's.
     let text = app.stopEditing();
-    app.action(new actions.SetText(app.currentItem, text));
+    let item = app.currentItem;
+    // Exception: a brand-new node (inserted via InsertSibling/
+    // InsertChild, see action.js's InsertNewItem) left empty on its
+    // first confirm is discarded rather than committed as an empty
+    // node. An existing node's text becoming empty is left untouched —
+    // it may still carry notes — so this only ever applies to
+    // just-inserted items (item.isNew).
+    if (!text && item.isNew) {
+      app.action(new actions.RemoveItem(item));
+      return;
+    }
+    item.isNew = false;
+    app.action(new actions.SetText(item, text));
   }
 })();
 new (class Newline extends Command {

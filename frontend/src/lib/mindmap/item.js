@@ -170,6 +170,13 @@ export default class Item {
     });
 
     this.originalText = "";
+    // Set true only by action.js's InsertNewItem (i.e. a node just
+    // created via InsertSibling/InsertChild). Cleared the first time
+    // Finish commits non-empty text, or the item is removed outright if
+    // left empty (see command/edit.js's Finish command). Plain instance
+    // field, not signal-backed: it's a one-shot marker, not something any
+    // UI needs to react to.
+    this.isNew = false;
     this.dom = {
       node: svg.group(),
       connectors: svg.group(),
