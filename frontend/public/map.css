@@ -192,7 +192,7 @@ svg > .item > .item > foreignObject > .content {
     ),
     color-mix(in srgb, var(--item-color, #f0f0f0) 18%, #ffffff);
   border: var(--node-border-width) solid
-    color-mix(in srgb, var(--item-color, transparent) 60%, #555555);
+    color-mix(in srgb, var(--item-color, #999999) 60%, #555555);
   box-shadow:
     var(--node-shadow),
     0 3px 8px rgba(0, 0, 0, 0.14),
