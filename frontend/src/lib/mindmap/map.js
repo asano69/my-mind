@@ -8,64 +8,6 @@ import { bumpDirty } from "./store.js";
 import { createSignal, createComputed, createRoot } from "solid-js";
 let css = "";
 
-// Phase 1 of layoutSubtree: DOM-content writes only, whole tree, before
-// any layout-driving read. Recursion order (children before self) is
-// unchanged from the old single-pass version.
-function updateContent(item) {
-  item._childrenVersion(); // track child insertion/removal
-  // Apply the collapsed class *before* recursing into children. Doing
-  // this after recursion (as before) meant that on the very pass that
-  // un-collapses an item, descendants were still hidden (display:none via
-  // ".item.collapsed .item") while their sizes were being measured here,
-  // caching zero-sized foreignObjects that only a full reload fixed.
-  item.updateToggle();
-  item.children.forEach(updateContent);
-  item._updateLayoutContent();
-}
-
-// Phase 2 of layoutSubtree: measure each item's own content box and
-// commit it to that item's <foreignObject> right away, post-order
-// (children before parent). This must NOT be split into a separate
-// "measure the whole tree" pass followed later by a "write all the
-// foreignObjects" pass: every <foreignObject> starts out at the
-// placeholder width="1" height="1" set by svg.foreignObject() (see
-// item.js) until its very first layout. On an item's first-ever layout
-// pass, measuring the *entire* tree while every foreignObject nearby is
-// still stuck at that 1x1 placeholder can yield an incorrectly small
-// intrinsic size, which then gets locked in — this is what caused newly
-// loaded maps to render visibly shrunken. Measuring and writing each
-// item's own size in the same bottom-up pass means that whenever a
-// node's box is read (here, or later via getBBox() in writeLayout), its
-// descendants' foreignObjects have already been committed to their real
-// size, matching the invariant layout depends on.
-function measureAndSizeContent(item) {
-  item.children.forEach(measureAndSizeContent);
-  item._measureOwnContent();
-}
-
-// Phase 3 of layoutSubtree: layout writes, post-order (children before
-// parent) since a parent's rank size depends on each child's already-
-// finalized DOM bbox. resolvedLayout.update() below still reads
-// child.size (a live getBBox() call), so this phase alone still forces
-// one reflow per item — removing that fully would mean computing sizes
-// analytically in JS instead of asking the DOM, a larger follow-up.
-function writeLayout(item) {
-  item.children.forEach(writeLayout);
-  item._writeOwnLayout();
-}
-
-// Entry point for one full layout pass (see the createComputed in Map's
-// constructor below). Content writes are still batched as their own
-// whole-tree pass first (Phase 1), since that part genuinely has no
-// reads to interleave with. Size measurement and layout stay two
-// separate post-order passes (Phase 2, Phase 3) rather than one, so the
-// (already unavoidable) per-item reflow from getBBox() in Phase 3 isn't
-// made worse by re-mixing it with the content writes from Phase 1.
-function layoutSubtree(item) {
-  updateContent(item);
-  measureAndSizeContent(item);
-  writeLayout(item);
-}
 export default class Map {
   constructor(options) {
     this.node = svg.node("svg");
@@ -107,15 +49,13 @@ export default class Map {
         if (!this.isVisible) {
           return;
         }
-        layoutSubtree(this._root);
-        this.node.setAttribute("width", String(this._root.size[0]));
-        this.node.setAttribute("height", String(this._root.size[1]));
-        // Bump once per full pass, not once per item — layoutSubtree
-        // walks the whole tree on every recompute (known cost from
-        // Phase 8), but auto-save only needs "did anything change",
-        // never "how many items changed" (see CLAUDE.md, Solid
-        // migration Phase 9.5 — an intentional coarsening, not a
-        // strict 1:1 port of the old per-item publish).
+        const rootSize = this._root._layoutResult();
+        this.node.setAttribute("width", String(rootSize[0]));
+        this.node.setAttribute("height", String(rootSize[1]));
+        // Bump once per root layout pass, not once per item. The
+        // recursive _layoutResult memo chain is now the layout entry
+        // point, so Solid can skip unrelated sibling subtrees while
+        // auto-save still only needs "did anything change".
         bumpDirty();
       });
     });
