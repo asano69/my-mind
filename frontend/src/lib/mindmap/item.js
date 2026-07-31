@@ -867,7 +867,6 @@ function computeLayout(item) {
   item._sideVersion();
   item._contentVersion();
   map?._layoutVersion?.();
-  map?._fontSizeVersion?.();
   if (!item._resolvedLayout()) {
     return item.size;
   }

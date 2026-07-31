@@ -66,7 +66,6 @@ vi.mock("./layout/layout.js", () => ({
 }));
 vi.mock("./map.js", () => ({ default: class Map {} }));
 
-const { createSignal } = await import("solid-js");
 const { default: Map } = await import("./map.js");
 const { default: Item, readItemLayoutResult } = await import("./item.js");
 
@@ -207,37 +206,6 @@ describe("Item layout result memo", () => {
     expect(childCalls.update).toBe(3);
     expect(siblingCalls.update).toBe(1);
     expect(map.ensureItemVisibility).toHaveBeenCalledWith(child);
-  });
-
-  it("uses map font-size version as an intentional whole-tree trigger", () => {
-    const map = new Map();
-    const [fontSizeVersion, setFontSizeVersion] = createSignal(0);
-    map._fontSizeVersion = fontSizeVersion;
-    map._bumpFontSizeVersion = () =>
-      setFontSizeVersion((version) => version + 1);
-    const root = new Item();
-    const child = new Item();
-    const sibling = new Item();
-    root.parent = map;
-    root.insertChild(child);
-    root.insertChild(sibling);
-
-    const rootCalls = instrumentLayout(root);
-    const childCalls = instrumentLayout(child);
-    const siblingCalls = instrumentLayout(sibling);
-    root.layout = {
-      id: "map",
-      computeAlignment: () => "left",
-      update: vi.fn(),
-    };
-
-    readItemLayoutResult(root);
-    map._bumpFontSizeVersion();
-    readItemLayoutResult(root);
-
-    expect(rootCalls.update).toBe(2);
-    expect(childCalls.update).toBe(2);
-    expect(siblingCalls.update).toBe(2);
   });
 
   it("does not layout descendants of a detached subtree with stale inherited layout", () => {

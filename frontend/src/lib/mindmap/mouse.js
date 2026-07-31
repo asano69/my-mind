@@ -104,7 +104,7 @@ function onWheel(e) {
     return;
   }
   let dir = deltaY > 0 ? -1 : 1;
-  app.currentMap.previewZoom(dir);
+  app.currentMap.adjustZoom(dir);
 }
 function onContextMenu(e) {
   if (!isCanvasActive() || !app.currentMap) {
@@ -292,7 +292,7 @@ function handlePinch(e) {
   }
   const delta = dist - current.pinchDistance;
   if (Math.abs(delta) >= PINCH_THRESHOLD) {
-    app.currentMap.previewZoom(delta > 0 ? 1 : -1);
+    app.currentMap.adjustZoom(delta > 0 ? 1 : -1);
     current.pinchDistance = dist; // reset baseline after each step
   }
 }

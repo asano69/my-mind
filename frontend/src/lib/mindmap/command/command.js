@@ -260,7 +260,7 @@ new (class ZoomIn extends Command {
     this.keys = [{ key: "+" }];
   }
   execute() {
-    app.currentMap.adjustFontSize(1);
+    app.currentMap.adjustZoom(1);
   }
 })();
 new (class ZoomOut extends Command {
@@ -269,7 +269,7 @@ new (class ZoomOut extends Command {
     this.keys = [{ key: "-" }];
   }
   execute() {
-    app.currentMap.adjustFontSize(-1);
+    app.currentMap.adjustZoom(-1);
   }
 })();
 new (class Help extends Command {

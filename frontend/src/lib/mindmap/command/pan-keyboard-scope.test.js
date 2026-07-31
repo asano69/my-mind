@@ -19,7 +19,7 @@ vi.mock("../my-mind.js", () => ({
     return {
       moveBy,
       center: vi.fn(),
-      adjustFontSize: vi.fn(),
+      adjustZoom: vi.fn(),
       ensureItemVisibility: vi.fn(),
     };
   },

@@ -14,10 +14,7 @@ export default class Map {
     this.style = html.node("style");
     this.position = [0, 0];
     this.fontSize = 15;
-    // Pending wheel/pinch zoom not yet committed to fontSize (see
-    // previewZoom/commitZoom below).
-    this._zoomAccum = 0;
-    this._zoomTimeout = null;
+    this.zoomScale = 1;
     let resolvedOptions = Object.assign(
       {
         root: (() => {
@@ -34,6 +31,7 @@ export default class Map {
     );
     this.style.textContent = css;
     this.node.style.fontSize = `${this.fontSize}px`;
+    this.node.style.transformOrigin = "0 0";
     let root = new Item();
     root.text = resolvedOptions.root;
     root.layout = resolvedOptions.layout;
@@ -47,11 +45,6 @@ export default class Map {
     const [layoutVersion, setLayoutVersion] = createSignal(0);
     this._layoutVersion = layoutVersion;
     this._setLayoutVersion = setLayoutVersion;
-    const [fontSizeVersion, setFontSizeVersion] = createSignal(0);
-    this._fontSizeVersion = fontSizeVersion;
-    this._bumpFontSizeVersion = () =>
-      setFontSizeVersion((version) => version + 1);
-
     createRoot((dispose) => {
       this._disposeLayout = dispose;
       createComputed(() => {
@@ -99,22 +92,14 @@ export default class Map {
     node.append(root.dom.node, style);
     root.parent = this;
   }
-  adjustFontSize(diff) {
-    // Anchor the zoom on the currently selected item's on-screen position,
-    // not the root's bounding-box center. The old approach assumed the
-    // whole tree grows/shrinks symmetrically around its center, which only
-    // holds for a balanced map — for an off-center leaf selection the
-    // relayout (font-size version bump, see map.js's shared layout computed)
-    // grows asymmetrically, so the half-the-bbox-diff compensation left
-    // the view visibly drifting. Measuring the anchor's actual screen
-    // position before/after and compensating for the exact delta keeps
-    // whatever the user is looking at fixed regardless of how the tree
-    // grows.
+  adjustZoom(diff) {
     const anchor = app.currentItem || this._root;
     const before = anchor.dom.content.getBoundingClientRect();
-    this.fontSize = Math.max(8, this.fontSize + 2 * diff);
-    this.node.style.fontSize = `${this.fontSize}px`;
-    this._bumpFontSizeVersion();
+    this.zoomScale = Math.max(
+      8 / this.fontSize,
+      this.zoomScale + (2 * diff) / this.fontSize,
+    );
+    this.node.style.transform = `scale(${this.zoomScale})`;
     const after = anchor.dom.content.getBoundingClientRect();
     this.moveBy([
       before.left + before.width / 2 - (after.left + after.width / 2),
@@ -123,35 +108,6 @@ export default class Map {
     this.ensureItemVisibility(app.currentItem);
   }
 
-  // Called on every wheel/pinch tick. adjustFontSize() triggers a
-  // synchronous full-tree relayout (every item's layout memo depends on
-  // _fontSizeVersion, the one intentional whole-tree trigger — see
-  // item.js), which is too slow to run on every tick for maps with many
-  // nodes and causes visible jank. Instead, apply an instant CSS transform
-  // for smooth visual feedback, and only commit the real (expensive)
-  // relayout once the user stops scrolling/pinching.
-  previewZoom(diff) {
-    this._zoomAccum += diff;
-    const scale = (this.fontSize + 2 * this._zoomAccum) / this.fontSize;
-    this.node.style.transform = `scale(${scale})`;
-    if (this._zoomTimeout !== null) {
-      clearTimeout(this._zoomTimeout);
-    }
-    this._zoomTimeout = setTimeout(() => this.commitZoom(), 150);
-  }
-
-  // Applies the accumulated preview zoom for real (one relayout pass) and
-  // clears the temporary transform, since the node's actual size now
-  // reflects the new fontSize.
-  commitZoom() {
-    this._zoomTimeout = null;
-    const diff = this._zoomAccum;
-    this._zoomAccum = 0;
-    this.node.style.transform = "";
-    if (diff) {
-      this.adjustFontSize(diff);
-    }
-  }
   mergeWith(data) {
     // store a sequence of nodes to be selected when merge is over
     let ids = [];
@@ -223,13 +179,6 @@ export default class Map {
     });
   }
   hide() {
-    // Don't leave a pending zoom commit firing against a map that's no
-    // longer shown.
-    if (this._zoomTimeout !== null) {
-      clearTimeout(this._zoomTimeout);
-      this._zoomTimeout = null;
-      this._zoomAccum = 0;
-    }
     this.node.remove();
   }
   center() {

@@ -8,8 +8,12 @@ const EXPORT_PADDING = 24;
  */
 export function serializeCurrentMap() {
   const serializer = new XMLSerializer();
-  // Clone so we can mutate freely without affecting the live map
+  // Clone so we can mutate freely without affecting the live map. The live
+  // canvas may be browser-zoomed with CSS transform; exports intentionally use
+  // the underlying 100% layout because zoom is only viewport state.
   const svgNode = app.currentMap.node.cloneNode(true);
+  svgNode.style.transform = "";
+  svgNode.style.transformOrigin = "";
   // Embed CSS custom properties
   injectRootVariables(svgNode);
   const p = EXPORT_PADDING;
