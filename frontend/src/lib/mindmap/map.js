@@ -7,13 +7,15 @@ import * as app from "./my-mind.js";
 import { bumpDirty } from "./store.js";
 import { createSignal, createComputed, createRoot } from "solid-js";
 let css = "";
+const DEFAULT_FONT_SIZE = 15;
+const MIN_ZOOM_SCALE = 8 / DEFAULT_FONT_SIZE;
+const ZOOM_STEP = 2 / DEFAULT_FONT_SIZE;
 
 export default class Map {
   constructor(options) {
     this.node = svg.node("svg");
     this.style = html.node("style");
     this.position = [0, 0];
-    this.fontSize = 15;
     this.zoomScale = 1;
     let resolvedOptions = Object.assign(
       {
@@ -30,7 +32,7 @@ export default class Map {
       options,
     );
     this.style.textContent = css;
-    this.node.style.fontSize = `${this.fontSize}px`;
+    this.node.style.fontSize = `${DEFAULT_FONT_SIZE}px`;
     this.node.style.transformOrigin = "0 0";
     let root = new Item();
     root.text = resolvedOptions.root;
@@ -92,20 +94,33 @@ export default class Map {
     node.append(root.dom.node, style);
     root.parent = this;
   }
-  adjustZoom(diff) {
-    const anchor = app.currentItem || this._root;
-    const before = anchor.dom.content.getBoundingClientRect();
-    this.zoomScale = Math.max(
-      8 / this.fontSize,
-      this.zoomScale + (2 * diff) / this.fontSize,
-    );
+  adjustZoom(diff, anchorPoint = null) {
+    const previousScale = this.zoomScale;
+    const nextScale = Math.max(MIN_ZOOM_SCALE, previousScale + ZOOM_STEP * diff);
+    if (nextScale === previousScale) {
+      return;
+    }
+
+    if (!anchorPoint) {
+      const anchorItem = app.currentItem || this._root;
+      const rect = anchorItem.dom.content.getBoundingClientRect();
+      anchorPoint = [rect.left + rect.width / 2, rect.top + rect.height / 2];
+    }
+
+    const before = this.node.getBoundingClientRect();
+    const unscaledAnchorOffset = [
+      (anchorPoint[0] - before.left) / previousScale,
+      (anchorPoint[1] - before.top) / previousScale,
+    ];
+
+    this.zoomScale = nextScale;
     this.node.style.transform = `scale(${this.zoomScale})`;
-    const after = anchor.dom.content.getBoundingClientRect();
+
+    const after = this.node.getBoundingClientRect();
     this.moveBy([
-      before.left + before.width / 2 - (after.left + after.width / 2),
-      before.top + before.height / 2 - (after.top + after.height / 2),
+      anchorPoint[0] - (after.left + unscaledAnchorOffset[0] * nextScale),
+      anchorPoint[1] - (after.top + unscaledAnchorOffset[1] * nextScale),
     ]);
-    this.ensureItemVisibility(app.currentItem);
   }
 
   mergeWith(data) {

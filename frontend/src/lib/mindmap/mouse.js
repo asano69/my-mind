@@ -103,8 +103,9 @@ function onWheel(e) {
   if (!deltaY) {
     return;
   }
+  e.preventDefault();
   let dir = deltaY > 0 ? -1 : 1;
-  app.currentMap.adjustZoom(dir);
+  app.currentMap.adjustZoom(dir, [e.clientX, e.clientY]);
 }
 function onContextMenu(e) {
   if (!isCanvasActive() || !app.currentMap) {
@@ -292,7 +293,11 @@ function handlePinch(e) {
   }
   const delta = dist - current.pinchDistance;
   if (Math.abs(delta) >= PINCH_THRESHOLD) {
-    app.currentMap.adjustZoom(delta > 0 ? 1 : -1);
+    const anchorPoint = [
+      (e.touches[0].clientX + e.touches[1].clientX) / 2,
+      (e.touches[0].clientY + e.touches[1].clientY) / 2,
+    ];
+    app.currentMap.adjustZoom(delta > 0 ? 1 : -1, anchorPoint);
     current.pinchDistance = dist; // reset baseline after each step
   }
 }

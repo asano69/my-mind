@@ -6,6 +6,7 @@ const getCommand = vi.fn((id) =>
   id === "finish" ? { execute: finishExecute } : {},
 );
 const getItemFor = vi.fn();
+const adjustZoom = vi.fn();
 
 vi.mock("./ui/context-menu.js", () => ({ open: menuOpen }));
 vi.mock("./command/command.js", () => ({ repo: { get: getCommand } }));
@@ -21,7 +22,7 @@ vi.mock("./store.js", () => ({ activeMode: () => mockActiveMode.value }));
 
 vi.mock("./my-mind.js", () => ({
   get currentMap() {
-    return { getItemFor };
+    return { getItemFor, adjustZoom };
   },
   get currentItem() {
     return null;
@@ -87,6 +88,25 @@ describe("mouse focus handoff", () => {
     });
 
     expect(container.focus).not.toHaveBeenCalled();
+
+    mouse.dispose();
+  });
+
+  it("zooms around the wheel cursor position", () => {
+    const port = eventTarget();
+    const container = { focus: vi.fn() };
+    const preventDefault = vi.fn();
+    mouse.init(port, container);
+
+    port.dispatch("wheel", {
+      deltaY: -100,
+      clientX: 123,
+      clientY: 456,
+      preventDefault,
+    });
+
+    expect(preventDefault).toHaveBeenCalledOnce();
+    expect(adjustZoom).toHaveBeenCalledWith(1, [123, 456]);
 
     mouse.dispose();
   });
