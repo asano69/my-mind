@@ -141,9 +141,11 @@ describe("Item layout result memo", () => {
   });
 
   it("recomputes the changed child and ancestors without unrelated siblings", () => {
+    const map = new Map();
     const root = new Item();
     const child = new Item();
     const sibling = new Item();
+    root.parent = map;
     root.insertChild(child);
     root.insertChild(sibling);
 
@@ -236,9 +238,35 @@ describe("Item layout result memo", () => {
     expect(siblingCalls.update).toBe(2);
   });
 
-  it("does not read child layout memos while collapsed", () => {
+  it("does not layout descendants of a detached subtree with stale inherited layout", () => {
+    const map = new Map();
     const root = new Item();
     const child = new Item();
+    const grandchild = new Item();
+    root.parent = map;
+    root.insertChild(child);
+    child.insertChild(grandchild);
+
+    const grandchildCalls = instrumentLayout(grandchild);
+    root.layout = {
+      id: "map",
+      computeAlignment: () => "left",
+      update: vi.fn(),
+    };
+
+    root._layoutResult();
+    expect(grandchildCalls.update).toBe(1);
+
+    child.parent = null;
+    expect(() => grandchild._layoutResult()).not.toThrow();
+    expect(grandchildCalls.update).toBe(1);
+  });
+
+  it("does not read child layout memos while collapsed", () => {
+    const map = new Map();
+    const root = new Item();
+    const child = new Item();
+    root.parent = map;
     root.insertChild(child);
 
     const rootCalls = instrumentLayout(root);

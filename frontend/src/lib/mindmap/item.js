@@ -728,12 +728,13 @@ export default class Item {
     // They do not have enough context for inherited layout, root alignment, or
     // MapLayout side assignment, so keep the memo harmless until the item is
     // attached and a parent/root recompute pulls it again.
-    if (!this.parent) {
+    const parent = this.parent;
+    const map = this.map;
+    if (parent && !map) {
       return this.size;
     }
     this._sideVersion();
     this._contentVersion();
-    const map = this.map;
     map?._layoutVersion?.();
     map?._fontSizeVersion?.();
     if (!this._resolvedLayout()) {
