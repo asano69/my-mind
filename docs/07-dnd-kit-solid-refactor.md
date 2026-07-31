@@ -92,3 +92,50 @@ re-syncs which dnd-kit group a child belongs to. This effect can no
 longer use `on()` with a fixed dependency, since the set of children
 signals it reads is itself dynamic; it is a plain `createEffect` instead,
 relying on Solid's normal automatic dependency tracking.
+
+
+
+## Phase6
+
+`useSortable`は本来「flexboxやgridで並んでいるリスト」を前提にしていて、ドラッグ中に他の要素へホバーすると、**dnd-kit自身がgetBoundingClientRectの差分からCSS transformを計算し、周囲の兄弟要素をリアルタイムに「押しのけて見せる」**（いわゆるFLIP風のライブプレビュー）機能を標準で持っています。
+
+一方このマインドマップは、兄弟の位置が`GraphLayout`/`TreeLayout`/`MapLayout`の幾何計算（`item.js`の`_writeOwnLayout`が`resolvedLayout.update(this)`を呼ぶ）によって決まる、SVGの`transform="translate(...)"`属性ベースのグラフ状レイアウトです。「flexboxの押しのけ」という前提がそもそも成立しません。さらに、`content`はforeignObject内のdivで、その祖先の`<g>`要素自体もSVG座標変換を持っているため、dnd-kitが計算するCSS transformとSVGのtransform属性が二重に効いて、意図しない位置にズレる・チラつく、という現象が起きやすくなります。
+
+なので「見た目の仕上げ」と一括りにせず、**まず"dnd-kitのライブプレビュー機能を殺す"作業を独立させる**ことが重要です。
+
+## Phase 6 分割計画
+
+| Sub-phase | 内容 | 目的 |
+|---|---|---|
+| **6.1** | `mouse.js`から旧ドラッグ関連コードを削除（衝突除去のみ、必須） | 二重発火・二重ゴーストの解消 |
+| **6.2** | `useSortable`の`feedback`/`optimistic`設定を検証し、**ライブ並び替えプレビューを無効化**する | SVGの乱れの直接原因を断つ |
+| **6.3** | ドラッグ中の視覚表現（フローティングゴースト）を、SVGの外側の独立したHTML要素として再実装する | 現状の`buildGhost`と同等の見た目を、SVGのtransformと干渉しない形で再現 |
+| **6.4** | ドラッグ中に`item.js`の`_layoutResult`ツリーが**一切再計算されない**ことを確認する回帰チェック | 「ドロップするまでは実データも実レイアウトも動かさない」という前提の検証 |
+| **6.5** | ドロップ先を示す簡易的なハイライト（transformを使わない、単なるCSSクラス切り替え）を再実装 | 旧`visualizeDragState`相当の"ここに入ります"表示を、乱れの原因にならない形で復活 |
+| **6.6** | タッチ・モバイルでの動作確認（長押し起動、スクロールとの共存、ピンチズームとの共存） | Phase 7で予定していたモバイル確認をここに前倒し統合 |
+| **6.7** | 回帰チェックリスト・不要コード最終削除 | 仕上げ |
+
+### 各段階の詳細方針
+
+**6.1（必須・前回説明済み）**
+`onDragStart`/`onDragMove`の`drag`分岐、`buildGhost`/`moveGhost`/`computeDragState`系関数、`finishDragDrop`を削除。パン・ピンチ・クリック選択は温存。
+
+**6.2（今回の懸念に直接対応）**
+`useSortable`のオプションを調べ、ライブプレビュー（ドラッグ中に他要素をtransformで動かす挙動）を止める設定を探す。具体的には`@dnd-kit/solid/sortable`の`feedback`/`animateTransform`相当のオプション、または`Feedback.configure({ feedback: 'clone' })`のようなプラグイン設定で「実要素は動かさず、クローンだけが追従する」モードに固定できるか確認する。**もし標準APIで完全に止められない場合は、6.3のカスタムオーバーレイに全面的に置き換えて、`useSortable`側のvisual機構自体を使わない**という判断もこの段階でしてよい（既存の`docs/`の中断条件と同じ考え方：効果が出ない/複雑さに見合わないなら差し戻す）。
+
+**6.3**
+現状の`buildGhost`（`content`をcloneNodeしてport配下にabsolute配置）をほぼそのまま踏襲し、dnd-kitの`onDragStart`/`onDragMove`イベント（`event.operation`の座標）を使って自前で追従させる。SVGのtransformスタックと完全に独立させることが目的。
+
+**6.4**
+`item._childrenVersion`や`_sideVersion`が、ドロップ前（`onDragOver`中）には一切bumpされていないことをテストで確認する。これにより「実データもレイアウトもドロップの瞬間まで不変」という前提が壊れていないことを保証する。
+
+**6.5**
+6.2で殺した機能の代替として、「今ホバー中の親/兄弟位置」を示すハイライトを、`item.dom.content.style.boxShadow`のような**transformを使わない**プロパティで表現する（旧`visualizeDragState`の発想をそのまま復活。transformではなくbox-shadowなので、SVGのtransform属性とは干渉しない）。
+
+**6.6・6.7**
+既存のPhase 7予定を吸収。
+
+## 提案
+
+まず**6.1と6.2をセットで**実行するのが良いと思います。6.2で「ライブプレビューを無効化できるか」を確認しないと、6.1だけ終えても結局SVGの乱れが残るためです。6.3以降（見た目の仕上げ）は動作確認しながら後回しでも問題ありません。
+
