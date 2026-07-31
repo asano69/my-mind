@@ -165,6 +165,10 @@ export default class Item {
         if (shape) {
           return shape;
         }
+        const parent = this.parent;
+        if (parent instanceof Item && parent._shape()) {
+          return parent._resolvedShape();
+        }
         switch (this._depth()) {
           case 0:
             return shapeRepo.get("ellipse");
