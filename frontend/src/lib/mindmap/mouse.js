@@ -6,6 +6,10 @@ import { isCanvasActive } from "./scope.js";
 
 const TOUCH_DELAY = 500;
 const SHADOW_OFFSET = 5;
+// Keep a drop target stable while the pointer remains near it. This mirrors
+// dnd-kit's collision stability/hysteresis ideas without depending on a
+// package that is unavailable in the current registry.
+const DROP_TARGET_STICKY_PADDING = 24;
 // Minimum change in pinch distance (px) required to trigger one zoom step
 const PINCH_THRESHOLD = 30;
 let touchContextTimeout;
@@ -408,7 +412,7 @@ function computeDragState() {
   // The ghost can be grabbed anywhere, so its center drifts away from
   // the cursor; the cursor is always the authoritative "drop here" point.
   let point = current.cursor;
-  let closest = app.currentMap.getClosestItem(point);
+  let closest = getStableDropCollision(point);
   let target = closest.item;
   let state = {
     result: "",
@@ -450,13 +454,65 @@ function computeDragState() {
   }
   return state;
 }
+function getStableDropCollision(point) {
+  const previousTarget = current.previousDragState?.target;
+  if (previousTarget && isPointInExpandedContentRect(previousTarget, point)) {
+    return collisionForItem(previousTarget, point);
+  }
+
+  const directTarget = getItemUnderPointer(point);
+  if (directTarget) {
+    return collisionForItem(directTarget, point);
+  }
+
+  return app.currentMap.getClosestItem(point);
+}
+function getItemUnderPointer(point) {
+  const element = globalThis.document?.elementFromPoint?.(point[0], point[1]);
+  if (!element) {
+    return null;
+  }
+  return app.currentMap.getItemFor(element) || null;
+}
+function collisionForItem(item, point) {
+  const rect = getContentRect(item);
+  return {
+    item,
+    dx: rect.left + rect.width / 2 - point[0],
+    dy: rect.top + rect.height / 2 - point[1],
+    distance: 0,
+  };
+}
+function getContentRect(item) {
+  const node = item.dom.content;
+  if (typeof node.getBoundingClientRect === "function") {
+    const rect = node.getBoundingClientRect();
+    return {
+      ...rect,
+      right: rect.right ?? rect.left + rect.width,
+      bottom: rect.bottom ?? rect.top + rect.height,
+    };
+  }
+  const [width = 0, height = 0] = item.contentSize || [];
+  return { left: 0, top: 0, right: width, bottom: height, width, height };
+}
+function isPointInExpandedContentRect(item, point) {
+  const rect = getContentRect(item);
+  return (
+    point[0] >= rect.left - DROP_TARGET_STICKY_PADDING &&
+    point[0] <= rect.right + DROP_TARGET_STICKY_PADDING &&
+    point[1] >= rect.top - DROP_TARGET_STICKY_PADDING &&
+    point[1] <= rect.bottom + DROP_TARGET_STICKY_PADDING
+  );
+}
 function visualizeDragState(state) {
   let { previousDragState } = current;
   if (
     previousDragState &&
     state &&
     previousDragState.target == state.target &&
-    previousDragState.result == state.result
+    previousDragState.result == state.result &&
+    previousDragState.direction == state.direction
   ) {
     return;
   } // nothing changed
@@ -465,6 +521,7 @@ function visualizeDragState(state) {
     previousDragState.target.dom.content.style.boxShadow = "";
   }
   if (!state) {
+    current.previousDragState = null;
     return;
   }
   // show new vis

@@ -87,6 +87,7 @@ describe("mouse focus handoff", () => {
     selectItem.mockClear();
     actionFn.mockClear();
     mockActiveMode.value = "canvas";
+    delete globalThis.document;
   });
 
   it("focuses the scoped container when a drag starts", () => {
@@ -139,6 +140,71 @@ describe("mouse focus handoff", () => {
 
     expect(preventDefault).toHaveBeenCalledOnce();
     expect(adjustZoom).toHaveBeenCalledWith(1, [123, 456]);
+
+    mouse.dispose();
+  });
+
+  it("uses the node directly under the pointer as the drop target", () => {
+    const dragged = {
+      isRoot: false,
+      contentSize: [60, 30],
+      dom: {
+        content: contentNode({ offsetWidth: 60, offsetHeight: 30 }),
+      },
+    };
+    const directTarget = {
+      isRoot: true,
+      contentSize: [80, 40],
+      dom: {
+        content: contentNode({
+          getBoundingClientRect: () => ({
+            left: 100,
+            top: 100,
+            width: 80,
+            height: 40,
+            right: 180,
+            bottom: 140,
+          }),
+        }),
+      },
+    };
+    const centerTarget = {
+      isRoot: true,
+      contentSize: [40, 20],
+      dom: { content: contentNode() },
+    };
+    const directElement = { closest: vi.fn() };
+    globalThis.document = {
+      elementFromPoint: vi.fn(() => directElement),
+    };
+    getItemFor.mockImplementation((element) =>
+      element === directElement ? directTarget : dragged,
+    );
+    getClosestItem.mockReturnValue({ item: centerTarget, dx: 0, dy: 0 });
+
+    const port = eventTarget();
+    port.append = vi.fn();
+    port.getBoundingClientRect = () => ({ left: 0, top: 0 });
+    const container = { focus: vi.fn() };
+    mouse.init(port, container);
+
+    port.dispatch("mousedown", {
+      type: "mousedown",
+      target: dragged.dom.content,
+      clientX: 10,
+      clientY: 20,
+      preventDefault: vi.fn(),
+    });
+    port.dispatch("mousemove", {
+      target: dragged.dom.content,
+      clientX: 120,
+      clientY: 120,
+      preventDefault: vi.fn(),
+    });
+    port.dispatch("mouseup", { target: directTarget.dom.content });
+
+    expect(globalThis.document.elementFromPoint).toHaveBeenCalledWith(120, 120);
+    expect(actionFn.mock.calls[0][0].target).toBe(directTarget);
 
     mouse.dispose();
   });
