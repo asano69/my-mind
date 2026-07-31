@@ -592,7 +592,14 @@ export default class Item {
     // full-map insertion.
     const map = this.map;
     if (map?.isVisible) {
-      requestAnimationFrame(() => map.requestLayout());
+      // Force a remeasure of just this freshly inserted item (not the
+      // whole map) to fix the foreign-object-in-SVG first-paint quirk
+      // (see map.js's show() for the fuller explanation of the quirk
+      // itself). Bumping the item's own content version keeps the
+      // recompute scoped to this item and its ancestors, instead of
+      // invalidating every item in the tree the way map.requestLayout()
+      // used to (it shares one signal read by every item's layout memo).
+      requestAnimationFrame(() => child._bumpContentVersion());
     }
   }
   removeChild(child) {

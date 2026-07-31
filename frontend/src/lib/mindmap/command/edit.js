@@ -57,7 +57,11 @@ new (class Newline extends Command {
     let br = document.createElement("br");
     range.insertNode(br);
     range.setStartAfter(br);
-    app.currentItem.map?.requestLayout();
+    // Only this item's own box grew (a line break was inserted), so bump
+    // its content version instead of forcing a full-map recompute via
+    // map.requestLayout() -- that used to invalidate every item's
+    // layout memo on every Shift+Enter press.
+    app.currentItem._bumpContentVersion();
   }
 })();
 new (class Cancel extends Command {
