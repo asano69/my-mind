@@ -723,6 +723,14 @@ export default class Item {
     if (!this.dom) {
       return [0, 0];
     }
+    // Detached items can briefly have a stale/dirty layout memo during JSON
+    // restore or reparenting, before their parent signal has been connected.
+    // They do not have enough context for inherited layout, root alignment, or
+    // MapLayout side assignment, so keep the memo harmless until the item is
+    // attached and a parent/root recompute pulls it again.
+    if (!this.parent) {
+      return this.size;
+    }
     this._sideVersion();
     this._contentVersion();
     const map = this.map;
