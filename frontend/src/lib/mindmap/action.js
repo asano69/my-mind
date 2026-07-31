@@ -245,10 +245,8 @@ export class SetSide extends Action {
   }
   do() {
     this.item.side = this.side;
-    this.item.map?.requestLayout();
   }
   undo() {
     this.item.side = this.oldSide;
-    this.item.map?.requestLayout();
   }
 }

@@ -29,7 +29,7 @@ export default class MapLayout extends GraphLayout {
       let side = sibling.side;
       if (!side) {
         side = counts.right > counts.left ? "left" : "right";
-        sibling.side = side;
+        sibling._setSide(side, { bump: false });
       }
       counts[side]++;
     });

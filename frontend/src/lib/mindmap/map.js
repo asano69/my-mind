@@ -41,7 +41,13 @@ export default class Map {
     // other direct callers need the DOM already reflecting the latest
     // layout the instant they resume execution, not on a deferred tick.
     const [layoutVersion, setLayoutVersion] = createSignal(0);
+    this._layoutVersion = layoutVersion;
     this._setLayoutVersion = setLayoutVersion;
+    const [fontSizeVersion, setFontSizeVersion] = createSignal(0);
+    this._fontSizeVersion = fontSizeVersion;
+    this._bumpFontSizeVersion = () =>
+      setFontSizeVersion((version) => version + 1);
+
     createRoot((dispose) => {
       this._disposeLayout = dispose;
       createComputed(() => {
@@ -52,20 +58,16 @@ export default class Map {
         const rootSize = this._root._layoutResult();
         this.node.setAttribute("width", String(rootSize[0]));
         this.node.setAttribute("height", String(rootSize[1]));
-        // Bump once per root layout pass, not once per item. The
-        // recursive _layoutResult memo chain is now the layout entry
-        // point, so Solid can skip unrelated sibling subtrees while
-        // auto-save still only needs "did anything change".
+        // Bump once per root layout pull, not once per item: auto-save only
+        // needs "did anything change", never "how many items changed".
         bumpDirty();
       });
     });
   }
 
-  // Forces the layout computed above to re-run even when no item signal
-  // changed. Needed for the handful of triggers outside the reactive
-  // system: item.side (deliberately non-reactive, see item.js's mergeWith
-  // comment), live contentEditable typing (item.js's handleEvent), and
-  // pure CSS font-size changes (adjustFontSize below).
+  // Forces the root layout memo to be read again when no item-level signal
+  // changed. Most formerly non-reactive triggers now use narrower item/map
+  // versions; this remains for full-map visibility/paint repair passes.
   requestLayout() {
     this._setLayoutVersion((v) => v + 1);
   }
@@ -98,7 +100,7 @@ export default class Map {
     // not the root's bounding-box center. The old approach assumed the
     // whole tree grows/shrinks symmetrically around its center, which only
     // holds for a balanced map — for an off-center leaf selection the
-    // relayout (requestLayout(), see map.js's shared layout computed)
+    // relayout (font-size version bump, see map.js's shared layout computed)
     // grows asymmetrically, so the half-the-bbox-diff compensation left
     // the view visibly drifting. Measuring the anchor's actual screen
     // position before/after and compensating for the exact delta keeps
@@ -108,7 +110,7 @@ export default class Map {
     const before = anchor.dom.content.getBoundingClientRect();
     this.fontSize = Math.max(8, this.fontSize + 2 * diff);
     this.node.style.fontSize = `${this.fontSize}px`;
-    this.requestLayout();
+    this._bumpFontSizeVersion();
     const after = anchor.dom.content.getBoundingClientRect();
     this.moveBy([
       before.left + before.width / 2 - (after.left + after.width / 2),

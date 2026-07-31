@@ -52,6 +52,13 @@ export default class Item {
     this._status = status;
     this._setStatus = setStatus;
     this._side = null; // side preference
+    const [sideVersion, setSideVersion] = createSignal(0);
+    this._sideVersion = sideVersion;
+    this._bumpSideVersion = () => setSideVersion((version) => version + 1);
+    const [contentVersion, setContentVersion] = createSignal(0);
+    this._contentVersion = contentVersion;
+    this._bumpContentVersion = () =>
+      setContentVersion((version) => version + 1);
     const [childrenVersion, setChildrenVersion] = createSignal(0);
     this._childrenVersion = childrenVersion;
     this._bumpChildrenVersion = () =>
@@ -310,7 +317,7 @@ export default class Item {
       this.notes = data.notes;
     }
     if (data.side) {
-      this._side = data.side;
+      this._setSide(data.side, { bump: false });
     }
     if (data.color) {
       this._setColor(data.color);
@@ -354,7 +361,7 @@ export default class Item {
       this.text = data.text;
     }
     if (this._side != data.side) {
-      this._side = data.side || null;
+      this._setSide(data.side || null);
     }
     if (this._color() != data.color) {
       this._setColor(data.color || "");
@@ -400,10 +407,6 @@ export default class Item {
     while (this.children.length > newLength) {
       this.removeChild(this.children[this.children.length - 1]);
     }
-    // `side` is a plain (non-reactive) field — per CLAUDE.md's Phase 6 note
-    // on MapLayout.getChildDirection — so it needs an explicit nudge here;
-    // simpler to do it unconditionally than to track which field changed.
-    this.map?.requestLayout();
   }
   clone() {
     var data = this.toJSON();
@@ -474,8 +477,16 @@ export default class Item {
     return this._side;
   }
   set side(side) {
+    this._setSide(side);
+  }
+  _setSide(side, { bump = true } = {}) {
+    if (this._side === side) {
+      return;
+    }
     this._side = side;
-    // no .update() call, because the whole map needs updating
+    if (bump) {
+      this._bumpSideVersion();
+    }
   }
   get color() {
     return this._color();
@@ -608,7 +619,7 @@ export default class Item {
   handleEvent(e) {
     switch (e.type) {
       case "input":
-        this.map.requestLayout();
+        this._bumpContentVersion();
         this.map.ensureItemVisibility(this);
         break;
       case "keydown":
@@ -701,14 +712,18 @@ export default class Item {
       .setAttribute("d", this._collapsed() ? D_PLUS : D_MINUS);
   }
 
-  // Phase 2 of recursive layout refactoring: prepare a per-item memo chain
-  // without switching map.js over yet. Parents synchronously read child
-  // _layoutResult memos so, when this path becomes the layout entry point,
-  // Solid can recompute only the changed item and its ancestors.
+  // Recursive layout memo entry point. Parents synchronously read child
+  // _layoutResult memos so Solid can recompute only stale items and their
+  // ancestors, except for explicit full-map layout/font-size version bumps.
   _computeLayout() {
     if (!this.dom) {
       return [0, 0];
     }
+    this._sideVersion();
+    this._contentVersion();
+    const map = this.map;
+    map?._layoutVersion?.();
+    map?._fontSizeVersion?.();
     if (!this._resolvedLayout()) {
       return this.size;
     }

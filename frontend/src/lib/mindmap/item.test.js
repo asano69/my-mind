@@ -9,7 +9,7 @@ function classList() {
 }
 
 function node() {
-  const attrs = new Map();
+  const attrs = new globalThis.Map();
   return {
     classList: classList(),
     dataset: {},
@@ -66,6 +66,8 @@ vi.mock("./layout/layout.js", () => ({
 }));
 vi.mock("./map.js", () => ({ default: class Map {} }));
 
+const { createSignal } = await import("solid-js");
+const { default: Map } = await import("./map.js");
 const { default: Item } = await import("./item.js");
 
 describe("Item resolved layout memo", () => {
@@ -165,6 +167,73 @@ describe("Item layout result memo", () => {
     expect(rootCalls.update).toBe(2);
     expect(childCalls.update).toBe(2);
     expect(siblingCalls.update).toBe(1);
+  });
+
+  it("uses item-local versions for side changes and live content input", () => {
+    const map = new Map();
+    map.ensureItemVisibility = vi.fn();
+    const root = new Item();
+    const child = new Item();
+    const sibling = new Item();
+    root.parent = map;
+    root.insertChild(child);
+    root.insertChild(sibling);
+
+    const rootCalls = instrumentLayout(root);
+    const childCalls = instrumentLayout(child);
+    const siblingCalls = instrumentLayout(sibling);
+    root.layout = {
+      id: "map",
+      computeAlignment: () => "left",
+      update: vi.fn(),
+    };
+
+    root._layoutResult();
+    child.side = "left";
+    root._layoutResult();
+
+    expect(rootCalls.update).toBe(2);
+    expect(childCalls.update).toBe(2);
+    expect(siblingCalls.update).toBe(1);
+
+    child.handleEvent({ type: "input" });
+    root._layoutResult();
+
+    expect(rootCalls.update).toBe(3);
+    expect(childCalls.update).toBe(3);
+    expect(siblingCalls.update).toBe(1);
+    expect(map.ensureItemVisibility).toHaveBeenCalledWith(child);
+  });
+
+  it("uses map font-size version as an intentional whole-tree trigger", () => {
+    const map = new Map();
+    const [fontSizeVersion, setFontSizeVersion] = createSignal(0);
+    map._fontSizeVersion = fontSizeVersion;
+    map._bumpFontSizeVersion = () =>
+      setFontSizeVersion((version) => version + 1);
+    const root = new Item();
+    const child = new Item();
+    const sibling = new Item();
+    root.parent = map;
+    root.insertChild(child);
+    root.insertChild(sibling);
+
+    const rootCalls = instrumentLayout(root);
+    const childCalls = instrumentLayout(child);
+    const siblingCalls = instrumentLayout(sibling);
+    root.layout = {
+      id: "map",
+      computeAlignment: () => "left",
+      update: vi.fn(),
+    };
+
+    root._layoutResult();
+    map._bumpFontSizeVersion();
+    root._layoutResult();
+
+    expect(rootCalls.update).toBe(2);
+    expect(childCalls.update).toBe(2);
+    expect(siblingCalls.update).toBe(2);
   });
 
   it("does not read child layout memos while collapsed", () => {
