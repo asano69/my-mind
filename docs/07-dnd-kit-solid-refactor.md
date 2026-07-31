@@ -59,3 +59,36 @@ app.action(new actions.MoveItem(item, newParent, newIndex, newSide));
 | 6 | 旧`computeDragState`/`visualizeDragState`/`buildGhost`/`getStableDropCollision`等を削除し、`DragOverlay`＋dnd-kitのcollision detectionに置き換え | 高（見た目の最終確認が必要） |
 | 7 | タッチセンサー確認：スマホでのドラッグ開始判定・スクロールとの共存・既存pinch-zoomとの共存 | 中 |
 | 8 | 回帰チェックリスト（undo/redo、multi-selection中のドラッグ、collapsed親への挿入、既存の`docs/`にある回帰観点を流用） | — |
+
+### Phase 5 progress note
+
+Implemented as planned, with one simplification worth calling out:
+`layout/map.js`'s `MapLayout.getChildDirection` no longer counts
+siblings to auto-balance an unset `side` -- it now just returns
+`child.side || "right"`. The old auto-balance code was removed entirely
+rather than kept as a fallback, since dnd-kit's own
+`"<rootId>:left"`/`"<rootId>:right"` groups (see
+`dnd/sortableTree.js`'s `rootGroupId()`/`syncRootChildren()`) are now the
+single source of truth for where a root child renders. A freshly
+inserted root child (via `InsertSibling`/`InsertChild`, not drag-and-drop)
+therefore defaults to the right side until explicitly moved -- this is
+the same simplification the plan anticipated ("自動バランシングの推測
+コードが丸ごと不要になる"), not an oversight.
+
+`dnd/sortableTree.js`'s `handleDragEnd` and `buildItemsByGroup` both
+special-case root's two groups: `buildItemsByGroup` emits
+`"<rootId>:left"`/`"<rootId>:right"` arrays instead of a `root.id` entry,
+and `handleDragEnd` maps a resulting group id back to `{ newParent: root,
+newSide: "left" | "right" }` when it matches one of those two ids. The
+childless-root drop case (`emptyParentId === root.id`) has no existing
+sibling to infer a side from, so it keeps the dragged item's current
+`side` if it has one, or defaults to `"right"` -- same default as
+`getChildDirection`.
+
+`init()`'s effect now also reads every root child's `_sideVersion()`
+(not just root's `_childrenVersion()`), so the `SetSide` command
+(Ctrl+Left/Right) -- which does not touch `_childrenVersion` -- still
+re-syncs which dnd-kit group a child belongs to. This effect can no
+longer use `on()` with a fixed dependency, since the set of children
+signals it reads is itself dynamic; it is a plain `createEffect` instead,
+relying on Solid's normal automatic dependency tracking.

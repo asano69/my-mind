@@ -19,30 +19,19 @@ export default class MapLayout extends GraphLayout {
     while (child.parent && !child.parent.isRoot) {
       child = child.parent;
     }
-    /*
-     * child is now the sub-root node. During tree construction/moves, Solid
-     * can synchronously ask for layout while a child has been inserted into a
-     * children array but its parent signal has not been connected yet. Avoid
-     * crashing on that transient disconnected state; the next invalidation
-     * after parent assignment will resolve the final side.
-     */
-    if (!child.parent) {
-      return child.side || "right";
-    }
-    let side = child.side;
-    if (side) {
-      return side;
-    }
-    let counts = { left: 0, right: 0 };
-    child.parent.children.forEach((sibling) => {
-      let side = sibling.side;
-      if (!side) {
-        side = counts.right > counts.left ? "left" : "right";
-        sibling._setSide(side, { bump: false });
-      }
-      counts[side]++;
-    });
-    return child.side; // we have a guaranteed side now
+    // child is now the sub-root node (a direct child of the map's root).
+    // Side is decided explicitly, not inferred: either the item's own
+    // `side` field (set by the SetSide command, JSON restore, or a
+    // drag-and-drop into the "root:left"/"root:right" dnd-kit group, see
+    // dnd/sortableTree.js's Phase 5), or "right" as the default for a
+    // freshly created item that hasn't been assigned a side yet. This
+    // replaces the old sibling-counting auto-balance -- dnd-kit's own
+    // drop groups are now the single source of truth for root-level
+    // left/right placement (see docs/07-dnd-kit-solid-refactor.md,
+    // Phase 5). This also stays safe if child.parent is transiently null
+    // (mid tree-construction/move), since the loop above simply exits and
+    // we fall back to child.side || "right" without dereferencing it.
+    return child.side || "right";
   }
   pickSibling(item, dir) {
     if (item.isRoot) {

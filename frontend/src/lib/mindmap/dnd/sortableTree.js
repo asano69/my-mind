@@ -1,12 +1,14 @@
-// Phase 3 of the dnd-kit refactor (see docs/07-dnd-kit-solid-refactor.md).
-// Generalizes Phase 2's single fixed group ("root-children") to
-// `group = parent.id` for every parent in the tree, so a drag can move an
-// item across parents, not just reorder siblings under a fixed parent.
+// Phases 3-5 of the dnd-kit refactor (see docs/07-dnd-kit-solid-refactor.md).
+// Phase 3 generalized the single fixed group ("root-children") to
+// `group = parent.id` for every non-root parent in the tree, so a drag can
+// move an item across parents, not just reorder siblings under a fixed
+// parent. Phase 4 added a placeholder droppable for childless parents
+// (see syncEmptyDroppable below). Phase 5 (this revision) splits root's
+// own direct children into two independent groups, "<rootId>:left" and
+// "<rootId>:right", matching MapLayout's own left/right rendering -- see
+// rootGroupId()/syncRootChildren() below.
 //
-// Still out of scope for this phase (see the plan doc):
-// - Dropping into a node that currently has zero children (Phase 4).
-// - Root's left/right side grouping (Phase 5) -- root's own children
-//   still share one group, same as Phase 2.
+// Still out of scope:
 // - Explicit teardown of a watcher/binding for an item once it is
 //   removed from the tree entirely (RemoveItem/cut). Left as a known,
 //   harmless leak for now; addressed in Phase 6's cleanup pass.
@@ -94,6 +96,40 @@ function syncChildren(parent, groupId) {
   syncEmptyDroppable(parent);
 }
 
+// Splits root's direct children into two independent dnd-kit groups by
+// side, "<rootId>:left" and "<rootId>:right", instead of the single
+// `root.id` group every other parent uses (see syncChildren above). This
+// mirrors MapLayout's own left/right rendering (see layout/map.js's
+// MapLayout.layoutRoot) and lets dnd-kit's Multiple Sortable Lists do the
+// left/right placement the same way it already handles ordinary
+// reparenting elsewhere in the tree.
+function rootGroupId(root, side) {
+  return `${root.id}:${side}`;
+}
+
+// Binds root's children into their side's group, based on each child's
+// resolved side (layout/map.js's MapLayout.getChildDirection, which as of
+// Phase 5 returns child.side || "right" with no sibling-counting
+// auto-balance -- see that file's comment). Each group's own index is the
+// child's position within just that side's children, matching what
+// MapLayout expects when it lays out root's left/right lists
+// independently.
+function syncRootChildren(root) {
+  const bySide = { left: [], right: [] };
+  root.children.forEach((child) => {
+    bySide[root.resolvedLayout.getChildDirection(child)].push(child);
+  });
+  ["left", "right"].forEach((side) => {
+    const groupId = rootGroupId(root, side);
+    bySide[side].forEach((child, index) => {
+      bindItem(child, groupId, index);
+      watchNode(child);
+      syncEmptyDroppable(child);
+    });
+  });
+  syncEmptyDroppable(root);
+}
+
 function watchNode(item) {
   if (watchers.has(item.id)) {
     return;
@@ -123,19 +159,19 @@ export function init(map) {
       unbindAll();
       dispose();
     };
-    // Map's `id` getter delegates to root.id (see map.js), so using
-    // map.root.id as the group id here is consistent with how a child
-    // item's `item.parent.id` resolves to the same value whether
-    // `item.parent` is the Map instance (root's direct children) or
-    // another Item.
-    createEffect(
-      on(map.root._childrenVersion, () => syncChildren(map.root, map.root.id)),
-    );
-    // syncChildren() above only calls syncEmptyDroppable() for the
-    // root's *children*, plus the root itself as `parent`. That already
-    // covers "root has zero children" (a brand-new map), so no separate
-    // call is needed here -- listed explicitly to make that coverage
-    // clear rather than relying on the reader to trace it back.
+    // Plain createEffect (not on()) because the dependency set is
+    // dynamic: besides root's own _childrenVersion, this also reads
+    // every direct child's _sideVersion, so a side change from the
+    // SetSide command (Ctrl+Left/Right) re-runs syncRootChildren() and
+    // moves that child into its new root:left/root:right dnd-kit group,
+    // not just structural inserts/removes.
+    createEffect(() => {
+      map.root._childrenVersion();
+      map.root.children.forEach((child) => child._sideVersion());
+      syncRootChildren(map.root);
+    });
+    // syncRootChildren() above covers "root has zero children" (a
+    // brand-new map) via its own syncEmptyDroppable(root) call.
   });
 }
 
@@ -159,16 +195,27 @@ function findItem(root, id) {
 }
 
 // Snapshots the whole tree as a group-id -> child-id-array record, the
-// shape @dnd-kit/helpers' move() expects for cross-group moves. Rebuilt
-// fresh on every drag end (a single O(tree size) walk per drop, not per
-// frame), which keeps this function simple at the cost of some
+// shape @dnd-kit/helpers' move() expects for cross-group moves. Root's
+// direct children are split into their two side groups (see
+// rootGroupId()/syncRootChildren() above) instead of one root.id group.
+// Rebuilt fresh on every drag end (a single O(tree size) walk per drop,
+// not per frame), which keeps this function simple at the cost of some
 // unnecessary work on very large maps -- acceptable for now per
 // CLAUDE.md's simplicity-first guidance; revisit only if profiling shows
 // it matters.
 function buildItemsByGroup(root) {
   const record = {};
+  const bySide = { left: [], right: [] };
+  root.children.forEach((child) => {
+    bySide[root.resolvedLayout.getChildDirection(child)].push(child.id);
+  });
+  record[rootGroupId(root, "left")] = bySide.left;
+  record[rootGroupId(root, "right")] = bySide.right;
+
   function walk(item) {
-    record[item.id] = item.children.map((child) => child.id);
+    if (item !== root) {
+      record[item.id] = item.children.map((child) => child.id);
+    }
     item.children.forEach(walk);
   }
   walk(root);
@@ -202,7 +249,12 @@ export function handleDragEnd(event) {
     if (!item || !newParent || item === newParent) {
       return;
     }
-    app.action(new actions.MoveItem(item, newParent, 0, item.side));
+    // Root has no existing children to infer a side from here (that's
+    // exactly why it's the "empty" case) -- keep the item's current side
+    // if it already has one, otherwise default to "right", the same
+    // default MapLayout.getChildDirection uses.
+    const newSide = newParent === root ? item.side || "right" : item.side;
+    app.action(new actions.MoveItem(item, newParent, 0, newSide));
     return;
   }
 
@@ -228,19 +280,32 @@ export function handleDragEnd(event) {
     return;
   }
 
-  const oldParentId = item.parent.id;
-  const oldIndex = item.parent.children.indexOf(item);
-  if (newParentId === oldParentId && newIndex === oldIndex) {
+  const oldParent = item.parent;
+  const oldIndex = oldParent.children.indexOf(item);
+  // Old group id must use the same "<rootId>:side" scheme as newParentId
+  // when the item's current parent is root, or a same-side/same-index
+  // no-op drag would be misread as a real move.
+  const oldGroupId =
+    oldParent === root
+      ? rootGroupId(root, root.resolvedLayout.getChildDirection(item))
+      : oldParent.id;
+  if (newParentId === oldGroupId && newIndex === oldIndex) {
     return; // no actual change
   }
 
-  const newParent = findItem(root, newParentId);
+  const rootLeftId = rootGroupId(root, "left");
+  const rootRightId = rootGroupId(root, "right");
+  let newParent;
+  let newSide = item.side;
+  if (newParentId === rootLeftId || newParentId === rootRightId) {
+    newParent = root;
+    newSide = newParentId === rootLeftId ? "left" : "right";
+  } else {
+    newParent = findItem(root, newParentId);
+  }
   if (!newParent) {
     return;
   }
 
-  // Side (left/right under root) is intentionally left unchanged here --
-  // that distinction is Phase 5's job. Non-root reparenting doesn't use
-  // `side` at all, so passing it through as-is is a no-op in that case.
-  app.action(new actions.MoveItem(item, newParent, newIndex, item.side));
+  app.action(new actions.MoveItem(item, newParent, newIndex, newSide));
 }
