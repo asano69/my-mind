@@ -6,11 +6,28 @@ const getCommand = vi.fn((id) =>
   id === "finish" ? { execute: finishExecute } : {},
 );
 const getItemFor = vi.fn();
+const getClosestItem = vi.fn();
 const adjustZoom = vi.fn();
+const selectItem = vi.fn();
+const actionFn = vi.fn();
 
 vi.mock("./ui/context-menu.js", () => ({ open: menuOpen }));
 vi.mock("./command/command.js", () => ({ repo: { get: getCommand } }));
-vi.mock("./action.js", () => ({}));
+vi.mock("./action.js", () => ({
+  MoveItem: class MoveItem {
+    constructor(item, target, targetIndex, side) {
+      this.item = item;
+      this.target = target;
+      this.targetIndex = targetIndex;
+      this.side = side;
+    }
+  },
+  Multi: class Multi {
+    constructor(actions) {
+      this.actions = actions;
+    }
+  },
+}));
 
 // mockActiveMode: mutable holder so individual tests can flip it, per
 // docs/workspace-mode-switch-refactor.md's Phase 3 guard. Must be
@@ -22,7 +39,7 @@ vi.mock("./store.js", () => ({ activeMode: () => mockActiveMode.value }));
 
 vi.mock("./my-mind.js", () => ({
   get currentMap() {
-    return { getItemFor, adjustZoom };
+    return { getItemFor, getClosestItem, adjustZoom };
   },
   get currentItem() {
     return null;
@@ -32,11 +49,23 @@ vi.mock("./my-mind.js", () => ({
   },
   selectedItems: new Set(),
   addToSelection: vi.fn(),
-  selectItem: vi.fn(),
+  selectItem,
+  action: actionFn,
   getAllSelected: vi.fn(() => []),
 }));
 
 const mouse = await import("./mouse.js");
+
+function contentNode(attrs = {}) {
+  return {
+    ...attrs,
+    style: {},
+    classList: { add: vi.fn() },
+    appendChild: vi.fn(),
+    cloneNode: vi.fn(() => contentNode({ offsetWidth: 60, offsetHeight: 30 })),
+    remove: vi.fn(),
+  };
+}
 
 function eventTarget() {
   const listeners = new Map();
@@ -54,6 +83,9 @@ describe("mouse focus handoff", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getItemFor.mockReturnValue(null);
+    getClosestItem.mockReset();
+    selectItem.mockClear();
+    actionFn.mockClear();
     mockActiveMode.value = "canvas";
   });
 
@@ -107,6 +139,57 @@ describe("mouse focus handoff", () => {
 
     expect(preventDefault).toHaveBeenCalledOnce();
     expect(adjustZoom).toHaveBeenCalledWith(1, [123, 456]);
+
+    mouse.dispose();
+  });
+
+  it("does not let the post-drag click move selection to the drop target", () => {
+    const dragged = {
+      isRoot: false,
+      contentSize: [60, 30],
+      dom: {
+        content: contentNode({ offsetWidth: 60, offsetHeight: 30 }),
+      },
+    };
+    const target = {
+      isRoot: true,
+      contentSize: [80, 40],
+      dom: { content: contentNode() },
+    };
+    getItemFor.mockImplementation((element) =>
+      element?.dataset?.role === "drop-target" ? target : dragged,
+    );
+    getClosestItem.mockReturnValue({ item: target, dx: 0, dy: 0 });
+
+    const port = eventTarget();
+    port.append = vi.fn();
+    port.getBoundingClientRect = () => ({ left: 0, top: 0 });
+    const container = { focus: vi.fn() };
+    mouse.init(port, container);
+
+    port.dispatch("mousedown", {
+      type: "mousedown",
+      target: dragged.dom.content,
+      clientX: 10,
+      clientY: 20,
+      preventDefault: vi.fn(),
+    });
+    port.dispatch("mousemove", {
+      target: dragged.dom.content,
+      clientX: 30,
+      clientY: 40,
+      preventDefault: vi.fn(),
+    });
+    port.dispatch("mouseup", { target: target.dom.content });
+
+    const preventDefault = vi.fn();
+    const clickTarget = { dataset: { role: "drop-target" } };
+    port.dispatch("click", { target: clickTarget, preventDefault });
+
+    expect(actionFn).toHaveBeenCalledOnce();
+    expect(preventDefault).toHaveBeenCalledOnce();
+    expect(selectItem).toHaveBeenCalledOnce();
+    expect(selectItem).toHaveBeenCalledWith(dragged);
 
     mouse.dispose();
   });

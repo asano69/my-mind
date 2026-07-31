@@ -19,6 +19,7 @@ let current = {
   ctrlHeld: false,
   previousDragState: null,
   pinchDistance: 0,
+  suppressNextClick: false,
 };
 let port;
 let container;
@@ -61,11 +62,18 @@ export function dispose() {
     ctrlHeld: false,
     previousDragState: null,
     pinchDistance: 0,
+    suppressNextClick: false,
   };
   port = null;
   container = null;
 }
 function onClick(e) {
+  if (current.suppressNextClick) {
+    current.suppressNextClick = false;
+    e.preventDefault?.();
+    return;
+  }
+
   if (!isCanvasActive() || !app.currentMap) {
     return;
   }
@@ -238,6 +246,11 @@ function onDragEnd(_e) {
     finishDragDrop(state);
     ghost.remove();
     current.ghost = null;
+    // Browsers dispatch a click after mouseup. When a real drag happened,
+    // that click targets whichever node is under the pointer at the drop
+    // position, which can unexpectedly move selection/focus away from the
+    // node the user just moved. Suppress only that synthetic post-drag click.
+    current.suppressNextClick = true;
   }
   current.items = [];
   current.mode = "";
