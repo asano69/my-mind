@@ -56,8 +56,14 @@ vi.mock("./svg.js", () => ({ group: node, foreignObject: node, node }));
 vi.mock("./pubsub.js", () => ({ publish: vi.fn() }));
 vi.mock("./my-mind.js", () => ({ selectItem: vi.fn() }));
 vi.mock("./command/command.js", () => ({ repo: { get: vi.fn() } }));
-vi.mock("./shape/shape.js", () => ({ repo: { get: (id) => ({ id }) } }));
-vi.mock("./layout/layout.js", () => ({ repo: { get: (id) => ({ id }) } }));
+vi.mock("./shape/shape.js", () => ({
+  repo: { get: (id) => ({ id, update: vi.fn() }) },
+}));
+vi.mock("./layout/layout.js", () => ({
+  repo: {
+    get: (id) => ({ id, computeAlignment: () => "left", update: vi.fn() }),
+  },
+}));
 vi.mock("./map.js", () => ({ default: class Map {} }));
 
 const { default: Item } = await import("./item.js");
@@ -68,7 +74,11 @@ describe("Item resolved layout memo", () => {
     const child = new Item();
     const grandchild = new Item();
 
-    root.layout = { id: "map" };
+    root.layout = {
+      id: "map",
+      computeAlignment: () => "left",
+      update: vi.fn(),
+    };
     child.parent = root;
     grandchild.parent = child;
 
@@ -95,5 +105,91 @@ describe("Item resolved value/status memos", () => {
 
     expect(parent.resolvedValue).toBe(3);
     expect(parent.resolvedStatus).toBe(false);
+  });
+});
+
+describe("Item layout result memo", () => {
+  function instrumentLayout(item) {
+    const calls = { update: 0, measure: 0, write: 0 };
+    item._updateLayoutContent = vi.fn(() => {
+      calls.update++;
+      item._text();
+    });
+    item._measureOwnContent = vi.fn(() => {
+      calls.measure++;
+    });
+    item._writeOwnLayout = vi.fn(() => {
+      calls.write++;
+    });
+    return calls;
+  }
+
+  it("returns the item size after running the per-item layout steps", () => {
+    const item = new Item();
+    item.dom.node.getBBox = () => ({ width: 42, height: 24 });
+    const calls = instrumentLayout(item);
+    item.layout = {
+      id: "map",
+      computeAlignment: () => "left",
+      update: vi.fn(),
+    };
+
+    expect(item._layoutResult()).toEqual([42, 24]);
+    expect(calls).toEqual({ update: 1, measure: 1, write: 1 });
+  });
+
+  it("recomputes the changed child and ancestors without unrelated siblings", () => {
+    const root = new Item();
+    const child = new Item();
+    const sibling = new Item();
+    root.insertChild(child);
+    root.insertChild(sibling);
+
+    const rootCalls = instrumentLayout(root);
+    const childCalls = instrumentLayout(child);
+    const siblingCalls = instrumentLayout(sibling);
+    root.layout = {
+      id: "map",
+      computeAlignment: () => "left",
+      update: vi.fn(),
+    };
+
+    root._layoutResult();
+    expect(rootCalls.update).toBe(1);
+    expect(childCalls.update).toBe(1);
+    expect(siblingCalls.update).toBe(1);
+
+    child.text = "changed";
+    root._layoutResult();
+
+    expect(rootCalls.update).toBe(2);
+    expect(childCalls.update).toBe(2);
+    expect(siblingCalls.update).toBe(1);
+  });
+
+  it("does not read child layout memos while collapsed", () => {
+    const root = new Item();
+    const child = new Item();
+    root.insertChild(child);
+
+    const rootCalls = instrumentLayout(root);
+    const childCalls = instrumentLayout(child);
+    root.layout = {
+      id: "map",
+      computeAlignment: () => "left",
+      update: vi.fn(),
+    };
+    rootCalls.update = 0;
+    rootCalls.measure = 0;
+    rootCalls.write = 0;
+    childCalls.update = 0;
+    childCalls.measure = 0;
+    childCalls.write = 0;
+    root.collapsed = true;
+
+    root._layoutResult();
+
+    expect(rootCalls.update).toBe(1);
+    expect(childCalls.update).toBe(0);
   });
 });

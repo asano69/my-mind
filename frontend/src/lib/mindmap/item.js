@@ -213,6 +213,11 @@ export default class Item {
     // reactive layout computed (see map.js, Solid migration Phase 8) calls
     // them directly while recomputing the whole tree, so DOM content sync
     // and size measurement always happen in the same synchronous pass.
+
+    createRoot((dispose) => {
+      this._disposeLayoutMemo = dispose;
+      this._layoutResult = createMemo(() => this._computeLayout());
+    });
   }
   get id() {
     return this._id;
@@ -694,6 +699,28 @@ export default class Item {
     toggle
       .querySelector("path")
       .setAttribute("d", this._collapsed() ? D_PLUS : D_MINUS);
+  }
+
+  // Phase 2 of recursive layout refactoring: prepare a per-item memo chain
+  // without switching map.js over yet. Parents synchronously read child
+  // _layoutResult memos so, when this path becomes the layout entry point,
+  // Solid can recompute only the changed item and its ancestors.
+  _computeLayout() {
+    if (!this.dom) {
+      return [0, 0];
+    }
+    if (!this._resolvedLayout()) {
+      return this.size;
+    }
+    this.updateToggle();
+    this._updateLayoutContent();
+    if (!this._collapsed()) {
+      this._childrenVersion();
+      this.children.forEach((child) => child._layoutResult());
+    }
+    this._measureOwnContent();
+    this._writeOwnLayout();
+    return this.size;
   }
 
   // Phase 1 of recursive layout refactoring: keep the existing whole-tree
