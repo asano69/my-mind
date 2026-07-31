@@ -11,15 +11,25 @@
 //   removed from the tree entirely (RemoveItem/cut). Left as a known,
 //   harmless leak for now; addressed in Phase 6's cleanup pass.
 import { createRoot, createEffect, on } from "solid-js";
-import { useSortable } from "@dnd-kit/solid/sortable";
+import { useSortable, } from "@dnd-kit/solid/sortable";
+import { useDroppable } from "@dnd-kit/solid";
 import { move } from "@dnd-kit/helpers";
 import * as app from "../my-mind.js";
 import * as actions from "../action.js";
+
+// Suffix used for the id of an empty-parent's placeholder droppable (see
+// bindEmptyDroppable below), so handleDragEnd can tell "dropped onto a
+// real sortable sibling" apart from "dropped onto a childless node's
+// content box" without any extra bookkeeping.
+const EMPTY_ID_SUFFIX = ":empty";
 
 // item id -> dispose fn for that item's own useSortable ref
 let bindings = new Map();
 // item id -> dispose fn for the effect watching that item's *children*
 let watchers = new Map();
+// item id -> dispose fn for that item's empty-container useDroppable,
+// present only while item.children.length === 0 (see syncEmptyDroppable).
+let emptyDroppables = new Map();
 let rootWatcherDispose = null;
 
 function bindItem(item, groupId, index) {
@@ -43,6 +53,34 @@ function bindItem(item, groupId, index) {
   });
 }
 
+// While `item` has zero children, its content box has no useSortable
+// element registered inside it (Phase 3's bindings only cover existing
+// children), so a drag has nothing to collide with there. Registering a
+// plain useDroppable directly on the same content node, scoped to
+// item.id's own group, lets a drag be dropped "into" a childless node to
+// become its first child. Removed again the moment a first child
+// appears, since Phase 3's own sortable bindings take over from there.
+function syncEmptyDroppable(item) {
+  const hasDroppable = emptyDroppables.has(item.id);
+  if (item.children.length === 0) {
+    if (hasDroppable) {
+      return; // already registered, nothing changed
+    }
+    createRoot((dispose) => {
+      const { ref } = useDroppable({
+        id: `${item.id}${EMPTY_ID_SUFFIX}`,
+        accept: "item",
+        data: { emptyParentId: item.id },
+      });
+      ref(item.dom.content);
+      emptyDroppables.set(item.id, dispose);
+    });
+  } else if (hasDroppable) {
+    emptyDroppables.get(item.id)();
+    emptyDroppables.delete(item.id);
+  }
+}
+
 // Binds every direct child of `parent` (whose group id is `groupId`,
 // i.e. parent.id) and makes sure each child's own children are being
 // watched, so a structural change anywhere in the tree eventually
@@ -51,7 +89,9 @@ function syncChildren(parent, groupId) {
   parent.children.forEach((child, index) => {
     bindItem(child, groupId, index);
     watchNode(child);
+    syncEmptyDroppable(child);
   });
+  syncEmptyDroppable(parent);
 }
 
 function watchNode(item) {
@@ -69,6 +109,8 @@ function unbindAll() {
   bindings.clear();
   watchers.forEach((dispose) => dispose());
   watchers.clear();
+  emptyDroppables.forEach((dispose) => dispose());
+  emptyDroppables.clear();
 }
 
 // Called by my-mind.js's showMap() whenever a map becomes current.
@@ -89,6 +131,11 @@ export function init(map) {
     createEffect(
       on(map.root._childrenVersion, () => syncChildren(map.root, map.root.id)),
     );
+    // syncChildren() above only calls syncEmptyDroppable() for the
+    // root's *children*, plus the root itself as `parent`. That already
+    // covers "root has zero children" (a brand-new map), so no separate
+    // call is needed here -- listed explicitly to make that coverage
+    // clear rather than relying on the reader to trace it back.
   });
 }
 
@@ -139,13 +186,29 @@ export function handleDragEnd(event) {
     return;
   }
 
-  const itemsByGroup = buildItemsByGroup(root);
-  const nextItemsByGroup = move(itemsByGroup, event);
-
   const sourceId = event.operation.source?.id;
   if (!sourceId) {
     return;
   }
+
+  // Dropped directly onto a childless node's placeholder droppable (see
+  // syncEmptyDroppable) -- handled separately from the move() path below,
+  // since there is no existing sibling list to reorder within; this is
+  // always "become this parent's first child," full stop.
+  const emptyParentId = event.operation.target?.data?.emptyParentId;
+  if (emptyParentId) {
+    const item = findItem(root, sourceId);
+    const newParent = findItem(root, emptyParentId);
+    if (!item || !newParent || item === newParent) {
+      return;
+    }
+    app.action(new actions.MoveItem(item, newParent, 0, item.side));
+    return;
+  }
+
+  const itemsByGroup = buildItemsByGroup(root);
+  const nextItemsByGroup = move(itemsByGroup, event);
+
   const item = findItem(root, sourceId);
   if (!item) {
     return;
