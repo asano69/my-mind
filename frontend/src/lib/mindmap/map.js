@@ -1,5 +1,5 @@
 // src/map.js
-import Item from "./item.js";
+import Item, { readItemLayoutResult } from "./item.js";
 import { repo as layoutRepo } from "./layout/layout.js";
 import * as svg from "./svg.js";
 import * as html from "./html.js";
@@ -55,7 +55,7 @@ export default class Map {
         if (!this.isVisible) {
           return;
         }
-        const rootSize = this._root._layoutResult();
+        const rootSize = readItemLayoutResult(this._root);
         this.node.setAttribute("width", String(rootSize[0]));
         this.node.setAttribute("height", String(rootSize[1]));
         // Bump once per root layout pull, not once per item: auto-save only

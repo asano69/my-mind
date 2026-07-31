@@ -10,6 +10,11 @@ import { repo as layoutRepo } from "./layout/layout.js";
 import Map from "./map.js";
 
 export const TOGGLE_SIZE = 7;
+const LAYOUT_RESULT = Symbol("Item.layoutResult");
+
+export function readItemLayoutResult(item) {
+  return item[LAYOUT_RESULT]();
+}
 
 export default class Item {
   static fromJSON(data) {
@@ -227,7 +232,7 @@ export default class Item {
 
     createRoot((dispose) => {
       this._disposeLayoutMemo = dispose;
-      this._layoutResult = createMemo(() => this._computeLayout());
+      this[LAYOUT_RESULT] = createMemo(() => computeLayout(this));
     });
   }
   get id() {
@@ -716,41 +721,6 @@ export default class Item {
       .setAttribute("d", this._collapsed() ? D_PLUS : D_MINUS);
   }
 
-  // Recursive layout memo entry point. Parents synchronously read child
-  // _layoutResult memos so Solid can recompute only stale items and their
-  // ancestors, except for explicit full-map layout/font-size version bumps.
-  _computeLayout() {
-    if (!this.dom) {
-      return [0, 0];
-    }
-    // Detached items can briefly have a stale/dirty layout memo during JSON
-    // restore or reparenting, before their parent signal has been connected.
-    // They do not have enough context for inherited layout, root alignment, or
-    // MapLayout side assignment, so keep the memo harmless until the item is
-    // attached and a parent/root recompute pulls it again.
-    const parent = this.parent;
-    const map = this.map;
-    if (!parent || (parent && !map)) {
-      return this.size;
-    }
-    this._sideVersion();
-    this._contentVersion();
-    map?._layoutVersion?.();
-    map?._fontSizeVersion?.();
-    if (!this._resolvedLayout()) {
-      return this.size;
-    }
-    this.updateToggle();
-    this._updateLayoutContent();
-    if (!this._collapsed()) {
-      this._childrenVersion();
-      this.children.forEach((child) => child._layoutResult());
-    }
-    this._measureOwnContent();
-    this._writeOwnLayout();
-    return this.size;
-  }
-
   // Phase 1 of recursive layout refactoring: keep the existing whole-tree
   // traversal in map.js, but make each per-item operation live with Item so
   // a later per-item layout memo can call the same small methods directly.
@@ -872,3 +842,35 @@ const COLOR = "#999";
  */
 const RE =
   /\b(([a-z][\w-]+:\/\/\w)|(([\w-]+\.){2,}[a-z][\w-]+)|([\w-]+\.[a-z][\w-]+\/))[^\s]*([^\s,.;:?!<>\(\)\[\]'"])?($|\b)/i;
+
+function computeLayout(item) {
+  if (!item.dom) {
+    return [0, 0];
+  }
+  // Detached items can briefly have a stale/dirty layout memo during JSON
+  // restore or reparenting, before their parent signal has been connected.
+  // They do not have enough context for inherited layout, root alignment, or
+  // MapLayout side assignment, so keep the memo harmless until the item is
+  // attached and a parent/root recompute pulls it again.
+  const parent = item.parent;
+  const map = item.map;
+  if (!parent || (parent && !map)) {
+    return item.size;
+  }
+  item._sideVersion();
+  item._contentVersion();
+  map?._layoutVersion?.();
+  map?._fontSizeVersion?.();
+  if (!item._resolvedLayout()) {
+    return item.size;
+  }
+  item.updateToggle();
+  item._updateLayoutContent();
+  if (!item._collapsed()) {
+    item._childrenVersion();
+    item.children.forEach(readItemLayoutResult);
+  }
+  item._measureOwnContent();
+  item._writeOwnLayout();
+  return item.size;
+}

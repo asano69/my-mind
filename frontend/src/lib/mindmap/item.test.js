@@ -68,7 +68,7 @@ vi.mock("./map.js", () => ({ default: class Map {} }));
 
 const { createSignal } = await import("solid-js");
 const { default: Map } = await import("./map.js");
-const { default: Item } = await import("./item.js");
+const { default: Item, readItemLayoutResult } = await import("./item.js");
 
 describe("Item resolved layout memo", () => {
   it("does not throw when a detached subtree invalidates descendant layout", () => {
@@ -138,7 +138,7 @@ describe("Item layout result memo", () => {
       update: vi.fn(),
     };
 
-    expect(item._layoutResult()).toEqual([42, 24]);
+    expect(readItemLayoutResult(item)).toEqual([42, 24]);
     expect(calls).toEqual({ update: 1, measure: 1, write: 1 });
   });
 
@@ -160,13 +160,13 @@ describe("Item layout result memo", () => {
       update: vi.fn(),
     };
 
-    root._layoutResult();
+    readItemLayoutResult(root);
     expect(rootCalls.update).toBe(1);
     expect(childCalls.update).toBe(1);
     expect(siblingCalls.update).toBe(1);
 
     child.text = "changed";
-    root._layoutResult();
+    readItemLayoutResult(root);
 
     expect(rootCalls.update).toBe(2);
     expect(childCalls.update).toBe(2);
@@ -192,16 +192,16 @@ describe("Item layout result memo", () => {
       update: vi.fn(),
     };
 
-    root._layoutResult();
+    readItemLayoutResult(root);
     child.side = "left";
-    root._layoutResult();
+    readItemLayoutResult(root);
 
     expect(rootCalls.update).toBe(2);
     expect(childCalls.update).toBe(2);
     expect(siblingCalls.update).toBe(1);
 
     child.handleEvent({ type: "input" });
-    root._layoutResult();
+    readItemLayoutResult(root);
 
     expect(rootCalls.update).toBe(3);
     expect(childCalls.update).toBe(3);
@@ -231,9 +231,9 @@ describe("Item layout result memo", () => {
       update: vi.fn(),
     };
 
-    root._layoutResult();
+    readItemLayoutResult(root);
     map._bumpFontSizeVersion();
-    root._layoutResult();
+    readItemLayoutResult(root);
 
     expect(rootCalls.update).toBe(2);
     expect(childCalls.update).toBe(2);
@@ -256,11 +256,11 @@ describe("Item layout result memo", () => {
       update: vi.fn(),
     };
 
-    root._layoutResult();
+    readItemLayoutResult(root);
     expect(grandchildCalls.update).toBe(1);
 
     child.parent = null;
-    expect(() => grandchild._layoutResult()).not.toThrow();
+    expect(() => readItemLayoutResult(grandchild)).not.toThrow();
     expect(grandchildCalls.update).toBe(1);
   });
 
@@ -286,7 +286,7 @@ describe("Item layout result memo", () => {
     childCalls.write = 0;
     root.collapsed = true;
 
-    root._layoutResult();
+    readItemLayoutResult(root);
 
     expect(rootCalls.update).toBe(1);
     expect(childCalls.update).toBe(0);
