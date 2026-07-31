@@ -730,7 +730,7 @@ export default class Item {
     // attached and a parent/root recompute pulls it again.
     const parent = this.parent;
     const map = this.map;
-    if (parent && !map) {
+    if (!parent || (parent && !map)) {
       return this.size;
     }
     this._sideVersion();

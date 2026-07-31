@@ -66,7 +66,7 @@ export function dispose() {
   container = null;
 }
 function onClick(e) {
-  if (!isCanvasActive()) {
+  if (!isCanvasActive() || !app.currentMap) {
     return;
   }
 
@@ -86,7 +86,7 @@ function onClick(e) {
   }
 }
 function onDblClick(e) {
-  if (!isCanvasActive()) {
+  if (!isCanvasActive() || !app.currentMap) {
     return;
   }
 
@@ -95,7 +95,7 @@ function onDblClick(e) {
 }
 
 function onWheel(e) {
-  if (!isCanvasActive()) {
+  if (!isCanvasActive() || !app.currentMap) {
     return;
   }
 
@@ -107,7 +107,7 @@ function onWheel(e) {
   app.currentMap.adjustFontSize(dir);
 }
 function onContextMenu(e) {
-  if (!isCanvasActive()) {
+  if (!isCanvasActive() || !app.currentMap) {
     return;
   }
 
@@ -118,7 +118,7 @@ function onContextMenu(e) {
   menu.open([e.clientX, e.clientY]);
 }
 function onDragStart(e) {
-  if (!isCanvasActive()) {
+  if (!isCanvasActive() || !app.currentMap) {
     return;
   }
   if (e.type == "touchstart" && "touches" in e && e.touches.length == 2) {
@@ -278,6 +278,9 @@ export function cancelDrag() {
  * Triggers one zoom step per PINCH_THRESHOLD pixels of distance change.
  */
 function handlePinch(e) {
+  if (!app.currentMap) {
+    return;
+  }
   e.preventDefault();
   clearTimeout(touchContextTimeout);
   const dist = getTouchDistance(e.touches);
@@ -380,6 +383,9 @@ function finishDragDrop(state) {
  * Returns result="" if the drop target is a dragged item itself or one of its descendants.
  */
 function computeDragState() {
+  if (!app.currentMap) {
+    return { result: "", target: null, direction: "left" };
+  }
   // Use the cursor position for hit-testing, not the ghost center.
   // The ghost can be grabbed anywhere, so its center drifts away from
   // the cursor; the cursor is always the authoritative "drop here" point.
@@ -436,7 +442,7 @@ function visualizeDragState(state) {
   ) {
     return;
   } // nothing changed
-  if (previousDragState) {
+  if (previousDragState?.target) {
     // remove old vis
     previousDragState.target.dom.content.style.boxShadow = "";
   }

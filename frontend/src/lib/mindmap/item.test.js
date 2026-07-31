@@ -127,7 +127,9 @@ describe("Item layout result memo", () => {
   }
 
   it("returns the item size after running the per-item layout steps", () => {
+    const map = new Map();
     const item = new Item();
+    item.parent = map;
     item.dom.node.getBBox = () => ({ width: 42, height: 24 });
     const calls = instrumentLayout(item);
     item.layout = {
