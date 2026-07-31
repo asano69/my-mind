@@ -16,10 +16,19 @@ export default class MapLayout extends GraphLayout {
     }
   }
   getChildDirection(child) {
-    while (!child.parent.isRoot) {
+    while (child.parent && !child.parent.isRoot) {
       child = child.parent;
     }
-    /* child is now the sub-root node */
+    /*
+     * child is now the sub-root node. During tree construction/moves, Solid
+     * can synchronously ask for layout while a child has been inserted into a
+     * children array but its parent signal has not been connected yet. Avoid
+     * crashing on that transient disconnected state; the next invalidation
+     * after parent assignment will resolve the final side.
+     */
+    if (!child.parent) {
+      return child.side || "right";
+    }
     let side = child.side;
     if (side) {
       return side;

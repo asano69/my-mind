@@ -573,9 +573,9 @@ export default class Item {
         next = this.children[index].dom.node;
       }
       this.dom.node.insertBefore(child.dom.node, next);
+      child.parent = this;
       this.children.splice(index, 0, child);
       this._bumpChildrenVersion();
-      child.parent = this;
     });
     // Foreign-object-in-SVG first-paint quirk (see map.js's show() for the
     // full explanation): a foreignObject just inserted into an already-
