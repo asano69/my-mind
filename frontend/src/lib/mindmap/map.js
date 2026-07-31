@@ -1,7 +1,6 @@
 // src/map.js
 import Item from "./item.js";
 import { repo as layoutRepo } from "./layout/layout.js";
-import { br2nl } from "./format/format.js";
 import * as svg from "./svg.js";
 import * as html from "./html.js";
 import * as app from "./my-mind.js";
@@ -21,11 +20,7 @@ function updateContent(item) {
   // caching zero-sized foreignObjects that only a full reload fixed.
   item.updateToggle();
   item.children.forEach(updateContent);
-  item.updateText();
-  item.updateStatus();
-  item.updateValue();
-  item.updateIcon();
-  item.updateNotes();
+  item._updateLayoutContent();
 }
 
 // Phase 2 of layoutSubtree: measure each item's own content box and
@@ -45,14 +40,7 @@ function updateContent(item) {
 // size, matching the invariant layout depends on.
 function measureAndSizeContent(item) {
   item.children.forEach(measureAndSizeContent);
-  const { content } = item.dom;
-  const size = [
-    Math.max(content.offsetWidth, content.scrollWidth),
-    Math.max(content.offsetHeight, content.scrollHeight),
-  ];
-  const fo = content.parentNode;
-  fo.setAttribute("width", String(size[0]));
-  fo.setAttribute("height", String(size[1]));
+  item._measureOwnContent();
 }
 
 // Phase 3 of layoutSubtree: layout writes, post-order (children before
@@ -63,14 +51,7 @@ function measureAndSizeContent(item) {
 // analytically in JS instead of asking the DOM, a larger follow-up.
 function writeLayout(item) {
   item.children.forEach(writeLayout);
-  const { resolvedLayout, resolvedShape, dom } = item;
-  const { node, connectors } = dom;
-  dom.text.style.color = item.resolvedTextColor;
-  node.dataset.shape = resolvedShape.id;
-  node.dataset.align = resolvedLayout.computeAlignment(item);
-  connectors.innerHTML = "";
-  resolvedLayout.update(item);
-  resolvedShape.update(item);
+  item._writeOwnLayout();
 }
 
 // Entry point for one full layout pass (see the createComputed in Map's

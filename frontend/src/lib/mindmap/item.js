@@ -695,6 +695,39 @@ export default class Item {
       .querySelector("path")
       .setAttribute("d", this._collapsed() ? D_PLUS : D_MINUS);
   }
+
+  // Phase 1 of recursive layout refactoring: keep the existing whole-tree
+  // traversal in map.js, but make each per-item operation live with Item so
+  // a later per-item layout memo can call the same small methods directly.
+  _updateLayoutContent() {
+    this.updateText();
+    this.updateStatus();
+    this.updateValue();
+    this.updateIcon();
+    this.updateNotes();
+  }
+
+  _measureOwnContent() {
+    const { content } = this.dom;
+    const size = [
+      Math.max(content.offsetWidth, content.scrollWidth),
+      Math.max(content.offsetHeight, content.scrollHeight),
+    ];
+    const fo = content.parentNode;
+    fo.setAttribute("width", String(size[0]));
+    fo.setAttribute("height", String(size[1]));
+  }
+
+  _writeOwnLayout() {
+    const { resolvedLayout, resolvedShape, dom } = this;
+    const { node, connectors } = dom;
+    dom.text.style.color = this.resolvedTextColor;
+    node.dataset.shape = resolvedShape.id;
+    node.dataset.align = resolvedLayout.computeAlignment(this);
+    connectors.innerHTML = "";
+    resolvedLayout.update(this);
+    resolvedShape.update(this);
+  }
 }
 function findLinks(node) {
   let children = [...node.childNodes];
