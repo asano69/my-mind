@@ -1,17 +1,16 @@
 // frontend/src/lib/dnd/DragDropRoot.jsx
 import { DragDropProvider } from "@dnd-kit/solid";
-import * as sortableRoot from "../mindmap/dnd/sortableRoot.js";
+import * as sortableTree from "../mindmap/dnd/sortableTree.js";
 
-// Phase 2 of the node-drag refactor (see docs/07-dnd-kit-solid-refactor.md):
-// dispatches to sortableRoot.js's handleDragEnd only for drags belonging
-// to its single fixed group (the root's direct children). Every other
-// node in the tree has no sortable/droppable bindings yet, so dragging
-// them is still handled entirely by mouse.js, unaffected by this
-// provider.
+// Phase 3 of the node-drag refactor (see docs/07-dnd-kit-solid-refactor.md):
+// every non-root item (and root's own children) now has a
+// useSortable/group binding (see sortableTree.js), so any drag whose
+// source carries a `group` in its data came from our bindings and should
+// be dispatched there.
 export default function DragDropRoot(props) {
   function handleDragEnd(event) {
-    if (event.operation.source?.data?.group === sortableRoot.GROUP) {
-      sortableRoot.handleDragEnd(event);
+    if (event.operation.source?.data?.group != null) {
+      sortableTree.handleDragEnd(event);
     }
   }
 
