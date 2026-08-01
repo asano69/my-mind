@@ -139,3 +139,15 @@ relying on Solid's normal automatic dependency tracking.
 
 まず**6.1と6.2をセットで**実行するのが良いと思います。6.2で「ライブプレビューを無効化できるか」を確認しないと、6.1だけ終えても結局SVGの乱れが残るためです。6.3以降（見た目の仕上げ）は動作確認しながら後回しでも問題ありません。
 
+---
+
+## 撤退 (Phase 5完了時点)
+
+Phase 5まで実装した結果、`useSortable`がflexbox/grid前提のライブプレビュー機構を持ち、SVGのtransform属性ベースのグラフレイアウト（`GraphLayout`/`TreeLayout`/`MapLayout`）とは構造的に相性が悪いことが判明したため、ここでdnd-kitの採用を撤回した。
+
+撤退にあたって判明した重要な事実: `mouse.js`の旧来のドラッグ&ドロップ実装（`onDragStart`の`drag`モード、`buildGhost`/`computeDragState`/`finishDragDrop`/`visualizeDragState`）は、dnd-kit導入後も一度も削除されていなかった。つまりPhase 1〜5の間、同一のDOMノード（`item.dom.content`）に対して2つの独立したドラッグ機構が同時にバインドされていたことになる。これは見た目の不具合だけでなく、大量ノードでのreactiveオーバーヘッド（`sortableTree.js`が全アイテムに`createRoot`を2つ追加していた）にも寄与していた可能性が高い。
+
+この事実により、撤退作業は単純だった: dnd-kit側の配線（`dnd/sortableTree.js`、`dnd/DragDropRoot.jsx`、`my-mind.js`の呼び出し、`package.json`の依存）を除去するだけで、`mouse.js`の既存実装がそのまま唯一のドラッグ経路として復活する。
+
+`layout/map.js`の`MapLayout.getChildDirection`は変更していない。Phase 5で導入された`child.side || "right"`（兄弟数を数える自動振り分けを廃止した実装）はそのまま維持する。理由: root直下への挿入時のside決定は`mouse.js`の`finishDragDrop`が既に自己完結して行っている（`"sibling"`分岐で`targetChildItem.side`を明示的に`newSide`として渡す）。dnd-kitのdrop groupに依存していた部分は実質的になかったため、旧来の自動バランシングを復元する必要はない。
+

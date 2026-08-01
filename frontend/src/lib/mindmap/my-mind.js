@@ -42,7 +42,6 @@ import * as mouse from "./mouse.js";
 import * as clipboard from "./clipboard.js";
 import * as title from "./title.js";
 import * as ui from "./ui/ui.js";
-import * as sortableTree from "./dnd/sortableTree.js";
 
 let port = null;
 let container = null;
@@ -64,15 +63,9 @@ export function showMap(map) {
   if (currentMap) {
     currentMap.hide();
   }
-  // Phase 3 of the node-drag refactor (see
-  // docs/07-dnd-kit-solid-refactor.md): tear down the previous map's
-  // whole-tree sortable bindings before switching, since they hold
-  // references to the old map's Item instances.
-  sortableTree.dispose();
   history.reset();
   currentMap = map;
   currentMap.show(port);
-  sortableTree.init(currentMap);
 }
 
 export function action(action) {
