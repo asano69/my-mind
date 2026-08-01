@@ -184,14 +184,21 @@ export default class Map {
     app.selectItem(this._root);
     // Foreign-object-in-SVG first-paint quirk: right after inserting a
     // brand-new SVG (with all its foreignObject/HTML content) into the
-    // document, the very first offsetWidth/scrollWidth reads inside
-    // layoutSubtree can be measured before the browser's first real paint,
-    // making everything render shrunk until some later relayout (e.g.
-    // zooming) recomputes real sizes. Force one more full recompute once
-    // the browser has had a chance to paint.
+    // document, the very first offsetWidth/scrollWidth reads inside the
+    // layout memo can be measured before the browser's first real paint,
+    // collapsing the SVG's own width/height attributes to ~0 (the map
+    // looks empty) until some later relayout (e.g. zooming, or inserting
+    // a node) recomputes real sizes. A single rAF is not always enough to
+    // guarantee paint has actually committed by the time the callback
+    // runs -- see toast.js's showToast() for the same lesson learned, and
+    // this is especially visible for a brand-new map with no prior
+    // content to have already forced a layout pass. Double-rAF for the
+    // same reason toast.js needs it.
     requestAnimationFrame(() => {
-      this.requestLayout();
-      this.center();
+      requestAnimationFrame(() => {
+        this.requestLayout();
+        this.center();
+      });
     });
   }
   hide() {

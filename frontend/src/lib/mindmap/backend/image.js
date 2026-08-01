@@ -17,9 +17,14 @@ export function serializeCurrentMap() {
   // Embed CSS custom properties
   injectRootVariables(svgNode);
   const p = EXPORT_PADDING;
-  // Get the original SVG dimensions before adding padding.
-  const width = svgNode.width.baseVal.value || svgNode.viewBox.baseVal.width;
-  const height = svgNode.height.baseVal.value || svgNode.viewBox.baseVal.height;
+  // Get the original SVG dimensions before adding padding. Read the
+  // attributes directly rather than via width.baseVal/viewBox.baseVal:
+  // viewBox is never actually set on this node (see map.js), and
+  // viewBox.baseVal can be null for a detached/cloned SVG element (this
+  // node is cloned just above) before its first layout/paint, which
+  // crashed here for a map saved immediately after creation.
+  const width = parseFloat(svgNode.getAttribute("width")) || 0;
+  const height = parseFloat(svgNode.getAttribute("height")) || 0;
   // Expand the viewBox unconditionally so that drop shadows (which extend
   // beyond the node bounds) are not clipped in either SVG or PNG output.
   const paddedWidth = width + p * 2;
