@@ -28,7 +28,7 @@ export default function Workspace() {
         <Show when={params.uuid ?? "__new__"} keyed>
           {(key) => {
             console.log("[Workspace] Show children re-created, key =", key);
-            return <MindMapCanvas uuid={params.uuid} />;
+            return <MindMapCanvas uuid={uuid()} />;
           }}
         </Show>
       </div>

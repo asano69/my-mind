@@ -194,9 +194,20 @@ export default class Map {
     // this is especially visible for a brand-new map with no prior
     // content to have already forced a layout pass. Double-rAF for the
     // same reason toast.js needs it.
+    // Foreign-object-in-SVG first-paint quirk (see item.js's insertChild(),
+    // which already works around the exact same issue for newly inserted
+    // children by bumping that item's own contentVersion one rAF later).
+    // The root never goes through insertChild(), so on a brand-new map
+    // (root only, no children yet) nothing ever applied that fix to the
+    // root itself — its foreignObject could stay stuck at a stale zero
+    // size until some later, unrelated DOM mutation (e.g. inserting the
+    // first child) happened to force a real remeasure. Apply the same
+    // targeted fix to the root here instead of relying only on
+    // requestLayout(), which re-triggers the same computation but does
+    // not by itself guarantee the browser has actually repainted.
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        this.requestLayout();
+        this._root._bumpContentVersion();
         this.center();
       });
     });
