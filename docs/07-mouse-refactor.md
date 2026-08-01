@@ -33,6 +33,36 @@
 
 リスク: なし。
 
+### Phase 0 progress note
+
+`current`が実際に取りうる状態の組み合わせを洗い出した結果:
+
+- **Idle**: `mode: ""`、`items: []`、`ghost: null`、`previousDragState: null`。`onDragEnd`/`dispose()`後の定常状態。
+- **Pan**: `mode: "pan"`。`item`が存在しない（背景クリック）か`item.isRoot`のときに入る。`items`は前回の値（`[]`）のまま触れられず、`ghost`も`null`のまま。
+- **Drag（ゴースト生成前）**: `mode: "drag"`、`items`に対象アイテムが入るが、`ghost`はまだ`null`。`onDragStart`直後から`onDragMove`の初回呼び出し（実際に1px以上動くまで）の間はこの状態にとどまる。
+- **Drag（ゴースト生成後）**: `mode: "drag"`、`ghost`がDOM要素、`ghostPosition`が設定済み。`previousDragState`はドラッグ中に`visualizeDragState()`経由で更新される。
+- **Pinch**: `mode: "pinch"`、`pinchDistance`が設定される。`touchstart`で指2本が同時に置かれた場合は`items`/`ghost`を一切触らずに直接この状態へ入る。
+
+**要注意な組み合わせ（既存の暗黙の制約/バグの芽）**:
+- ドラッグ中（`mode: "drag"`、`ghost`が存在）に2本目の指が触れると、`onDragMove`から`handlePinch()`が呼ばれ、`current.mode`が`"pinch"`に変わる。このときドラッグ用の`ghost`は`remove()`されずに残ったままになる（`current.ghost`もクリアされない）。Phase 1以降でPointer Events化する際、この遷移を明示的に扱わないと、ゴースト要素がDOMに取り残された状態でピンチズームが行われるバグを再現/継承してしまう。
+- `grabOffset: [0, 0]`は初期状態オブジェクトに宣言されているが、`mouse.js`内のどこからも読み書きされていない（呼ばれない）デッドフィールド。Phase 6の後片付けで削除候補にする。
+- `ctrlHeld`は、既に選択済みのアイテムをドラッグする経路（`isSelected`が`true`の分岐）では一切更新されず、前回のドラッグ時の値が残ったままになる。次の未選択アイテムのドラッグでは`onDragStart`で必ず上書きされるため実害は今のところ無いが、状態機械化（Phase 2）の際は「この状態変数は`drag`開始時に常にリセットされる」という前提を作らないよう注意。
+
+**`mouse.test.js`が既にカバーしている回帰観点**:
+- フォーカスハンドオフ: ドラッグ開始時に`container.focus()`が呼ばれること（"focuses the scoped container when a drag starts"）。
+- `isCanvasActive()`によるバックグラウンド時の無視（"ignores mousedown while the canvas is backgrounded"）。
+- ホイールズームのアンカー座標（"zooms around the wheel cursor position"）。
+- ドロップ先の当たり判定（`elementFromPoint`優先、`getStableDropCollision`のスティッキー挙動）（"uses the node directly under the pointer as the drop target"）。
+- post-dragクリックの抑制（`current.suppressNextClick`）が選択位置を変えないこと（"does not let the post-drag click move selection to the drop target"）。
+
+**現時点で回帰テストが存在しない箇所**（Phase 1以降で特に注意が必要）:
+- ピンチズーム（`handlePinch`、`getTouchDistance`、`PINCH_THRESHOLD`）。
+- タッチの長押しによるコンテキストメニュー起動（`touchContextTimeout`）。
+- `isDragging()`/`cancelDrag()`（`command/edit.js`のCancelコマンドから参照される公開API）。
+- Ctrl+クリックで複数選択されたアイテムを一括ドラッグする経路（`current.items`が複数件になるケース）。
+
+**移動距離のしきい値について**: 現状のドラッグには明示的な「○pxだけ動いたらドラッグ開始」というしきい値は存在しない。`onDragStart`で`current.mode`は即座に`"drag"`になり、`buildGhost()`は`onDragMove`の初回呼び出し時（＝実際に座標が変化した最初の瞬間）にのみ実行される。つまり「1pxでも動けばゴーストが生成される」という暗黙の閾値が、実質的な唯一の閾値になっている。これは`onClick`の`current.suppressNextClick`ロジック（`ghost`が存在した場合だけpost-dragクリックを抑制する）とも整合しており、Phase 2以降で状態機械を導入する際もこの不変条件（「ghostの有無 = 実際に動いたかどうか」）を壊さないよう注意する。
+
 ---
 
 ### Phase 1 — Pointer Eventsへの統一（当たり判定・状態はそのまま）
