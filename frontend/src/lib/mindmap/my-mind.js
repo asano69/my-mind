@@ -278,7 +278,6 @@ export function unmount() {
   window.removeEventListener("resize", handleResize);
   ui.dispose(container);
   title.dispose();
-  sortableTree.dispose();
 
   disposePanelEffects?.();
   disposePanelEffects = null;

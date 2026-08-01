@@ -5,6 +5,7 @@ import * as svg from "./svg.js";
 import * as html from "./html.js";
 import * as app from "./my-mind.js";
 import { bumpDirty } from "./store.js";
+import { br2nl } from "./format/format.js";
 import { createSignal, createComputed, createRoot } from "solid-js";
 let css = "";
 const DEFAULT_FONT_SIZE = 15;
