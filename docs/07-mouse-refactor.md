@@ -16,11 +16,16 @@
 
 つまり**全面書き換えではなく「同じ設計のまま、状態機械とPointer Eventsに寄せる」**リファクタです。CLAUDE.mdの「シンプルさ最優先」「小さく刻む」に沿って、段階分割します。
 
+なお、`mouse.js`は、マウス駆動のPointer Events だけを想定したシンプルな実装にすること。
+モバイル/ペン/タブレット対応は別途まとめて着手する予定であり、今リファクタを進める上ではノイズにしかならない。
+
+
 ## Non-goals
 
 - `nodeDraggable.ts`の`insertType`（`before`/`after`/`in`）というCSSクラスベースのプレビュー方式への差し替えは**今回は行わない**。理由はPhase 5で述べる。
 - 複数キャンバス同時マウントへの対応は`docs/02-workspace-mode-switch-refactor.md`と同様スコープ外。`mouse.js`は現状も`init(port, containerEl)`で1インスタンスに閉じており、そのモデルを維持する。
 - `context-menu.js`（右クリック/長押しメニュー）自体の実装は変更しない。`mouse.js`側のイベント発火経路だけがPointer Events化の影響を受ける。
+- **タッチ/ペンタブレット対応（ピンチズーム、長押しコンテキストメニュー）は今回スコープ外。** マウスでのドラッグ&ドロップ・パン・ホイールズームだけをシンプルに保守できる形にすることを優先し、タッチ固有のロジックは着手時期が来るまで実装しない（既存のピンチ/長押しコードは削除済み）。
 
 ---
 
@@ -96,15 +101,16 @@
 
 ### Phase 2 — 明示的な状態機械の導入
 
-`current.mode`という素の文字列を、`nodeDraggable.ts`の`State`定数のような明示的な列挙に置き換える。ただし`nodeDraggable.ts`の`BoxSelect`はmy-mindには存在しない概念（my-mindは`app.selectedItems`によるCtrl+クリック式のマルチ選択のみで、範囲選択のドラッグは実装されていない）ため含めない。
+`current.mode`という素の文字列を、`nodeDraggable.ts`の`State`定数のような明示的な列挙に置き換える。ただし`nodeDraggable.ts`の`BoxSelect`はmy-mindには存在しない概念（my-mindは`app.selectedItems`によるCtrl+クリック式のマルチ選択のみで、範囲選択のドラッグは実装されていない）ため含めない。タッチ/ペン対応を延期したことに伴い、`Pinch`状態も含めない（ピンチズームに本格着手する際に追加する）。
 
 ```js
-// mouse.js — new state enum, replacing the current.mode string
+// mouse.js — new state enum, replacing the current.mode string.
+// No Pinch state: pinch-zoom/touch support is deferred (see this doc's
+// revision note at the top).
 const State = {
   Idle: 0,
   Pan: 1,
   Drag: 2,
-  Pinch: 3,
 };
 ```
 
@@ -119,7 +125,9 @@ const State = {
 
 ---
 
-### Phase 3 — Long-press helper の抽出（タッチのドラッグ開始判定）
+### Phase 3 — Long-press helper の抽出（タッチのドラッグ開始判定） — 延期
+
+**このフェーズはタッチ/ペン対応の本格着手まで延期する。** 以下は将来参照するための元の計画のまま残す。
 
 現状の`touchContextTimeout`は「タッチで押し始めてから500ms後、まだドラッグが始まっていなければコンテキストメニューを開く」というタイマーだが、`onDragMove`が呼ばれた時点で`clearTimeout(touchContextTimeout)`するだけの素朴な実装で、`nodeDraggable.ts`の`longPressHelper`のように「動いた距離がしきい値を超えたら明示的にキャンセルする」という判定は持っていない（移動量に関わらず、`onDragMove`が一度でも呼ばれればタイマーは止まる）。
 
@@ -165,7 +173,7 @@ const State = {
 
 ### Phase 4 — Edge auto-scroll（`EdgeMoveController`パターン）の追加
 
-`nodeDraggable.ts`にあってmy-mindに存在しない新機能。ノードをドラッグして画面端に近づけると、キャンバスが自動的にその方向へパンし続ける。
+`nodeDraggable.ts`にあってmy-mindに存在しない新機能。ノードをドラッグして画面端に近づけると、キャンバスが自動的にその方向へパンし続ける。タッチ固有の話ではなく、マウスドラッグでも有用な機能なので、タッチ/ペン対応の延期とは無関係に実施してよい。
 
 - `EdgeMoveController`をほぼそのまま移植する。my-mindでは`mind.move(dx, dy)`の代わりに`app.currentMap.moveBy([dx, dy])`を呼ぶ点だけが差分になる。
   ```js
@@ -240,11 +248,11 @@ const State = {
 | Phase | 内容 | リスク | 依存 |
 |---|---|---|---|
 | 0 | 現状の特性化（コード変更なし） | なし | — |
-| 1 | Pointer Eventsへの統一 | 中 | Phase 0 |
-| 2 | 明示的な状態機械の導入 | 低 | Phase 1 |
-| 3 | Long-press helperの抽出 | 低〜中 | Phase 2 |
+| 1 | Pointer Eventsへの統一（マウスのみ、タッチのピンチ/長押しは未実装） | 中 | Phase 0 — **完了** |
+| 2 | 明示的な状態機械の導入（`Pinch`状態は含めない） | 低 | Phase 1 |
+| 3 | Long-press helperの抽出 | 低〜中 | Phase 2 — **延期**（タッチ対応着手時） |
 | 4 | Edge auto-scroll（`EdgeMoveController`）の追加 | 中 | Phase 2 |
 | 5 | ドロップ視覚化: 不採用の記録のみ | なし | — |
 | 6 | 後片付け・回帰チェックリスト | なし | Phase 1–4 |
 
-各フェーズは独立した1コミット/PRとして扱い、前フェーズの動作確認が終わってから次に進む（既存の`docs/01-mindmap-state-refactor.md`や`docs/02-workspace-mode-switch-refactor.md`と同じ運用方針）。Phase 3とPhase 4はPhase 2にのみ依存し、互いに独立しているため、順序を入れ替えても問題ない。
+各フェーズは独立した1コミット/PRとして扱い、前フェーズの動作確認が終わってから次に進む（既存の`docs/01-mindmap-state-refactor.md`や`docs/02-workspace-mode-switch-refactor.md`と同じ運用方針）。Phase 4はPhase 2にのみ依存する。Phase 3（タッチの長押し）はタッチ/ペン対応に本格着手するタイミングまで実施しない。
