@@ -330,14 +330,18 @@ describe("computeDragState append/sibling threshold (Phase 0 characterization, s
       clientY: 0,
       preventDefault: vi.fn(),
     });
+
+    // target の中心 (targetContentSize/2) から dx,dy だけ離れた実座標に動かす。
+    // これで mouseup 側の再計算（sticky collision）でも同じ dx/dy が
+    // 再現され、モックした値と食い違わなくなる。
+    const [tw, th] = target.contentSize;
     port.dispatch("mousemove", {
       target: dragged.dom.content,
-      clientX: 1,
-      clientY: 1,
+      clientX: tw / 2 - dx,
+      clientY: th / 2 - dy,
       preventDefault: vi.fn(),
     });
     port.dispatch("mouseup", { target: target.dom.content });
-
     mouse.dispose();
     return actionFn.mock.calls[0]?.[0];
   }
