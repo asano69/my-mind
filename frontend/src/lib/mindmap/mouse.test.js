@@ -260,3 +260,122 @@ describe("mouse focus handoff", () => {
     mouse.dispose();
   });
 });
+
+// Phase 0 of docs/07-drop-target-detection-refactor.md: characterization
+// tests for computeDragState()'s current append/sibling boundary. No
+// production code changes here -- these tests document today's behavior
+// (and its threshold) so Phase 2's axis-margin rewrite can be compared
+// against a known baseline. Unlike the tests above (which exercise
+// *target selection* via elementFromPoint/getClosestItem), these drive
+// getClosestItem directly with explicit dx/dy so the append-vs-sibling
+// arithmetic itself can be pinned down.
+describe("computeDragState append/sibling threshold (Phase 0 characterization, see docs/07-drop-target-detection-refactor.md)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    delete globalThis.document;
+  });
+
+  // Builds a minimal 3-level tree (root -> middle -> target) so the
+  // ancestor walk in computeDragState() (which rejects drops onto a
+  // dragged item's own subtree) has somewhere to terminate.
+  function buildThreeLevelTree({ targetContentSize, draggedContentSize }) {
+    const root = { isRoot: true };
+    const middle = {
+      isRoot: false,
+      parent: root,
+      resolvedLayout: { getChildDirection: vi.fn(() => "right") },
+    };
+    const target = {
+      isRoot: false,
+      parent: middle,
+      side: "right",
+      contentSize: targetContentSize,
+      dom: { content: contentNode() },
+    };
+    middle.children = [target];
+    const dragged = {
+      isRoot: false,
+      contentSize: draggedContentSize,
+      dom: {
+        content: contentNode({
+          offsetWidth: draggedContentSize[0],
+          offsetHeight: draggedContentSize[1],
+        }),
+      },
+    };
+    return { root, middle, target, dragged };
+  }
+
+  // Drives a full mousedown -> mousemove -> mouseup drag sequence with
+  // getClosestItem pinned to (target, dx, dy), then returns the
+  // MoveItem-like object passed to app.action() so the caller can tell
+  // append (targetIndex undefined) from sibling (targetIndex a number)
+  // apart -- see action.js's MoveItem mock constructor above.
+  function dragTo(dragged, target, dx, dy) {
+    getItemFor.mockImplementation((element) =>
+      element === dragged.dom.content ? dragged : target,
+    );
+    getClosestItem.mockReturnValue({ item: target, dx, dy, distance: 0 });
+
+    const port = eventTarget();
+    port.append = vi.fn();
+    port.getBoundingClientRect = () => ({ left: 0, top: 0 });
+    const container = { focus: vi.fn() };
+    mouse.init(port, container);
+
+    port.dispatch("mousedown", {
+      type: "mousedown",
+      target: dragged.dom.content,
+      clientX: 0,
+      clientY: 0,
+      preventDefault: vi.fn(),
+    });
+    port.dispatch("mousemove", {
+      target: dragged.dom.content,
+      clientX: 1,
+      clientY: 1,
+      preventDefault: vi.fn(),
+    });
+    port.dispatch("mouseup", { target: target.dom.content });
+
+    mouse.dispose();
+    return actionFn.mock.calls[0]?.[0];
+  }
+
+  it("today's append/sibling boundary sits exactly at the larger of the two nodes' own size (w = max(itemW, targetW), h = max(itemH, targetH))", () => {
+    const { target, dragged } = buildThreeLevelTree({
+      targetContentSize: [80, 40],
+      draggedContentSize: [60, 30],
+    });
+    // h = max(30, 40) = 40 per the current formula in mouse.js's
+    // computeDragState(); w = max(60, 80) = 80 (not exercised by this
+    // vertical-offset case, since dx stays 0 throughout).
+
+    const justInsideAppend = dragTo(dragged, target, 0, 39);
+    expect(justInsideAppend.targetIndex).toBeUndefined(); // append: MoveItem(item, target)
+
+    actionFn.mockClear();
+
+    const justOutsideAppend = dragTo(dragged, target, 0, 41);
+    expect(typeof justOutsideAppend.targetIndex).toBe("number"); // sibling: MoveItem(item, parent, index, side)
+  });
+
+  it("still registers append well outside the target's own visual bounds, since both axes share one full-node-size threshold today", () => {
+    // A single-line node is typically much shorter than it is wide. With
+    // today's symmetric w/h formula, a cursor sitting further from center
+    // than half the node's own rendered height can still land on
+    // "append" as long as it stays within one *full* node-height of the
+    // center. This is exactly the generous-but-imprecise behavior Phase 2
+    // is meant to replace with a narrow margin along the sibling-ordering
+    // axis only (see the doc's "採用設計" section).
+    const { target, dragged } = buildThreeLevelTree({
+      targetContentSize: [200, 24],
+      draggedContentSize: [200, 24],
+    });
+
+    // 20px below center: well outside the node's own ~12px half-height,
+    // yet still inside today's h=24 append threshold.
+    const result = dragTo(dragged, target, 0, 20);
+    expect(result.targetIndex).toBeUndefined();
+  });
+});
