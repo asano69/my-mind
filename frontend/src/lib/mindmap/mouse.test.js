@@ -269,82 +269,84 @@ describe("mouse focus handoff", () => {
 // *target selection* via elementFromPoint/getClosestItem), these drive
 // getClosestItem directly with explicit dx/dy so the append-vs-sibling
 // arithmetic itself can be pinned down.
+// Builds a minimal 3-level tree (root -> middle -> target) so the
+// ancestor walk in computeDragState() (which rejects drops onto a
+// dragged item's own subtree) has somewhere to terminate. Shared by both
+// the Phase 0 and Phase 1 describe blocks below.
+function buildThreeLevelTree({ targetContentSize, draggedContentSize }) {
+  const root = { isRoot: true };
+  const middle = {
+    isRoot: false,
+    parent: root,
+    resolvedLayout: { getChildDirection: vi.fn(() => "right") },
+  };
+  const target = {
+    isRoot: false,
+    parent: middle,
+    side: "right",
+    contentSize: targetContentSize,
+    dom: { content: contentNode() },
+  };
+  middle.children = [target];
+  const dragged = {
+    isRoot: false,
+    contentSize: draggedContentSize,
+    dom: {
+      content: contentNode({
+        offsetWidth: draggedContentSize[0],
+        offsetHeight: draggedContentSize[1],
+      }),
+    },
+  };
+  return { root, middle, target, dragged };
+}
+
+// Drives a full mousedown -> mousemove -> mouseup drag sequence with
+// getClosestItem pinned to (target, dx, dy), then returns the
+// MoveItem-like object passed to app.action() so the caller can tell
+// append (targetIndex undefined) from sibling (targetIndex a number)
+// apart -- see action.js's MoveItem mock constructor above. Shared by
+// both the Phase 0 and Phase 1 describe blocks below.
+function dragTo(dragged, target, dx, dy) {
+  getItemFor.mockImplementation((element) =>
+    element === dragged.dom.content ? dragged : target,
+  );
+  getClosestItem.mockReturnValue({ item: target, dx, dy, distance: 0 });
+
+  const port = eventTarget();
+  port.append = vi.fn();
+  port.getBoundingClientRect = () => ({ left: 0, top: 0 });
+  const container = { focus: vi.fn() };
+  mouse.init(port, container);
+
+  port.dispatch("mousedown", {
+    type: "mousedown",
+    target: dragged.dom.content,
+    clientX: 0,
+    clientY: 0,
+    preventDefault: vi.fn(),
+  });
+
+  // Move to the actual coordinates that sit dx,dy away from target's
+  // center (targetContentSize/2). This keeps mouseup's own recomputation
+  // (sticky collision) consistent with the mocked dx/dy values.
+  const [tw, th] = target.contentSize;
+  port.dispatch("mousemove", {
+    target: dragged.dom.content,
+    clientX: tw / 2 - dx,
+    clientY: th / 2 - dy,
+    preventDefault: vi.fn(),
+  });
+  port.dispatch("mouseup", { target: target.dom.content });
+  mouse.dispose();
+  return actionFn.mock.calls[0]?.[0];
+}
+
 describe("computeDragState append/sibling threshold (Phase 0 characterization, see docs/07-drop-target-detection-refactor.md)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     delete globalThis.document;
   });
-
-  // Builds a minimal 3-level tree (root -> middle -> target) so the
-  // ancestor walk in computeDragState() (which rejects drops onto a
-  // dragged item's own subtree) has somewhere to terminate.
-  function buildThreeLevelTree({ targetContentSize, draggedContentSize }) {
-    const root = { isRoot: true };
-    const middle = {
-      isRoot: false,
-      parent: root,
-      resolvedLayout: { getChildDirection: vi.fn(() => "right") },
-    };
-    const target = {
-      isRoot: false,
-      parent: middle,
-      side: "right",
-      contentSize: targetContentSize,
-      dom: { content: contentNode() },
-    };
-    middle.children = [target];
-    const dragged = {
-      isRoot: false,
-      contentSize: draggedContentSize,
-      dom: {
-        content: contentNode({
-          offsetWidth: draggedContentSize[0],
-          offsetHeight: draggedContentSize[1],
-        }),
-      },
-    };
-    return { root, middle, target, dragged };
-  }
-
-  // Drives a full mousedown -> mousemove -> mouseup drag sequence with
-  // getClosestItem pinned to (target, dx, dy), then returns the
-  // MoveItem-like object passed to app.action() so the caller can tell
-  // append (targetIndex undefined) from sibling (targetIndex a number)
-  // apart -- see action.js's MoveItem mock constructor above.
-  function dragTo(dragged, target, dx, dy) {
-    getItemFor.mockImplementation((element) =>
-      element === dragged.dom.content ? dragged : target,
-    );
-    getClosestItem.mockReturnValue({ item: target, dx, dy, distance: 0 });
-
-    const port = eventTarget();
-    port.append = vi.fn();
-    port.getBoundingClientRect = () => ({ left: 0, top: 0 });
-    const container = { focus: vi.fn() };
-    mouse.init(port, container);
-
-    port.dispatch("mousedown", {
-      type: "mousedown",
-      target: dragged.dom.content,
-      clientX: 0,
-      clientY: 0,
-      preventDefault: vi.fn(),
-    });
-
-    // target の中心 (targetContentSize/2) から dx,dy だけ離れた実座標に動かす。
-    // これで mouseup 側の再計算（sticky collision）でも同じ dx/dy が
-    // 再現され、モックした値と食い違わなくなる。
-    const [tw, th] = target.contentSize;
-    port.dispatch("mousemove", {
-      target: dragged.dom.content,
-      clientX: tw / 2 - dx,
-      clientY: th / 2 - dy,
-      preventDefault: vi.fn(),
-    });
-    port.dispatch("mouseup", { target: target.dom.content });
-    mouse.dispose();
-    return actionFn.mock.calls[0]?.[0];
-  }
 
   it("today's append/sibling boundary sits exactly at the larger of the two nodes' own size (w = max(itemW, targetW), h = max(itemH, targetH))", () => {
     const { target, dragged } = buildThreeLevelTree({
