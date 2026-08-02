@@ -383,3 +383,48 @@ describe("computeDragState append/sibling threshold (Phase 0 characterization, s
     expect(result.targetIndex).toBeUndefined();
   });
 });
+
+// Phase 1 of docs/07-drop-target-detection-refactor.md: regression tests
+// for the axis-margin append/sibling design planned for Phase 2, written
+// before that implementation exists (per CLAUDE.md's "write a failing
+// test before fixing" rule). The new design applies the append/sibling
+// boundary along the sibling-ordering axis using the *target's own* axis
+// size (not max(item, target)) minus an edge margin -- see the doc's
+// "採用設計" section:
+//   edgeMargin(axisSize) = max(axisSize * 0.2, 10)
+//   new append boundary  = axisSize / 2 - edgeMargin(axisSize)
+// For a same-sized 100x100 item/target pair with childDirection "right"
+// (sibling axis is vertical, i.e. dy), axisSize = 100, margin = 20, so
+// the new append boundary sits at 50 - 20 = 30.
+describe("computeDragState axis-margin design (Phase 1 characterization, see docs/07-drop-target-detection-refactor.md)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    delete globalThis.document;
+  });
+
+  it("40% of the way from center to the target's own edge (dy=20) is append under both the new design and today's implementation", () => {
+    const { target, dragged } = buildThreeLevelTree({
+      targetContentSize: [100, 100],
+      draggedContentSize: [100, 100],
+    });
+    // New design: 20 < 30 (new append boundary) -> append.
+    // Today: h = max(100, 100) = 100; 20 < 100 -> append too.
+    // This passes already -- kept as a regression guard so Phase 2 does
+    // not accidentally shrink the append zone below this point.
+    const result = dragTo(dragged, target, 0, 20);
+    expect(result.targetIndex).toBeUndefined(); // append
+  });
+
+  it("90% of the way from center to the target's own edge (dy=45) should be sibling under the new design, but today's implementation still returns append", () => {
+    const { target, dragged } = buildThreeLevelTree({
+      targetContentSize: [100, 100],
+      draggedContentSize: [100, 100],
+    });
+    // New design: 45 >= 30 (new append boundary) -> sibling.
+    // Today: h = max(100, 100) = 100; 45 < 100 -> append, so this
+    // assertion currently FAILS. This is the intentionally-failing
+    // regression test Phase 2's axis-margin rewrite must turn green.
+    const result = dragTo(dragged, target, 0, 45);
+    expect(typeof result.targetIndex).toBe("number"); // sibling
+  });
+});
