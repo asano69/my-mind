@@ -161,8 +161,15 @@ svg > .item > .item > foreignObject > .content {
 
 /* Notes indicator. The icon itself is an inline SVG built by item.js's
    buildNotesIcon() (lucide "paperclip"), not a CSS background-image, so
-   this rule only handles the badge's box and positioning. */
-.item .notes {
+   this rule only handles the badge's box and positioning.
+   Scoped to ".content .notes", not ".item .notes": mouse.js's
+   buildGhost() clones only the ".content" div (without its ".item"
+   ancestor) for the drag ghost, so an ".item"-scoped selector silently
+   stopped matching inside the ghost -- leaving the notes SVG with no
+   explicit width/height and rendering it at its unconstrained intrinsic
+   size (hugely oversized) while dragging. ".content" is present on both
+   the real node and the ghost clone, so this fixes both. */
+.content .notes {
   width: 30px;
   height: 30px;
   position: absolute;
@@ -174,7 +181,7 @@ svg > .item > .item > foreignObject > .content {
   justify-content: flex-end;
 }
 
-.item .notes svg {
+.content .notes svg {
   width: 24px;
   height: 24px;
 }
