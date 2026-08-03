@@ -749,12 +749,18 @@ export default class Item {
   // a shrunk/oversized look right after changing shape. Splitting the
   // style application out keeps measurement always working off
   // up-to-date CSS.
+  // Only the CSS-affecting parts of styling happen here, before
+  // measurement: data-shape/data-align drive map.css's per-shape
+  // padding/border, which _measureOwnContent() must see already applied.
+  // The actual shape *drawing* (resolvedShape.update()) is deferred to
+  // _writeOwnLayout() below -- shapes like Underline draw a line based
+  // on this item's measured contentSize/contentPosition, which do not
+  // exist yet at this point.
   _applyOwnStyle() {
     const { resolvedShape, resolvedLayout, dom } = this;
     dom.text.style.color = this.resolvedTextColor;
     dom.node.dataset.shape = resolvedShape.id;
     dom.node.dataset.align = resolvedLayout.computeAlignment(this);
-    resolvedShape.update(this);
   }
 
   _measureOwnContent() {
@@ -769,11 +775,14 @@ export default class Item {
   }
 
   // Runs after measurement: positions children/connectors based on
-  // already-measured sizes (this item's and its children's).
+  // already-measured sizes (this item's and its children's), and draws
+  // this item's own shape (e.g. Underline's line), which also depends
+  // on this item's now-accurate contentSize/contentPosition.
   _writeOwnLayout() {
-    const { resolvedLayout, dom } = this;
+    const { resolvedLayout, resolvedShape, dom } = this;
     dom.connectors.innerHTML = "";
     resolvedLayout.update(this);
+    resolvedShape.update(this);
   }
 }
 function findLinks(node) {
