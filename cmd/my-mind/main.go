@@ -31,7 +31,7 @@ func main() {
 	root.Use = "my-mind"
 	root.Short = "my-mind"
 	root.SilenceUsage = true
-	root.Version = "0.0.1-beta.2"
+	root.Version = "0.0.1-beta.3"
 
 	root.AddCommand(
 
