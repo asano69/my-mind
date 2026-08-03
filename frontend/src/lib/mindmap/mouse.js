@@ -467,14 +467,21 @@ function computeDragState() {
   return state;
 }
 function getStableDropCollision(point) {
-  const previousTarget = current.previousDragState?.target;
-  if (previousTarget && isPointInExpandedContentRect(previousTarget, point)) {
-    return collisionForItem(previousTarget, point);
-  }
-
+  // Whatever the pointer is actually over must always win: this is
+  // exactly what the browser's native `:hover` CSS reflects, and the
+  // black drop-target outline (drawn from this result, see
+  // visualizeDragState()) must never disagree with it. The sticky
+  // hysteresis below only kicks in when there is no direct hit (the
+  // pointer is in a gap between nodes), purely to avoid flicker there
+  // -- it must never override an actual real target with a stale one.
   const directTarget = getItemUnderPointer(point);
   if (directTarget) {
     return collisionForItem(directTarget, point);
+  }
+
+  const previousTarget = current.previousDragState?.target;
+  if (previousTarget && isPointInExpandedContentRect(previousTarget, point)) {
+    return collisionForItem(previousTarget, point);
   }
 
   return app.currentMap.getClosestItem(point);
