@@ -165,14 +165,15 @@ export default class Item {
         }
         return depth;
       });
+      // Unlike resolvedColor/resolvedTextColor, shape is intentionally
+      // NOT inherited from an ancestor's explicit shape -- changing a
+      // node's shape must only affect that node itself. An item with no
+      // explicit shape of its own always falls back to the depth-based
+      // default, regardless of what shape any ancestor has set.
       this._resolvedShape = createMemo(() => {
         const shape = this._shape();
         if (shape) {
           return shape;
-        }
-        const parent = this.parent;
-        if (parent instanceof Item && parent._shape()) {
-          return parent._resolvedShape();
         }
         switch (this._depth()) {
           case 0:
@@ -739,6 +740,23 @@ export default class Item {
     this.updateNotes();
   }
 
+  // Content-affecting classes (data-shape/data-align drive map.css's
+  // per-shape padding/border) must be applied *before* measuring this
+  // item's content box in _measureOwnContent(). Previously these were
+  // set inside _writeOwnLayout(), which runs *after* measurement --
+  // so a shape change measured the box using the *old* shape's CSS
+  // padding, then rendered it with the new shape's padding, producing
+  // a shrunk/oversized look right after changing shape. Splitting the
+  // style application out keeps measurement always working off
+  // up-to-date CSS.
+  _applyOwnStyle() {
+    const { resolvedShape, resolvedLayout, dom } = this;
+    dom.text.style.color = this.resolvedTextColor;
+    dom.node.dataset.shape = resolvedShape.id;
+    dom.node.dataset.align = resolvedLayout.computeAlignment(this);
+    resolvedShape.update(this);
+  }
+
   _measureOwnContent() {
     const { content } = this.dom;
     const size = [
@@ -750,15 +768,12 @@ export default class Item {
     fo.setAttribute("height", String(size[1]));
   }
 
+  // Runs after measurement: positions children/connectors based on
+  // already-measured sizes (this item's and its children's).
   _writeOwnLayout() {
-    const { resolvedLayout, resolvedShape, dom } = this;
-    const { node, connectors } = dom;
-    dom.text.style.color = this.resolvedTextColor;
-    node.dataset.shape = resolvedShape.id;
-    node.dataset.align = resolvedLayout.computeAlignment(this);
-    connectors.innerHTML = "";
+    const { resolvedLayout, dom } = this;
+    dom.connectors.innerHTML = "";
     resolvedLayout.update(this);
-    resolvedShape.update(this);
   }
 }
 function findLinks(node) {
@@ -872,6 +887,7 @@ function computeLayout(item) {
   }
   item.updateToggle();
   item._updateLayoutContent();
+  item._applyOwnStyle();
   if (!item._collapsed()) {
     item._childrenVersion();
     item.children.forEach(readItemLayoutResult);
