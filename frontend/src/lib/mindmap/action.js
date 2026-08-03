@@ -30,6 +30,14 @@ export class InsertNewItem extends Action {
     // command/edit.js) can discard it instead of committing empty text,
     // without affecting existing items that already had empty text.
     this.item.isNew = true;
+    // Auto-balance left/right placement for new root-level children:
+    // assign whichever side currently has fewer children, so the map
+    // doesn't grow lopsided when nodes are added without an explicit
+    // side. Only meaningful for root's direct children -- side has no
+    // effect anywhere else in the tree (see command/command.js's SetSide).
+    if (parent.isRoot) {
+      this.item.side = pickBalancedSide(parent);
+    }
   }
   do() {
     this.parent.collapsed = false; // FIXME remember?
@@ -41,6 +49,23 @@ export class InsertNewItem extends Action {
     app.selectItem(this.parent);
   }
 }
+// Counts root's existing direct children by side (falling back to
+// "right", the same default MapLayout.getChildDirection uses for a
+// child with no side set) and returns whichever side currently has
+// fewer children.
+function pickBalancedSide(root) {
+  let left = 0;
+  let right = 0;
+  root.children.forEach((child) => {
+    if (child.side === "left") {
+      left++;
+    } else {
+      right++;
+    }
+  });
+  return right > left ? "left" : "right";
+}
+
 export class AppendItem extends Action {
   constructor(parent, item) {
     super();
