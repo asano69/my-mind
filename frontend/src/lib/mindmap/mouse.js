@@ -12,16 +12,6 @@ const SHADOW_OFFSET = 5;
 const DROP_TARGET_STICKY_PADDING = 24;
 // Minimum change in pinch distance (px) required to trigger one zoom step
 const PINCH_THRESHOLD = 30;
-// Sibling-insert edge margin (see docs/07-drop-target-detection-refactor.md).
-// Only the axis siblings are laid out on gets a strict margin; the rest of
-// the target's area counts as "append", mirroring mind-elixir-core's
-// nodeDraggable.ts (thin edge bands mean before/after, everything else
-// means append).
-const EDGE_MARGIN_RATIO = 0.2;
-const EDGE_MARGIN_MIN_PX = 10;
-function edgeMargin(axisSize) {
-  return Math.max(axisSize * EDGE_MARGIN_RATIO, EDGE_MARGIN_MIN_PX);
-}
 let touchContextTimeout;
 let current = {
   mode: "",
@@ -447,41 +437,33 @@ function computeDragState() {
     state.result = "append";
     return state;
   }
-  // Use the first dragged item's content size for proximity calculation
-  let itemContentSize = current.items[0].contentSize;
-  let targetContentSize = target.contentSize;
-  // Sibling insertion happens along the axis children are laid out on (see
-  // MapLayout.getChildDirection). Only that axis gets a strict edge margin;
-  // the cross axis keeps the old generous max(item, target) allowance so a
-  // slight diagonal offset doesn't fall out of "append" by accident (see
-  // docs/07-drop-target-detection-refactor.md).
+  // The append zone is exactly the rectangle used to highlight a selected
+  // node (target's content box -- see map.css's
+  // ".item.current > foreignObject > .content" rule). Anywhere inside
+  // that rect drops the dragged item(s) as a child of target; outside it,
+  // insert as a sibling before/after depending on which side of the
+  // layout axis the cursor landed on.
+  const rect = getContentRect(target);
+  const insideContentRect =
+    point[0] >= rect.left &&
+    point[0] <= rect.right &&
+    point[1] >= rect.top &&
+    point[1] <= rect.bottom;
+  if (insideContentRect) {
+    state.result = "append";
+    return state;
+  }
   let childDirection = target.parent.resolvedLayout.getChildDirection(target);
   const isVerticalSiblings =
     childDirection == "left" || childDirection == "right";
-  const axisSize = isVerticalSiblings
-    ? targetContentSize[1]
-    : targetContentSize[0];
-  const axisDist = isVerticalSiblings ? closest.dy : closest.dx;
-  const crossDist = isVerticalSiblings ? closest.dx : closest.dy;
-  const crossSize = isVerticalSiblings
-    ? Math.max(itemContentSize[0], targetContentSize[0])
-    : Math.max(itemContentSize[1], targetContentSize[1]);
-  if (
-    Math.abs(axisDist) < axisSize / 2 - edgeMargin(axisSize) &&
-    Math.abs(crossDist) < crossSize
-  ) {
-    // append here
-    state.result = "append";
-  } else {
-    state.result = "sibling";
-    state.direction = isVerticalSiblings
-      ? closest.dy < 0
-        ? "bottom"
-        : "top"
-      : closest.dx < 0
-        ? "right"
-        : "left";
-  }
+  state.result = "sibling";
+  state.direction = isVerticalSiblings
+    ? closest.dy < 0
+      ? "bottom"
+      : "top"
+    : closest.dx < 0
+      ? "right"
+      : "left";
   return state;
 }
 function getStableDropCollision(point) {
@@ -517,10 +499,17 @@ function getContentRect(item) {
   const node = item.dom.content;
   if (typeof node.getBoundingClientRect === "function") {
     const rect = node.getBoundingClientRect();
+    // DOMRect's fields (left/top/right/bottom/width/height) are accessor
+    // properties on DOMRect.prototype, not the instance's own properties,
+    // so a shallow spread ({...rect}) silently drops every one of them.
+    // Read each field explicitly instead of spreading.
     return {
-      ...rect,
-      right: rect.right ?? rect.left + rect.width,
-      bottom: rect.bottom ?? rect.top + rect.height,
+      left: rect.left,
+      top: rect.top,
+      right: rect.right,
+      bottom: rect.bottom,
+      width: rect.width,
+      height: rect.height,
     };
   }
   const [width = 0, height = 0] = item.contentSize || [];
