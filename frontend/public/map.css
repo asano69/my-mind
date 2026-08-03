@@ -313,13 +313,6 @@ svg > .item > .item > foreignObject > .content {
    ------------------------------------------------------------- */
 .ghost {
   position: relative;
-  /* The ghost tracks the cursor and can sit directly on top of the real
-     node underneath it. mouse.js's computeDragState() needs
-     document.elementFromPoint() to see through the ghost to the actual
-     node under the cursor (it now does strict containment testing
-     against that node's own content rect), so the ghost must never be
-     hit-testable itself. */
-  pointer-events: none;
 }
 
 .ghost-count {
