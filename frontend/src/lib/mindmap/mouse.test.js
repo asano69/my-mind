@@ -342,49 +342,11 @@ function dragTo(dragged, target, dx, dy) {
   return actionFn.mock.calls[0]?.[0];
 }
 
-describe("computeDragState append/sibling threshold (Phase 0 characterization, see docs/07-drop-target-detection-refactor.md)", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    delete globalThis.document;
-  });
-
-  it("today's append/sibling boundary sits exactly at the larger of the two nodes' own size (w = max(itemW, targetW), h = max(itemH, targetH))", () => {
-    const { target, dragged } = buildThreeLevelTree({
-      targetContentSize: [80, 40],
-      draggedContentSize: [60, 30],
-    });
-    // h = max(30, 40) = 40 per the current formula in mouse.js's
-    // computeDragState(); w = max(60, 80) = 80 (not exercised by this
-    // vertical-offset case, since dx stays 0 throughout).
-
-    const justInsideAppend = dragTo(dragged, target, 0, 39);
-    expect(justInsideAppend.targetIndex).toBeUndefined(); // append: MoveItem(item, target)
-
-    actionFn.mockClear();
-
-    const justOutsideAppend = dragTo(dragged, target, 0, 41);
-    expect(typeof justOutsideAppend.targetIndex).toBe("number"); // sibling: MoveItem(item, parent, index, side)
-  });
-
-  it("still registers append well outside the target's own visual bounds, since both axes share one full-node-size threshold today", () => {
-    // A single-line node is typically much shorter than it is wide. With
-    // today's symmetric w/h formula, a cursor sitting further from center
-    // than half the node's own rendered height can still land on
-    // "append" as long as it stays within one *full* node-height of the
-    // center. This is exactly the generous-but-imprecise behavior Phase 2
-    // is meant to replace with a narrow margin along the sibling-ordering
-    // axis only (see the doc's "採用設計" section).
-    const { target, dragged } = buildThreeLevelTree({
-      targetContentSize: [200, 24],
-      draggedContentSize: [200, 24],
-    });
-
-    // 20px below center: well outside the node's own ~12px half-height,
-    // yet still inside today's h=24 append threshold.
-    const result = dragTo(dragged, target, 0, 20);
-    expect(result.targetIndex).toBeUndefined();
-  });
-});
+// Phase 0's characterization tests (which pinned the old
+// max(itemSize, targetSize) threshold) were removed once Phase 2 replaced
+// that formula with the axis-margin design below — their assertions
+// described behavior this change deliberately supersedes. The Phase 1
+// tests below now serve as the regression suite for the new behavior.
 
 // Phase 1 of docs/07-drop-target-detection-refactor.md: regression tests
 // for the axis-margin append/sibling design planned for Phase 2, written

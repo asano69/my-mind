@@ -12,6 +12,16 @@ const SHADOW_OFFSET = 5;
 const DROP_TARGET_STICKY_PADDING = 24;
 // Minimum change in pinch distance (px) required to trigger one zoom step
 const PINCH_THRESHOLD = 30;
+// Sibling-insert edge margin (see docs/07-drop-target-detection-refactor.md).
+// Only the axis siblings are laid out on gets a strict margin; the rest of
+// the target's area counts as "append", mirroring mind-elixir-core's
+// nodeDraggable.ts (thin edge bands mean before/after, everything else
+// means append).
+const EDGE_MARGIN_RATIO = 0.2;
+const EDGE_MARGIN_MIN_PX = 10;
+function edgeMargin(axisSize) {
+  return Math.max(axisSize * EDGE_MARGIN_RATIO, EDGE_MARGIN_MIN_PX);
+}
 let touchContextTimeout;
 let current = {
   mode: "",
@@ -432,25 +442,45 @@ function computeDragState() {
       return state;
     } // root check
   }
-  // Use the first dragged item's content size for proximity calculation
-  let itemContentSize = current.items[0].contentSize;
-  let targetContentSize = target.contentSize;
-  const w = Math.max(itemContentSize[0], targetContentSize[0]);
-  const h = Math.max(itemContentSize[1], targetContentSize[1]);
   if (target.isRoot) {
     // append here
     state.result = "append";
-  } else if (Math.abs(closest.dx) < w && Math.abs(closest.dy) < h) {
+    return state;
+  }
+  // Use the first dragged item's content size for proximity calculation
+  let itemContentSize = current.items[0].contentSize;
+  let targetContentSize = target.contentSize;
+  // Sibling insertion happens along the axis children are laid out on (see
+  // MapLayout.getChildDirection). Only that axis gets a strict edge margin;
+  // the cross axis keeps the old generous max(item, target) allowance so a
+  // slight diagonal offset doesn't fall out of "append" by accident (see
+  // docs/07-drop-target-detection-refactor.md).
+  let childDirection = target.parent.resolvedLayout.getChildDirection(target);
+  const isVerticalSiblings =
+    childDirection == "left" || childDirection == "right";
+  const axisSize = isVerticalSiblings
+    ? targetContentSize[1]
+    : targetContentSize[0];
+  const axisDist = isVerticalSiblings ? closest.dy : closest.dx;
+  const crossDist = isVerticalSiblings ? closest.dx : closest.dy;
+  const crossSize = isVerticalSiblings
+    ? Math.max(itemContentSize[0], targetContentSize[0])
+    : Math.max(itemContentSize[1], targetContentSize[1]);
+  if (
+    Math.abs(axisDist) < axisSize / 2 - edgeMargin(axisSize) &&
+    Math.abs(crossDist) < crossSize
+  ) {
     // append here
     state.result = "append";
   } else {
     state.result = "sibling";
-    let childDirection = target.parent.resolvedLayout.getChildDirection(target);
-    if (childDirection == "left" || childDirection == "right") {
-      state.direction = closest.dy < 0 ? "bottom" : "top";
-    } else {
-      state.direction = closest.dx < 0 ? "right" : "left";
-    }
+    state.direction = isVerticalSiblings
+      ? closest.dy < 0
+        ? "bottom"
+        : "top"
+      : closest.dx < 0
+        ? "right"
+        : "left";
   }
   return state;
 }
