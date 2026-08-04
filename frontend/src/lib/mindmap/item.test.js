@@ -69,6 +69,57 @@ vi.mock("./map.js", () => ({ default: class Map {} }));
 const { default: Map } = await import("./map.js");
 const { default: Item, readItemLayoutResult } = await import("./item.js");
 
+describe("Item collapsed->expanded remeasure (post-Phase-7 bug fix)", () => {
+  it("schedules a double-rAF remeasure of the revealed subtree only when transitioning collapsed -> expanded", () => {
+    const rafCallbacks = [];
+    const originalRaf = globalThis.requestAnimationFrame;
+    globalThis.requestAnimationFrame = vi.fn((cb) => rafCallbacks.push(cb));
+
+    const root = new Item();
+    const child = new Item();
+    root.insertChild(child);
+    const bumpSpy = vi.spyOn(child, "_bumpSubtreeContentVersion");
+
+    // Collapsing does not schedule anything.
+    root.collapsed = true;
+    expect(rafCallbacks).toHaveLength(0);
+
+    // Expanding schedules exactly one outer rAF.
+    root.collapsed = false;
+    expect(rafCallbacks).toHaveLength(1);
+
+    // Running the outer rAF schedules the inner one; the bump only
+    // happens once the inner rAF itself runs (double-rAF, matching
+    // map.js's show()).
+    rafCallbacks.shift()();
+    expect(bumpSpy).not.toHaveBeenCalled();
+    expect(rafCallbacks).toHaveLength(1);
+
+    rafCallbacks.shift()();
+    expect(bumpSpy).toHaveBeenCalledOnce();
+
+    globalThis.requestAnimationFrame = originalRaf;
+  });
+
+  it("recurses _bumpSubtreeContentVersion over every descendant", () => {
+    const root = new Item();
+    const child = new Item();
+    const grandchild = new Item();
+    root.insertChild(child);
+    child.insertChild(grandchild);
+
+    const rootBump = vi.spyOn(root, "_bumpContentVersion");
+    const childBump = vi.spyOn(child, "_bumpContentVersion");
+    const grandchildBump = vi.spyOn(grandchild, "_bumpContentVersion");
+
+    root._bumpSubtreeContentVersion();
+
+    expect(rootBump).toHaveBeenCalledOnce();
+    expect(childBump).toHaveBeenCalledOnce();
+    expect(grandchildBump).toHaveBeenCalledOnce();
+  });
+});
+
 describe("Item per-item content effects (Phase 7)", () => {
   it("syncs icon and notes DOM directly, without going through the layout memo", () => {
     const item = new Item();

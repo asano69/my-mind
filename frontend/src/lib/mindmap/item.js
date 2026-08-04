@@ -465,7 +465,27 @@ export default class Item {
     return this._collapsed();
   }
   set collapsed(collapsed) {
+    const wasCollapsed = this._collapsed();
     this._setCollapsed(collapsed);
+    if (wasCollapsed && !collapsed) {
+      // Foreign-object-in-SVG paint quirk (see map.js's show() for the
+      // fuller explanation, and insertChild() below for the same fix
+      // applied to fresh insertions): removing the "collapsed" class
+      // synchronously un-hides every descendant, but a synchronous
+      // offsetWidth/offsetHeight read immediately afterward can still
+      // measure stale/zero sizes for items whose foreignObject was
+      // never actually painted while hidden behind display:none --
+      // most commonly an item dragged into an already-collapsed node
+      // (insertChild()'s own RAF-based remeasure fires while still
+      // collapsed, so nothing ever reads/consumes it until expansion).
+      // Force one more remeasure pass, after the browser actually
+      // paints, for this item's whole revealed subtree.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          this.children.forEach((child) => child._bumpSubtreeContentVersion());
+        });
+      });
+    }
   }
   get value() {
     return this._value();
@@ -742,6 +762,14 @@ export default class Item {
     // reintroduce a layout recompute that has no visible effect, exactly
     // the kind of unnecessary work docs/06.1-recursive-memo-layout-
     // refactor.md's Phase 7 is meant to remove.
+  }
+  // Bumps this item and every descendant's content version, forcing them
+  // to remeasure on the next layout pull. Used when a collapsed ancestor
+  // expands (see the `collapsed` setter above) -- see that comment for
+  // why a plain synchronous remeasure at expand time is not sufficient.
+  _bumpSubtreeContentVersion() {
+    this._bumpContentVersion();
+    this.children.forEach((child) => child._bumpSubtreeContentVersion());
   }
   updateToggle() {
     const { node, toggle } = this.dom;
