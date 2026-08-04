@@ -1,6 +1,5 @@
-import { createEffect, For, Show } from "solid-js";
+import { createEffect, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { contextMenuPoint, setContextMenuPoint } from "../lib/mindmap/store";
-import { repo as commandRepo } from "../lib/mindmap/command/command.js";
 
 // Explicit groups (and the separators between them) mirror the old static
 // markup's ordering exactly, rather than pulling every registered command
@@ -19,6 +18,29 @@ const GROUPS = [
 // wrapper around this signal).
 export default function ContextMenu() {
   let menuRef;
+  // command/command.js is imported dynamically (like TopBar.jsx/
+  // LeftPanel.jsx/RightPanel.jsx already do), not statically at the top
+  // of this file. ContextMenu.jsx sits on the static import chain
+  // main.jsx -> Workspace.jsx -> MindMapCanvas.jsx, which now runs before
+  // my-mind.js ever gets a chance to be the first module to import
+  // command.js. command.js and my-mind.js import each other (a command's
+  // execute() calls into app.*, and my-mind.js imports command modules
+  // for their registration side effects) -- whichever module starts
+  // loading first "wins" that circular pair. A static import here made
+  // command.js load first, which meant my-mind.js's own
+  // `import "./command/edit.js"` line ran while command.js was still
+  // mid-evaluation, before its `export default class Command` had run,
+  // throwing a TDZ ReferenceError. Deferring this import to onMount
+  // avoids becoming that first entry point.
+  let commandRepo;
+  const [ready, setReady] = createSignal(false);
+
+  onMount(async () => {
+    ({ repo: commandRepo } = await import(
+      "../lib/mindmap/command/command.js"
+    ));
+    setReady(true);
+  });
 
   function run(id, e) {
     // Attached via on:click (a real listener on the button itself, fired
@@ -58,8 +80,29 @@ export default function ContextMenu() {
     menuRef.style.top = `${top}px`;
   });
 
+  // Closes the menu on any mousedown outside it -- e.g. clicking the
+  // canvas, another node, or a panel. The old context-menu.js got this
+  // for free by also listening for "mousedown" on `port` itself and
+  // closing whenever the event's currentTarget wasn't its own node; that
+  // whole listener is gone now; this effect (only live while the menu is
+  // actually open) is what replaces it.
+  createEffect(() => {
+    if (!contextMenuPoint()) {
+      return;
+    }
+    function onOutsideMouseDown(e) {
+      if (!menuRef?.contains(e.target)) {
+        setContextMenuPoint(null);
+      }
+    }
+    document.addEventListener("mousedown", onOutsideMouseDown, true);
+    onCleanup(() =>
+      document.removeEventListener("mousedown", onOutsideMouseDown, true),
+    );
+  });
+
   return (
-    <Show when={contextMenuPoint()}>
+    <Show when={ready() && contextMenuPoint()}>
       <div id="context-menu" ref={menuRef}>
         <For each={GROUPS}>
           {(group, i) => (
