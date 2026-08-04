@@ -1,5 +1,5 @@
 // src/item.js
-import { createSignal, createMemo, createRoot, batch } from "solid-js";
+import { createSignal, createMemo, createRoot, createEffect, batch } from "solid-js";
 import * as html from "./html.js";
 import * as svg from "./svg.js";
 
@@ -215,7 +215,6 @@ export default class Item {
     dom.value.classList.add("value");
     dom.text.classList.add("text");
     dom.icon.classList.add("icon");
-    this.updateNotes(); // hide the node before the first effect run
     let fo = svg.foreignObject();
     dom.node.append(dom.connectors, fo);
     fo.append(dom.content);
@@ -225,11 +224,20 @@ export default class Item {
       app.selectItem(this);
     });
     this.updateToggle();
-    // updateText/updateStatus/updateValue/updateIcon/updateNotes/updateToggle
-    // are no longer wrapped in per-item effects here — Map's single
-    // reactive layout computed (see map.js, Solid migration Phase 8) calls
-    // them directly while recomputing the whole tree, so DOM content sync
-    // and size measurement always happen in the same synchronous pass.
+    // updateStatus/updateValue/updateToggle are still called directly from
+    // computeLayout() below, since resolvedStatus/resolvedValue read
+    // child-aggregated memos and must stay inside the post-order layout
+    // pass (see docs/06.1-recursive-memo-layout-refactor.md, Phase 7).
+    // updateText/updateIcon/updateNotes only touch this item's own DOM and
+    // never read child/parent state, so they run as independent per-item
+    // effects instead -- a leaf node's text edit no longer needs to pull
+    // through the whole layout memo chain just to sync its own label.
+    createRoot((dispose) => {
+      this._disposeContentEffects = dispose;
+      createEffect(() => this.updateText());
+      createEffect(() => this.updateIcon());
+      createEffect(() => this.updateNotes());
+    });
 
     createRoot((dispose) => {
       this._disposeLayoutMemo = dispose;
@@ -650,14 +658,11 @@ export default class Item {
     }
   }
   updateText() {
-    // Always read the signal (even while editing) so this item's `_text`
-    // dependency stays part of the shared layout computed's tracked set
-    // (see map.js, Solid migration Phase 8). Solid re-tracks dependencies
-    // fresh on every run, so returning before this read while
-    // contentEditable is "true" would silently drop the subscription —
-    // the eventual "finish" commit (`_setText` in the Finish command)
-    // would then not trigger a redraw until some *other*, unrelated
-    // signal happened to force the shared computed to rerun.
+    // Always read the signal (even while editing) so this per-item effect
+    // (see the constructor) stays subscribed to future changes. Returning
+    // before this read while contentEditable is "true" would drop the
+    // subscription, and the eventual "finish" commit (`_setText` in the
+    // Finish command) would then never re-trigger this effect.
     const text = this._text();
     // While this item is being live-edited, the DOM is the source of
     // truth until "finish" commits it back to the `text` signal (see
@@ -673,6 +678,11 @@ export default class Item {
     }
     this.dom.text.innerHTML = text;
     findLinks(this.dom.text);
+    // Text size can change the content box; this effect runs independently
+    // of computeLayout() now, so it must nudge the layout memo itself to
+    // remeasure this item (and its ancestors) rather than relying on
+    // computeLayout() having read `_text()` directly.
+    this._bumpContentVersion();
   }
 
   updateStatus() {
@@ -699,6 +709,11 @@ export default class Item {
       this.dom.icon.classList.add("fa");
       this.dom.icon.classList.add(icon);
     }
+    // Icon presence/absence changes the content box (it's a flex sibling
+    // of .text, see map.css); this effect runs independently of
+    // computeLayout() now (see the constructor), so nudge the layout memo
+    // itself to remeasure this item (and its ancestors).
+    this._bumpContentVersion();
   }
   updateValue() {
     const { dom } = this;
@@ -720,6 +735,13 @@ export default class Item {
   }
   updateNotes() {
     this.dom.notes.hidden = !this._hasNotes();
+    // Unlike updateText()/updateIcon() above, the notes badge is
+    // absolutely positioned (see map.css's ".content .notes" rule) and
+    // never affects the content box's measured size, so this
+    // intentionally does NOT bump the content version -- doing so would
+    // reintroduce a layout recompute that has no visible effect, exactly
+    // the kind of unnecessary work docs/06.1-recursive-memo-layout-
+    // refactor.md's Phase 7 is meant to remove.
   }
   updateToggle() {
     const { node, toggle } = this.dom;
@@ -729,15 +751,15 @@ export default class Item {
       .setAttribute("d", this._collapsed() ? D_PLUS : D_MINUS);
   }
 
-  // Phase 1 of recursive layout refactoring: keep the existing whole-tree
-  // traversal in map.js, but make each per-item operation live with Item so
-  // a later per-item layout memo can call the same small methods directly.
+  // Only status/value remain here (see docs/06.1-recursive-memo-layout-
+  // refactor.md, Phase 7): both read child-aggregated memos
+  // (resolvedStatus/resolvedValue), so they must stay part of the
+  // post-order layout pass. text/icon/notes moved to standalone per-item
+  // effects (see the constructor) since they only touch this item's own
+  // DOM and have no ordering dependency on children or parent.
   _updateLayoutContent() {
-    this.updateText();
     this.updateStatus();
     this.updateValue();
-    this.updateIcon();
-    this.updateNotes();
   }
 
   // Content-affecting classes (data-shape/data-align drive map.css's
@@ -786,7 +808,10 @@ export default class Item {
   }
 }
 function findLinks(node) {
-  let children = [...node.childNodes];
+  // Defensive default: some lightweight DOM stand-ins used in tests don't
+  // implement childNodes, and this can now run outside computeLayout()'s
+  // controlled flow via the per-item text effect (see the constructor).
+  let children = [...(node.childNodes || [])];
   for (let i = 0; i < children.length; i++) {
     let child = children[i];
     if (child instanceof Element) {

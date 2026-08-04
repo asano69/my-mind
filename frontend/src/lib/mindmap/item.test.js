@@ -69,6 +69,25 @@ vi.mock("./map.js", () => ({ default: class Map {} }));
 const { default: Map } = await import("./map.js");
 const { default: Item, readItemLayoutResult } = await import("./item.js");
 
+describe("Item per-item content effects (Phase 7)", () => {
+  it("syncs icon and notes DOM directly, without going through the layout memo", () => {
+    const item = new Item();
+    expect(item.dom.icon.hidden).toBe(true);
+
+    item.icon = "fa-star";
+    expect(item.dom.icon.hidden).toBe(false);
+
+    item.notes = "some notes";
+    expect(item.dom.notes.hidden).toBe(false);
+  });
+
+  it("syncs text immediately via its own effect, independent of computeLayout", () => {
+    const item = new Item();
+    item.text = "hello";
+    expect(item.dom.text.innerHTML).toBe("hello");
+  });
+});
+
 describe("Item resolved layout memo", () => {
   it("does not throw when a detached subtree invalidates descendant layout", () => {
     const root = new Item();
