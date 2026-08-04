@@ -103,18 +103,26 @@ export default function ContextMenu() {
 
   return (
     <Show when={ready() && contextMenuPoint()}>
-      <div id="context-menu" ref={menuRef}>
+      <div
+        id="context-menu"
+        ref={menuRef}
+        class="absolute flex w-[130px] flex-col overflow-hidden rounded-md
+          border border-[#bbb] bg-pane py-[3px] shadow-card"
+      >
         <For each={GROUPS}>
           {(group, i) => (
             <>
               <Show when={i() > 0}>
-                <span></span>
+                <span class="my-[3px] border-t border-[color:var(--color-border-menu)]"></span>
               </Show>
               <For each={group}>
                 {(id) => (
                   <button
                     disabled={!commandRepo.get(id).isValid}
                     on:click={[run, id]}
+                    class="bg-transparent px-2.5 py-[5px] text-left text-sm
+                      transition-colors duration-[80ms] hover:bg-hover
+                      hover:text-text disabled:opacity-40"
                   >
                     {commandRepo.get(id).label}
                   </button>

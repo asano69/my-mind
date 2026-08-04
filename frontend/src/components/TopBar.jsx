@@ -5,6 +5,7 @@ import { createSignal, onMount, onCleanup } from "solid-js";
 import Trash2 from "lucide-solid/icons/trash-2";
 import TextCursor from "lucide-solid/icons/text-cursor";
 import Save from "lucide-solid/icons/save";
+import IconButton from "./IconButton";
 // The floating strip across the top of the canvas: the title input
 // (fixed top-center) and the right-hand icon group (delete/notes/
 // property-panel toggle). Catalog/Help/the left panel toggle used to
@@ -79,25 +80,17 @@ export default function TopBar() {
         style={{ "z-index": 10 }}
       />
       <div class="topbar-right">
-        <button
-          class="icon-btn"
-          onClick={() => runCommand("save")}
-          title="Save"
-        >
+        <IconButton onClick={() => runCommand("save")} title="Save">
           <Save size={28} />
-        </button>
+        </IconButton>
 
-        <button
-          class="icon-btn"
-          onClick={() => runCommand("notes")}
-          title="Notes"
-        >
+        <IconButton onClick={() => runCommand("notes")} title="Notes">
           <TextCursor size={28} />
-        </button>
+        </IconButton>
 
-        <button class="icon-btn" title="Delete map" onClick={handleDelete}>
+        <IconButton onClick={handleDelete} title="Delete map">
           <Trash2 size={28} />
-        </button>
+        </IconButton>
       </div>
     </>
   );

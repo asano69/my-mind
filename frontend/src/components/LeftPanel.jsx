@@ -11,6 +11,7 @@ import {
 import SnapshotsList from "./SnapshotsList";
 import CatalogList from "./CatalogList";
 import HelpPanel from "./HelpPanel";
+import IconButton, { iconButtonClass } from "./IconButton";
 
 import FolderOpen from "lucide-solid/icons/folder-open";
 import Book from "lucide-solid/icons/book";
@@ -67,57 +68,37 @@ export default function LeftPanel() {
       }}
     >
       <div class="flex w-[var(--ribbon-width)] flex-shrink-0 flex-col items-center gap-2 py-2">
-        <button
-          class="icon-btn"
-          onClick={toggleLeftPanel}
-          title="Toggle sidebar"
-        >
+        <IconButton onClick={toggleLeftPanel} title="Toggle sidebar">
           <PanelLeft size={20} />
-        </button>
+        </IconButton>
 
-        <button class="icon-btn" onClick={() => runCommand("new")} title="New">
+        <IconButton onClick={() => runCommand("new")} title="New">
           <FilePlus size={20} />
-        </button>
+        </IconButton>
 
-        <button
-          class="icon-btn"
-          onClick={() => runCommand("catalog-list")}
-          title="Browse maps"
-        >
+        <IconButton onClick={() => runCommand("catalog-list")} title="Browse maps">
           <FolderOpen size={20} />
-        </button>
+        </IconButton>
 
         <A
           href="/catalog"
-          class="icon-btn"
+          class={iconButtonClass}
           title="Catalog"
           onClick={goToCatalog}
         >
           <Book size={20} />
         </A>
 
-        <button
-          class="icon-btn"
-          onClick={() => runCommand("save-as")}
-          title="Save as"
-        >
+        <IconButton onClick={() => runCommand("save-as")} title="Save as">
           <Images size={20} />
-        </button>
+        </IconButton>
 
-        <button
-          class="icon-btn"
-          onClick={() => runCommand("recover")}
-          title="Restore snapshot"
-        >
+        <IconButton onClick={() => runCommand("recover")} title="Restore snapshot">
           <DatabaseBackup size={20} />
-        </button>
-        <button
-          class="icon-btn"
-          onClick={() => runCommand("help")}
-          title="Help"
-        >
+        </IconButton>
+        <IconButton onClick={() => runCommand("help")} title="Help">
           <CircleQuestionMark size={20} />
-        </button>
+        </IconButton>
       </div>
       {/* Fades in only once the panel is wide enough to actually show its
           content. Shows the snapshot recovery list once the "recover"
