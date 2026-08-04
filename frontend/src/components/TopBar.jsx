@@ -1,5 +1,6 @@
 import { useNavigate } from "@solidjs/router";
 import { createSignal, onMount, onCleanup } from "solid-js";
+import { rightPanelHidden } from "../lib/mindmap/store";
 
 // icons
 import Trash2 from "lucide-solid/icons/trash-2";
@@ -79,7 +80,18 @@ export default function TopBar() {
           hover:bg-pane-hover focus:border-pane-hover focus:bg-pane"
         style={{ "z-index": 10 }}
       />
-      <div class="topbar-right">
+      {/* Shifts left while the right property panel is expanded, so it
+          never overlaps it. Reads the same store signal RightPanel.jsx
+          uses, replacing the old `body:has(#ui.panel-expanded)` CSS
+          hack in my-mind.css. */}
+      <div
+        class="fixed top-2 z-1 flex gap-4 transition-[right] duration-500 ease-in-out"
+        style={{
+          right: rightPanelHidden()
+            ? "8px"
+            : "calc(var(--side-panel-width) + 8px)",
+        }}
+      >
         <IconButton onClick={() => runCommand("save")} title="Save">
           <Save size={28} />
         </IconButton>

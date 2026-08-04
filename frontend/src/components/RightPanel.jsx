@@ -268,7 +268,6 @@ export default function RightPanel() {
       <div
         id="ui"
         class="fixed inset-y-0 right-0 z-5 flex overflow-hidden bg-pane shadow-card transition-[width] duration-300 ease-in-out"
-        classList={{ "panel-expanded": !rightPanelHidden() }}
         style={{
           width: rightPanelHidden() ? "0px" : "var(--side-panel-width)",
         }}
