@@ -3,6 +3,7 @@ import { createResource, createSignal, For, Show } from "solid-js";
 import { A, useNavigate } from "@solidjs/router";
 //import Logo from "../components/Logo";
 import Search from "../components/Search";
+import Spinner from "../components/Spinner";
 import FilePlus from "lucide-solid/icons/file-plus";
 import Settings2 from "lucide-solid/icons/settings-2";
 import Check from "lucide-solid/icons/check";
@@ -75,7 +76,10 @@ export default function Catalog() {
           <Search onSearch={setQuery} />
         </div>
 
-        <Show when={!maps.loading} fallback={<p>Loading…</p>}>
+        <Show
+          when={!maps.loading}
+          fallback={<Spinner visible={true} class="relative mx-auto h-10 w-10" />}
+        >
           <Show when={!maps.error} fallback={<p>Failed to load maps.</p>}>
             <Show
               when={maps()?.length}

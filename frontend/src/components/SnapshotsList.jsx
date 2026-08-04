@@ -1,6 +1,7 @@
 import { For, Show, createResource } from "solid-js";
 import { currentMapId } from "../lib/mindmap/store";
 import { listSnapshots, getSnapshot } from "../lib/mindmap/backend/pocketbase";
+import Spinner from "./Spinner";
 
 function formatDate(dateStr) {
   return new Date(dateStr).toLocaleString();
@@ -29,7 +30,7 @@ export default function SnapshotsList() {
     >
       <Show
         when={!snapshots.loading}
-        fallback={<p class="px-1 text-sm text-text/50">Loading…</p>}
+        fallback={<Spinner visible={true} class="relative mx-auto h-6 w-6" />}
       >
         <Show
           when={snapshots()?.length}

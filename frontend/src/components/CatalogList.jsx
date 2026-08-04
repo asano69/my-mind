@@ -1,6 +1,7 @@
 import { For, Show, createResource } from "solid-js";
 import { listMaps } from "../lib/mindmap/backend/pocketbase";
 import { A, useNavigate } from "@solidjs/router";
+import Spinner from "./Spinner";
 // Read-only list of every saved map, shown inline in the left sidebar
 // (see LeftPanel.jsx's "catalog-list" command) instead of navigating away
 // to the full /catalog page. Sorted pinned-first, then by most recently
@@ -33,7 +34,7 @@ export default function CatalogList() {
   return (
     <Show
       when={!maps.loading}
-      fallback={<p class="px-1 text-sm text-text/50">Loading…</p>}
+      fallback={<Spinner visible={true} class="relative mx-auto h-6 w-6" />}
     >
       <Show
         when={maps()?.length}
