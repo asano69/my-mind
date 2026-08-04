@@ -50,6 +50,14 @@ export function toggleRightPanel() {
   setRightPanelHidden((h) => !h);
 }
 
+// Whether the loading spinner (see Spinner.jsx) should be visible.
+// Replaces the old `spinner = document.querySelector(".spinner")` direct
+// DOM toggle in my-mind.js's setThrobber() -- any component can now read
+// this signal directly instead of my-mind.js needing to know about a
+// specific DOM node (see CLAUDE.md's Phase 5 addendum, "read-only
+// consumption -- no bridge object needed").
+export const [throbberVisible, setThrobberVisible] = createSignal(false);
+
 // Which pane is the active workspace mode: the mind-map canvas or the
 // notes editor. Added ahead of Workspace.jsx keeping both mounted at
 // once and switching which one is on top (see

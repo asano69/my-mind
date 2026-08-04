@@ -5,6 +5,7 @@ import {
   leftPanelHidden,
   rightPanelHidden,
   activeMode,
+  setThrobberVisible,
 } from "./store.js";
 
 // Application entry point. Owns global editor state (current map/item/selection,
@@ -45,7 +46,6 @@ import * as ui from "./ui/ui.js";
 
 let port = null;
 let container = null;
-let spinner = null;
 let mounted = false;
 let disposePanelEffects = null; // dispose fn for the effects below, cleared in unmount()
 
@@ -55,8 +55,13 @@ export let editing = false;
 export const selectedItems = new Set();
 export let selectionCursor = null;
 
+// Thin wrapper kept for callers (io.js, command.js) that don't otherwise
+// need to know about store.js -- the actual spinner visibility lives in
+// store.js's throbberVisible signal, read directly by Spinner.jsx (see
+// CLAUDE.md's Phase 5 addendum, "read-only consumption -- no bridge
+// object needed").
 export function setThrobber(visible) {
-  spinner.hidden = !visible;
+  setThrobberVisible(visible);
 }
 
 export function showMap(map) {
@@ -212,7 +217,6 @@ export async function mount(root, containerEl, uuid) {
   mounted = true;
   port = root;
   container = containerEl;
-  spinner = document.querySelector(".spinner");
 
   setThrobber(true);
   await initMapCSS();
@@ -299,6 +303,5 @@ export function unmount() {
   selectionCursor = null;
 
   port = null;
-  spinner = null;
   mounted = false;
 }

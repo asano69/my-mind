@@ -7,6 +7,7 @@ import {
 } from "../lib/mindmap/store";
 import ChevronLeft from "lucide-solid/icons/chevron-left";
 import ChevronRight from "lucide-solid/icons/chevron-right";
+import Spinner from "./Spinner";
 
 const STATUS_MAP = { yes: true, no: false, "": null };
 
@@ -357,10 +358,7 @@ export default function RightPanel() {
           </footer>
         </div>
 
-        <div class="spinner" hidden>
-          <div class="dot1"></div>
-          <div class="dot2"></div>
-        </div>
+        <Spinner />
       </div>
 
       {/* Tab handle: lives outside #ui so it stays visible even when the
