@@ -64,21 +64,3 @@ button:not(:disabled) {
   opacity: 0.5;
   z-index: 1;
 }
-
-/* Fixed top-right button group (Notes, UI toggle) — see TopBar.jsx.
-   Shifted left while #ui (the right panel) is expanded so it never
-   overlaps the panel; #ui.panel-expanded is toggled from RightPanel.jsx. */
-.topbar-right {
-  position: fixed;
-  top: 5px;
-  right: 8px;
-  z-index: 1;
-  display: flex;
-  gap: 1rem;
-  margin: 0.5rem;
-  transition: right 0.5s;
-}
-
-body:has(#ui.panel-expanded) .topbar-right {
-  right: calc(var(--side-panel-width) + 8px);
-}
