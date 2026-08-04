@@ -180,11 +180,19 @@ describe("Item resolved value/status memos", () => {
 });
 
 describe("Item layout result memo", () => {
+  // Post-Phase-7 (see docs/06.1-recursive-memo-layout-refactor.md):
+  // _updateLayoutContent() no longer reads _text() itself -- text syncing
+  // moved to its own per-item effect (updateText(), see item.js's
+  // constructor), which bumps _contentVersion() on an actual change.
+  // Tracking _text() here directly would double-subscribe this memo (once
+  // via this mock, once transitively via _contentVersion), causing an
+  // extra spurious recompute per text edit. Rely on _contentVersion()
+  // (already read by the real computeLayout()) instead, matching how
+  // production code observes text changes.
   function instrumentLayout(item) {
     const calls = { update: 0, measure: 0, write: 0 };
     item._updateLayoutContent = vi.fn(() => {
       calls.update++;
-      item._text();
     });
     item._measureOwnContent = vi.fn(() => {
       calls.measure++;

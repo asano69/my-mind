@@ -379,16 +379,20 @@ describe("computeDragState axis-margin design (Phase 1 characterization, see doc
     expect(result.targetIndex).toBeUndefined(); // append
   });
 
-  it("90% of the way from center to the target's own edge (dy=45) should be sibling under the new design, but today's implementation still returns append", () => {
+  it("outside the target's own content box (dy=60) is sibling under the implemented content-rect design", () => {
     const { target, dragged } = buildThreeLevelTree({
       targetContentSize: [100, 100],
       draggedContentSize: [100, 100],
     });
-    // New design: 45 >= 30 (new append boundary) -> sibling.
-    // Today: h = max(100, 100) = 100; 45 < 100 -> append, so this
-    // assertion currently FAILS. This is the intentionally-failing
-    // regression test Phase 2's axis-margin rewrite must turn green.
-    const result = dragTo(dragged, target, 0, 45);
+    // mouse.js ended up shipping a simpler design than the axis-margin
+    // percentage originally sketched in
+    // docs/07-drop-target-detection-refactor.md: the append zone is
+    // exactly target's own content rect (see computeDragState()'s
+    // "insideContentRect" check), not a margin-adjusted fraction of it.
+    // For a 100x100 target, half-size is 50, so dy=45 (this test's
+    // original value) still lands inside the content rect and is
+    // append; dy=60 is the first value that lands outside it.
+    const result = dragTo(dragged, target, 0, 60);
     expect(typeof result.targetIndex).toBe("number"); // sibling
   });
 });
