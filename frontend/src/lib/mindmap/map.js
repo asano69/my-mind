@@ -48,6 +48,10 @@ export default class Map {
     const [layoutVersion, setLayoutVersion] = createSignal(0);
     this._layoutVersion = layoutVersion;
     this._setLayoutVersion = setLayoutVersion;
+    // Root's own on-screen anchor across layout passes (see the moveBy()
+    // call below). Stays null until the first real layout pass has run,
+    // so that first pass never triggers a compensating move.
+    this._lastRootContentPosition = null;
     createRoot((dispose) => {
       this._disposeLayout = dispose;
       createComputed(() => {
@@ -58,6 +62,28 @@ export default class Map {
         const rootSize = readItemLayoutResult(this._root);
         this.node.setAttribute("width", String(rootSize[0]));
         this.node.setAttribute("height", String(rootSize[1]));
+        // Keep the root node visually anchored to the same screen point
+        // across layout recomputes. layoutRoot() (see layout/map.js)
+        // repositions root's own contentPosition whenever the left/right
+        // children's bounding boxes change size (e.g. after a
+        // drag-and-drop move), which otherwise shifts the *whole* map on
+        // screen even though only one branch actually changed.
+        // Compensate by moving the map's own screen position by the
+        // opposite delta, so only the branches appear to move.
+        const rootContentPosition = this._root.contentPosition;
+        if (this._lastRootContentPosition) {
+          const dx = rootContentPosition[0] - this._lastRootContentPosition[0];
+          const dy = rootContentPosition[1] - this._lastRootContentPosition[1];
+          if (dx || dy) {
+            // contentPosition lives inside the node that carries the zoom
+            // `transform: scale()`, while moveBy()'s left/top offsets sit
+            // outside that transform (see adjustZoom()'s own anchor
+            // math), so the compensation must be scaled by zoomScale to
+            // line up on screen.
+            this.moveBy([-dx * this.zoomScale, -dy * this.zoomScale]);
+          }
+        }
+        this._lastRootContentPosition = rootContentPosition;
         // Bump once per root layout pull, not once per item: auto-save only
         // needs "did anything change", never "how many items changed".
         bumpDirty();
