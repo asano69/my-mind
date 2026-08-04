@@ -223,20 +223,21 @@ export default class Item {
       this.collapsed = !this.collapsed;
       app.selectItem(this);
     });
-    this.updateToggle();
-    // updateStatus/updateValue/updateToggle are still called directly from
+    // updateStatus/updateValue are still called directly from
     // computeLayout() below, since resolvedStatus/resolvedValue read
     // child-aggregated memos and must stay inside the post-order layout
     // pass (see docs/06.1-recursive-memo-layout-refactor.md, Phase 7).
-    // updateText/updateIcon/updateNotes only touch this item's own DOM and
-    // never read child/parent state, so they run as independent per-item
-    // effects instead -- a leaf node's text edit no longer needs to pull
-    // through the whole layout memo chain just to sync its own label.
+    // updateText/updateIcon/updateNotes/updateToggle only touch this
+    // item's own DOM and never read child/parent state, so they run as
+    // independent per-item effects instead -- a leaf node's text edit (or
+    // a collapse toggle) no longer needs to pull through the whole layout
+    // memo chain just to sync its own label/icon/toggle glyph.
     createRoot((dispose) => {
       this._disposeContentEffects = dispose;
       createEffect(() => this.updateText());
       createEffect(() => this.updateIcon());
       createEffect(() => this.updateNotes());
+      createEffect(() => this.updateToggle());
     });
 
     createRoot((dispose) => {
@@ -782,9 +783,9 @@ export default class Item {
   // Only status/value remain here (see docs/06.1-recursive-memo-layout-
   // refactor.md, Phase 7): both read child-aggregated memos
   // (resolvedStatus/resolvedValue), so they must stay part of the
-  // post-order layout pass. text/icon/notes moved to standalone per-item
-  // effects (see the constructor) since they only touch this item's own
-  // DOM and have no ordering dependency on children or parent.
+  // post-order layout pass. text/icon/notes/toggle moved to standalone
+  // per-item effects (see the constructor) since they only touch this
+  // item's own DOM and have no ordering dependency on children or parent.
   _updateLayoutContent() {
     this.updateStatus();
     this.updateValue();
@@ -947,7 +948,6 @@ function computeLayout(item) {
   if (!item._resolvedLayout()) {
     return item.size;
   }
-  item.updateToggle();
   item._updateLayoutContent();
   item._applyOwnStyle();
   if (!item._collapsed()) {
