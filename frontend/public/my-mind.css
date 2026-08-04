@@ -291,20 +291,21 @@ body:has(#ui.panel-expanded) .topbar-right {
 /* -------------------------------------------------------------
    Context menu
    ------------------------------------------------------------- */
+/* No [hidden]/:not([hidden]) toggling anymore -- ContextMenu.jsx only
+   renders this element into the DOM at all while store.js's
+   contextMenuPoint signal is non-null, so display can just be
+   unconditional here. */
 #context-menu {
   position: absolute;
   border: 1px solid #bbb;
   background-color: var(--color-pane);
   box-shadow: var(--shadow-card);
   border-radius: 6px;
+  display: flex;
   flex-direction: column;
   width: 130px;
   overflow: hidden;
   padding: 3px 0;
-}
-
-#context-menu:not([hidden]) {
-  display: flex;
 }
 
 #context-menu button {
@@ -320,6 +321,10 @@ body:has(#ui.panel-expanded) .topbar-right {
 #context-menu button:hover {
   background-color: var(--color-hover);
   color: var(--color-text);
+}
+
+#context-menu button:disabled {
+  opacity: 0.4;
 }
 
 #context-menu span {

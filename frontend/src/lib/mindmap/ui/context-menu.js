@@ -1,83 +1,37 @@
-import { repo as commandRepo } from "../command/command.js";
-let node = null;
-let port = null;
+import { setContextMenuPoint } from "../store.js";
 
-// A menu command already runs on "mousedown" (handleEvent below) rather
-// than "click", so the menu can close and stopPropagation() before
-// mouse.js's onDragStart/onClick react to the same press. Browsers still
-// fire a normal "click" event after the mouseup that follows, though, and
-// that click bubbles up into containerEl, where ui/ui.js's delegated
-// data-command click listener would otherwise execute the same command a
-// second time. This flag + capture-phase listener swallows exactly that
-// one follow-up click.
-let suppressNextClick = false;
-function suppressClick(e) {
-  if (!suppressNextClick) {
-    return;
-  }
-  suppressNextClick = false;
-  e.stopPropagation();
-}
-
+// The right-click item menu no longer owns a DOM node. Opening/closing it
+// is now just writing the click point into store.js's contextMenuPoint
+// signal, which ContextMenu.jsx renders from directly. This replaces the
+// old pattern of querying "#context-menu" by id, toggling its hidden
+// attribute, and computing style.left/style.top by hand. It also removes
+// the need for the old mousedown-based click handling and its
+// capture-phase document listener (used only to swallow the browser's
+// follow-up "click" so containerEl's delegated click listener in
+// ui/ui.js wouldn't execute the same command twice) -- ContextMenu.jsx's
+// buttons use on:click with stopPropagation() instead, which is enough
+// on its own.
+//
 // Assumes a single instance in the DOM (see
-// docs/workspace-mode-switch-refactor.md, Phase 4) — `#context-menu`
-// is looked up by id. Safe under the current "one canvas, toggle
-// visibility" model; revisit if multiple canvases are ever mounted
-// simultaneously.
-export function init(port_) {
-  node = document.querySelector("#context-menu");
-  port = port_;
-  [...node.querySelectorAll("[data-command]")].forEach((button) => {
-    let commandName = button.dataset.command;
-    button.textContent = commandRepo.get(commandName).label;
-  });
-  port.addEventListener("mousedown", handleEvent);
-  node.addEventListener("mousedown", handleEvent);
-  document.addEventListener("click", suppressClick, true);
-  close();
-}
-export function dispose() {
-  port.removeEventListener("mousedown", handleEvent);
-  node.removeEventListener("mousedown", handleEvent);
-  document.removeEventListener("click", suppressClick, true);
-  suppressNextClick = false;
-  node = null;
-  port = null;
-}
+// docs/workspace-mode-switch-refactor.md, Phase 4) -- safe under the
+// current "one canvas, toggle visibility" model; revisit if multiple
+// canvases are ever mounted simultaneously.
 export function open(point) {
-  node.hidden = false;
-  let w = node.offsetWidth;
-  let h = node.offsetHeight;
-  let left = point[0];
-  let top = point[1];
-  if (left > port.offsetWidth / 2) {
-    left -= w;
-  }
-  if (top > port.offsetHeight / 2) {
-    top -= h;
-  }
-  node.style.left = `${left}px`;
-  node.style.top = `${top}px`;
+  setContextMenuPoint({ x: point[0], y: point[1] });
 }
-function handleEvent(e) {
-  if (e.currentTarget != node) {
-    close();
-    return;
-  }
-  e.stopPropagation(); // no dragdrop, no blur of activeElement
-  e.preventDefault(); // we do not want to focus the button
-  let commandName = e.target.dataset.command;
-  if (!commandName) {
-    return;
-  }
-  let command = commandRepo.get(commandName);
-  if (!command.isValid) {
-    return;
-  }
-  suppressNextClick = true;
-  command.execute();
+
+export function close() {
+  setContextMenuPoint(null);
+}
+
+// Kept so ui/ui.js's existing init()/dispose() call sites don't need to
+// change, even though there is no DOM setup/teardown left to do here --
+// this just guards against a stale point from a previous mount leaking
+// into a fresh one.
+export function init() {
   close();
 }
-function close() {
-  node.hidden = true;
+
+export function dispose() {
+  close();
 }
