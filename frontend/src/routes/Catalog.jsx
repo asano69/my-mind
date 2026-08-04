@@ -4,6 +4,7 @@ import { A, useNavigate } from "@solidjs/router";
 //import Logo from "../components/Logo";
 import Search from "../components/Search";
 import Spinner from "../components/Spinner";
+import IconButton, { iconButtonClass } from "../components/IconButton";
 import FilePlus from "lucide-solid/icons/file-plus";
 import Settings2 from "lucide-solid/icons/settings-2";
 import Check from "lucide-solid/icons/check";
@@ -58,16 +59,15 @@ export default function Catalog() {
           </A>
 
           <div class="flex gap-2">
-            <button
+            <IconButton
               onClick={() => setEditMode(!editMode())}
-              class="icon-btn"
               title={editMode() ? "Done" : "Edit"}
             >
               <Show when={editMode()} fallback={<Settings2 size={28} />}>
                 <Check size={28} />
               </Show>
-            </button>
-            <A href="/maps/new" class="icon-btn" title="New">
+            </IconButton>
+            <A href="/maps/new" class={iconButtonClass} title="New">
               <FilePlus size={28} />
             </A>
           </div>
