@@ -2,51 +2,9 @@ import * as app from "../my-mind.js";
 import * as io from "./io.js";
 import * as menu from "./context-menu.js";
 import { repo as commandRepo } from "../command/command.js";
-import { lastSaveTime, toggleRightPanel } from "../store.js";
+import { toggleRightPanel } from "../store.js";
 import { isCanvasActive } from "../scope.js";
 
-let saveTimeEl = null;
-let elapsedTimer = null;
-
-/** Format a Date as HH:MM:SS. */
-function formatTime(d) {
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-}
-/** Format elapsed milliseconds as a human-readable string.
- *  <5s  → "now"
- *  <60s → "<1m"
- *  <60m → "Xm ago"
- *  else → "Xh ago"
- */
-function formatElapsed(ms) {
-  const s = Math.floor(ms / 1000);
-  if (s < 5) {
-    return "now";
-  }
-  if (s < 60) {
-    return "<1m";
-  }
-  const m = Math.floor(s / 60);
-  if (m < 60) {
-    return `${m}m ago`;
-  }
-  const h = Math.floor(m / 60);
-  return `${h}h ago`;
-}
-
-/** Refresh the elapsed portion of the save-time display, reading the
- *  shared save timestamp from store.js (see CLAUDE.md, Solid migration
- *  Phase 4) instead of a locally tracked copy. */
-function refreshElapsed() {
-  const savedAt = lastSaveTime();
-  if (savedAt === null || !saveTimeEl) {
-    return;
-  }
-  const elapsed = Date.now() - savedAt;
-  const timeStr = formatTime(new Date(savedAt));
-  saveTimeEl.textContent = `${timeStr}  (${formatElapsed(elapsed)})`;
-}
 export function isActive() {
   const active = document.activeElement;
   if (
@@ -101,7 +59,6 @@ function onClick(e) {
 // blank one — avoids the old race where a blank map was created
 // unconditionally and then (maybe) overwritten once restore() resolved.
 export async function init(port, containerEl, uuid) {
-  saveTimeEl = document.querySelector("#save-time");
   // layout/shape/value/status no longer live here — see RightPanel.jsx,
   // which reads store.js's `currentItem` signal directly instead of being
   // driven by this module's init()/dispose()/pubsub wiring (Solid migration
@@ -109,12 +66,11 @@ export async function init(port, containerEl, uuid) {
   // notes.js no longer has init()/dispose(): its editorAPI registration
   // lives in NotesEditor.jsx for the whole Workspace lifetime, independent
   // of the canvas's own mount/unmount cycle (see notes.js's comment).
+  // Save-status text is rendered reactively by RightPanel.jsx, which reads
+  // store.js's `lastSaveTime` signal directly instead of this module
+  // polling a DOM node (see io.js's formatSaveStatus()).
   io.init();
   menu.init(port);
-  // Poll store.js's `lastSaveTime` signal once a second instead of
-  // subscribing to the old "save-done" pubsub message (Solid migration
-  // Phase 4, see CLAUDE.md).
-  elapsedTimer = setInterval(refreshElapsed, 1000);
   containerEl.addEventListener("click", onClick);
   return io.restore(uuid);
 }
@@ -124,9 +80,6 @@ export async function init(port, containerEl, uuid) {
 // init() brought them up, mirroring standard stack-unwind teardown order.
 export function dispose(containerEl) {
   containerEl.removeEventListener("click", onClick);
-  clearInterval(elapsedTimer);
-  elapsedTimer = null;
   menu.dispose();
   io.dispose();
-  saveTimeEl = null;
 }

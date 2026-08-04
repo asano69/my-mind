@@ -1,6 +1,7 @@
-import { createMemo, createSignal, For, onMount, Show } from "solid-js";
+import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import {
   currentItem,
+  lastSaveTime,
   rightPanelHidden,
   toggleRightPanel,
 } from "../lib/mindmap/store";
@@ -102,26 +103,46 @@ export default function RightPanel() {
   let commandRepo;
   let layoutRepo;
   let shapeRepo;
+  let ioModule;
 
   const [ready, setReady] = createSignal(false);
 
+  // Ticks once a second while this panel is mounted, purely to drive
+  // re-renders of the save-status label below -- lastSaveTime() itself
+  // only changes on an actual save, not every second, so the "<5s ago" /
+  // "2m ago" text needs something else advancing it.
+  const [tick, setTick] = createSignal(0);
+  let tickTimer;
+
   onMount(async () => {
-    const [actionsMod, appMod, cmdMod, layoutMod, shapeMod] = await Promise.all(
-      [
+    const [actionsMod, appMod, cmdMod, layoutMod, shapeMod, ioMod] =
+      await Promise.all([
         import("../lib/mindmap/action.js"),
         import("../lib/mindmap/my-mind.js"),
         import("../lib/mindmap/command/command.js"),
         import("../lib/mindmap/layout/layout.js"),
         import("../lib/mindmap/shape/shape.js"),
-      ],
-    );
+        import("../lib/mindmap/ui/io.js"),
+      ]);
     actionsModule = actionsMod;
     appModule = appMod;
     commandRepo = cmdMod.repo;
     layoutRepo = layoutMod.repo;
     shapeRepo = shapeMod.repo;
+    ioModule = ioMod;
 
     setReady(true);
+  });
+
+  tickTimer = setInterval(() => setTick((t) => t + 1), 1000);
+  onCleanup(() => clearInterval(tickTimer));
+
+  const saveStatusLabel = createMemo(() => {
+    tick();
+    if (!ioModule) {
+      return "";
+    }
+    return ioModule.formatSaveStatus(lastSaveTime());
   });
 
   const layoutGroups = createMemo(() => {
@@ -332,7 +353,7 @@ export default function RightPanel() {
           </div>
 
           <footer class="flex min-h-[28px] flex-none items-end justify-between border-t border-black/10 px-3 py-1.5">
-            <span id="save-status" class="pl-0.5 text-base text-text"></span>
+            <span class="pl-0.5 text-base text-text">{saveStatusLabel()}</span>
           </footer>
         </div>
 

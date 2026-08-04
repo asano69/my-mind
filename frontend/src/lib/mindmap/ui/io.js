@@ -6,7 +6,6 @@ import { serializeCurrentMap } from "../backend/image.js";
 import {
   currentTitle,
   setCurrentTitle,
-  lastSaveTime,
   setLastSaveTime,
   dirtyVersion,
   setCurrentMapId,
@@ -19,7 +18,6 @@ let currentMapUuid = null; // public uuid, used in the URL
 // node's text (which is exposed separately as map.name) — see title.js.
 
 let autoSaveTimeout = null;
-let statusTimer = null; // setInterval id for updateSaveStatus, cleared in dispose()
 let disposeAutoSaveEffect = null; // dispose fn for the createRoot below, cleared in dispose()
 
 // Guards against overlapping save() calls. With a short auto-save debounce,
@@ -36,7 +34,6 @@ const AUTO_SAVE_DELAY_MS = 1000;
 // directly (see quickSave() below), so there is no longer a DOM node
 // or focus state for this module to track.
 export function init() {
-  statusTimer = setInterval(updateSaveStatus, 1000);
   // Auto-save: debounce item changes and save after a short delay.
   // Only kicks in once the map has been saved at least once (has an id).
 
@@ -73,8 +70,6 @@ export function init() {
 // along with the DOM element (Solid removes #io on unmount), so only the
 // module-level timer and map-identity state need explicit teardown here.
 export function dispose() {
-  clearInterval(statusTimer);
-  statusTimer = null;
   disposeAutoSaveEffect?.();
   disposeAutoSaveEffect = null;
   if (autoSaveTimeout !== null) {
@@ -206,7 +201,6 @@ async function performSave(includeSvg) {
     const record = await backend.save(currentMapId, title, mymind, svg);
     setCurrentMap(record);
     setLastSaveTime(Date.now());
-    updateSaveStatus();
   } catch (e) {
     error(e);
   }
@@ -280,26 +274,28 @@ function error(e) {
   alert(`IO error: ${message}`);
 }
 
-function updateSaveStatus() {
-  const el = document.getElementById("save-status");
-  if (!el) {
-    return;
-  }
-  const savedAt = lastSaveTime();
+// Pure formatting helper, read directly by RightPanel.jsx (see CLAUDE.md's
+// Solid migration Phase 5 addendum, "read-only consumption -- no bridge
+// object needed"). Takes `now` as a parameter rather than reading
+// Date.now() internally, since lastSaveTime() itself only changes on an
+// actual save -- RightPanel.jsx supplies its own 1s ticking signal to
+// drive the re-render that keeps this label advancing between saves.
+export function formatSaveStatus(savedAt, now = Date.now()) {
   if (savedAt === null) {
-    el.textContent = "";
-    return;
+    return "";
   }
-  const elapsed = Math.floor((Date.now() - savedAt) / 1000);
+  const elapsed = Math.floor((now - savedAt) / 1000);
   if (elapsed < 2) {
-    el.textContent = "just saved!";
-  } else if (elapsed < 5) {
-    el.textContent = "<5s ago";
-  } else if (elapsed < 10) {
-    el.textContent = "<10s ago";
-  } else if (elapsed < 60) {
-    el.textContent = `${Math.floor(elapsed / 10) * 10}s ago`;
-  } else {
-    el.textContent = `${Math.floor(elapsed / 60)}m ago`;
+    return "just saved!";
   }
+  if (elapsed < 5) {
+    return "<5s ago";
+  }
+  if (elapsed < 10) {
+    return "<10s ago";
+  }
+  if (elapsed < 60) {
+    return `${Math.floor(elapsed / 10) * 10}s ago`;
+  }
+  return `${Math.floor(elapsed / 60)}m ago`;
 }
