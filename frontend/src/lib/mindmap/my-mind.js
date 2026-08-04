@@ -2,6 +2,7 @@
 import { createRoot, createEffect, on } from "solid-js";
 import {
   setCurrentItem,
+  setEditing,
   leftPanelHidden,
   rightPanelHidden,
   activeMode,
@@ -149,11 +150,13 @@ export function selectItem(item) {
 export function startEditing() {
   clearMultiSelection();
   editing = true;
+  setEditing(true);
   currentItem.startEditing();
 }
 
 export function stopEditing() {
   editing = false;
+  setEditing(false);
   return currentItem.stopEditing();
 }
 
@@ -299,6 +302,7 @@ export function unmount() {
   container = null;
   setCurrentItem(null);
   editing = false;
+  setEditing(false);
   selectedItems.clear();
   selectionCursor = null;
 

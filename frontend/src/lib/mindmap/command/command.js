@@ -12,7 +12,11 @@ import ImageBackend from "../backend/image.js";
 import * as actions from "../action.js";
 import MindMap from "../map.js";
 import { isCanvasActive } from "../scope.js";
-import { setLeftPanelHidden } from "../store.js";
+import {
+  setLeftPanelHidden,
+  editing as editingSignal,
+  currentItem as currentItemSignal,
+} from "../store.js";
 
 const PAN_AMOUNT = 15;
 let keyboardScope = globalThis.window ?? null;
@@ -40,7 +44,13 @@ export default class Command {
     repo.set(id, this);
   }
   get isValid() {
-    return this.editMode === null || this.editMode == app.editing;
+    // Reads store.js's editing signal (mirrored from app.editing by
+    // my-mind.js's startEditing()/stopEditing()) rather than the plain
+    // `app.editing` field directly, so any Solid computation reading
+    // `.isValid` (e.g. ContextMenu.jsx's disabled attribute) stays
+    // correct across edit-mode changes instead of only reflecting the
+    // value at the moment the menu happened to render.
+    return this.editMode === null || this.editMode == editingSignal();
   }
 }
 new (class Notes extends Command {
@@ -58,6 +68,10 @@ new (class Undo extends Command {
     this.keys = [{ code: "KeyZ", ctrlKey: true }];
   }
   get isValid() {
+    // history.canBack() itself reads a plain module-level array, not a
+    // signal, so reading historyVersion() first is what actually
+    // subscribes this getter to undo-stack changes (see history.js).
+    history.historyVersion();
     return super.isValid && history.canBack();
   }
   execute() {
@@ -70,6 +84,7 @@ new (class Redo extends Command {
     this.keys = [{ code: "KeyY", ctrlKey: true }];
   }
   get isValid() {
+    history.historyVersion();
     return super.isValid && history.canForward();
   }
   execute() {
@@ -113,7 +128,11 @@ new (class Delete extends Command {
     this.keys = [{ code: isMac() ? "Backspace" : "Delete" }]; // Mac keyboards' "delete" button generates "Backspace"
   }
   get isValid() {
-    return super.isValid && !app.currentItem.isRoot;
+    // Reads store.js's currentItem signal, not the plain app.currentItem
+    // field, so this stays correct if selection changes while something
+    // is observing .isValid (e.g. ContextMenu.jsx staying open across a
+    // selection change).
+    return super.isValid && !currentItemSignal()?.isRoot;
   }
   execute() {
     // Delete all selected non-root items in one undoable action

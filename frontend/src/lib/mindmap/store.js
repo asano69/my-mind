@@ -6,6 +6,15 @@ import { createSignal } from "solid-js";
 // unmount(); treat as read-only everywhere else.
 export const [currentItem, setCurrentItem] = createSignal(null);
 
+// Mirrors my-mind.js's `editing` module state as a Solid signal, the same
+// way currentItem is mirrored above. Written by my-mind.js's
+// startEditing()/stopEditing()/unmount(); lets command/command.js's
+// Command.isValid react to edit-mode changes (e.g. so ContextMenu.jsx's
+// disabled state stays correct while the menu is open), instead of
+// reading the plain `app.editing` field once at render time and never
+// again.
+export const [editing, setEditing] = createSignal(false);
+
 // The map's title (PocketBase's "title" field), owned by ui/io.js. Replaces
 // the old "title-change" pubsub message (see CLAUDE.md, Solid migration
 // Phase 4) — title.js and TitleBar.jsx read this directly instead of
