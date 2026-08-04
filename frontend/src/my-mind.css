@@ -1,7 +1,7 @@
 /* =============================================================
- *
    my-mind.css — layout and UI styles for the mind-map page
-   Requires: theme.css loaded first (provides font/color tokens)
+   Requires: theme.css loaded first (provides font/color tokens);
+   see style.css, which imports both in order.
    ============================================================= */
 
 /* -------------------------------------------------------------

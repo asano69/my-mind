@@ -1,10 +1,15 @@
-/* Shared design tokens (palette, fonts, button/toast variables) already
-   * used by the legacy mind-map engine. theme.css stays the single source
-   * of truth for the actual values (editor.html and the legacy SSR pages
-   * load it directly), and is re-exposed below via `@theme inline` so
+/* Shared design tokens (palette, fonts, button/toast variables) used by
+   * the mind-map engine. theme.css stays the single source of truth for
+   * the actual values, and is re-exposed below via `@theme inline` so
    * Tailwind utility classes (bg-bg, text-text, font-sans, ...) can be
    * generated from the same tokens. */
-@import url("/theme.css");
+@import "./theme.css";
+
+/* Layout/UI styles for the mind-map page. Previously served from
+   * public/my-mind.css and linked directly in index.html; now bundled
+   * through Vite like every other stylesheet, so it participates in
+   * the normal build/HMR pipeline. */
+@import "./my-mind.css";
 
 /* Tailwind v4 entry point */
 @import "tailwindcss";

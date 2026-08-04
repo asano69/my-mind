@@ -1,5 +1,5 @@
 /* =============================================================
-   theme.css — shared design tokens (loaded by every page)
+   theme.css — shared design tokens, imported once by style.css
    ============================================================= */
 
 :root {
