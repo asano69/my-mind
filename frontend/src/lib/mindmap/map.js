@@ -70,33 +70,39 @@ export default class Map {
         const rootSize = readItemLayoutResult(this._root);
         this.node.setAttribute("width", String(rootSize[0]));
         this.node.setAttribute("height", String(rootSize[1]));
-        // Keep the root node visually anchored to the same screen point
-        // across layout recomputes. layoutRoot() (see layout/map.js)
-        // repositions root's own contentPosition whenever the left/right
-        // children's bounding boxes change size (e.g. after a
-        // drag-and-drop move), which otherwise shifts the *whole* map on
-        // screen even though only one branch actually changed.
-        // Compensate by moving the map's own screen position by the
-        // opposite delta, so only the branches appear to move.
-        const rootContentPosition = this._root.contentPosition;
-        if (this._lastRootContentPosition) {
-          const dx = rootContentPosition[0] - this._lastRootContentPosition[0];
-          const dy = rootContentPosition[1] - this._lastRootContentPosition[1];
-          if (dx || dy) {
-            // contentPosition lives inside the node that carries the zoom
-            // `transform: scale()`, while moveBy()'s left/top offsets sit
-            // outside that transform (see adjustZoom()'s own anchor
-            // math), so the compensation must be scaled by zoomScale to
-            // line up on screen.
-            this.moveBy([-dx * this.zoomScale, -dy * this.zoomScale]);
-          }
-        }
-        this._lastRootContentPosition = rootContentPosition;
+        this._anchorRootPosition(this._root.contentPosition);
         // Bump once per root layout pull, not once per item: auto-save only
         // needs "did anything change", never "how many items changed".
         bumpDirty();
       });
     });
+  }
+
+  // Keeps the root node visually anchored to the same screen point across
+  // layout recomputes. layoutRoot() (see layout/map.js) repositions root's
+  // own contentPosition whenever the left/right children's bounding boxes
+  // change size (e.g. after a collapse, a drag-and-drop move, or a text
+  // edit), which otherwise shifts the *whole* map on screen even though
+  // only the affected branch actually changed. Compensates by moving the
+  // map's own screen position by the opposite delta, so only the branches
+  // appear to move. This is the single anchoring codepath used by every
+  // layout-triggering operation (collapse, move, edit, and show()'s own
+  // paint-quirk correction below) -- there is no separate per-operation
+  // positioning logic.
+  _anchorRootPosition(rootContentPosition) {
+    if (this._lastRootContentPosition) {
+      const dx = rootContentPosition[0] - this._lastRootContentPosition[0];
+      const dy = rootContentPosition[1] - this._lastRootContentPosition[1];
+      if (dx || dy) {
+        // contentPosition lives inside the node that carries the zoom
+        // `transform: scale()`, while moveBy()'s left/top offsets sit
+        // outside that transform (see adjustZoom()'s own anchor math), so
+        // the compensation must be scaled by zoomScale to line up on
+        // screen.
+        this.moveBy([-dx * this.zoomScale, -dy * this.zoomScale]);
+      }
+    }
+    this._lastRootContentPosition = rootContentPosition;
   }
 
   // Forces the root layout memo to be read again when no item-level signal
@@ -241,8 +247,17 @@ export default class Map {
     // not by itself guarantee the browser has actually repainted.
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
+        // Do NOT call center() again here. Bumping the content version
+        // re-triggers the shared layout computed above, whose
+        // _anchorRootPosition() call already keeps the map at the exact
+        // screen position center() placed it at just above -- the same
+        // anchoring a collapse or a drag-and-drop move relies on. A
+        // second explicit center() call here used to override that
+        // anchored position with a fresh center calculation based on the
+        // now-accurate (post-paint) root size, which is why a reload's
+        // final position could end up different from where a collapse
+        // mid-session would have left the map.
         this._root._bumpContentVersion();
-        this.center();
       });
     });
   }
