@@ -43,12 +43,15 @@ export async function updatePin(id, pin) {
 
 // Lightweight list of every saved map (used by both Catalog.jsx and
 // CatalogList.jsx's inline sidebar view). Pinned maps sort first, then
-// most-recently-updated first. svg is included directly so callers can
-// render a thumbnail without a second request.
+// most-recently-updated first. svg is excluded: thumbnails are now
+// rendered by the server as real <img> resources (see
+// internal/cmd/serve/serve.go's "/maps/{uuid}/svg" route) instead of
+// being embedded via innerHTML, since a raw SVG's own <style> block
+// would otherwise leak globally into the page.
 export async function listMaps(query) {
   return pb.collection(COLLECTION).getFullList({
     sort: "-pin,-updated",
-    fields: "id,uuid,title,svg,pin",
+    fields: "id,uuid,title,pin",
     filter: query ? pb.filter("title ~ {:q}", { q: query }) : "",
   });
 }
@@ -56,13 +59,15 @@ export async function listMaps(query) {
 const SNAPSHOTS_COLLECTION = "snapshots";
 
 // Lightweight list of a map's restorable past snapshots, newest first.
-// Excludes "mymind" (the full map JSON) since the list view only needs
-// enough to render a thumbnail; see getSnapshot() for restoring one.
+// Excludes "mymind" (the full map JSON) and "svg" -- thumbnails are
+// rendered by the server as real <img> resources (see
+// internal/cmd/serve/serve.go's "/snapshots/{id}/svg" route); see
+// getSnapshot() for restoring the full record.
 export async function listSnapshots(mapId) {
   return pb.collection(SNAPSHOTS_COLLECTION).getFullList({
     filter: pb.filter("map = {:map}", { map: mapId }),
     sort: "-created",
-    fields: "id,tier,svg,created",
+    fields: "id,tier,created",
   });
 }
 

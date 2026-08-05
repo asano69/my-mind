@@ -16,6 +16,15 @@ export default defineConfig({
       // while PocketBase only listens on 127.0.0.1 (IPv4).
       "^/api": { target: "http://127.0.0.1:3000", changeOrigin: true },
       "^/_": { target: "http://127.0.0.1:3000", changeOrigin: true },
+      // Thumbnail image routes (see internal/cmd/serve/serve.go). Matched
+      // narrowly by trailing "/svg" rather than "^/maps"/"^/snapshots",
+      // since "/maps/:uuid" (no "/svg" suffix) is a real frontend route
+      // (see main.jsx) that must stay served by Vite itself.
+      "^/maps/.*/svg$": { target: "http://127.0.0.1:3000", changeOrigin: true },
+      "^/snapshots/.*/svg$": {
+        target: "http://127.0.0.1:3000",
+        changeOrigin: true,
+      },
     },
   },
   build: {

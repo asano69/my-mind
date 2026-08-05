@@ -100,11 +100,14 @@ export default function Catalog() {
                       classList={{ "cursor-pointer": !editMode() }}
                     >
                       <div class="relative flex h-32 items-center justify-center overflow-hidden bg-white/50">
-                        <div
-                          class="h-full w-full p-2 [&_svg]:!static [&_svg]:!h-full
-              [&_svg]:!w-full [&_svg]:!overflow-hidden [&_svg]:pointer-events-none
-           [&_svg]:select-none"
-                          innerHTML={map.svg || ""}
+                        {/* Server-rendered image (see
+                            backend/pocketbase.js's listMaps() comment)
+                            instead of innerHTML, so this SVG's embedded
+                            <style> can't leak into the page. */}
+                        <img
+                          src={`/maps/${map.uuid}/svg`}
+                          alt=""
+                          class="pointer-events-none h-full w-full select-none object-contain p-2"
                         />
 
                         <Show when={!editMode() && map.pin}>

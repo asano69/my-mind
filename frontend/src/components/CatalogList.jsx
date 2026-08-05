@@ -54,10 +54,13 @@ export default function CatalogList() {
                   transition hover:bg-pane-hover"
               >
                 <div class="relative flex h-20 items-center justify-center overflow-hidden bg-white/50">
-                  <div
-                    class="h-full w-full p-1 [&_svg]:!static [&_svg]:!h-full
-                      [&_svg]:!w-full [&_svg]:pointer-events-none [&_svg]:select-none"
-                    innerHTML={map.svg || ""}
+                  {/* Server-rendered image (see backend/pocketbase.js's
+                      listMaps() comment) instead of innerHTML, so this
+                      SVG's embedded <style> can't leak into the page. */}
+                  <img
+                    src={`/maps/${map.uuid}/svg`}
+                    alt=""
+                    class="pointer-events-none h-full w-full select-none object-contain p-1"
                   />
                   <Show when={map.pin}>
                     <span class="absolute top-1 right-1 text-sm drop-shadow">

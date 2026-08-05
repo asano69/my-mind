@@ -2,12 +2,14 @@ package serve
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/asano69/my-mind/internal/assets"
 	"github.com/asano69/my-mind/internal/config"
 	"github.com/asano69/my-mind/internal/db"
 
 	"github.com/google/uuid"
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
@@ -15,7 +17,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const mapsCollection = "maps"
+const (
+	mapsCollection      = "maps"
+	snapshotsCollection = "snapshots"
+)
 
 // Run opens the database and collection once, registers all drill routes, then
 // starts listening. The database and collection are shared across all sessions.
@@ -43,6 +48,33 @@ func Run(app *pocketbase.PocketBase, cfg *config.Config) error {
 	})
 
 	app.OnServe().BindFunc(func(e *core.ServeEvent) error {
+		// Serve rendered map/snapshot thumbnails as real image responses
+		// instead of embedding their SVG (with its own <style> block)
+		// directly into the frontend's DOM. An SVG's <style> element is
+		// not scoped to that SVG -- it applies globally to the whole
+		// document -- so multiple thumbnails (or the live mind-map
+		// canvas) rendered via innerHTML on the same page would bleed
+		// their styles into each other. Serving them as an <img> src
+		// instead sandboxes each SVG's CSS to its own image resource.
+		e.Router.GET("/maps/{uuid}/svg", func(e *core.RequestEvent) error {
+			record, err := app.FindFirstRecordByFilter(
+				mapsCollection,
+				"uuid = {:uuid}",
+				dbx.Params{"uuid": e.Request.PathValue("uuid")},
+			)
+			if err != nil {
+				return e.NotFoundError("map not found", err)
+			}
+			return e.Blob(http.StatusOK, "image/svg+xml", []byte(record.GetString("svg")))
+		})
+		e.Router.GET("/snapshots/{id}/svg", func(e *core.RequestEvent) error {
+			record, err := app.FindRecordById(snapshotsCollection, e.Request.PathValue("id"))
+			if err != nil {
+				return e.NotFoundError("snapshot not found", err)
+			}
+			return e.Blob(http.StatusOK, "image/svg+xml", []byte(record.GetString("svg")))
+		})
+
 		// Serve the whole Vite build output as-is: index.html, editor.html,
 		// the hashed assets/ bundle, and the public/ files copied alongside
 		// them (theme.css, my-mind.css, favicon.svg, img/, ...). Any request

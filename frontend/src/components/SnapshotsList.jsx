@@ -45,12 +45,17 @@ export default function SnapshotsList() {
                     border-pane-hover bg-pane text-left shadow-card
                     transition hover:bg-pane-hover"
                 >
-                  <div
-                    class="flex h-20 items-center justify-center overflow-hidden
-                      bg-white/50 p-1 [&_svg]:!static [&_svg]:!h-full
-                      [&_svg]:!w-full [&_svg]:pointer-events-none [&_svg]:select-none"
-                    innerHTML={snapshot.svg || ""}
-                  />
+                  {/* Server-rendered image (see backend/pocketbase.js's
+                      listSnapshots() comment) instead of innerHTML, so
+                      this SVG's embedded <style> can't leak into the
+                      page. */}
+                  <div class="flex h-20 items-center justify-center overflow-hidden bg-white/50 p-1">
+                    <img
+                      src={`/snapshots/${snapshot.id}/svg`}
+                      alt=""
+                      class="pointer-events-none h-full w-full select-none object-contain"
+                    />
+                  </div>
                   <div class="px-2 py-1 text-xs">
                     <div class="truncate">{formatDate(snapshot.created)}</div>
                     <div class="text-text/50">{snapshot.tier}</div>
