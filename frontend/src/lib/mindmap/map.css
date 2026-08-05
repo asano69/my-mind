@@ -98,6 +98,14 @@ svg > .item > .item > foreignObject > .content {
   min-height: 1.8em;
   line-height: 1.8em;
   outline: none;
+  /* Without an explicit color, dark-mode browsers (see index.html's
+     `color-scheme: dark light`) fall back to a UA default text color
+     (near-white), making node labels unreadable on the app's light
+     background. This app has no real dark-mode support yet, so just pin
+     the text color to the light-theme value; resolvedTextColor's inline
+     style (see item.js's _applyOwnStyle()) still overrides this when a
+     node has an explicit text color set. */
+  color: var(--color-text);
 }
 
 .item .text a {
