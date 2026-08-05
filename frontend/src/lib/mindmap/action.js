@@ -73,6 +73,14 @@ export class AppendItem extends Action {
     this.item = item;
   }
   do() {
+    // Auto-balance left/right placement for appended/pasted items that
+    // don't already carry an explicit side (plain-text paste, or a copy
+    // of a node that was never a direct root child) -- mirrors
+    // InsertNewItem's behavior so pasting under root doesn't always
+    // pile up on the same side.
+    if (this.parent.isRoot && !this.item.side) {
+      this.item.side = pickBalancedSide(this.parent);
+    }
     this.parent.insertChild(this.item);
     app.selectItem(this.item);
   }
@@ -110,7 +118,11 @@ export class MoveItem extends Action {
   }
   do() {
     const { item, newParent, newIndex, newSide } = this;
-    item.side = newSide;
+    // Same auto-balance as AppendItem above: a move with no explicit side
+    // (e.g. cut-then-paste via clipboard.js) shouldn't silently reset the
+    // item to the "right" default when it lands directly under root --
+    // pick whichever side is currently lighter instead.
+    item.side = newSide ?? (newParent.isRoot ? pickBalancedSide(newParent) : null);
     if (newIndex === undefined) {
       newParent.insertChild(item);
     } else {
