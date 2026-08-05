@@ -312,6 +312,16 @@ export default class Map {
     return scanForContent(this._root);
   }
   ensureItemVisibility(item) {
+    // An item hidden by a collapsed ancestor (e.g. just dropped into a
+    // collapsed node) is display:none, and getBoundingClientRect() on a
+    // display:none element returns an all-zero rect. Without this guard,
+    // that all-zero rect looks like "far off-screen at (0,0)" and
+    // triggers a large, spurious moveBy() that visibly shifts the whole
+    // map the instant the drop happens. getClientRects() returning
+    // nothing is the standard way to detect display:none.
+    if (item.dom.content.getClientRects().length === 0) {
+      return;
+    }
     const padding = 10;
     let itemRect = item.dom.content.getBoundingClientRect();
     var parentRect = this.node.parentNode.getBoundingClientRect();
