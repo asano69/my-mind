@@ -14,6 +14,18 @@ export function serializeCurrentMap() {
   const svgNode = app.currentMap.node.cloneNode(true);
   svgNode.style.transform = "";
   svgNode.style.transformOrigin = "";
+  // Notes indicator badges (the paperclip icon, see item.js's dom.notes)
+  // must never appear in exported images, regardless of whether a node
+  // actually has notes. Their visibility normally relies on the "hidden"
+  // DOM attribute plus the browser's default "[hidden] { display: none }"
+  // UA stylesheet rule -- but that default rule isn't reliably applied
+  // once this SVG is serialized and rendered standalone (e.g. via an
+  // <img> tag, see waitForImageLoad() below), which is why every node's
+  // clip icon was showing up in exports. Hide them explicitly instead of
+  // depending on that browser default.
+  svgNode.querySelectorAll(".notes").forEach((el) => {
+    el.style.display = "none";
+  });
   // Embed CSS custom properties
   injectRootVariables(svgNode);
   const p = EXPORT_PADDING;
