@@ -1,4 +1,3 @@
-
 BINARY := $(notdir $(CURDIR))
 APP := $(notdir $(CURDIR))
 # Ports used by the dev servers (frontend, backend, and PocketBase-style API)
@@ -70,9 +69,7 @@ format:
 
 
 migrate-collections:
-	ls -1 migrations/*.go | sort | head -n -1 | xargs rm -f
 	yes | go run ./cmd/my-mind migrate collections
-	ls -1 migrations/*.go | sort | head -n -1 | xargs rm -f
 
 build: frontend
 	go build -o $(BINARY) ./cmd/$(BINARY)
