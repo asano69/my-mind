@@ -198,6 +198,14 @@ svg > .item > .item > foreignObject > .content {
       rgba(255, 255, 255, 0) 100%
     ),
     color-mix(in srgb, var(--item-color, #f0f0f0) 18%, #ffffff);
+  /* Clip the background to just inside the border (padding-box), not the
+     border-box edge. On an ellipse (border-radius: 50%), the border's
+     outer stroke and the background's border-box clip are rasterized as
+     separate elliptical curves; at high zoom their rounding can diverge
+     by ~1px, letting the background peek past the border line. Clipping
+     to padding-box keeps the background strictly inside the border, so
+     the border always fully covers the shape's outer edge. */
+  background-clip: padding-box;
   border: var(--node-border-width) solid
     color-mix(in srgb, var(--item-color, #999999) 60%, #555555);
   box-shadow:
