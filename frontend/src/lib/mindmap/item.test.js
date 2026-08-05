@@ -349,6 +349,13 @@ describe("Item layout result memo", () => {
   });
 
   it("does not read child layout memos while collapsed", () => {
+    // Setting collapsed schedules a requestAnimationFrame-based remeasure
+    // (see item.js's `collapsed` setter); this test doesn't care about
+    // that remeasure, just about the synchronous layout-memo behavior, so
+    // stub it out like the "collapse/expand remeasure" tests above do.
+    const originalRaf = globalThis.requestAnimationFrame;
+    globalThis.requestAnimationFrame = vi.fn();
+
     const map = new Map();
     const root = new Item();
     const child = new Item();
@@ -374,5 +381,7 @@ describe("Item layout result memo", () => {
 
     expect(rootCalls.update).toBe(1);
     expect(childCalls.update).toBe(0);
+
+    globalThis.requestAnimationFrame = originalRaf;
   });
 });
