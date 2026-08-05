@@ -22,3 +22,16 @@ workingにおいて、1分おきのバックアップを取る場合は、1分�
 保持ポリシー(未決定)
 - 8個: 日単位
 - 8個: 週単位
+
+
+## Security Model for SVG Resource Access
+
+This application is intended to operate within a trusted network environment, with authorization enforced at the network layer.
+
+SVG resources are accessible to any party that possesses the corresponding URL.
+
+Resource identifiers are generated using UUIDv7. Because UUIDv7 provides a sufficiently large search space, including approximately 74 bits of unpredictable entropy, discovering valid resource URLs through brute-force enumeration is not considered practically feasible. As a result, the system effectively functions as a capability URL (unguessable URL) mechanism, where access is limited to parties that know the URL.
+
+However, this approach is not an authorization mechanism; it relies on the confidentiality of the URL itself. Consequently, if a URL is disclosed, the associated resource becomes accessible to anyone who obtains it.
+
+Given the intended deployment model—namely, operation within a trusted network and use by a single user or a limited set of users—this approach is considered to provide an acceptable level of practical security for the application.
