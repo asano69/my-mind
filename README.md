@@ -75,7 +75,7 @@ The demo takes about 50 seconds to start.
 
 
 ## Work in Progress
-
+- [ ] SVGのスタイルがグローバルに影響する問題
 - [ ] Undo/Redoボタンの設置
 - [ ] クライアントサイドでの自動転送（保存）機能の無効化と有効化を切り替えるトグルスイッチ（デフォルトでは無効化）
 
