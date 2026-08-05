@@ -1,18 +1,108 @@
-/* Shared design tokens (palette, fonts, button/toast variables) used by
-   * the mind-map engine. theme.css stays the single source of truth for
-   * the actual values, and is re-exposed below via `@theme inline` so
-   * Tailwind utility classes (bg-bg, text-text, font-sans, ...) can be
-   * generated from the same tokens. */
-@import "./theme.css";
-
-/* Layout/UI styles for the mind-map page. Previously served from
-   * public/my-mind.css and linked directly in index.html; now bundled
-   * through Vite like every other stylesheet, so it participates in
-   * the normal build/HMR pipeline. */
-@import "./my-mind.css";
-
-/* Tailwind v4 entry point */
+/* Tailwind v4 entry point. @import statements must precede all other
+   rules in a stylesheet, so this comes first even though the design
+   tokens below are conceptually "more foundational". */
 @import "tailwindcss";
+
+/* -------------------------------------------------------------
+   Design tokens (palette, fonts, shadows, toast variables).
+   Previously theme.css, imported separately as its own file;
+   merged here since nothing ever imported it independently of
+   style.css.
+   ------------------------------------------------------------- */
+:root {
+  /* Sans: readable and neutral for node labels */
+  --font-sans: sans-serif;
+  /* Serif: literary — for notes/descriptions if used */
+  --font-serif: serif;
+
+  /* Mono: unchanged */
+  --font-mono: "Consolas", "Courier New", monospace;
+
+  /* Palette — warm parchment family */
+  --color-bg: #f5ede4; /* page / canvas background   */
+  --color-pane: #ede0d4; /* panel / surface background */
+  --color-pane-hover: #d9c9bb; /* hovered item inside panel  */
+  --color-accent: #5a4a3a; /* primary interactive/active */
+  --color-text: #2c2015; /* body text                  */
+  /* Shadows */
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.18), 0 1px 4px rgba(0, 0, 0, 0.1);
+  /* soft hover highlight, shared across pages */
+  --color-hover: rgba(90, 74, 58, 0.3);
+
+  /* ── Toast notification tokens ──────────────────────────────
+   * Override any of these per-page to restyle toasts locally
+   * without touching toast.ts.
+   * ---------------------------------------------------------- */
+  --toast-bg: var(--color-pane-hover);
+  --toast-color: var(--color-text);
+  --toast-padding: 0.5rem 1rem;
+  --toast-radius: 8px;
+  --toast-font-size: 14px;
+  --toast-font-weight: 700;
+  --toast-letter-spacing: 0.05em;
+  --toast-font-family: var(--font-sans);
+  --toast-shadow: var(--shadow-card);
+  --toast-bottom: 1.2rem;
+  --toast-linger: 2500ms; /* fully-visible duration before fade */
+
+  /* Layout */
+  --ribbon-width: 45px; /* collapsed width of #left-panel; matches IconButton.jsx's own rendered size (1rem padding + 28px icon) */
+  --side-panel-width: 240px; /* expanded width of the left/right side panels */
+
+  /* Note-preview watermark, see NotesEditor.css */
+  --color-preview-ink: rgba(90, 60, 30, 0.95);
+
+  /* #context-menu's separator line, see ContextMenu.jsx */
+  --color-border-menu: rgba(0, 0, 0, 0.12);
+}
+
+/* -------------------------------------------------------------
+   Base / reset for the mind-map page.
+   Previously my-mind.css, imported separately as its own file
+   (and, before that, served directly from public/my-mind.css and
+   linked in index.html); merged here for the same reason as the
+   tokens above.
+   ------------------------------------------------------------- */
+* {
+  font-family: var(--font-sans);
+}
+
+html,
+body {
+  margin: 0;
+  overflow: hidden;
+  height: 100%;
+  background-color: var(--color-bg);
+  -webkit-user-select: none;
+}
+
+[contenteditable] {
+  -webkit-user-select: auto;
+}
+
+svg {
+  position: absolute;
+  overflow: visible;
+}
+
+main {
+  position: relative;
+  /* Matches .pane-left's own width transition so the canvas edge and the
+     panel edge move together instead of one snapping ahead of the other. */
+  transition:
+    margin-left 280ms ease,
+    width 280ms ease;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+.ghost {
+  position: absolute !important;
+  opacity: 0.5;
+  z-index: 1;
+}
 
 @theme inline {
   --color-bg: var(--color-bg);
