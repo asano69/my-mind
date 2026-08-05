@@ -144,7 +144,6 @@ export function selectItem(item) {
   // per the Solid migration plan's Phase 3 (see CLAUDE.md).
   setCurrentItem(item);
   currentItem.select();
-  currentMap.ensureItemVisibility(currentItem);
 }
 
 export function startEditing() {
