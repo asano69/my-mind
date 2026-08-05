@@ -468,25 +468,33 @@ export default class Item {
   set collapsed(collapsed) {
     const wasCollapsed = this._collapsed();
     this._setCollapsed(collapsed);
-    if (wasCollapsed && !collapsed) {
-      // Foreign-object-in-SVG paint quirk (see map.js's show() for the
-      // fuller explanation, and insertChild() below for the same fix
-      // applied to fresh insertions): removing the "collapsed" class
-      // synchronously un-hides every descendant, but a synchronous
-      // offsetWidth/offsetHeight read immediately afterward can still
-      // measure stale/zero sizes for items whose foreignObject was
-      // never actually painted while hidden behind display:none --
-      // most commonly an item dragged into an already-collapsed node
-      // (insertChild()'s own RAF-based remeasure fires while still
-      // collapsed, so nothing ever reads/consumes it until expansion).
-      // Force one more remeasure pass, after the browser actually
-      // paints, for this item's whole revealed subtree.
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          this.children.forEach((child) => child._bumpSubtreeContentVersion());
-        });
-      });
+    if (wasCollapsed === collapsed) {
+      return;
     }
+    // Foreign-object-in-SVG paint quirk (see map.js's show() for the
+    // fuller explanation, and insertChild() below for the same fix
+    // applied to fresh insertions): toggling the "collapsed" CSS class
+    // happens in a separate per-item effect (updateToggle()), so a
+    // synchronous getBBox()/offsetWidth read right after flipping this
+    // signal can race that class actually being applied and painted.
+    // Force one more remeasure pass, after the browser actually paints,
+    // mirroring both directions of the transition:
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (collapsed) {
+          // Collapsing: this item's own footprint shrinks (its children
+          // are now display:none and excluded from its bbox/layout), so
+          // only this item itself needs remeasuring -- its ancestors then
+          // repack around the new, smaller size via the usual recursive
+          // memo chain. Its children stay hidden and untouched.
+          this._bumpContentVersion();
+        } else {
+          // Expanding: descendants were hidden and may have gone stale
+          // while invisible; remeasure the whole revealed subtree.
+          this.children.forEach((child) => child._bumpSubtreeContentVersion());
+        }
+      });
+    });
   }
   get value() {
     return this._value();

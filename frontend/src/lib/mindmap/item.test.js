@@ -69,8 +69,8 @@ vi.mock("./map.js", () => ({ default: class Map {} }));
 const { default: Map } = await import("./map.js");
 const { default: Item, readItemLayoutResult } = await import("./item.js");
 
-describe("Item collapsed->expanded remeasure (post-Phase-7 bug fix)", () => {
-  it("schedules a double-rAF remeasure of the revealed subtree only when transitioning collapsed -> expanded", () => {
+describe("Item collapse/expand remeasure (post-Phase-7 bug fix)", () => {
+  it("expanding schedules a double-rAF remeasure of the revealed subtree", () => {
     const rafCallbacks = [];
     const originalRaf = globalThis.requestAnimationFrame;
     globalThis.requestAnimationFrame = vi.fn((cb) => rafCallbacks.push(cb));
@@ -78,11 +78,12 @@ describe("Item collapsed->expanded remeasure (post-Phase-7 bug fix)", () => {
     const root = new Item();
     const child = new Item();
     root.insertChild(child);
-    const bumpSpy = vi.spyOn(child, "_bumpSubtreeContentVersion");
+    const bumpSubtreeSpy = vi.spyOn(child, "_bumpSubtreeContentVersion");
 
-    // Collapsing does not schedule anything.
+    // Collapsing schedules its own (different) remeasure -- see below --
+    // so clear whatever that scheduled before asserting on expand.
     root.collapsed = true;
-    expect(rafCallbacks).toHaveLength(0);
+    rafCallbacks.length = 0;
 
     // Expanding schedules exactly one outer rAF.
     root.collapsed = false;
@@ -92,11 +93,48 @@ describe("Item collapsed->expanded remeasure (post-Phase-7 bug fix)", () => {
     // happens once the inner rAF itself runs (double-rAF, matching
     // map.js's show()).
     rafCallbacks.shift()();
-    expect(bumpSpy).not.toHaveBeenCalled();
+    expect(bumpSubtreeSpy).not.toHaveBeenCalled();
     expect(rafCallbacks).toHaveLength(1);
 
     rafCallbacks.shift()();
-    expect(bumpSpy).toHaveBeenCalledOnce();
+    expect(bumpSubtreeSpy).toHaveBeenCalledOnce();
+
+    globalThis.requestAnimationFrame = originalRaf;
+  });
+
+  it("collapsing schedules a double-rAF remeasure of the item itself, not its children", () => {
+    const rafCallbacks = [];
+    const originalRaf = globalThis.requestAnimationFrame;
+    globalThis.requestAnimationFrame = vi.fn((cb) => rafCallbacks.push(cb));
+
+    const root = new Item();
+    const child = new Item();
+    root.insertChild(child);
+    const bumpOwnSpy = vi.spyOn(root, "_bumpContentVersion");
+    const bumpSubtreeSpy = vi.spyOn(child, "_bumpSubtreeContentVersion");
+
+    root.collapsed = true;
+    expect(rafCallbacks).toHaveLength(1);
+
+    rafCallbacks.shift()();
+    expect(bumpOwnSpy).not.toHaveBeenCalled();
+    expect(rafCallbacks).toHaveLength(1);
+
+    rafCallbacks.shift()();
+    expect(bumpOwnSpy).toHaveBeenCalledOnce();
+    expect(bumpSubtreeSpy).not.toHaveBeenCalled();
+
+    globalThis.requestAnimationFrame = originalRaf;
+  });
+
+  it("setting collapsed to its current value schedules nothing", () => {
+    const rafCallbacks = [];
+    const originalRaf = globalThis.requestAnimationFrame;
+    globalThis.requestAnimationFrame = vi.fn((cb) => rafCallbacks.push(cb));
+
+    const root = new Item();
+    root.collapsed = false; // already false
+    expect(rafCallbacks).toHaveLength(0);
 
     globalThis.requestAnimationFrame = originalRaf;
   });
