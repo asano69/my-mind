@@ -36,7 +36,7 @@ import "./shape/ellipse.js";
 import "./shape/underline.js";
 
 import { repo as commandRepo, setKeyboardScope } from "./command/command.js";
-import Map, { init as initMapCSS } from "./map.js";
+import Map from "./map.js";
 import * as history from "./history.js";
 
 import * as keyboard from "./keyboard.js";
@@ -222,7 +222,6 @@ export async function mount(root, containerEl, uuid) {
   container = containerEl;
 
   setThrobber(true);
-  await initMapCSS();
 
   window.addEventListener("resize", handleResize);
   clipboard.init(containerEl);

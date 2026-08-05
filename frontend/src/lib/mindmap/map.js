@@ -7,7 +7,15 @@ import * as app from "./my-mind.js";
 import { bumpDirty } from "./store.js";
 import { br2nl } from "./format/format.js";
 import { createSignal, createComputed, createRoot } from "solid-js";
-let css = "";
+// Raw-text import: Vite reads and inlines map.css's content at build
+// time instead of the old fetch("/map.css") runtime request against a
+// public/ static file -- no network round-trip, no async init() needed.
+// Still injected as an inline <style> element (see the constructor
+// below), not linked as a normal stylesheet, because the same text must
+// also be embedded inside exported/serialized SVG snapshots (see
+// backend/image.js's serializeCurrentMap) so they render correctly
+// standalone, with no access to the app's own page stylesheet.
+import mapCss from "./map.css?raw";
 const DEFAULT_FONT_SIZE = 15;
 const MIN_ZOOM_SCALE = 8 / DEFAULT_FONT_SIZE;
 const ZOOM_STEP = 2 / DEFAULT_FONT_SIZE;
@@ -32,7 +40,7 @@ export default class Map {
       },
       options,
     );
-    this.style.textContent = css;
+    this.style.textContent = mapCss;
     this.node.style.fontSize = `${DEFAULT_FONT_SIZE}px`;
     this.node.style.transformOrigin = "0 0";
     let root = new Item();
@@ -377,14 +385,4 @@ export default class Map {
     this.node.style.left = `${point[0]}px`;
     this.node.style.top = `${point[1]}px`;
   }
-}
-export async function init() {
-  // Skip the fetch on every remount: css is a module-level cache that
-  // survives across mount/unmount cycles (map.css never changes at
-  // runtime), so only the very first mount needs to fetch it.
-  if (css) {
-    return;
-  }
-  let response = await fetch("/map.css");
-  css = await response.text();
 }
