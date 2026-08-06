@@ -377,21 +377,21 @@ export default function RightPanel() {
           </div>
 
           <footer class="flex min-h-[28px] flex-none items-center justify-between border-t border-black/10 px-3 py-1.5">
-            <span class="pl-0.5 text-base text-text">{saveStatusLabel()}</span>
             <Switch
               checked={autoSaveEnabled()}
               onChange={handleAutoSaveChange}
               disabled={!ready()}
               class="flex items-center gap-1.5"
             >
-              <Switch.Label class="cursor-pointer text-xs text-text/70 select-none">
-                Auto-save
-              </Switch.Label>
               <Switch.Input />
               <Switch.Control class="relative inline-flex h-4 w-7 shrink-0 cursor-pointer items-center rounded-full bg-pane-hover transition-colors data-[checked]:bg-accent">
                 <Switch.Thumb class="block h-3 w-3 translate-x-0.5 rounded-full bg-white transition-transform data-[checked]:translate-x-[14px]" />
               </Switch.Control>
+              <Switch.Label class="cursor-pointer text-xs text-text/70 select-none">
+                Auto-save
+              </Switch.Label>
             </Switch>
+            <span class="pr-0.5 text-base text-text">{saveStatusLabel()}</span>
           </footer>
         </div>
 
