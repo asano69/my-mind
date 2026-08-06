@@ -35,6 +35,14 @@ export const [currentTitle, setCurrentTitle] = createSignal("");
 // both read this instead of maintaining their own copies.
 export const [lastSaveTime, setLastSaveTime] = createSignal(null);
 
+// Whether auto-save (the debounced save-to-server that runs on every
+// edit, see ui/io.js's dirtyVersion effect) is enabled. Defaults to
+// enabled; persisted in PocketBase's "settings" collection under the
+// "autoSaveEnabled" key (see ui/io.js's init()/setAutoSave()) so the
+// choice survives reloads. Manual saves (the Save button, Ctrl+Shift+S)
+// are unaffected by this toggle.
+export const [autoSaveEnabled, setAutoSaveEnabled] = createSignal(true);
+
 // Bumped once per full layout pass (map.js) or explicit notes edit
 // (notes.js) to mean "something changed", for auto-save debouncing.
 // Nothing reads the value itself, only its change — a plain counter,

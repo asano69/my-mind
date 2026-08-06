@@ -9,6 +9,8 @@ import {
   setLastSaveTime,
   dirtyVersion,
   setCurrentMapId,
+  autoSaveEnabled,
+  setAutoSaveEnabled,
 } from "../store.js";
 
 let currentMapId = null; // PocketBase record id, used for save/update calls
@@ -29,13 +31,24 @@ let saveInFlight = false;
 let saveAgainRequested = false;
 
 const AUTO_SAVE_DELAY_MS = 1000;
+const AUTO_SAVE_SETTING_KEY = "autoSaveEnabled";
 
 // The #io save-confirmation panel was removed: Ctrl+Shift+S now saves
 // directly (see quickSave() below), so there is no longer a DOM node
 // or focus state for this module to track.
 export function init() {
+  // Load the persisted auto-save preference (see backend/pocketbase.js's
+  // getSetting()). Best-effort: if it fails or was never set, store.js's
+  // signal keeps its default (enabled).
+  backend.getSetting(AUTO_SAVE_SETTING_KEY).then((value) => {
+    if (value !== null) {
+      setAutoSaveEnabled(value === "true");
+    }
+  });
+
   // Auto-save: debounce item changes and save after a short delay.
-  // Only kicks in once the map has been saved at least once (has an id).
+  // Only kicks in once the map has been saved at least once (has an id)
+  // and the auto-save preference (see setAutoSave() below) is enabled.
 
   // dirtyVersion is a store.js signal (see Phase 9.5), so this is a
   // vanilla-module effect and needs its own createRoot per the Phase 5
@@ -49,7 +62,7 @@ export function init() {
       on(
         dirtyVersion,
         () => {
-          if (!currentMapId) {
+          if (!currentMapId || !autoSaveEnabled()) {
             return;
           }
           if (autoSaveTimeout !== null) {
@@ -64,6 +77,24 @@ export function init() {
       ),
     );
   });
+}
+
+// Toggles auto-save on/off (see RightPanel.jsx's footer switch) and
+// persists the choice to PocketBase's "settings" collection so it
+// survives reloads. Cancels any pending debounced save immediately when
+// turned off, so an edit made just before disabling doesn't still get
+// sent to the server a second later.
+export async function setAutoSave(enabled) {
+  setAutoSaveEnabled(enabled);
+  if (!enabled && autoSaveTimeout !== null) {
+    clearTimeout(autoSaveTimeout);
+    autoSaveTimeout = null;
+  }
+  try {
+    await backend.setSetting(AUTO_SAVE_SETTING_KEY, String(enabled));
+  } catch (e) {
+    error(e);
+  }
 }
 
 // Called by my-mind.js's unmount(). node's own click/keydown listeners die

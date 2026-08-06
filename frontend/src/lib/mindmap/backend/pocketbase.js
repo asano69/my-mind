@@ -76,3 +76,40 @@ export async function listSnapshots(mapId) {
 export async function getSnapshot(id) {
   return pb.collection(SNAPSHOTS_COLLECTION).getOne(id);
 }
+
+const SETTINGS_COLLECTION = "settings";
+
+// Fetches a single setting's raw string value by key, or null if it has
+// never been set. Values are stored as plain strings (see the
+// "settings" collection's "value" text field); callers are responsible
+// for parsing them (e.g. "true"/"false" for a boolean toggle).
+export async function getSetting(key) {
+  try {
+    const record = await pb
+      .collection(SETTINGS_COLLECTION)
+      .getFirstListItem(pb.filter("key = {:key}", { key }));
+    return record.value;
+  } catch (e) {
+    if (e?.status === 404) {
+      return null;
+    }
+    throw e;
+  }
+}
+
+// Creates or updates a setting by key. "settings" has no id known to the
+// caller, so this looks the row up by key first -- same find-then-write
+// pattern as save()'s create/update split above.
+export async function setSetting(key, value) {
+  try {
+    const record = await pb
+      .collection(SETTINGS_COLLECTION)
+      .getFirstListItem(pb.filter("key = {:key}", { key }));
+    return pb.collection(SETTINGS_COLLECTION).update(record.id, { value });
+  } catch (e) {
+    if (e?.status === 404) {
+      return pb.collection(SETTINGS_COLLECTION).create({ key, value });
+    }
+    throw e;
+  }
+}
