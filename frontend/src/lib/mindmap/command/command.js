@@ -188,8 +188,9 @@ new (class Save extends Command {
     super("save", "Save map");
     this.keys = [{ code: "KeyS", ctrlKey: true, shiftKey: true }];
   }
-  execute() {
-    io.quickSave();
+  async execute() {
+    await io.quickSave();
+    showToast("Saved", app.currentMap.name);
   }
 })();
 // Renders the current map as a transparent PNG and copies it to the

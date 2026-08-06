@@ -19,7 +19,7 @@ export function showToast(label, subject, options = {}) {
       class="flex items-baseline gap-2 rounded-lg bg-pane-hover px-4 py-2
         text-base text-text shadow-card transition-[opacity,transform]
         duration-200 data-[closed]:opacity-0 data-[opened]:opacity-100
-        data-[closed]:translate-y-1 data-[opened]:translate-y-0"
+        data-[closed]:translate-x-4 data-[opened]:translate-x-0"
     >
       <span>{label}</span>
       {subject !== undefined && (
