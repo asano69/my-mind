@@ -49,7 +49,7 @@ export default function ContextMenuContent() {
     <Show when={ready()}>
       <ContextMenu.Portal>
         <ContextMenu.Content
-          class="flex w-[130px] flex-col overflow-hidden rounded-md
+          class="z-20 flex w-[130px] flex-col overflow-hidden rounded-md
             border border-[#bbb] bg-pane py-[3px] shadow-card"
         >
           <For each={GROUPS}>
