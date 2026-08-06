@@ -38,7 +38,7 @@ export default function ConfirmDialog(props) {
                   props.onConfirm();
                   props.onOpenChange(false);
                 }}
-                class="rounded-md bg-[#dc3545] px-3 py-1.5 text-sm text-white hover:opacity-90"
+                class="rounded-md bg-[#cc0000] px-3 py-1.5 text-sm text-white hover:opacity-90"
               >
                 {props.confirmLabel ?? "Delete"}
               </button>
