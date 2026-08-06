@@ -1,8 +1,31 @@
-export default function Logo() {
-  return (
+import { A } from "@solidjs/router";
+
+// size: overall pixel size of the icon (width == height). Defaults to
+// 40px (the old fixed "w-10 h-10" Tailwind size).
+// showTitle: whether to render "My Mind" next to the icon.
+// linkable: whether clicking the logo navigates home ("/"). Defaults to
+// false and must stay false for Login.jsx's usage: Login is rendered by
+// AuthGate as a fallback *outside* the Router (see main.jsx), so
+// wrapping it in <A> there would break routing context. Only pass
+// linkable={true} from places that are guaranteed to render inside
+// <Router> (e.g. TopBar/LeftPanel-style chrome).
+export default function Logo(props) {
+  const size = () => props.size ?? 40;
+
+  const icon = (
     <svg
       viewBox="0 0 260 235"
-      class="w-10 h-10"
+      // style.css has a global `svg { position: absolute }` rule (used by
+      // the mindmap canvas's own SVG elements) that otherwise yanks this
+      // icon out of normal flow, making it overlap the title text next
+      // to it instead of sitting side-by-side. Override it back to
+      // static here rather than touching the global rule, since that
+      // rule is load-bearing for the canvas.
+      style={{
+        width: `${size()}px`,
+        height: `${size()}px`,
+        position: "static",
+      }}
       fill="#5563A2"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -34,4 +57,59 @@ export default function Logo() {
       />
     </svg>
   );
+
+  // Scales with the icon: at the old default size (40px), this works
+  // out to 20px, matching the previous fixed "text-xl" class.
+  const titleFontSize = () => size() * 0.5;
+
+  const title = props.showTitle && (
+    // Set font-family directly via style rather than the "font-serif"
+    // Tailwind utility class: inline style always wins over any class,
+    // so this can't be silently overridden regardless of class
+    // generation/ordering.
+    <span
+      class="whitespace-nowrap"
+      style={{
+        "font-family": "var(--font-serif)",
+        "font-size": `${titleFontSize()}px`,
+      }}
+    >
+      My Mind
+    </span>
+  );
+
+  // When showTitle is off, layout is simple: icon only, no centering
+  // concerns.
+  if (!props.showTitle) {
+    return props.linkable ? <A href="/">{icon}</A> : icon;
+  }
+
+  // centerTitle=true: for callers wrapping Logo in something like
+  // `flex justify-center`, where the *title text* (not the icon+title
+  // pair as a block) should end up centered, with the icon sitting just
+  // to its left. Achieved by centering only the title in normal flow,
+  // then absolutely positioning the icon just to its left (relative to
+  // this component's own wrapper), so the icon never affects the text's
+  // centering.
+  //
+  // centerTitle=false (default): plain side-by-side layout, icon then
+  // title, both centered as one block by the caller if needed.
+  const content = props.centerTitle ? (
+    <span class="relative flex items-center justify-center">
+      <span
+        class="absolute right-full mr-2"
+        style={{ width: `${size()}px`, height: `${size()}px` }}
+      >
+        {icon}
+      </span>
+      {title}
+    </span>
+  ) : (
+    <span class="flex items-center gap-2">
+      {icon}
+      {title}
+    </span>
+  );
+
+  return props.linkable ? <A href="/">{content}</A> : content;
 }

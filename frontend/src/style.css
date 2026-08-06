@@ -13,7 +13,7 @@
   /* Sans: readable and neutral for node labels */
   --font-sans: sans-serif;
   /* Serif: literary — for notes/descriptions if used */
-  --font-serif: serif;
+  --font-serif: "TeX Gyre Termes", "Nimbus Roman No9 L", "Georgia", serif;
 
   /* Mono: unchanged */
   --font-mono: "Consolas", "Courier New", monospace;

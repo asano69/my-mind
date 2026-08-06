@@ -32,8 +32,8 @@ export default function Login() {
         onSubmit={handleSubmit}
         class="flex w-full max-w-sm flex-col gap-4 rounded-md border border-pane-hover bg-pane p-8 shadow-card"
       >
-        <Logo />
-        <h1 class="text-center font-serif text-3xl">my-mind</h1>
+        <div class="flex justify-center"><Logo size={48} showTitle centerTitle /></div>
+       
         <input
           type="email"
           placeholder="Email"

@@ -8,6 +8,7 @@ import IconButton, { iconButtonClass } from "../components/IconButton";
 import FilePlus from "lucide-solid/icons/file-plus";
 import Settings2 from "lucide-solid/icons/settings-2";
 import Check from "lucide-solid/icons/check";
+import Logo from "../components/Logo";
 
 import {
   listMaps,
@@ -54,10 +55,7 @@ export default function Catalog() {
     <div class="min-h-screen bg-bg p-8 text-text">
       <div class="mx-auto max-w-5xl">
         <div class="mb-6 flex items-center justify-between">
-          <A href="/catalog" title="Catalog">
-            <h1 class="text-3xl">My Mind</h1>
-          </A>
-
+  <Logo showTitle/>
           <div class="flex gap-2">
             <IconButton
               onClick={() => setEditMode(!editMode())}
