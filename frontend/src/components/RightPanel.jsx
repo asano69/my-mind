@@ -22,7 +22,7 @@ const STATUS_MAP = { yes: true, no: false, "": null };
 // save attempt failed (e.g. the connection to the server was lost).
 const SAVE_STATUS_STYLES = {
   saved: { class: "bg-[#2ca02c]", label: "Saved" },
-  dirty: { class: "bg-[#dd3]", label: "Unsaved changes" },
+  dirty: { class: "bg-[#C68E17]", label: "Unsaved changes" },
   error: { class: "bg-[#cc0000]", label: "Save failed" },
 };
 
