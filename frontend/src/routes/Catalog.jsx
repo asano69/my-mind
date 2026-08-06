@@ -16,6 +16,7 @@ import {
   updatePin,
   deleteMap,
 } from "../lib/mindmap/backend/pocketbase";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 export default function Catalog() {
   const navigate = useNavigate();
@@ -24,8 +25,13 @@ export default function Catalog() {
   const [maps, { mutate }] = createResource(query, listMaps);
   const [editMode, setEditMode] = createSignal(false);
 
-  async function handleDelete(id) {
-    if (!confirm("Delete this map?")) return;
+  const [pendingDeleteId, setPendingDeleteId] = createSignal(null);
+
+  // Confirmation is handled by ConfirmDialog (see render below) instead
+  // of a native confirm() popup.
+  async function confirmDelete() {
+    const id = pendingDeleteId();
+    if (!id) return;
     await deleteMap(id);
     mutate((prev) => prev.filter((m) => m.id !== id));
   }
@@ -130,7 +136,7 @@ export default function Catalog() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDelete(map.id);
+                              setPendingDeleteId(map.id);
                             }}
                             title="Delete"
                             class="absolute top-1 left-1 flex h-7 w-7 items-center justify-center text-sm"
@@ -170,6 +176,14 @@ export default function Catalog() {
           </Show>
         </Show>
       </div>
+
+      <ConfirmDialog
+        open={!!pendingDeleteId()}
+        onOpenChange={(open) => !open && setPendingDeleteId(null)}
+        title="Delete this map?"
+        description="This cannot be undone."
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

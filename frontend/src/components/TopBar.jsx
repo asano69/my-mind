@@ -7,6 +7,7 @@ import Trash2 from "lucide-solid/icons/trash-2";
 import TextCursor from "lucide-solid/icons/text-cursor";
 import Save from "lucide-solid/icons/save";
 import IconButton from "./IconButton";
+import ConfirmDialog from "./ConfirmDialog";
 // The floating strip across the top of the canvas: the title input
 // (fixed top-center) and the right-hand icon group (delete/notes/
 // property-panel toggle). Catalog/Help/the left panel toggle used to
@@ -45,12 +46,13 @@ export default function TopBar() {
     titleModule?.unregisterInput();
   });
 
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = createSignal(false);
+
   // Deletes the currently open map (same backend call as Catalog.jsx's
-  // delete button) and returns to the catalog afterwards.
+  // delete button) and returns to the catalog afterwards. Confirmation
+  // is handled by ConfirmDialog (see render below) instead of a native
+  // confirm() popup.
   async function handleDelete() {
-    if (!confirm("Delete this map?")) {
-      return;
-    }
     const io = await import("../lib/mindmap/ui/io.js");
     await io.deleteCurrentMap();
     navigate("/catalog");
@@ -100,10 +102,21 @@ export default function TopBar() {
           <TextCursor size={28} />
         </IconButton>
 
-        <IconButton onClick={handleDelete} title="Delete map">
+        <IconButton
+          onClick={() => setConfirmDeleteOpen(true)}
+          title="Delete map"
+        >
           <Trash2 size={28} />
         </IconButton>
       </div>
+
+      <ConfirmDialog
+        open={confirmDeleteOpen()}
+        onOpenChange={setConfirmDeleteOpen}
+        title="Delete this map?"
+        description="This cannot be undone."
+        onConfirm={handleDelete}
+      />
     </>
   );
 }
