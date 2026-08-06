@@ -51,7 +51,7 @@ export async function updatePin(id, pin) {
 export async function listMaps(query) {
   return pb.collection(COLLECTION).getFullList({
     sort: "-pin,-updated",
-    fields: "id,uuid,title,pin",
+    fields: "id,uuid,title,pin,updated",
     filter: query ? pb.filter("title ~ {:q}", { q: query }) : "",
   });
 }

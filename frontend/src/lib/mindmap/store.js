@@ -139,3 +139,12 @@ export function openValueDialog() {
 export function closeValueDialog() {
   setValueDialogOpen(false);
 }
+
+// Whether the Ctrl+K map-switcher dialog (see FileSwitcher.jsx) is open.
+export const [fileSwitcherOpen, setFileSwitcherOpen] = createSignal(false);
+export function openFileSwitcher() {
+  setFileSwitcherOpen(true);
+}
+export function closeFileSwitcher() {
+  setFileSwitcherOpen(false);
+}

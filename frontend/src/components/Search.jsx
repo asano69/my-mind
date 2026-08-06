@@ -20,9 +20,11 @@ export default function Search(props) {
 
   return (
     <input
+      ref={props.ref}
       type="search"
       value={value()}
       onInput={onInput}
+      onKeyDown={props.onKeyDown}
       placeholder="Search by title…"
       class="w-full rounded-md border border-pane-hover bg-pane px-3 py-2
         text-sm text-text placeholder:text-text/40 focus:border-accent

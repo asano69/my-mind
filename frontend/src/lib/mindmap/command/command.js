@@ -6,7 +6,12 @@ import * as notes from "../ui/notes.js";
 import * as ui from "../ui/ui.js";
 import * as io from "../ui/io.js";
 import { showToast } from "../ui/toast.jsx";
-import { openHelp, openSnapshots, openCatalogList } from "../store.js";
+import {
+  openHelp,
+  openSnapshots,
+  openCatalogList,
+  openFileSwitcher,
+} from "../store.js";
 
 import ImageBackend from "../backend/image.js";
 import * as actions from "../action.js";
@@ -246,6 +251,16 @@ new (class CatalogList extends Command {
   execute() {
     setLeftPanelHidden(false);
     openCatalogList();
+  }
+})();
+
+new (class FileSwitcher extends Command {
+  constructor() {
+    super("file-switcher", "Switch map");
+    this.keys = [{ code: "KeyK", ctrlKey: true }];
+  }
+  execute() {
+    openFileSwitcher();
   }
 })();
 

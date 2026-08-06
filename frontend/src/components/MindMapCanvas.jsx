@@ -1,6 +1,7 @@
 // frontend/src/components/MindMapCanvas.jsx
 import RightPanel from "./RightPanel";
 import ValueDialog from "./ValueDialog";
+import FileSwitcher from "./FileSwitcher";
 
 import ContextMenuContent from "./ContextMenu";
 import { ContextMenu } from "@kobalte/core/context-menu";
@@ -36,7 +37,12 @@ export default function MindMapCanvas(props) {
   });
 
   return (
-    <div ref={containerRef} tabIndex="-1" class="outline-none">
+    <div
+      ref={containerRef}
+      id="mindmap-container"
+      tabIndex="-1"
+      class="outline-none"
+    >
       {/* Kobalte's ContextMenu.Trigger owns opening/positioning the
           right-click menu (flip near screen edges, close on outside
           interaction/Escape, long-press support on touch) -- see
@@ -58,6 +64,7 @@ export default function MindMapCanvas(props) {
 
       <RightPanel />
       <ValueDialog />
+      <FileSwitcher />
     </div>
   );
 }
