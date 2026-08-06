@@ -1,8 +1,15 @@
 import EasyMDE from "easymde";
 import "easymde/dist/easymde.min.css";
 import "./NotesEditor.css";
-import { activeMode, currentItem } from "../lib/mindmap/store";
-import { createEffect, createSignal, on, onMount, onCleanup } from "solid-js";
+import { activeMode, currentItem, hoveredItem } from "../lib/mindmap/store";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  on,
+  onMount,
+  onCleanup,
+} from "solid-js";
 
 export default function NotesEditor() {
   let textareaRef;
@@ -89,17 +96,27 @@ export default function NotesEditor() {
     setReady(true);
   });
 
-  // Sync the notes editor and background preview whenever the selected
-  // item changes, or once our async setup becomes ready — covers both
+  // Which item's notes should currently be shown/edited. While notes is
+  // the active (foreground, editable) mode, this is always the selected
+  // item -- editing follows selection, not the mouse. While canvas is the
+  // active mode, the background preview instead follows whatever item is
+  // under the pointer (see store.js's hoveredItem), falling back to the
+  // selected item when the pointer isn't over any item.
+  const previewItem = createMemo(() =>
+    activeMode() === "notes" ? currentItem() : (hoveredItem() ?? currentItem()),
+  );
+
+  // Sync the notes editor and background preview whenever previewItem
+  // changes, or once our async setup becomes ready — covers both
   // possible orderings of "item selected" vs "editor initialized".
   //
-  // Uses on() to track ONLY `ready` and `currentItem` explicitly.
+  // Uses on() to track ONLY `ready` and `previewItem` explicitly.
   // Without this, createEffect would also implicitly depend on
   // `item.notes` (read inside onItemSelect -> editorAPI.setContent),
   // causing every keystroke to re-run this effect and force-reset
   // the editor's value — which resets the cursor and swallows input.
   createEffect(
-    on([ready, currentItem], ([isReady, item]) => {
+    on([ready, previewItem], ([isReady, item]) => {
       if (!isReady) {
         return;
       }

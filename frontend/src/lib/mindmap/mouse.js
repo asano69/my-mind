@@ -2,6 +2,7 @@ import * as app from "./my-mind.js";
 import * as actions from "./action.js";
 import { repo as commandRepo } from "./command/command.js";
 import { isCanvasActive } from "./scope.js";
+import { setHoveredItem } from "./store.js";
 
 const TOUCH_DELAY = 500;
 const SHADOW_OFFSET = 5;
@@ -34,6 +35,8 @@ export function init(port_, container_) {
   port.addEventListener("click", onClick);
   port.addEventListener("dblclick", onDblClick);
   port.addEventListener("wheel", onWheel);
+  port.addEventListener("mousemove", onHoverMove);
+  port.addEventListener("mouseleave", onHoverLeave);
 }
 // Called by my-mind.js's unmount(). Removes every listener registered by
 // init(), force-ends any drag in progress (so an orphaned ghost element
@@ -52,6 +55,8 @@ export function dispose() {
   port.removeEventListener("mouseup", onDragEnd);
   port.removeEventListener("touchmove", onDragMove);
   port.removeEventListener("touchend", onDragEnd);
+  port.removeEventListener("mousemove", onHoverMove);
+  port.removeEventListener("mouseleave", onHoverLeave);
   port.style.cursor = "";
   current = {
     mode: "",
@@ -65,6 +70,7 @@ export function dispose() {
     pinchDistance: 0,
     suppressNextClick: false,
   };
+  setHoveredItem(null);
   port = null;
   container = null;
 }
@@ -115,6 +121,21 @@ function onWheel(e) {
   e.preventDefault();
   let dir = deltaY > 0 ? -1 : 1;
   app.currentMap.adjustZoom(dir, [e.clientX, e.clientY]);
+}
+// Tracks which item (if any) is under the pointer while the canvas is
+// the active workspace mode, so NotesEditor.jsx can preview that item's
+// notes in the background instead of only ever showing the selected
+// item's notes (see store.js's hoveredItem). Skipped while any other
+// mouse interaction (drag/pan/pinch) is in progress, since current.mode
+// being non-empty means the pointer's meaning is already spoken for.
+function onHoverMove(e) {
+  if (!isCanvasActive() || !app.currentMap || current.mode) {
+    return;
+  }
+  setHoveredItem(app.currentMap.getItemFor(e.target));
+}
+function onHoverLeave() {
+  setHoveredItem(null);
 }
 // Runs the drag-cancel and item-selection side effects for a right-click
 // or long-press, regardless of how the context menu itself opens. Called

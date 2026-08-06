@@ -34,7 +34,7 @@
   --side-panel-width: 240px; /* expanded width of the left/right side panels */
 
   /* Note-preview watermark, see NotesEditor.css */
-  --color-preview-ink: rgba(90, 60, 30, 0.95);
+  --color-preview-ink: rgba(45, 30, 15, 0.95);
 
   /* #context-menu's separator line, see ContextMenu.jsx */
   --color-border-menu: rgba(0, 0, 0, 0.12);

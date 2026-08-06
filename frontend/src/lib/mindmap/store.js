@@ -6,6 +6,14 @@ import { createSignal } from "solid-js";
 // unmount(); treat as read-only everywhere else.
 export const [currentItem, setCurrentItem] = createSignal(null);
 
+// The mindmap item currently under the mouse cursor while the canvas is
+// the active workspace mode, or null/undefined when the cursor isn't over
+// any item (or the canvas is backgrounded). Written by mouse.js's hover
+// tracking; read by NotesEditor.jsx to decide which item's notes to
+// preview in the background (falls back to currentItem when nothing is
+// hovered).
+export const [hoveredItem, setHoveredItem] = createSignal(null);
+
 // Mirrors my-mind.js's `editing` module state as a Solid signal, the same
 // way currentItem is mirrored above. Written by my-mind.js's
 // startEditing()/stopEditing()/unmount(); lets command/command.js's
