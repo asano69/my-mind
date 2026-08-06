@@ -1,6 +1,5 @@
 import * as app from "../my-mind.js";
 import * as io from "./io.js";
-import * as menu from "./context-menu.js";
 import { repo as commandRepo } from "../command/command.js";
 import { toggleRightPanel } from "../store.js";
 import { isCanvasActive } from "../scope.js";
@@ -69,8 +68,10 @@ export async function init(port, containerEl, uuid) {
   // Save-status text is rendered reactively by RightPanel.jsx, which reads
   // store.js's `lastSaveTime` signal directly instead of this module
   // polling a DOM node (see io.js's formatSaveStatus()).
+  // The right-click item menu is now Kobalte's ContextMenu, owned by
+  // MindMapCanvas.jsx/ContextMenu.jsx directly -- there is no longer an
+  // imperative init()/dispose() pair to call here.
   io.init();
-  menu.init(port);
   containerEl.addEventListener("click", onClick);
   return io.restore(uuid);
 }
@@ -80,6 +81,5 @@ export async function init(port, containerEl, uuid) {
 // init() brought them up, mirroring standard stack-unwind teardown order.
 export function dispose(containerEl) {
   containerEl.removeEventListener("click", onClick);
-  menu.dispose();
   io.dispose();
 }

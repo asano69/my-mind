@@ -1,12 +1,5 @@
-import {
-  createEffect,
-  createSignal,
-  For,
-  onCleanup,
-  onMount,
-  Show,
-} from "solid-js";
-import { contextMenuPoint, setContextMenuPoint } from "../lib/mindmap/store";
+import { createSignal, For, onMount, Show } from "solid-js";
+import { ContextMenu } from "@kobalte/core/context-menu";
 
 // Explicit groups (and the separators between them) mirror the old static
 // markup's ordering exactly, rather than pulling every registered command
@@ -18,13 +11,14 @@ const GROUPS = [
   ["undo", "redo", "center"],
 ];
 
-// The right-click item menu. Fully reactive: store.js's contextMenuPoint
-// signal is the only source of truth for whether the menu is open and
-// where, so there is no imperative DOM node to hold onto or hide/show by
-// hand anymore (see ui/context-menu.js, now just a thin open()/close()
-// wrapper around this signal).
-export default function ContextMenu() {
-  let menuRef;
+// The right-click item menu's content, rendered as a child of Kobalte's
+// <ContextMenu> root whose <ContextMenu.Trigger> wraps the mind-map
+// canvas (see MindMapCanvas.jsx). Kobalte owns opening the menu at the
+// pointer, flipping it near screen edges, and closing it on outside
+// interaction, Escape, or item selection -- none of that lives in this
+// module anymore (see ui/context-menu.js's removal and mouse.js's
+// handleContextMenu()).
+export default function ContextMenuContent() {
   // command/command.js is imported dynamically (like TopBar.jsx/
   // LeftPanel.jsx/RightPanel.jsx already do), not statically at the top
   // of this file. ContextMenu.jsx sits on the static import chain
@@ -47,96 +41,42 @@ export default function ContextMenu() {
     setReady(true);
   });
 
-  function run(id, e) {
-    // Attached via on:click (a real listener on the button itself, fired
-    // at the target phase) rather than Solid's default delegated onClick
-    // (which only runs once the event has already bubbled all the way up
-    // to document). stopPropagation() here must happen before ui/ui.js's
-    // delegated click listener on containerEl runs, or that listener
-    // would execute the same command a second time.
-    e.stopPropagation();
-    const command = commandRepo.get(id);
-    if (!command.isValid) {
-      return;
-    }
-    command.execute();
-    setContextMenuPoint(null);
+  function run(id) {
+    commandRepo.get(id).execute();
   }
 
-  // Positions the menu near the click point, flipping to the opposite
-  // side whenever it would otherwise overflow past the middle of the
-  // screen -- same heuristic the old context-menu.js used, just driven by
-  // the rendered menu's own measured size (via the ref) instead of a DOM
-  // node it held onto imperatively.
-  createEffect(() => {
-    const point = contextMenuPoint();
-    if (!point || !menuRef) {
-      return;
-    }
-    let left = point.x;
-    let top = point.y;
-    if (left > window.innerWidth / 2) {
-      left -= menuRef.offsetWidth;
-    }
-    if (top > window.innerHeight / 2) {
-      top -= menuRef.offsetHeight;
-    }
-    menuRef.style.left = `${left}px`;
-    menuRef.style.top = `${top}px`;
-  });
-
-  // Closes the menu on any mousedown outside it -- e.g. clicking the
-  // canvas, another node, or a panel. The old context-menu.js got this
-  // for free by also listening for "mousedown" on `port` itself and
-  // closing whenever the event's currentTarget wasn't its own node; that
-  // whole listener is gone now; this effect (only live while the menu is
-  // actually open) is what replaces it.
-  createEffect(() => {
-    if (!contextMenuPoint()) {
-      return;
-    }
-    function onOutsideMouseDown(e) {
-      if (!menuRef?.contains(e.target)) {
-        setContextMenuPoint(null);
-      }
-    }
-    document.addEventListener("mousedown", onOutsideMouseDown, true);
-    onCleanup(() =>
-      document.removeEventListener("mousedown", onOutsideMouseDown, true),
-    );
-  });
-
   return (
-    <Show when={ready() && contextMenuPoint()}>
-      <div
-        id="context-menu"
-        ref={menuRef}
-        class="absolute flex w-[130px] flex-col overflow-hidden rounded-md
-          border border-[#bbb] bg-pane py-[3px] shadow-card"
-      >
-        <For each={GROUPS}>
-          {(group, i) => (
-            <>
-              <Show when={i() > 0}>
-                <span class="my-[3px] border-t border-[color:var(--color-border-menu)]"></span>
-              </Show>
-              <For each={group}>
-                {(id) => (
-                  <button
-                    disabled={!commandRepo.get(id).isValid}
-                    on:click={[run, id]}
-                    class="bg-transparent px-2.5 py-[5px] text-left text-sm
-                      transition-colors duration-[80ms] hover:bg-hover
-                      hover:text-text disabled:opacity-40"
-                  >
-                    {commandRepo.get(id).label}
-                  </button>
-                )}
-              </For>
-            </>
-          )}
-        </For>
-      </div>
+    <Show when={ready()}>
+      <ContextMenu.Portal>
+        <ContextMenu.Content
+          class="flex w-[130px] flex-col overflow-hidden rounded-md
+            border border-[#bbb] bg-pane py-[3px] shadow-card"
+        >
+          <For each={GROUPS}>
+            {(group, i) => (
+              <>
+                <Show when={i() > 0}>
+                  <ContextMenu.Separator class="my-[3px] border-t border-[color:var(--color-border-menu)]" />
+                </Show>
+                <For each={group}>
+                  {(id) => (
+                    <ContextMenu.Item
+                      disabled={!commandRepo.get(id).isValid}
+                      onSelect={() => run(id)}
+                      class="px-2.5 py-[5px] text-left text-sm
+                        transition-colors duration-[80ms]
+                        data-[highlighted]:bg-hover data-[highlighted]:text-text
+                        data-[disabled]:opacity-40"
+                    >
+                      {commandRepo.get(id).label}
+                    </ContextMenu.Item>
+                  )}
+                </For>
+              </>
+            )}
+          </For>
+        </ContextMenu.Content>
+      </ContextMenu.Portal>
     </Show>
   );
 }

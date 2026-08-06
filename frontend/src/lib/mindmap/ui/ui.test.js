@@ -6,8 +6,6 @@ const initNotes = vi.fn();
 const disposeNotes = vi.fn();
 const initIo = vi.fn();
 const disposeIo = vi.fn();
-const initMenu = vi.fn();
-const disposeMenu = vi.fn();
 
 vi.mock("../my-mind.js", () => ({ currentItem: null }));
 vi.mock("./notes.js", () => ({ init: initNotes, dispose: disposeNotes }));
@@ -17,7 +15,6 @@ vi.mock("./io.js", () => ({
   isActive: vi.fn(() => false),
   restore,
 }));
-vi.mock("./context-menu.js", () => ({ init: initMenu, dispose: disposeMenu }));
 // Uses "insert-child" rather than "notes" because TopBar's notes button
 // no longer goes through this delegation (see CLAUDE.md, Workspace
 // shared-chrome refactor) — it calls command/command.js's execute()
@@ -78,7 +75,6 @@ describe("ui click delegation scope", () => {
 
     ui.init(port, container);
 
-    expect(initMenu).toHaveBeenCalledWith(port);
     expect(container.addEventListener).toHaveBeenCalledWith(
       "click",
       expect.any(Function),

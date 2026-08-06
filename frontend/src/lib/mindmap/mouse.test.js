@@ -1,6 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const menuOpen = vi.fn();
 const finishExecute = vi.fn();
 const getCommand = vi.fn((id) =>
   id === "finish" ? { execute: finishExecute } : {},
@@ -11,7 +10,6 @@ const adjustZoom = vi.fn();
 const selectItem = vi.fn();
 const actionFn = vi.fn();
 
-vi.mock("./ui/context-menu.js", () => ({ open: menuOpen }));
 vi.mock("./command/command.js", () => ({ repo: { get: getCommand } }));
 vi.mock("./action.js", () => ({
   MoveItem: class MoveItem {

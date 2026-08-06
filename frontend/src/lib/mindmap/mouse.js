@@ -1,4 +1,3 @@
-import * as menu from "./ui/context-menu.js";
 import * as app from "./my-mind.js";
 import * as actions from "./action.js";
 import { repo as commandRepo } from "./command/command.js";
@@ -35,7 +34,6 @@ export function init(port_, container_) {
   port.addEventListener("click", onClick);
   port.addEventListener("dblclick", onDblClick);
   port.addEventListener("wheel", onWheel);
-  port.addEventListener("contextmenu", onContextMenu);
 }
 // Called by my-mind.js's unmount(). Removes every listener registered by
 // init(), force-ends any drag in progress (so an orphaned ghost element
@@ -119,16 +117,19 @@ function onWheel(e) {
   let dir = deltaY > 0 ? -1 : 1;
   app.currentMap.adjustZoom(dir, [e.clientX, e.clientY]);
 }
-function onContextMenu(e) {
+// Runs the drag-cancel and item-selection side effects for a right-click
+// or long-press, regardless of how the context menu itself opens. Called
+// via ContextMenu.Trigger's onContextMenu prop (see MindMapCanvas.jsx) --
+// opening and positioning the menu at the pointer is Kobalte's
+// ContextMenu.Trigger's job now, not this module's (see ContextMenu.jsx).
+export function handleContextMenu(e) {
   if (!isCanvasActive() || !app.currentMap) {
     return;
   }
 
   onDragEnd(e);
-  e.preventDefault();
   let item = app.currentMap.getItemFor(e.target);
   item && app.selectItem(item);
-  menu.open([e.clientX, e.clientY]);
 }
 function onDragStart(e) {
   if (!isCanvasActive() || !app.currentMap) {
@@ -186,10 +187,12 @@ function onDragStart(e) {
     port.addEventListener("mouseup", onDragEnd);
   }
   if (e.type == "touchstart") {
-    // context menu here, after we have the item
+    // Selects the long-pressed item once TOUCH_DELAY elapses; opening the
+    // context menu itself is Kobalte's ContextMenu.Trigger's own
+    // long-press detection on this same element (see ContextMenu.jsx),
+    // independent of this timeout.
     touchContextTimeout = setTimeout(function () {
       item && app.selectItem(item);
-      menu.open(point);
     }, TOUCH_DELAY);
     port.addEventListener("touchmove", onDragMove);
     port.addEventListener("touchend", onDragEnd);

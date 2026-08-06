@@ -67,14 +67,6 @@ export function toggleRightPanel() {
 // consumption -- no bridge object needed").
 export const [throbberVisible, setThrobberVisible] = createSignal(false);
 
-// The point (client coordinates) at which the right-click item menu
-// should be shown, or null when it's closed. Replaces the old
-// ui/context-menu.js pattern of holding onto "#context-menu"'s DOM node
-// directly and toggling its hidden attribute/style.left/style.top by
-// hand -- ContextMenu.jsx now renders straight from this signal instead
-// (see CLAUDE.md's Solid migration notes).
-export const [contextMenuPoint, setContextMenuPoint] = createSignal(null);
-
 // Which pane is the active workspace mode: the mind-map canvas or the
 // notes editor. Added ahead of Workspace.jsx keeping both mounted at
 // once and switching which one is on top (see
