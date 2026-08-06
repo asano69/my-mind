@@ -31,8 +31,12 @@ export default function ConfirmDialog(props) {
               <button
                 type="button"
                 onClick={() => {
-                  props.onOpenChange(false);
+                  // Call onConfirm() before onOpenChange(false): callers
+                  // (e.g. Catalog.jsx's confirmDelete) may read state that
+                  // onOpenChange's handler clears (pendingDeleteId), so
+                  // confirming first ensures that state is still valid.
                   props.onConfirm();
+                  props.onOpenChange(false);
                 }}
                 class="rounded-md bg-[#dc3545] px-3 py-1.5 text-sm text-white hover:opacity-90"
               >
