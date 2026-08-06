@@ -48,7 +48,6 @@ export function dispose() {
   port.removeEventListener("click", onClick);
   port.removeEventListener("dblclick", onDblClick);
   port.removeEventListener("wheel", onWheel);
-  port.removeEventListener("contextmenu", onContextMenu);
   port.removeEventListener("mousemove", onDragMove);
   port.removeEventListener("mouseup", onDragEnd);
   port.removeEventListener("touchmove", onDragMove);
