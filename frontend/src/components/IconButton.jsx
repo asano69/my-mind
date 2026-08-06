@@ -17,7 +17,9 @@ export default function IconButton(props) {
       type="button"
       onClick={props.onClick}
       title={props.title}
+      disabled={props.disabled}
       class={iconButtonClass}
+      classList={{ "opacity-30 pointer-events-none": props.disabled }}
     >
       {props.children}
     </button>

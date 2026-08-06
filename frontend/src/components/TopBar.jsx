@@ -1,11 +1,13 @@
 import { useNavigate } from "@solidjs/router";
-import { createSignal, onMount, onCleanup } from "solid-js";
+import { createSignal, createMemo, onMount, onCleanup } from "solid-js";
 import { rightPanelHidden } from "../lib/mindmap/store";
 
 // icons
 import Trash2 from "lucide-solid/icons/trash-2";
 import TextCursor from "lucide-solid/icons/text-cursor";
 import Save from "lucide-solid/icons/save";
+import Undo from "lucide-solid/icons/undo";
+import Redo from "lucide-solid/icons/redo";
 import IconButton from "./IconButton";
 import ConfirmDialog from "./ConfirmDialog";
 // The floating strip across the top of the canvas: the title input
@@ -28,6 +30,15 @@ export default function TopBar() {
   let titleModule; // cached after the first dynamic import, see onMount
   const [title, setTitle] = createSignal("");
 
+  // Undo/Redo button enablement mirrors ContextMenu.jsx's disabled logic
+  // (commandRepo.get(id).isValid), which itself reads history.js's
+  // historyVersion signal — see command/command.js's Undo/Redo commands.
+  // Loaded lazily (dynamic import) like title.js above, since these
+  // touch the engine bundle.
+  let historyModule;
+  let commandRepoRef;
+  const [historyReady, setHistoryReady] = createSignal(false);
+
   function commitTitle(e) {
     titleModule?.rename(e.target.value);
   }
@@ -35,6 +46,26 @@ export default function TopBar() {
   onMount(async () => {
     titleModule = await import("../lib/mindmap/title.js");
     titleModule.registerInput({ setValue: setTitle });
+    [historyModule, { repo: commandRepoRef }] = await Promise.all([
+      import("../lib/mindmap/history.js"),
+      import("../lib/mindmap/command/command.js"),
+    ]);
+    setHistoryReady(true);
+  });
+
+  const canUndo = createMemo(() => {
+    if (!historyReady()) {
+      return false;
+    }
+    historyModule.historyVersion();
+    return commandRepoRef.get("undo").isValid;
+  });
+  const canRedo = createMemo(() => {
+    if (!historyReady()) {
+      return false;
+    }
+    historyModule.historyVersion();
+    return commandRepoRef.get("redo").isValid;
   });
 
   // TopBar lives at the Workspace level and stays mounted across map
@@ -94,6 +125,22 @@ export default function TopBar() {
             : "calc(var(--side-panel-width) + 8px)",
         }}
       >
+        <IconButton
+          onClick={() => runCommand("undo")}
+          title="Undo"
+          disabled={!canUndo()}
+        >
+          <Undo size={28} />
+        </IconButton>
+
+        <IconButton
+          onClick={() => runCommand("redo")}
+          title="Redo"
+          disabled={!canRedo()}
+        >
+          <Redo size={28} />
+        </IconButton>
+
         <IconButton onClick={() => runCommand("save")} title="Save">
           <Save size={28} />
         </IconButton>
