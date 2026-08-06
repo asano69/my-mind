@@ -1,16 +1,9 @@
-import {
-  createMemo,
-  createSignal,
-  For,
-  onCleanup,
-  onMount,
-  Show,
-} from "solid-js";
+import { createMemo, createSignal, For, onMount, Show } from "solid-js";
 import { Switch } from "@kobalte/core/switch";
 import {
   autoSaveEnabled,
   currentItem,
-  lastSaveTime,
+  saveStatus,
   rightPanelHidden,
   toggleRightPanel,
 } from "../lib/mindmap/store";
@@ -22,6 +15,16 @@ import SelectField from "./SelectField";
 import Logo from "./Logo";
 
 const STATUS_MAP = { yes: true, no: false, "": null };
+
+// Colors for the save-status dot in the footer (see saveStatusStyle
+// below): green while the server copy matches what's on screen, yellow
+// while local edits haven't been confirmed saved yet, red if the last
+// save attempt failed (e.g. the connection to the server was lost).
+const SAVE_STATUS_STYLES = {
+  saved: { class: "bg-[#2ca02c]", label: "Saved" },
+  dirty: { class: "bg-[#dd3]", label: "Unsaved changes" },
+  error: { class: "bg-[#cc0000]", label: "Save failed" },
+};
 
 const COLOR_SWATCHES = [
   { value: "", title: "Inherit" },
@@ -123,12 +126,9 @@ export default function RightPanel() {
 
   const [ready, setReady] = createSignal(false);
 
-  // Ticks once a second while this panel is mounted, purely to drive
-  // re-renders of the save-status label below -- lastSaveTime() itself
-  // only changes on an actual save, not every second, so the "<5s ago" /
-  // "2m ago" text needs something else advancing it.
-  const [tick, setTick] = createSignal(0);
-  let tickTimer;
+  const saveStatusStyle = createMemo(
+    () => SAVE_STATUS_STYLES[saveStatus()] ?? SAVE_STATUS_STYLES.saved,
+  );
 
   onMount(async () => {
     const [actionsMod, appMod, cmdMod, layoutMod, shapeMod, ioMod] =
@@ -148,17 +148,6 @@ export default function RightPanel() {
     ioModule = ioMod;
 
     setReady(true);
-  });
-
-  tickTimer = setInterval(() => setTick((t) => t + 1), 1000);
-  onCleanup(() => clearInterval(tickTimer));
-
-  const saveStatusLabel = createMemo(() => {
-    tick();
-    if (!ioModule) {
-      return "";
-    }
-    return ioModule.formatSaveStatus(lastSaveTime());
   });
 
   const layoutGroups = createMemo(() => {
@@ -391,7 +380,10 @@ export default function RightPanel() {
                 Auto-save
               </Switch.Label>
             </Switch>
-            <span class="pr-0.5 text-base text-text">{saveStatusLabel()}</span>
+            <span
+              class={`h-2.5 w-2.5 rounded-full ${saveStatusStyle().class}`}
+              title={saveStatusStyle().label}
+            />
           </footer>
         </div>
 

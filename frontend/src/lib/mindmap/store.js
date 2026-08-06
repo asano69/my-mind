@@ -29,11 +29,13 @@ export const [editing, setEditing] = createSignal(false);
 // subscribing to an event.
 export const [currentTitle, setCurrentTitle] = createSignal("");
 
-// Timestamp (ms since epoch) of the last successful save, or null if the
-// current map has not been saved yet. Replaces the old "save-done" pubsub
-// message (see CLAUDE.md, Solid migration Phase 4) — ui/io.js and ui/ui.js
-// both read this instead of maintaining their own copies.
-export const [lastSaveTime, setLastSaveTime] = createSignal(null);
+// Whether the currently open map's server copy is confirmed up to date:
+// "saved" (nothing pending, or nothing to save yet), "dirty" (local edits
+// not yet confirmed saved), or "error" (the last save attempt failed,
+// e.g. lost connection to the server). Replaces the old lastSaveTime
+// timestamp -- knowing the current state is safe matters more than
+// knowing exactly when it last was (see RightPanel.jsx's status dot).
+export const [saveStatus, setSaveStatus] = createSignal("saved");
 
 // Whether auto-save (the debounced save-to-server that runs on every
 // edit, see ui/io.js's dirtyVersion effect) is enabled. Defaults to

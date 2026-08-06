@@ -6,7 +6,7 @@ import { serializeCurrentMap } from "../backend/image.js";
 import {
   currentTitle,
   setCurrentTitle,
-  setLastSaveTime,
+  setSaveStatus,
   dirtyVersion,
   setCurrentMapId,
   autoSaveEnabled,
@@ -62,6 +62,9 @@ export function init() {
       on(
         dirtyVersion,
         () => {
+          // Any change makes the server copy stale, regardless of whether
+          // auto-save is enabled or the map has ever been saved before.
+          setSaveStatus("dirty");
           if (!currentMapId || !autoSaveEnabled()) {
             return;
           }
@@ -111,7 +114,7 @@ export function dispose() {
   currentMapUuid = null;
 
   setCurrentTitle("");
-  setLastSaveTime(null);
+  setSaveStatus("saved");
   setCurrentMapId(null);
 
   saveInFlight = false;
@@ -231,8 +234,8 @@ async function performSave(includeSvg) {
   try {
     const record = await backend.save(currentMapId, title, mymind, svg);
     setCurrentMap(record);
-    setLastSaveTime(Date.now());
   } catch (e) {
+    setSaveStatus("error");
     error(e);
   }
 }
@@ -241,6 +244,10 @@ function setCurrentMap(record) {
   currentMapUuid = record ? record.uuid : null;
   setCurrentTitle(record ? record.title || "" : "");
   setCurrentMapId(currentMapId);
+  // A record just loaded from (or written to) the server is by definition
+  // in sync with it -- covers restore(), performSave()'s success path,
+  // resetCurrentMap(), and deleteCurrentMap() all at once.
+  setSaveStatus("saved");
   updateURL();
 }
 // Called by command/command.js's New command after starting a fresh
@@ -305,28 +312,3 @@ function error(e) {
   alert(`IO error: ${message}`);
 }
 
-// Pure formatting helper, read directly by RightPanel.jsx (see CLAUDE.md's
-// Solid migration Phase 5 addendum, "read-only consumption -- no bridge
-// object needed"). Takes `now` as a parameter rather than reading
-// Date.now() internally, since lastSaveTime() itself only changes on an
-// actual save -- RightPanel.jsx supplies its own 1s ticking signal to
-// drive the re-render that keeps this label advancing between saves.
-export function formatSaveStatus(savedAt, now = Date.now()) {
-  if (savedAt === null) {
-    return "";
-  }
-  const elapsed = Math.floor((now - savedAt) / 1000);
-  if (elapsed < 2) {
-    return "just saved!";
-  }
-  if (elapsed < 5) {
-    return "<5s ago";
-  }
-  if (elapsed < 10) {
-    return "<10s ago";
-  }
-  if (elapsed < 60) {
-    return `${Math.floor(elapsed / 10) * 10}s ago`;
-  }
-  return `${Math.floor(elapsed / 60)}m ago`;
-}
