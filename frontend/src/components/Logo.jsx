@@ -21,6 +21,11 @@ export default function Logo(props) {
       // to it instead of sitting side-by-side. Override it back to
       // static here rather than touching the global rule, since that
       // rule is load-bearing for the canvas.
+      // group-hover (rather than a plain hover: on the svg itself) so
+      // hovering anywhere over the logo -- icon or title text -- spins
+      // the icon, not just when the cursor is exactly over the svg.
+  class="transition-transform duration-1500 ease-in-out group-hover:scale-x-[-1]"
+      //class="transition-transform duration-700 ease-in-out hover:rotate-[180deg] group-hover:rotate-[180deg]"
       style={{
         width: `${size()}px`,
         height: `${size()}px`,
@@ -60,7 +65,7 @@ export default function Logo(props) {
 
   // Scales with the icon: at the old default size (40px), this works
   // out to 20px, matching the previous fixed "text-xl" class.
-  const titleFontSize = () => size() * 0.5;
+  const titleFontSize = () => size() * 0.65;
 
   const title = props.showTitle && (
     // Set font-family directly via style rather than the "font-serif"
@@ -95,7 +100,7 @@ export default function Logo(props) {
   // centerTitle=false (default): plain side-by-side layout, icon then
   // title, both centered as one block by the caller if needed.
   const content = props.centerTitle ? (
-    <span class="relative flex items-center justify-center">
+    <span class="group relative flex items-center justify-center">
       <span
         class="absolute right-full mr-2"
         style={{ width: `${size()}px`, height: `${size()}px` }}
@@ -105,7 +110,7 @@ export default function Logo(props) {
       {title}
     </span>
   ) : (
-    <span class="flex items-center gap-2">
+    <span class="group flex items-center gap-2">
       {icon}
       {title}
     </span>
