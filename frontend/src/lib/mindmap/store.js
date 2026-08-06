@@ -128,3 +128,14 @@ export function openCatalogList() {
   setShowSnapshotsRaw(false);
   setShowCatalogListRaw(true);
 }
+
+// Whether the "Set value" dialog (see ValueDialog.jsx) is open. Replaces
+// command/edit.js's old prompt()-based flow with a Kobalte dialog that
+// matches the rest of the app's UI, instead of a native browser dialog.
+export const [valueDialogOpen, setValueDialogOpen] = createSignal(false);
+export function openValueDialog() {
+  setValueDialogOpen(true);
+}
+export function closeValueDialog() {
+  setValueDialogOpen(false);
+}

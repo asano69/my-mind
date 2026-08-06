@@ -1,5 +1,6 @@
 // frontend/src/components/MindMapCanvas.jsx
 import RightPanel from "./RightPanel";
+import ValueDialog from "./ValueDialog";
 
 import ContextMenuContent from "./ContextMenu";
 import { ContextMenu } from "@kobalte/core/context-menu";
@@ -56,6 +57,7 @@ export default function MindMapCanvas(props) {
       </ContextMenu>
 
       <RightPanel />
+      <ValueDialog />
     </div>
   );
 }

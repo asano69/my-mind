@@ -3,7 +3,7 @@ import * as app from "../my-mind.js";
 import * as actions from "../action.js";
 import * as notes from "../ui/notes.js";
 import * as mouse from "../mouse.js";
-import { closeHelp } from "../store.js";
+import { closeHelp, openValueDialog } from "../store.js";
 import Command, { repo as commandRepo } from "./command.js";
 new (class Edit extends Command {
   constructor() {
@@ -205,21 +205,11 @@ new (class Value extends Command {
     this.keys = [{ key: "v", ctrlKey: false, metaKey: false }];
   }
   execute() {
-    let item = app.currentItem;
-    let oldValue = item.value;
-    let newValue = prompt("Set item value", String(oldValue));
-    if (newValue == null) {
-      return;
-    }
-    if (!newValue.length) {
-      newValue = null;
-    }
-    let numValue = Number(newValue);
-    let action = new actions.SetValue(
-      item,
-      isNaN(numValue) ? newValue : numValue,
-    );
-    app.action(action);
+    // Opens the Kobalte-based ValueDialog (see components/ValueDialog.jsx)
+    // instead of blocking synchronously on window.prompt(). The dialog
+    // reads store.js's currentItem itself and dispatches the SetValue
+    // action on confirm.
+    openValueDialog();
   }
 })();
 new (class Yes extends Command {
