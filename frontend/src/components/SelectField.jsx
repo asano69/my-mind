@@ -18,12 +18,17 @@ function unwrapValue(value) {
 }
 
 // Recursively wraps every option's `value` (plain items and grouped
-// items alike) so "" never reaches Kobalte directly.
-function wrapOptions(options) {
+// items alike) so "" never reaches Kobalte directly. Leaf items nested
+// under a group also get `grouped: true`, so itemComponent below can
+// indent them under their group label -- Kobalte's Select.Section only
+// renders the label itself, not a wrapping element around its items, so
+// this is the simplest way to tell a grouped leaf apart from a top-level
+// one without depending on Kobalte's internal DOM structure.
+function wrapOptions(options, grouped = false) {
   return options.map((option) =>
     "options" in option
-      ? { ...option, options: wrapOptions(option.options) }
-      : { ...option, value: wrapValue(option.value) },
+      ? { ...option, options: wrapOptions(option.options, true) }
+      : { ...option, value: wrapValue(option.value), grouped },
   );
 }
 
@@ -64,6 +69,11 @@ export default function SelectField(props) {
         optionValue="value"
         optionTextValue="label"
         optionDisabled="disabled"
+        // Tells Kobalte which property on a group object holds its child
+        // options, so it renders { label: "Graph", options: [...] } as a
+        // real optgroup (via sectionComponent below) instead of trying to
+        // treat the group object itself as a selectable leaf item.
+        optionGroupChildren="options"
         value={selected()}
         onChange={(option) =>
           props.onChange(option ? unwrapValue(option.value) : "")
@@ -72,7 +82,11 @@ export default function SelectField(props) {
         itemComponent={(itemProps) => (
           <Select.Item
             item={itemProps.item}
-            class="cursor-pointer rounded px-2 py-1.5 text-sm text-text outline-none data-[highlighted]:bg-hover data-[disabled]:cursor-default data-[disabled]:opacity-40"
+            class="cursor-pointer rounded py-1.5 pr-2 text-sm text-text outline-none data-[highlighted]:bg-hover data-[disabled]:cursor-default data-[disabled]:opacity-40"
+            classList={{
+              "pl-2": !itemProps.item.rawValue.grouped,
+              "pl-5": itemProps.item.rawValue.grouped,
+            }}
           >
             <Select.ItemLabel>{itemProps.item.rawValue.label}</Select.ItemLabel>
           </Select.Item>
