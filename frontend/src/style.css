@@ -29,22 +29,6 @@
   /* soft hover highlight, shared across pages */
   --color-hover: rgba(90, 74, 58, 0.3);
 
-  /* ── Toast notification tokens ──────────────────────────────
-   * Override any of these per-page to restyle toasts locally
-   * without touching toast.ts.
-   * ---------------------------------------------------------- */
-  --toast-bg: var(--color-pane-hover);
-  --toast-color: var(--color-text);
-  --toast-padding: 0.5rem 1rem;
-  --toast-radius: 8px;
-  --toast-font-size: 14px;
-  --toast-font-weight: 700;
-  --toast-letter-spacing: 0.05em;
-  --toast-font-family: var(--font-sans);
-  --toast-shadow: var(--shadow-card);
-  --toast-bottom: 1.2rem;
-  --toast-linger: 2500ms; /* fully-visible duration before fade */
-
   /* Layout */
   --ribbon-width: 45px; /* collapsed width of #left-panel; matches IconButton.jsx's own rendered size (1rem padding + 28px icon) */
   --side-panel-width: 240px; /* expanded width of the left/right side panels */

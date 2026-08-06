@@ -9,6 +9,7 @@ import Workspace from "./routes/Workspace";
 import "./style.css";
 
 import Login from "./routes/Login";
+import ToastRegion from "./components/ToastRegion";
 
 import pb from "./lib/pb";
 
@@ -31,14 +32,17 @@ function AuthGate(props) {
 
 render(
   () => (
-    <AuthGate>
-      <Router>
-        <Route path="/" component={Catalog} />
-        <Route path="/catalog" component={Catalog} />
-        <Route path="/maps/new" component={Workspace} />
-        <Route path="/maps/:uuid" component={Workspace} />
-      </Router>
-    </AuthGate>
+    <>
+      <AuthGate>
+        <Router>
+          <Route path="/" component={Catalog} />
+          <Route path="/catalog" component={Catalog} />
+          <Route path="/maps/new" component={Workspace} />
+          <Route path="/maps/:uuid" component={Workspace} />
+        </Router>
+      </AuthGate>
+      <ToastRegion />
+    </>
   ),
   document.getElementById("app"),
 );

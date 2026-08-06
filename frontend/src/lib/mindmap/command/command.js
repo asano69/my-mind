@@ -5,7 +5,7 @@ import * as app from "../my-mind.js";
 import * as notes from "../ui/notes.js";
 import * as ui from "../ui/ui.js";
 import * as io from "../ui/io.js";
-import { showToast } from "../ui/toast.js";
+import { showToast } from "../ui/toast.jsx";
 import { openHelp, openSnapshots, openCatalogList } from "../store.js";
 
 import ImageBackend from "../backend/image.js";
