@@ -1,6 +1,5 @@
 import { A, useNavigate } from "@solidjs/router";
 import { Show } from "solid-js";
-
 import {
   leftPanelHidden,
   toggleLeftPanel,
@@ -76,7 +75,10 @@ export default function LeftPanel() {
           <FilePlus size={20} />
         </IconButton>
 
-        <IconButton onClick={() => runCommand("catalog-list")} title="Browse maps">
+        <IconButton
+          onClick={() => runCommand("catalog-list")}
+          title="Browse maps"
+        >
           <FolderOpen size={20} />
         </IconButton>
 
@@ -93,7 +95,10 @@ export default function LeftPanel() {
           <Images size={20} />
         </IconButton>
 
-        <IconButton onClick={() => runCommand("recover")} title="Restore snapshot">
+        <IconButton
+          onClick={() => runCommand("recover")}
+          title="Restore snapshot"
+        >
           <DatabaseBackup size={20} />
         </IconButton>
         <IconButton onClick={() => runCommand("help")} title="Help">

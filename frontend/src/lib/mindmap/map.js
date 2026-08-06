@@ -137,7 +137,10 @@ export default class Map {
   }
   adjustZoom(diff, anchorPoint = null) {
     const previousScale = this.zoomScale;
-    const nextScale = Math.max(MIN_ZOOM_SCALE, previousScale + ZOOM_STEP * diff);
+    const nextScale = Math.max(
+      MIN_ZOOM_SCALE,
+      previousScale + ZOOM_STEP * diff,
+    );
     if (nextScale === previousScale) {
       return;
     }

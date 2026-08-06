@@ -1,4 +1,11 @@
-import { createEffect, createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import {
+  createEffect,
+  createSignal,
+  For,
+  onCleanup,
+  onMount,
+  Show,
+} from "solid-js";
 import { contextMenuPoint, setContextMenuPoint } from "../lib/mindmap/store";
 
 // Explicit groups (and the separators between them) mirror the old static
@@ -36,9 +43,7 @@ export default function ContextMenu() {
   const [ready, setReady] = createSignal(false);
 
   onMount(async () => {
-    ({ repo: commandRepo } = await import(
-      "../lib/mindmap/command/command.js"
-    ));
+    ({ repo: commandRepo } = await import("../lib/mindmap/command/command.js"));
     setReady(true);
   });
 

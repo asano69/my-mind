@@ -55,7 +55,7 @@ export default function Catalog() {
     <div class="min-h-screen bg-bg p-8 text-text">
       <div class="mx-auto max-w-5xl">
         <div class="mb-6 flex items-center justify-between">
-  <Logo showTitle/>
+          <Logo showTitle />
           <div class="flex gap-2">
             <IconButton
               onClick={() => setEditMode(!editMode())}
@@ -76,7 +76,9 @@ export default function Catalog() {
 
         <Show
           when={!maps.loading}
-          fallback={<Spinner visible={true} class="relative mx-auto h-10 w-10" />}
+          fallback={
+            <Spinner visible={true} class="relative mx-auto h-10 w-10" />
+          }
         >
           <Show when={!maps.error} fallback={<p>Failed to load maps.</p>}>
             <Show

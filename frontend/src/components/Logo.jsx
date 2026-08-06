@@ -24,7 +24,7 @@ export default function Logo(props) {
       // group-hover (rather than a plain hover: on the svg itself) so
       // hovering anywhere over the logo -- icon or title text -- spins
       // the icon, not just when the cursor is exactly over the svg.
-  class="transition-transform duration-1500 ease-in-out group-hover:scale-x-[-1]"
+      class="transition-transform duration-1500 ease-in-out group-hover:scale-x-[-1]"
       //class="transition-transform duration-700 ease-in-out hover:rotate-[180deg] group-hover:rotate-[180deg]"
       style={{
         width: `${size()}px`,

@@ -1,4 +1,11 @@
-import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import {
+  createMemo,
+  createSignal,
+  For,
+  onCleanup,
+  onMount,
+  Show,
+} from "solid-js";
 import {
   currentItem,
   lastSaveTime,
@@ -8,6 +15,9 @@ import {
 import ChevronLeft from "lucide-solid/icons/chevron-left";
 import ChevronRight from "lucide-solid/icons/chevron-right";
 import Spinner from "./Spinner";
+import SelectField from "./SelectField";
+
+import Logo from "./Logo";
 
 const STATUS_MAP = { yes: true, no: false, "": null };
 
@@ -22,6 +32,31 @@ const COLOR_SWATCHES = [
   { value: "#dd3", title: "Yellow" },
 ];
 
+// Static option lists for SelectField (see ./SelectField.jsx). Layout
+// and Shape depend on the engine's registered repos, so their option
+// lists stay computed memos inside the component below; Value and
+// Status never change, so they live here as plain module-level data.
+const VALUE_OPTIONS = [
+  { value: "", label: "(None)" },
+  { value: "num", label: "Number" },
+  {
+    label: "Formula",
+    options: [
+      { value: "sum", label: "Sum" },
+      { value: "avg", label: "Average" },
+      { value: "min", label: "Minimum" },
+      { value: "max", label: "Maximum" },
+    ],
+  },
+];
+
+const STATUS_OPTIONS = [
+  { value: "", label: "None" },
+  { value: "yes", label: "Yes" },
+  { value: "no", label: "No" },
+  { value: "computed", label: "Autocompute" },
+];
+
 function statusToString(status) {
   for (let key in STATUS_MAP) {
     if (STATUS_MAP[key] === status) {
@@ -29,28 +64,6 @@ function statusToString(status) {
     }
   }
   return String(status);
-}
-
-// A labeled <select> row. Shared by the Layout/Shape/Value/Status fields
-// below so their styling lives in one place instead of four.
-function Field(props) {
-  return (
-    <div class="border-b border-black/[0.07] px-3 py-2">
-      <label class="block">
-        <span class="mb-1 block text-[11px] font-semibold tracking-wider text-text/70 uppercase">
-          {props.label}
-        </span>
-        <select
-          value={props.value}
-          onChange={props.onChange}
-          disabled={props.disabled}
-          class="w-full rounded border border-black/20 bg-white px-2 py-1.5 text-sm text-text shadow-[inset_0_1px_2px_rgba(0,0,0,0.08)] outline-none transition-colors focus:border-accent disabled:opacity-50"
-        >
-          {props.children}
-        </select>
-      </label>
-    </div>
-  );
 }
 
 // A labeled row of clickable color swatches. Shared by the item-color and
@@ -170,6 +183,34 @@ export default function RightPanel() {
     return !!currentItem()?.isRoot;
   });
 
+  // Option lists for SelectField (see ./SelectField.jsx), replacing the
+  // <option>/<optgroup> markup the old native <select> rendered directly.
+  const layoutOptions = createMemo(() => {
+    const groups = layoutGroups();
+    const items = [{ value: "", label: "(Inherit)", disabled: isRoot() }];
+    if (groups) {
+      items.push({
+        value: "map",
+        label: groups.map.label,
+        disabled: !isRoot(),
+      });
+      items.push({
+        label: "Graph",
+        options: groups.graph.map((l) => ({ value: l.id, label: l.label })),
+      });
+      items.push({
+        label: "Tree",
+        options: groups.tree.map((l) => ({ value: l.id, label: l.label })),
+      });
+    }
+    return items;
+  });
+
+  const shapeOptions = createMemo(() => [
+    { value: "", label: "(Automatic)" },
+    ...shapeList().map((s) => ({ value: s.id, label: s.label })),
+  ]);
+
   const layoutValue = createMemo(() => {
     const item = currentItem();
     return item?.layout ? item.layout.id : "";
@@ -197,50 +238,57 @@ export default function RightPanel() {
     return item ? statusToString(item.status) : "";
   });
 
-  function setLayout(e) {
+  // Kobalte's Select trigger is a <button>, not a native <select>, so
+  // there is no event target to blur directly here (unlike the old
+  // e.target.blur()). Blur whichever element is currently focused,
+  // which is the trigger button right after a selection, so keyboard
+  // shortcuts keep working the same way they did before this refactor.
+  function returnFocusToCanvas() {
+    document.activeElement?.blur();
+  }
+
+  function setLayout(value) {
     const item = currentItem();
     if (!item) {
       return;
     }
-    const layout = layoutRepo.get(e.target.value);
+    const layout = layoutRepo.get(value);
     appModule.action(new actionsModule.SetLayout(item, layout));
-    e.target.blur(); // return focus to the canvas so shortcuts keep working
+    returnFocusToCanvas();
   }
 
-  function setShape(e) {
+  function setShape(value) {
     const item = currentItem();
     if (!item) {
       return;
     }
-    const shape = shapeRepo.get(e.target.value);
+    const shape = shapeRepo.get(value);
     appModule.action(new actionsModule.SetShape(item, shape));
-    e.target.blur();
+    returnFocusToCanvas();
   }
 
-  function setValue(e) {
+  function setValue(value) {
     const item = currentItem();
     if (!item) {
       return;
     }
-    const raw = e.target.value;
-    if (raw === "num") {
+    if (value === "num") {
       // Same prompt()-based flow as the "value" keyboard shortcut/command.
       commandRepo.get("value").execute();
     } else {
-      appModule.action(new actionsModule.SetValue(item, raw || null));
+      appModule.action(new actionsModule.SetValue(item, value || null));
     }
-    e.target.blur();
+    returnFocusToCanvas();
   }
 
-  function setStatus(e) {
+  function setStatus(value) {
     const item = currentItem();
     if (!item) {
       return;
     }
-    const raw = e.target.value;
-    const status = raw in STATUS_MAP ? STATUS_MAP[raw] : raw;
+    const status = value in STATUS_MAP ? STATUS_MAP[value] : value;
     appModule.action(new actionsModule.SetStatus(item, status));
-    e.target.blur();
+    returnFocusToCanvas();
   }
 
   function setColor(e) {
@@ -280,73 +328,40 @@ export default function RightPanel() {
           }}
         >
           <div class="flex-1 overflow-y-auto">
-            <Field
+            <div class="flex justify-center p-1 border-b border-black/10"> 
+              <Logo size={28} showTitle linkable centerTitle />
+            </div>
+            <SelectField
               label="Layout"
               value={layoutValue()}
               onChange={setLayout}
               disabled={!ready() || !currentItem()}
-            >
-              <option value="" disabled={isRoot()}>
-                (Inherit)
-              </option>
-              {layoutGroups() && (
-                <>
-                  <option value="map" disabled={!isRoot()}>
-                    {layoutGroups().map.label}
-                  </option>
-                  <optgroup label="Graph">
-                    <For each={layoutGroups().graph}>
-                      {(l) => <option value={l.id}>{l.label}</option>}
-                    </For>
-                  </optgroup>
-                  <optgroup label="Tree">
-                    <For each={layoutGroups().tree}>
-                      {(l) => <option value={l.id}>{l.label}</option>}
-                    </For>
-                  </optgroup>
-                </>
-              )}
-            </Field>
+              options={layoutOptions()}
+            />
 
-            <Field
+            <SelectField
               label="Shape"
               value={shapeValue()}
               onChange={setShape}
               disabled={!ready() || !currentItem()}
-            >
-              <option value="">(Automatic)</option>
-              <For each={shapeList()}>
-                {(s) => <option value={s.id}>{s.label}</option>}
-              </For>
-            </Field>
+              options={shapeOptions()}
+            />
 
-            <Field
+            <SelectField
               label="Value"
               value={valueValue()}
               onChange={setValue}
               disabled={!ready() || !currentItem()}
-            >
-              <option value="">(None)</option>
-              <option value="num">Number</option>
-              <optgroup label="Formula">
-                <option value="sum">Sum</option>
-                <option value="avg">Average</option>
-                <option value="min">Minimum</option>
-                <option value="max">Maximum</option>
-              </optgroup>
-            </Field>
+              options={VALUE_OPTIONS}
+            />
 
-            <Field
+            <SelectField
               label="Status"
               value={statusValue()}
               onChange={setStatus}
               disabled={!ready() || !currentItem()}
-            >
-              <option value="">None</option>
-              <option value="yes">Yes</option>
-              <option value="no">No</option>
-              <option value="computed">Autocompute</option>
-            </Field>
+              options={STATUS_OPTIONS}
+            />
 
             <ColorPicker label="Item color" onClick={setColor} />
             <ColorPicker label="Text color" onClick={setTextColor} />

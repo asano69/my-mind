@@ -122,7 +122,8 @@ export class MoveItem extends Action {
     // (e.g. cut-then-paste via clipboard.js) shouldn't silently reset the
     // item to the "right" default when it lands directly under root --
     // pick whichever side is currently lighter instead.
-    item.side = newSide ?? (newParent.isRoot ? pickBalancedSide(newParent) : null);
+    item.side =
+      newSide ?? (newParent.isRoot ? pickBalancedSide(newParent) : null);
     if (newIndex === undefined) {
       newParent.insertChild(item);
     } else {

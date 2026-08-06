@@ -1,5 +1,11 @@
 // src/item.js
-import { createSignal, createMemo, createRoot, createEffect, batch } from "solid-js";
+import {
+  createSignal,
+  createMemo,
+  createRoot,
+  createEffect,
+  batch,
+} from "solid-js";
 import * as html from "./html.js";
 import * as svg from "./svg.js";
 

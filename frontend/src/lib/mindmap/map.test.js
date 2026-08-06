@@ -56,7 +56,12 @@ describe("Map.prototype.ensureItemVisibility", () => {
       dom: {
         content: {
           getClientRects: () => [],
-          getBoundingClientRect: () => ({ left: 0, top: 0, right: 0, bottom: 0 }),
+          getBoundingClientRect: () => ({
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: 0,
+          }),
         },
       },
     };
@@ -72,7 +77,12 @@ describe("Map.prototype.ensureItemVisibility", () => {
       dom: {
         content: {
           getClientRects: () => [{}],
-          getBoundingClientRect: () => ({ left: -50, top: 10, right: 20, bottom: 40 }),
+          getBoundingClientRect: () => ({
+            left: -50,
+            top: 10,
+            right: 20,
+            bottom: 40,
+          }),
         },
       },
     };
