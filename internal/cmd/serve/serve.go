@@ -85,12 +85,23 @@ func Run(app *pocketbase.PocketBase, cfg *config.Config) error {
 	})
 
 	// Snapshot the working tier once a minute while maps are being
-	// edited. Daily/weekly/... tiers are simple enough to be handled by
-	// PocketBase's own cron-based collection rules instead (see
-	// docs/design.md).
+	// edited.
 	app.Cron().MustAdd("workingSnapshotBackup", "* * * * *", func() {
 		if err := database.BackupWorkingSnapshots(); err != nil {
 			logrus.WithError(err).Error("working snapshot backup failed")
+		}
+	})
+	// Daily/weekly tiers run at a fixed off-hours time instead of every
+	// minute, so they naturally avoid catching a map mid-edit (see
+	// docs/design.md).
+	app.Cron().MustAdd("dailySnapshotBackup", "0 3 * * *", func() {
+		if err := database.BackupDailySnapshots(); err != nil {
+			logrus.WithError(err).Error("daily snapshot backup failed")
+		}
+	})
+	app.Cron().MustAdd("weeklySnapshotBackup", "0 3 * * 0", func() {
+		if err := database.BackupWeeklySnapshots(); err != nil {
+			logrus.WithError(err).Error("weekly snapshot backup failed")
 		}
 	})
 
