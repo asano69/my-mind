@@ -1,4 +1,11 @@
-import { createSignal, createResource, For, Show } from "solid-js";
+import {
+  createSignal,
+  createResource,
+  createEffect,
+  onCleanup,
+  For,
+  Show,
+} from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { Dialog } from "@kobalte/core/dialog";
 import { fileSwitcherOpen, closeFileSwitcher } from "../lib/mindmap/store";
@@ -48,7 +55,10 @@ function FileSwitcherPanel(props) {
   // ArrowUp/ArrowDown move focus between result buttons (they're plain
   // siblings inside listRef, so next/previousElementSibling is enough --
   // no need to track an index). ArrowUp on the first result returns
-  // focus to the search box instead of doing nothing.
+  // focus to the search box instead of doing nothing. "/" jumps back to
+  // the search box from anywhere in the list, mirroring the common
+  // command-palette convention (e.g. GitHub's own "/" search shortcut),
+  // regardless of which item currently has focus.
   function handleListKeyDown(e) {
     if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -61,6 +71,9 @@ function FileSwitcherPanel(props) {
       } else {
         searchInputRef?.focus();
       }
+    } else if (e.key === "/") {
+      e.preventDefault();
+      searchInputRef?.focus();
     }
   }
 
@@ -118,6 +131,30 @@ export default function FileSwitcher() {
       closeFileSwitcher();
     }
   }
+
+  // Pressing Ctrl+K again while the dialog is open closes it, mirroring
+  // typical command-palette toggle behavior. This can't be handled by
+  // command/command.js's "file-switcher" command (which only ever
+  // opens): once the dialog is open, focus lives inside Kobalte's
+  // Dialog.Content, rendered via a Portal outside MindMapCanvas.jsx's
+  // containerRef -- so keyboard.js's containerEl-scoped keydown
+  // listener never sees the keystroke at all. A window-level listener,
+  // active only while the dialog is open, is the only way to catch it.
+  // Capture phase so it runs before the search input (or focused result
+  // button) would otherwise handle the keystroke.
+  createEffect(() => {
+    if (!fileSwitcherOpen()) {
+      return;
+    }
+    function handleKeyDown(e) {
+      if (e.code === "KeyK" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        closeFileSwitcher();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown, true);
+    onCleanup(() => window.removeEventListener("keydown", handleKeyDown, true));
+  });
 
   // Kobalte's Dialog restores focus on close to whatever it recorded as
   // "previously active" when the dialog opened. Since this dialog opens
