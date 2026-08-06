@@ -29,7 +29,7 @@
   /* Serif, not monospace: the raw markdown source is meant to read like
      prose, matching the preview's reading font. Monospace is reserved
      for actual code spans (see .cm-comment below). */
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: var(--notes-font-size);
   line-height: var(--notes-line-height);
   border: none;
@@ -52,7 +52,7 @@
 #notes .editor-preview-side {
   background: var(--color-bg);
   color: var(--color-preview-ink);
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: var(--notes-font-size);
   line-height: var(--notes-line-height);
   padding: 2rem;
@@ -154,7 +154,7 @@
 #notes .editor-preview-side h4,
 #notes .editor-preview-side h5,
 #notes .editor-preview-side h6 {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-weight: 700;
   line-height: 1.25;
   margin: 1em 0 0.4em;
