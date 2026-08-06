@@ -2,6 +2,7 @@ import { A, useNavigate } from "@solidjs/router";
 import { Show } from "solid-js";
 import {
   leftPanelHidden,
+  setLeftPanelHidden,
   toggleLeftPanel,
   showSnapshots,
   showCatalogList,
@@ -37,6 +38,44 @@ import DatabaseBackup from "lucide-solid/icons/database-backup";
 export default function LeftPanel() {
   const navigate = useNavigate();
 
+  // Closing the panel leaves focus on this toggle button, which lives
+  // outside MindMapCanvas.jsx's containerRef (LeftPanel is a Workspace-
+  // level sibling, not a child of the canvas container). keyboard.js's
+  // keydown listener is scoped to containerEl, so any shortcut (e.g.
+  // Ctrl+K) stops working until focus lands back inside it -- and
+  // keyboard.js's own self-heal guard only fires when containerEl
+  // itself loses focus, which never happened here since it was never
+  // focused to begin with. Explicitly hand focus back, same fix as
+  // FileSwitcher.jsx's onCloseAutoFocus. Only when *closing*: leaving
+  // it open means the user is about to interact with the sidebar, so
+  // stealing focus there would be counterproductive.
+  function handleToggleLeftPanel() {
+    toggleLeftPanel();
+    if (leftPanelHidden()) {
+      document.getElementById("mindmap-container")?.focus();
+    }
+  }
+
+  // Escape collapses the panel, but only while focus is actually inside
+  // it (this handler is attached to the panel's own root div, so it
+  // only fires while a descendant -- a search input, a list button, the
+  // toggle icon itself, ... -- has focus and the keydown bubbles up
+  // through this element). This is the opposite direction of
+  // keyboard.js's canvas-scoped Escape (Cancel command, see
+  // command/edit.js): that one is scoped to the canvas container and
+  // must NOT reach into this panel, since containerEl and this panel
+  // are DOM siblings, not ancestor/descendant -- Escape pressed while
+  // the canvas is focused never bubbles here, and vice versa. Each side
+  // owns Escape only for its own focus scope.
+  function handlePanelKeyDown(e) {
+    if (e.key !== "Escape" || leftPanelHidden()) {
+      return;
+    }
+    e.stopPropagation();
+    setLeftPanelHidden(true);
+    document.getElementById("mindmap-container")?.focus();
+  }
+
   // Snapshot the map's SVG before leaving for the catalog, so its
   // thumbnail there is up to date (auto-save skips the SVG for speed).
   async function goToCatalog(e) {
@@ -59,6 +98,7 @@ export default function LeftPanel() {
   return (
     <div
       id="left-panel"
+      onKeyDown={handlePanelKeyDown}
       class="fixed inset-y-0 left-0 z-5 flex overflow-hidden bg-pane shadow-card transition-[width] duration-300 ease-in-out"
       style={{
         width: leftPanelHidden()
@@ -67,7 +107,7 @@ export default function LeftPanel() {
       }}
     >
       <div class="flex w-[var(--ribbon-width)] flex-shrink-0 flex-col items-center gap-2 py-2">
-        <IconButton onClick={toggleLeftPanel} title="Toggle sidebar">
+        <IconButton onClick={handleToggleLeftPanel} title="Toggle sidebar">
           <PanelLeft size={20} />
         </IconButton>
 
