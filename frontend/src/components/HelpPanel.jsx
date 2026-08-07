@@ -1,4 +1,5 @@
 import { createSignal, onMount, For } from "solid-js";
+import { getVersion } from "../lib/mindmap/backend/pocketbase";
 
 // Static shape of the help table: section title + which commands make up
 // each row. commandRepo is only resolved at mount time (see onMount below),
@@ -113,6 +114,10 @@ export default function HelpPanel() {
   // "read-only consumption — no bridge object"). command.js's Help command
   // and edit.js's Cancel command write to it directly.
   const [sections, setSections] = createSignal([]);
+  // Best-effort: an empty string just renders no footer text if the
+  // request fails, rather than blocking the (more important) command
+  // table above on the network.
+  const [version, setVersion] = createSignal("");
 
   onMount(async () => {
     // Import the same three command modules my-mind.js imports for their
@@ -129,6 +134,9 @@ export default function HelpPanel() {
         rows: section.rows.map((names) => buildRow(commandRepo, names)),
       })),
     );
+    getVersion()
+      .then(setVersion)
+      .catch(() => {});
   });
 
   // Rendered inline inside LeftPanel.jsx's scrollable content area (see
@@ -136,26 +144,36 @@ export default function HelpPanel() {
   // `.pane` wrapper of its own. Small text + horizontal scroll so long
   // key combinations don't wrap or overflow the sidebar.
   return (
-    <div class="overflow-x-auto text-xs">
-      <For each={sections()}>
-        {(section) => (
-          <div class="mb-3">
-            <p class="mb-1 text-[11px] font-semibold tracking-wider text-text/60 uppercase">
-              {section.title}
-            </p>
-            <table class="w-full whitespace-nowrap text-xs leading-tight">
-              <For each={section.rows}>
-                {(row) => (
-                  <tr>
-                    <td class="py-0.5 pr-3">{row.labels}</td>
-                    <td class="py-0.5 text-right text-text/50">{row.keys}</td>
-                  </tr>
-                )}
-              </For>
-            </table>
-          </div>
-        )}
-      </For>
+    <div class="flex h-full flex-col">
+      <div class="flex-1 overflow-x-auto text-xs">
+        <For each={sections()}>
+          {(section) => (
+            <div class="mb-3">
+              <p class="mb-1 text-[11px] font-semibold tracking-wider text-text/60 uppercase">
+                {section.title}
+              </p>
+              <table class="w-full whitespace-nowrap text-xs leading-tight">
+                <For each={section.rows}>
+                  {(row) => (
+                    <tr>
+                      <td class="py-0.5 pr-3">{row.labels}</td>
+                      <td class="py-0.5 text-right text-text/50">
+                        {row.keys}
+                      </td>
+                    </tr>
+                  )}
+                </For>
+              </table>
+            </div>
+          )}
+        </For>
+      </div>
+      {/* Mirrors RightPanel.jsx's footer (border-t, min-h-[28px],
+          flex items-center justify-between, same padding) so the two
+          side panels' footers read as a matching pair. */}
+      <footer class="flex min-h-[28px] flex-none items-center justify-between border-t border-black/10 px-3 py-1.5">
+        <span class="text-xs text-text/50">{version() && `v${version()}`}</span>
+      </footer>
     </div>
   );
 }

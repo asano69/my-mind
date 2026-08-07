@@ -7,6 +7,7 @@ import (
 	"github.com/asano69/my-mind/internal/assets"
 	"github.com/asano69/my-mind/internal/config"
 	"github.com/asano69/my-mind/internal/db"
+	"github.com/asano69/my-mind/internal/version"
 
 	"github.com/google/uuid"
 	"github.com/pocketbase/dbx"
@@ -73,6 +74,13 @@ func Run(app *pocketbase.PocketBase, cfg *config.Config) error {
 				return e.NotFoundError("snapshot not found", err)
 			}
 			return e.Blob(http.StatusOK, "image/svg+xml", []byte(record.GetString("svg")))
+		})
+
+		// Exposes the app version (see internal/version) for the frontend's
+		// help panel footer. No auth required -- same trust level as the
+		// static assets served just below.
+		e.Router.GET("/api/version", func(e *core.RequestEvent) error {
+			return e.JSON(http.StatusOK, map[string]string{"version": version.Version})
 		})
 
 		// Serve the whole Vite build output as-is: index.html, editor.html,

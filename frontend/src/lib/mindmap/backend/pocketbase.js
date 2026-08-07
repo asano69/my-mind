@@ -120,3 +120,12 @@ export async function setSetting(key, value) {
     throw e;
   }
 }
+
+// Fetches the running server's version string (see internal/version and
+// the "/api/version" route in internal/cmd/serve/serve.go). Not backed
+// by a PocketBase collection, so this hits the custom route directly via
+// pb.send() rather than pb.collection(...).
+export async function getVersion() {
+  const { version } = await pb.send("/api/version", { method: "GET" });
+  return version;
+}

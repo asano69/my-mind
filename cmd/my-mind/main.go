@@ -13,6 +13,7 @@ import (
 
 	"github.com/asano69/my-mind/internal/config"
 	_ "github.com/asano69/my-mind/migrations"
+	"github.com/asano69/my-mind/internal/version"
 	"github.com/pocketbase/pocketbase/plugins/migratecmd"
 )
 
@@ -31,7 +32,7 @@ func main() {
 	root.Use = "my-mind"
 	root.Short = "my-mind"
 	root.SilenceUsage = true
-	root.Version = "0.0.1-beta.3"
+	root.Version = version.Version
 
 	root.AddCommand(
 
