@@ -900,6 +900,16 @@ func init() {
 						"type": "bool"
 					},
 					{
+						"help": "",
+						"hidden": false,
+						"id": "bool1441639195",
+						"name": "titleAuto",
+						"presentable": false,
+						"required": false,
+						"system": false,
+						"type": "bool"
+					},
+					{
 						"hidden": false,
 						"id": "autodate2990389176",
 						"name": "created",
