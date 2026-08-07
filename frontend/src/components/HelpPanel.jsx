@@ -171,9 +171,10 @@ export default function HelpPanel() {
       {/* Mirrors RightPanel.jsx's footer (border-t, min-h-[28px],
           flex items-center justify-between, same padding) so the two
           side panels' footers read as a matching pair. */}
-      <footer class="flex min-h-[28px] flex-none items-center justify-between border-t border-black/10 px-3 py-1.5">
-        <span class="text-xs text-text/50">{version() && `v${version()}`}</span>
-      </footer>
+      <div class="flex-none border-t border-black/10">
+        <span class="text-xs text-text/75">{version() && `v${version()}`}</span>
+      </div>
+ 
     </div>
   );
 }

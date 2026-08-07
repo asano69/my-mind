@@ -174,7 +174,7 @@ export default function LeftPanel() {
             HelpPanel.jsx's internal section headings (larger, non-
             uppercase), so it reads as "which pane is this" rather than
             competing with Help's own section labels. */}
-        <div class="flex-none border-b border-black/10 px-1 py-2">
+        <div class="flex-none border-b border-black/10 px-1 py-1.5">
           {/* font-family set via inline style, not the "font-serif" class:
               map.css injects an unlayered `* { font-family: sans }` rule
               (see item.js/map.js's raw <style> import), which always beats
