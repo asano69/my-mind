@@ -1,7 +1,11 @@
 import { useNavigate } from "@solidjs/router";
-import { createSignal, createMemo, onMount, onCleanup, Show } from "solid-js";
+import { createSignal, createMemo, onMount, Show } from "solid-js";
 import { TextField } from "@kobalte/core/text-field";
-import { rightPanelHidden, leftPanelHidden } from "../lib/mindmap/store";
+import {
+  rightPanelHidden,
+  leftPanelHidden,
+  currentTitle,
+} from "../lib/mindmap/store";
 
 // icons
 import Trash2 from "lucide-solid/icons/trash-2";
@@ -29,7 +33,11 @@ export default function TopBar() {
   const navigate = useNavigate();
 
   let titleModule; // cached after the first dynamic import, see onMount
-  const [title, setTitle] = createSignal("");
+  // Local buffer for the input while it's actively being edited. The
+  // displayed (non-editing) title always reads store.js's currentTitle()
+  // directly (see below) instead of being pushed a mirrored copy — see
+  // title.js's init() for why the old push-based mirror was removed.
+  const [editValue, setEditValue] = createSignal("");
 
   // Undo/Redo button enablement mirrors ContextMenu.jsx's disabled logic
   // (commandRepo.get(id).isValid), which itself reads history.js's
@@ -49,7 +57,8 @@ export default function TopBar() {
   let titleBeforeEdit = "";
 
   function startEditingTitle() {
-    titleBeforeEdit = title();
+    titleBeforeEdit = currentTitle();
+    setEditValue(titleBeforeEdit);
     setIsEditingTitle(true);
     // The input isn't mounted yet this tick (see the <Show> below), so
     // focus/select it once it is.
@@ -61,11 +70,11 @@ export default function TopBar() {
 
   function commitTitle() {
     setIsEditingTitle(false);
-    titleModule?.rename(title());
+    titleModule?.rename(editValue());
   }
 
   function cancelEditingTitle() {
-    setTitle(titleBeforeEdit);
+    setEditValue(titleBeforeEdit);
     setIsEditingTitle(false);
   }
 
@@ -79,7 +88,6 @@ export default function TopBar() {
 
   onMount(async () => {
     titleModule = await import("../lib/mindmap/title.js");
-    titleModule.registerInput({ setValue: setTitle });
     [historyModule, { repo: commandRepoRef }] = await Promise.all([
       import("../lib/mindmap/history.js"),
       import("../lib/mindmap/command/command.js"),
@@ -100,15 +108,6 @@ export default function TopBar() {
     }
     historyModule.historyVersion();
     return commandRepoRef.get("redo").isValid;
-  });
-
-  // TopBar lives at the Workspace level and stays mounted across map
-  // switches (only MindMapCanvas remounts, see Workspace.jsx's keyed
-  // <Show>). It only truly unregisters when it unmounts itself, e.g.
-  // leaving Workspace entirely for /catalog — not on every engine
-  // mount()/unmount() cycle (see title.js's dispose()).
-  onCleanup(() => {
-    titleModule?.unregisterInput();
   });
 
   const [confirmDeleteOpen, setConfirmDeleteOpen] = createSignal(false);
@@ -160,11 +159,11 @@ export default function TopBar() {
                 py-1 text-left font-serif text-lg font-semibold text-text
                 transition-colors hover:bg-pane-hover"
             >
-              {title() || "Untitled"}
+              {currentTitle() || "Untitled"}
             </button>
           }
         >
-          <TextField value={title()} onChange={setTitle}>
+          <TextField value={editValue()} onChange={setEditValue}>
             <TextField.Input
               ref={titleInputRef}
               onBlur={commitTitle}
