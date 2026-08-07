@@ -4,7 +4,7 @@ import { repo as layoutRepo } from "./layout/layout.js";
 import * as svg from "./svg.js";
 import * as html from "./html.js";
 import * as app from "./my-mind.js";
-import { bumpDirty } from "./store.js";
+import { bumpDirty, titleAuto, setCurrentTitle } from "./store.js";
 import { br2nl } from "./format/format.js";
 import { createSignal, createComputed, createRoot } from "solid-js";
 // Raw-text import: Vite reads and inlines map.css's content at build
@@ -71,6 +71,16 @@ export default class Map {
         this.node.setAttribute("width", String(rootSize[0]));
         this.node.setAttribute("height", String(rootSize[1]));
         this._anchorRootPosition(this._root.contentPosition);
+        // Keeps the map's title synced to the root node's label whenever
+        // titleAuto is on (see store.js/ui/io.js). Piggybacks on this
+        // already-existing layout pass rather than a dedicated effect: a
+        // root text edit invalidates root's own layout memo, which this
+        // computed reads via readItemLayoutResult() above, so this
+        // reruns synchronously on every root text change -- no new
+        // signal needed.
+        if (titleAuto()) {
+          setCurrentTitle(this.name);
+        }
         // Bump once per root layout pull, not once per item: auto-save only
         // needs "did anything change", never "how many items changed".
         bumpDirty();

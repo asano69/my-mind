@@ -29,6 +29,14 @@ export const [editing, setEditing] = createSignal(false);
 // subscribing to an event.
 export const [currentTitle, setCurrentTitle] = createSignal("");
 
+// Whether the map's title automatically follows the root node's label
+// (true) or has been explicitly overridden by the user (false). Mirrors
+// the "titleAuto" field on the maps collection record (see
+// backend/pocketbase.js); ui/io.js's setCurrentMap()/setTitle() write
+// this, and map.js's shared layout computed reads it to keep
+// currentTitle synced to the root's text whenever it's true.
+export const [titleAuto, setTitleAuto] = createSignal(true);
+
 // Whether the currently open map's server copy is confirmed up to date:
 // "saved" (nothing pending, or nothing to save yet), "dirty" (local edits
 // not yet confirmed saved), or "error" (the last save attempt failed,

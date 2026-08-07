@@ -6,6 +6,8 @@ import { serializeCurrentMap } from "../backend/image.js";
 import {
   currentTitle,
   setCurrentTitle,
+  titleAuto,
+  setTitleAuto,
   setSaveStatus,
   dirtyVersion,
   setCurrentMapId,
@@ -113,7 +115,16 @@ export function dispose() {
   currentMapId = null;
   currentMapUuid = null;
 
-  setCurrentTitle("");
+  // Deliberately does NOT reset currentTitle to "" here. dispose() runs
+  // on every map switch (unmount() before the next mount()'s async
+  // io.restore() resolves), and restore() is a network round-trip -- if
+  // currentTitle were cleared here, TopBar/title.js would flash
+  // "Untitled" for that whole window. Leaving the previous map's title
+  // visible until the new one loads (like a browser tab keeping its old
+  // title while a page loads) is both simpler and less jarring.
+  // setCurrentMap() (called by both restore() and resetCurrentMap())
+  // always overwrites it as soon as the new value is known.
+  setTitleAuto(true);
   setSaveStatus("saved");
   setCurrentMapId(null);
 
@@ -157,18 +168,37 @@ export function getTitle() {
   return currentTitle();
 }
 
-// Renames the map's title (the "title" field stored in PocketBase),
-// independent of the mindmap's root node text. Saves immediately if the
-// map has already been saved once; otherwise the new title just carries
-// into the next save.
+// Renames the map's title (the "title" field stored in PocketBase).
+// An empty (after trim) title means "go back to following the root
+// node's label" — switches to auto mode and immediately reflects the
+// root's current text (map.js's shared layout computed keeps it synced
+// from then on, on every subsequent root text edit). A non-empty title
+// switches to manual mode and is kept exactly as given. Saves
+// immediately if the map has already been saved once; otherwise the new
+// title/mode just carries into the next save.
 export async function setTitle(title) {
-  if (title === currentTitle()) {
+  const trimmed = title.trim();
+  if (!trimmed) {
+    setTitleAuto(true);
+    const autoTitle = app.currentMap ? app.currentMap.name : "";
+    setCurrentTitle(autoTitle);
+    if (currentMapId) {
+      try {
+        await backend.updateTitle(currentMapId, autoTitle, true);
+      } catch (e) {
+        error(e);
+      }
+    }
     return;
   }
-  setCurrentTitle(title);
+  if (trimmed === currentTitle() && !titleAuto()) {
+    return;
+  }
+  setTitleAuto(false);
+  setCurrentTitle(trimmed);
   if (currentMapId) {
     try {
-      await backend.updateTitle(currentMapId, title);
+      await backend.updateTitle(currentMapId, trimmed, false);
     } catch (e) {
       error(e);
     }
@@ -216,10 +246,10 @@ export function saveWithSvg() {
 async function performSave(includeSvg) {
   const map = app.currentMap;
   const mymind = map.toJSON();
-  // Use the explicitly-set title if present; otherwise fall back to the
-  // root node's name (only relevant for maps that have never had a
-  // custom title set).
-  const title = currentTitle() || map.name;
+  // While titleAuto is on, the title saved is always the root node's
+  // current label; otherwise it's whatever the user explicitly set.
+  const auto = titleAuto();
+  const title = auto ? map.name : currentTitle();
   // SVG snapshot generation is somewhat expensive and only needed for the
   // catalog page thumbnail, so it's skipped on auto-save (includeSvg=false)
   // and only computed when the user explicitly saves.
@@ -232,7 +262,7 @@ async function performSave(includeSvg) {
     }
   }
   try {
-    const record = await backend.save(currentMapId, title, mymind, svg);
+    const record = await backend.save(currentMapId, title, mymind, svg, auto);
     setCurrentMap(record);
   } catch (e) {
     setSaveStatus("error");
@@ -243,6 +273,7 @@ function setCurrentMap(record) {
   currentMapId = record ? record.id : null;
   currentMapUuid = record ? record.uuid : null;
   setCurrentTitle(record ? record.title || "" : "");
+  setTitleAuto(record ? (record.titleAuto ?? true) : true);
   setCurrentMapId(currentMapId);
   // A record just loaded from (or written to) the server is by definition
   // in sync with it -- covers restore(), performSave()'s success path,

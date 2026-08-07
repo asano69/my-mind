@@ -10,10 +10,13 @@ const COLLECTION = "maps";
 // svg is the rendered SVG snapshot, stored alongside for use on the catalog
 // page. It's optional: pass undefined to leave the stored svg untouched
 // (used by auto-save, which should not re-send it on every keystroke).
-export async function save(id, title, mymind, svg) {
+export async function save(id, title, mymind, svg, titleAuto) {
   const data = { title, mymind };
   if (svg !== undefined) {
     data.svg = svg;
+  }
+  if (titleAuto !== undefined) {
+    data.titleAuto = titleAuto;
   }
   if (id) {
     return pb.collection(COLLECTION).update(id, data);
@@ -29,8 +32,12 @@ export async function loadByUuid(uuid) {
     .getFirstListItem(pb.filter("uuid = {:uuid}", { uuid }));
 }
 
-export async function updateTitle(id, title) {
-  return pb.collection(COLLECTION).update(id, { title });
+export async function updateTitle(id, title, titleAuto) {
+  const data = { title };
+  if (titleAuto !== undefined) {
+    data.titleAuto = titleAuto;
+  }
+  return pb.collection(COLLECTION).update(id, data);
 }
 
 export async function deleteMap(id) {

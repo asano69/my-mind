@@ -22,7 +22,11 @@ vi.mock("./my-mind.js", () => ({
   selectItem: vi.fn(),
   stopEditing: vi.fn(),
 }));
-vi.mock("./store.js", () => ({ bumpDirty: vi.fn() }));
+vi.mock("./store.js", () => ({
+  bumpDirty: vi.fn(),
+  titleAuto: vi.fn(() => true),
+  setCurrentTitle: vi.fn(),
+}));
 vi.mock("./format/format.js", () => ({ br2nl: (s) => s }));
 vi.mock("./map.css?raw", () => ({ default: "" }));
 
