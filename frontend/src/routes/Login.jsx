@@ -1,4 +1,5 @@
 import { createSignal } from "solid-js";
+import { Button } from "@kobalte/core/button";
 import pb from "../lib/pb";
 import Logo from "../components/Logo";
 // Login screen shown by AuthGate when no valid superuser session exists.
@@ -54,9 +55,21 @@ export default function Login() {
           class="rounded-md border border-pane-hover bg-bg px-3 py-2 text-text"
         />
         {error() && <p class="text-sm text-[#dc3545]">{error()}</p>}
-        <button type="submit" class="btn" disabled={pending()}>
+        {/* Kobalte's Button owns disabled semantics (aria-disabled,
+            blocking clicks while disabled) instead of relying only on
+            the native disabled attribute, matching the rest of the
+            app's Kobalte-based controls (Switch, Select, Dialog). */}
+        <Button
+          type="submit"
+          disabled={pending()}
+          class="rounded-md bg-[#5563A2]/70 px-3 py-2 text-sm font-semibold
+            text-white transition-colors hover:bg-[#5563A2]/85
+            focus-visible:outline focus-visible:outline-2
+            focus-visible:outline-offset-2 focus-visible:outline-accent
+            disabled:cursor-not-allowed disabled:opacity-50"
+        >
           {pending() ? "Logging in…" : "Log in"}
-        </button>
+        </Button>
       </form>
     </div>
   );
