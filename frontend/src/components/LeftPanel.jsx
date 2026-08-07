@@ -175,7 +175,17 @@ export default function LeftPanel() {
             uppercase), so it reads as "which pane is this" rather than
             competing with Help's own section labels. */}
         <div class="flex-none border-b border-black/10 px-1 py-2">
-          <p class="truncate font-serif text-base font-semibold text-text">
+          {/* font-family set via inline style, not the "font-serif" class:
+              map.css injects an unlayered `* { font-family: sans }` rule
+              (see item.js/map.js's raw <style> import), which always beats
+              any layered Tailwind utility class regardless of specificity.
+              Without this, the title renders serif only until the map's
+              <style> tag is inserted, then silently flips to sans. Same
+              fix Logo.jsx already uses for its own title text. */}
+          <p
+            class="truncate text-base font-semibold text-text"
+            style={{ "font-family": "var(--font-serif)" }}
+          >
             {paneTitle()}
           </p>
         </div>

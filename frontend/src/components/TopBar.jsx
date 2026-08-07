@@ -155,9 +155,18 @@ export default function TopBar() {
             <button
               type="button"
               onClick={startEditingTitle}
+              // font-family set via inline style, not the (now removed)
+              // "font-serif" class: this title must never render serif,
+              // not even briefly. map.css injects an unlayered
+              // `* { font-family: sans }` rule that always beats a
+              // layered Tailwind utility class, so before the map's
+              // <style> tag is inserted this button used to flash serif
+              // for one frame. Pinning font-family inline removes the
+              // dependency on load order entirely.
               class="truncate rounded-md border border-transparent px-2
-                py-1 text-left font-serif text-lg font-semibold text-text
+                py-1 text-left text-lg font-semibold text-text
                 transition-colors hover:bg-pane-hover"
+              style={{ "font-family": "var(--font-sans)" }}
             >
               {currentTitle() || "Untitled"}
             </button>
@@ -169,9 +178,15 @@ export default function TopBar() {
               onBlur={commitTitle}
               onKeyDown={handleTitleKeyDown}
               placeholder="Untitled"
-              style={{ "field-sizing": "content" }}
+              // Same inline-style fix as the button above, kept in sync
+              // so switching between display/edit mode never changes
+              // the font.
+              style={{
+                "field-sizing": "content",
+                "font-family": "var(--font-sans)",
+              }}
               class="rounded-md border border-pane-hover bg-pane px-2 py-1
-                text-left font-serif text-lg font-semibold text-text
+                text-left text-lg font-semibold text-text
                 outline-none"
             />
           </TextField>
