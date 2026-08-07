@@ -1,7 +1,12 @@
 import EasyMDE from "easymde";
 import "easymde/dist/easymde.min.css";
 import "./NotesEditor.css";
-import { activeMode, currentItem, hoveredItem } from "../lib/mindmap/store";
+import {
+  activeMode,
+  currentItem,
+  hoveredItem,
+  currentMapId,
+} from "../lib/mindmap/store";
 import {
   createEffect,
   createMemo,
@@ -15,7 +20,17 @@ export default function NotesEditor() {
   let textareaRef;
   let easyMDE;
   let notesModule; // cached after the first dynamic import, see onMount
-  let applyingExternalContent = false;
+
+  // One CodeMirror Doc per item, keyed by item.id. CodeMirror 5's
+  // undo/redo history belongs to the Doc, not to the editor instance --
+  // the old code reused a single Doc across every item (via
+  // easyMDE.value()), which meant undo/redo history was shared globally
+  // across all notes: undoing after switching items would undo the
+  // *previous* item's edit. Swapping in a per-item Doc
+  // (easyMDE.codemirror.swapDoc()) gives each item its own independent
+  // undo/redo stack.
+  const docsByItemId = new Map();
+  let currentDocItemId = null; // avoids a redundant swapDoc() for the same item
 
   // Tracks whether notesModule/editorAPI are ready. The createEffect below
   // needs to react to *both* "the engine selected an item" and "our own
@@ -27,25 +42,40 @@ export default function NotesEditor() {
   // change again just because our setup finished.
   const [ready, setReady] = createSignal(false);
 
-  function setMarkdown(text) {
-    const next = text || "";
-    if (easyMDE.value() === next) {
+  function getOrCreateDoc(item) {
+    let doc = docsByItemId.get(item.id);
+    if (!doc) {
+      // Reuse the editor's own configured mode (e.g. "gfm") rather than
+      // hardcoding it, so every per-item Doc renders/highlights exactly
+      // like the editor's initial Doc did.
+      const CodeMirror = easyMDE.codemirror.constructor;
+      const mode = easyMDE.codemirror.getOption("mode");
+      doc = new CodeMirror.Doc(item.notes || "", mode);
+      docsByItemId.set(item.id, doc);
+    }
+    return doc;
+  }
+
+  // Switches the editor to show/edit `item`'s own Doc (creating one on
+  // first use). swapDoc() does not fire a "change" event, so unlike the
+  // old value()-based approach this needs no "applyingExternalContent"
+  // guard to keep onEditorChange() from firing spuriously.
+  function setContent(item) {
+    if (!item || item.id === currentDocItemId) {
       return;
     }
-
-    applyingExternalContent = true;
+    currentDocItemId = item.id;
     const wasPreview = easyMDE.isPreviewActive();
-    easyMDE.value(next);
+    easyMDE.codemirror.swapDoc(getOrCreateDoc(item));
     // EasyMDE's preview pane is a static render generated the moment
-    // togglePreview() runs; changing the underlying value via value()
-    // while preview is already active does not refresh it. Without this,
-    // switching maps while backgrounded left the notes preview showing
-    // the previous map's content. Toggle off/on to force a fresh render.
+    // togglePreview() runs; changing the underlying doc while preview is
+    // already active does not refresh it. Without this, switching maps
+    // while backgrounded left the notes preview showing the previous
+    // map's content. Toggle off/on to force a fresh render.
     if (wasPreview) {
       easyMDE.togglePreview();
       easyMDE.togglePreview();
     }
-    applyingExternalContent = false;
   }
 
   // Idempotent wrapper around togglePreview(): EasyMDE only exposes a
@@ -79,9 +109,6 @@ export default function NotesEditor() {
       toolbar: false,
     });
     easyMDE.codemirror.on("change", () => {
-      if (applyingExternalContent) {
-        return;
-      }
       notesModule?.onEditorChange(easyMDE.value());
     });
 
@@ -89,7 +116,7 @@ export default function NotesEditor() {
     notesModule = await import("../lib/mindmap/ui/notes.js");
 
     notesModule.registerEditorAPI({
-      setContent: setMarkdown,
+      setContent,
     });
 
     window.addEventListener("keydown", handleEscape, true);
@@ -148,8 +175,25 @@ export default function NotesEditor() {
     }),
   );
 
+  // Each Doc's undo/redo history only makes sense within the map it
+  // belongs to -- item ids aren't guaranteed unique across different
+  // maps, and there is no reason to keep every map's Docs alive for the
+  // whole app session. Clear the cache whenever the open map changes, so
+  // stale Docs (and their history) from a previous map are dropped.
+  createEffect(
+    on(
+      currentMapId,
+      () => {
+        docsByItemId.clear();
+        currentDocItemId = null;
+      },
+      { defer: true },
+    ),
+  );
+
   onCleanup(() => {
     window.removeEventListener("keydown", handleEscape, true);
+    docsByItemId.clear();
     easyMDE?.toTextArea();
     easyMDE = null;
   });

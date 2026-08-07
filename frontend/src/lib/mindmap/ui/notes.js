@@ -14,7 +14,10 @@ export function toggle() {
   const nextMode = activeMode() === "notes" ? "canvas" : "notes";
   setActiveMode(nextMode);
   if (nextMode === "notes" && app.currentItem) {
-    editorAPI?.setContent(app.currentItem.notes);
+    // Pass the item itself, not its text -- NotesEditor.jsx needs
+    // item.id to look up (or create) that item's own CodeMirror Doc, so
+    // each item keeps an independent undo/redo history.
+    editorAPI?.setContent(app.currentItem);
   }
 }
 
@@ -26,7 +29,8 @@ export function onItemSelect(item) {
   if (!item) {
     return;
   }
-  editorAPI?.setContent(item.notes);
+  // See toggle()'s comment: setContent now takes the item, not text.
+  editorAPI?.setContent(item);
 }
 
 // Called by NotesEditor whenever the user edits the text.
