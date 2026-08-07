@@ -1,4 +1,4 @@
-import { createEffect, createSignal } from "solid-js";
+import { createEffect, createSignal, Show } from "solid-js";
 import { Dialog } from "@kobalte/core/dialog";
 import {
   currentItem,
@@ -10,6 +10,16 @@ import {
 // Kobalte dialog, mirroring ConfirmDialog.jsx's structure. Always
 // mounted (see MindMapCanvas.jsx); visibility is store.js's
 // valueDialogOpen signal, opened by the "value" command.
+// Empty input is intentionally NOT invalid -- it means "clear the
+// value" (see handleConfirm below). Anything else must parse as a
+// number, or SetValue would silently store an arbitrary string that
+// item.js's resolvedValue getter can't interpret (it falls through to
+// 0 for any value it doesn't recognize as sum/avg/min/max), which is
+// confusing since nothing signals that the save was rejected.
+function isInvalidInput(text) {
+  return text.length > 0 && isNaN(Number(text));
+}
+
 export default function ValueDialog() {
   let inputRef;
   const [value, setValue] = createSignal("");
@@ -40,23 +50,23 @@ export default function ValueDialog() {
       closeValueDialog();
       return;
     }
+    const raw = value();
+    if (isInvalidInput(raw)) {
+      // Block the save; the Set button is disabled and Enter is a
+      // no-op for the same reason, so this mainly guards against a
+      // stale keydown racing a fresh value() update.
+      return;
+    }
     if (!actionsModule || !appModule) {
       [actionsModule, appModule] = await Promise.all([
         import("../lib/mindmap/action.js"),
         import("../lib/mindmap/my-mind.js"),
       ]);
     }
-    // Same conversion as the old prompt()-based flow: an empty input
-    // becomes null, then Number(...) decides whether the stored value is
-    // numeric or left as a string (e.g. a formula id).
-    let newValue = value();
-    if (!newValue.length) {
-      newValue = null;
-    }
-    const numValue = Number(newValue);
-    appModule.action(
-      new actionsModule.SetValue(item, isNaN(numValue) ? newValue : numValue),
-    );
+    // Empty input clears the value; otherwise it's always a real
+    // number now that isInvalidInput() rejects anything else.
+    const newValue = raw.length ? Number(raw) : null;
+    appModule.action(new actionsModule.SetValue(item, newValue));
     closeValueDialog();
   }
 
@@ -80,9 +90,23 @@ export default function ValueDialog() {
               type="text"
               value={value()}
               onInput={(e) => setValue(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
-              class="mt-3 w-full rounded-md border border-pane-hover bg-bg px-3 py-2 text-text outline-none focus:border-accent"
+              onKeyDown={(e) =>
+                e.key === "Enter" &&
+                !isInvalidInput(value()) &&
+                handleConfirm()
+              }
+              aria-invalid={isInvalidInput(value())}
+              class="mt-3 w-full rounded-md border bg-bg px-3 py-2 text-text outline-none focus:border-accent"
+              classList={{
+                "border-pane-hover": !isInvalidInput(value()),
+                "border-[#cc0000]": isInvalidInput(value()),
+              }}
             />
+            <Show when={isInvalidInput(value())}>
+              <p class="mt-1 text-sm text-[#cc0000]">
+                Enter a number, or leave blank to clear.
+              </p>
+            </Show>
             <div class="mt-5 flex justify-end gap-2">
               <button
                 type="button"
@@ -94,7 +118,8 @@ export default function ValueDialog() {
               <button
                 type="button"
                 onClick={handleConfirm}
-                class="rounded-md bg-accent px-3 py-1.5 text-sm text-white hover:opacity-90"
+                disabled={isInvalidInput(value())}
+                class="rounded-md bg-accent px-3 py-1.5 text-sm text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Set
               </button>
