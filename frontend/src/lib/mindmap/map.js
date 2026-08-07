@@ -361,7 +361,12 @@ export default class Map {
   }
   get name() {
     let name = this._root.text;
-    return br2nl(name).replace(/\n/g, " ").replace(/[<>]/g, "").trim();
+    return br2nl(name)
+      .replace(/\n/g, " ")
+      .replace(/&nbsp;/gi, " ") // contentEditable can serialize a trailing space as this entity
+      .replace(/\u00a0/g, " ") // the literal non-breaking space character, in case it wasn't entity-encoded
+      .replace(/[<>]/g, "")
+      .trim();
   }
   get id() {
     return this._root.id;
