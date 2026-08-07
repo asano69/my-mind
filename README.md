@@ -65,6 +65,7 @@ The demo takes about 50 seconds to start.
 - [x] ドロップターゲット判定改善計画 doc07
 - [x] SVGのスタイルがグローバルに影響する問題
 - [x] クライアントサイドでの自動転送（保存）機能の無効化と有効化を切り替えるトグルスイッチ（デフォルトでは有効化）
+- [x] Undo/Redoボタンの設置
 - [ ] dark-mode対応
 - [ ] サイドバーの開閉状態を記憶
 - [ ] フロントエンドにおいて自動保存アルゴリズムの調整（スナップショットロード時に自動バックアップされないようにする）
@@ -78,7 +79,7 @@ The demo takes about 50 seconds to start.
 
 ## Work in Progress
 
-- [ ] Undo/Redoボタンの設置
+
 
 
 
