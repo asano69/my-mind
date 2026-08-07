@@ -19,7 +19,8 @@ export default function IconButton(props) {
       title={props.title}
       disabled={props.disabled}
       class={iconButtonClass}
-      classList={{ "opacity-30 pointer-events-none": props.disabled }}
+      classList={{ "pointer-events-none": props.disabled }}
+      style={{ opacity: props.disabled ? 0.15 : undefined }}
     >
       {props.children}
     </button>
