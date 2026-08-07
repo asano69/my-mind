@@ -38,6 +38,19 @@ import DatabaseBackup from "lucide-solid/icons/database-backup";
 export default function LeftPanel() {
   const navigate = useNavigate();
 
+  // Title for the fixed pane header above the scrollable content area
+  // (see the render below). Mirrors the same three-way branch used to
+  // pick which list component renders.
+  const paneTitle = () => {
+    if (showSnapshots()) {
+      return "Snapshots";
+    }
+    if (!helpHidden()) {
+      return "Help";
+    }
+    return "Catalog";
+  };
+
   // Closing the panel leaves focus on this toggle button, which lives
   // outside MindMapCanvas.jsx's containerRef (LeftPanel is a Workspace-
   // level sibling, not a child of the canvas container). keyboard.js's
@@ -150,25 +163,37 @@ export default function LeftPanel() {
           command has been triggered (see command/command.js); empty
           otherwise. */}
       <div
-        class="min-w-0 flex-1 overflow-y-auto px-2 py-2 transition-opacity duration-200"
+        class="flex min-w-0 flex-1 flex-col overflow-hidden transition-opacity duration-200"
         classList={{
           "opacity-0": leftPanelHidden(),
           "pointer-events-none": leftPanelHidden(),
         }}
       >
-        <Show when={showSnapshots()}>
-          <SnapshotsList />
-        </Show>
-        {/* Default fallback: when neither snapshots nor help is being
-            shown, display the maps browser instead of leaving the panel
-            blank (covers both the explicit "catalog-list" command and
-            the panel's default just-opened state). */}
-        <Show when={showCatalogList() || (!showSnapshots() && helpHidden())}>
-          <CatalogList />
-        </Show>
-        <Show when={!helpHidden()}>
-          <HelpPanel />
-        </Show>
+        {/* Fixed pane header, mirroring RightPanel.jsx's own Logo header
+            (same border-b treatment). One level more abstract than
+            HelpPanel.jsx's internal section headings (larger, non-
+            uppercase), so it reads as "which pane is this" rather than
+            competing with Help's own section labels. */}
+        <div class="flex-none border-b border-black/10 px-1 py-2">
+          <p class="truncate font-serif text-base font-semibold text-text">
+            {paneTitle()}
+          </p>
+        </div>
+        <div class="min-w-0 flex-1 overflow-y-auto px-2 py-2">
+          <Show when={showSnapshots()}>
+            <SnapshotsList />
+          </Show>
+          {/* Default fallback: when neither snapshots nor help is being
+              shown, display the maps browser instead of leaving the panel
+              blank (covers both the explicit "catalog-list" command and
+              the panel's default just-opened state). */}
+          <Show when={showCatalogList() || (!showSnapshots() && helpHidden())}>
+            <CatalogList />
+          </Show>
+          <Show when={!helpHidden()}>
+            <HelpPanel />
+          </Show>
+        </div>
       </div>
     </div>
   );
