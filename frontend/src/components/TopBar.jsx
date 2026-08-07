@@ -1,6 +1,7 @@
 import { useNavigate } from "@solidjs/router";
-import { createSignal, createMemo, onMount, onCleanup } from "solid-js";
-import { rightPanelHidden } from "../lib/mindmap/store";
+import { createSignal, createMemo, onMount, onCleanup, Show } from "solid-js";
+import { TextField } from "@kobalte/core/text-field";
+import { rightPanelHidden, leftPanelHidden } from "../lib/mindmap/store";
 
 // icons
 import Trash2 from "lucide-solid/icons/trash-2";
@@ -39,8 +40,41 @@ export default function TopBar() {
   let commandRepoRef;
   const [historyReady, setHistoryReady] = createSignal(false);
 
-  function commitTitle(e) {
-    titleModule?.rename(e.target.value);
+  // Whether the title shows as plain text (click to edit) or as an
+  // editable Kobalte TextField. Mirrors the click-to-edit pattern used
+  // elsewhere in the app, instead of always rendering a styled-like-an-
+  // input field.
+  const [isEditingTitle, setIsEditingTitle] = createSignal(false);
+  let titleInputRef;
+  let titleBeforeEdit = "";
+
+  function startEditingTitle() {
+    titleBeforeEdit = title();
+    setIsEditingTitle(true);
+    // The input isn't mounted yet this tick (see the <Show> below), so
+    // focus/select it once it is.
+    queueMicrotask(() => {
+      titleInputRef?.focus();
+      titleInputRef?.select();
+    });
+  }
+
+  function commitTitle() {
+    setIsEditingTitle(false);
+    titleModule?.rename(title());
+  }
+
+  function cancelEditingTitle() {
+    setTitle(titleBeforeEdit);
+    setIsEditingTitle(false);
+  }
+
+  function handleTitleKeyDown(e) {
+    if (e.key === "Enter") {
+      e.currentTarget.blur(); // triggers commitTitle via onBlur
+    } else if (e.key === "Escape") {
+      cancelEditingTitle();
+    }
   }
 
   onMount(async () => {
@@ -100,19 +134,50 @@ export default function TopBar() {
 
   return (
     <>
-      <input
-        type="text"
-        value={title()}
-        onInput={(e) => setTitle(e.target.value)}
-        onBlur={commitTitle}
-        onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-        placeholder="Untitled"
-        class="fixed top-2 left-1/2 w-80 -translate-x-1/2 rounded-md
-          border border-transparent bg-pane px-2 py-1 text-center
-          font-serif text-lg text-text outline-none transition-colors
-          hover:bg-pane-hover focus:border-pane-hover focus:bg-pane"
-        style={{ "z-index": 10 }}
-      />
+      {/* Positioned right next to the left panel (ribbon or expanded)
+          instead of screen-center, so it moves together with the
+          sidebar's own width transition rather than floating
+          independently in the middle of the screen. No fixed width here:
+          the button already hugs its text via padding, and the input
+          below uses field-sizing:content so its box tracks the actual
+          rendered text width -- correct for mixed half-width/full-width
+          characters, unlike an estimate based on character count. */}
+      <div
+        class="fixed top-2 z-[10] transition-[left] duration-300 ease-in-out"
+        style={{
+          left: leftPanelHidden()
+            ? "calc(var(--ribbon-width) + 8px)"
+            : "calc(var(--side-panel-width) + 8px)",
+        }}
+      >
+        <Show
+          when={isEditingTitle()}
+          fallback={
+            <button
+              type="button"
+              onClick={startEditingTitle}
+              class="truncate rounded-md border border-transparent px-2
+                py-1 text-left font-serif text-lg font-semibold text-text
+                transition-colors hover:bg-pane-hover"
+            >
+              {title() || "Untitled"}
+            </button>
+          }
+        >
+          <TextField value={title()} onChange={setTitle}>
+            <TextField.Input
+              ref={titleInputRef}
+              onBlur={commitTitle}
+              onKeyDown={handleTitleKeyDown}
+              placeholder="Untitled"
+              style={{ "field-sizing": "content" }}
+              class="rounded-md border border-pane-hover bg-pane px-2 py-1
+                text-left font-serif text-lg font-semibold text-text
+                outline-none"
+            />
+          </TextField>
+        </Show>
+      </div>
       {/* Shifts left while the right property panel is expanded, so it
           never overlaps it. Reads the same store signal RightPanel.jsx
           uses, replacing the old `body:has(#ui.panel-expanded)` CSS
