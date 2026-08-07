@@ -4,4 +4,4 @@
 // route), so the two never drift out of sync.
 package version
 
-const Version = "0.0.1-beta.3"
+const Version = "0.0.6-beta.1"
