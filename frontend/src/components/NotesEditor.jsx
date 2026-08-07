@@ -6,6 +6,7 @@ import {
   currentItem,
   hoveredItem,
   currentMapId,
+  bumpNotesHistoryVersion,
 } from "../lib/mindmap/store";
 import {
   createEffect,
@@ -109,6 +110,14 @@ export default function NotesEditor() {
       toolbar: false,
     });
     easyMDE.codemirror.on("change", () => {
+      // Bumped on every change, including programmatic setValue() calls
+      // (e.g. switching to a different item's notes, which CodeMirror
+      // treats as a full history reset) -- see notes.js's canUndo()/
+      // canRedo(), read by command/command.js's Undo/Redo commands.
+      bumpNotesHistoryVersion();
+      if (applyingExternalContent) {
+        return;
+      }
       notesModule?.onEditorChange(easyMDE.value());
     });
 
@@ -116,9 +125,11 @@ export default function NotesEditor() {
     notesModule = await import("../lib/mindmap/ui/notes.js");
 
     notesModule.registerEditorAPI({
-      setContent,
+      setContent: setMarkdown,
+      undo: () => easyMDE.codemirror.undo(),
+      redo: () => easyMDE.codemirror.redo(),
+      historySize: () => easyMDE.codemirror.historySize(),
     });
-
     window.addEventListener("keydown", handleEscape, true);
     setReady(true);
   });

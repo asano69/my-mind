@@ -64,6 +64,16 @@ export function bumpDirty() {
   setDirtyVersion((v) => v + 1);
 }
 
+// Bumped whenever the notes editor's own undo/redo history changes (see
+// NotesEditor.jsx's codemirror "change" listener). Read by
+// command/command.js's Undo/Redo commands so they react to notes-editor
+// history changes while activeMode is "notes" -- like dirtyVersion, this
+// is just a changed marker; nothing reads the value itself.
+export const [notesHistoryVersion, setNotesHistoryVersion] = createSignal(0);
+export function bumpNotesHistoryVersion() {
+  setNotesHistoryVersion((v) => v + 1);
+}
+
 // Whether the left sidebar (#left-panel) is hidden. Mirrors the right
 // sidebar's own hidden state (see RightPanel.jsx), but this one needs
 // no bridge object: both reader (LeftPanel.jsx) and writer (TopBar.jsx)

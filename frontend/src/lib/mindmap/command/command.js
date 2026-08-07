@@ -21,6 +21,8 @@ import {
   setLeftPanelHidden,
   editing as editingSignal,
   currentItem as currentItemSignal,
+  activeMode,
+  notesHistoryVersion,
 } from "../store.js";
 
 const PAN_AMOUNT = 15;
@@ -73,6 +75,13 @@ new (class Undo extends Command {
     this.keys = [{ code: "KeyZ", ctrlKey: true }];
   }
   get isValid() {
+    // While notes is the active workspace mode, Undo acts on the notes
+    // editor's own CodeMirror history instead of the mindmap's -- see
+    // notes.js's canUndo() and NotesEditor.jsx's bumpNotesHistoryVersion().
+    if (activeMode() === "notes") {
+      notesHistoryVersion();
+      return super.isValid && notes.canUndo();
+    }
     // history.canBack() itself reads a plain module-level array, not a
     // signal, so reading historyVersion() first is what actually
     // subscribes this getter to undo-stack changes (see history.js).
@@ -80,6 +89,10 @@ new (class Undo extends Command {
     return super.isValid && history.canBack();
   }
   execute() {
+    if (activeMode() === "notes") {
+      notes.undo();
+      return;
+    }
     history.back();
   }
 })();
@@ -89,10 +102,18 @@ new (class Redo extends Command {
     this.keys = [{ code: "KeyY", ctrlKey: true }];
   }
   get isValid() {
+    if (activeMode() === "notes") {
+      notesHistoryVersion();
+      return super.isValid && notes.canRedo();
+    }
     history.historyVersion();
     return super.isValid && history.canForward();
   }
   execute() {
+    if (activeMode() === "notes") {
+      notes.redo();
+      return;
+    }
     history.forward();
   }
 })();

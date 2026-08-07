@@ -10,6 +10,24 @@ export function registerEditorAPI(api) {
   editorAPI = api;
 }
 
+// Whether the notes editor itself has something to undo/redo (its own
+// CodeMirror history, independent of the mindmap's undo stack). Used by
+// command/command.js's Undo/Redo commands while activeMode is "notes",
+// so TopBar.jsx's Undo/Redo buttons act on the editor's own history
+// instead of the mindmap's.
+export function canUndo() {
+  return !!editorAPI?.historySize?.().undo;
+}
+export function canRedo() {
+  return !!editorAPI?.historySize?.().redo;
+}
+export function undo() {
+  editorAPI?.undo?.();
+}
+export function redo() {
+  editorAPI?.redo?.();
+}
+
 export function toggle() {
   const nextMode = activeMode() === "notes" ? "canvas" : "notes";
   setActiveMode(nextMode);
