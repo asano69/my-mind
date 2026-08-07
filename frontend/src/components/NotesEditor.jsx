@@ -15,12 +15,47 @@ import {
   on,
   onMount,
   onCleanup,
+  Show,
 } from "solid-js";
 
 export default function NotesEditor() {
   let textareaRef;
   let easyMDE;
   let notesModule; // cached after the first dynamic import, see onMount
+
+  // Panel width is a plain px value (not vw) so the resize handle below
+  // can add/subtract pixel deltas directly. Defaults to half the window,
+  // matching the old fixed "50vw" CSS rule this replaces.
+  const MIN_NOTES_WIDTH = 320;
+  const RIGHT_MARGIN = 80; // keep some canvas visible even at max width
+  const [width, setWidth] = createSignal(
+    typeof window !== "undefined" ? window.innerWidth / 2 : 480,
+  );
+  // Set only while a drag is in progress, so onCleanup can tear down a
+  // still-active drag if the component unmounts mid-resize (e.g.
+  // switching maps while dragging).
+  let stopResize = null;
+
+  function startResize(e) {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = width();
+    function onMove(moveEvent) {
+      const delta = moveEvent.clientX - startX;
+      const maxWidth = window.innerWidth - RIGHT_MARGIN;
+      setWidth(
+        Math.min(Math.max(startWidth + delta, MIN_NOTES_WIDTH), maxWidth),
+      );
+    }
+    function onUp() {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      stopResize = null;
+    }
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    stopResize = onUp;
+  }
 
   // One CodeMirror Doc per item, keyed by item.id. CodeMirror 5's
   // undo/redo history belongs to the Doc, not to the editor instance --
@@ -115,9 +150,9 @@ export default function NotesEditor() {
       // treats as a full history reset) -- see notes.js's canUndo()/
       // canRedo(), read by command/command.js's Undo/Redo commands.
       bumpNotesHistoryVersion();
-      if (applyingExternalContent) {
-        return;
-      }
+      // No "applyingExternalContent" guard needed here: switching items
+      // uses swapDoc() (see setContent() above), which does not fire a
+      // "change" event at all, unlike the old value()-based approach.
       notesModule?.onEditorChange(easyMDE.value());
     });
 
@@ -125,7 +160,7 @@ export default function NotesEditor() {
     notesModule = await import("../lib/mindmap/ui/notes.js");
 
     notesModule.registerEditorAPI({
-      setContent: setMarkdown,
+      setContent,
       undo: () => easyMDE.codemirror.undo(),
       redo: () => easyMDE.codemirror.redo(),
       historySize: () => easyMDE.codemirror.historySize(),
@@ -204,13 +239,33 @@ export default function NotesEditor() {
 
   onCleanup(() => {
     window.removeEventListener("keydown", handleEscape, true);
+    stopResize?.();
     docsByItemId.clear();
     easyMDE?.toTextArea();
     easyMDE = null;
   });
 
   return (
-    <div id="notes" class="h-full">
+    <div
+      id="notes"
+      class="relative h-full"
+      style={{
+        width: `${width()}px`,
+        // Semi-transparent while backgrounded (canvas mode), so the
+        // preview text doesn't fully obscure the mind-map underneath it.
+        // Fully opaque while notes is the active, editable mode.
+        opacity: activeMode() === "notes" ? 1 : 0.45,
+      }}
+    >
+      {/* Right-edge drag handle for resizing the panel — see startResize()
+          above. Width itself defaults to half the window (see the width
+          signal) but can be dragged wider/narrower from here. Only shown
+          while notes is the active (foreground) mode; the handle is
+          meaningless while the canvas is in front and notes is just a
+          read-only background preview. */}
+      <Show when={activeMode() === "notes"}>
+        <div class="notes-resize-handle" onPointerDown={startResize} />
+      </Show>
       <textarea ref={textareaRef} />
     </div>
   );

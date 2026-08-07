@@ -9,18 +9,49 @@
   height: 100%;
 }
 
-/* Constrain both edit mode (CodeMirror) and preview mode to half the
-   screen width, so long lines wrap at the same point regardless of
-   which mode is currently showing. Applied to #notes itself (the
-   wrapper both modes share, see NotesEditor.jsx) rather than
-   .CodeMirror/.editor-preview individually, so edit/view always agree
-   on width without duplicating the value in two places. */
+/* Constrain both edit mode (CodeMirror) and preview mode to the same
+   width, so long lines wrap at the same point regardless of which mode
+   is currently showing. Applied to #notes itself (the wrapper both
+   modes share, see NotesEditor.jsx) rather than .CodeMirror/
+   .editor-preview individually, so edit/view always agree on width
+   without duplicating the value in two places. The width itself is set
+   inline by NotesEditor.jsx (defaults to half the window, resizable via
+   .notes-resize-handle below), not fixed here. */
 #notes {
-  width: 50vw;
   /* Extra breathing room below TopBar.jsx's floating title/icon strip,
      which is fixed near the top of the screen and would otherwise sit
      flush against the editor's first line. */
   padding-top: 1rem;
+}
+
+/* Drag handle for resizing #notes' width (see NotesEditor.jsx's
+   startResize()). Sits just past the panel's right edge so it doesn't
+   eat into the editor's own content area. Always visible (a thin
+   vertical line), not just on hover, so the panel's resizability is
+   discoverable without first mousing over the edge. */
+.notes-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 2;
+}
+
+.notes-resize-handle::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 3px;
+  width: 6px;
+  height: 100%;
+  background: var(--color-pane-hover);
+}
+
+.notes-resize-handle:hover::before,
+.notes-resize-handle:active::before {
+  background: var(--color-accent);
 }
 
 /* Font-size/line-height are set once here and shared by both modes
