@@ -46,46 +46,58 @@
    (and, before that, served directly from public/my-mind.css and
    linked in index.html); merged here for the same reason as the
    tokens above.
+
+   Wrapped in @layer base: Tailwind's utilities (e.g. font-serif,
+   font-mono) live in @layer utilities. An unlayered rule always
+   beats a layered one regardless of specificity (per the CSS
+   Cascade Layers spec), so a plain `* { font-family: ... }` here
+   would silently override every font-family utility in the app,
+   no matter how specific the utility's own selector is. Placing
+   this reset in @layer base keeps it below @layer utilities in
+   Tailwind's own layer order (declared by `@import "tailwindcss"`
+   above), so utilities can still override it as expected.
    ------------------------------------------------------------- */
-* {
-  font-family: var(--font-sans);
-}
+@layer base {
+  * {
+    font-family: var(--font-sans);
+  }
 
-html,
-body {
-  margin: 0;
-  overflow: hidden;
-  height: 100%;
-  background-color: var(--color-bg);
-  -webkit-user-select: none;
-}
+  html,
+  body {
+    margin: 0;
+    overflow: hidden;
+    height: 100%;
+    background-color: var(--color-bg);
+    -webkit-user-select: none;
+  }
 
-[contenteditable] {
-  -webkit-user-select: auto;
-}
+  [contenteditable] {
+    -webkit-user-select: auto;
+  }
 
-svg {
-  position: absolute;
-  overflow: visible;
-}
+  svg {
+    position: absolute;
+    overflow: visible;
+  }
 
-main {
-  position: relative;
-  /* Matches .pane-left's own width transition so the canvas edge and the
-     panel edge move together instead of one snapping ahead of the other. */
-  transition:
-    margin-left 280ms ease,
-    width 280ms ease;
-}
+  main {
+    position: relative;
+    /* Matches .pane-left's own width transition so the canvas edge and the
+       panel edge move together instead of one snapping ahead of the other. */
+    transition:
+      margin-left 280ms ease,
+      width 280ms ease;
+  }
 
-button:not(:disabled) {
-  cursor: pointer;
-}
+  button:not(:disabled) {
+    cursor: pointer;
+  }
 
-.ghost {
-  position: absolute !important;
-  opacity: 0.5;
-  z-index: 1;
+  .ghost {
+    position: absolute !important;
+    opacity: 0.5;
+    z-index: 1;
+  }
 }
 
 @theme inline {
