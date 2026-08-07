@@ -9,6 +9,20 @@
   height: 100%;
 }
 
+/* Constrain both edit mode (CodeMirror) and preview mode to half the
+   screen width, so long lines wrap at the same point regardless of
+   which mode is currently showing. Applied to #notes itself (the
+   wrapper both modes share, see NotesEditor.jsx) rather than
+   .CodeMirror/.editor-preview individually, so edit/view always agree
+   on width without duplicating the value in two places. */
+#notes {
+  width: 50vw;
+  /* Extra breathing room below TopBar.jsx's floating title/icon strip,
+     which is fixed near the top of the screen and would otherwise sit
+     flush against the editor's first line. */
+  padding-top: 1rem;
+}
+
 /* Font-size/line-height are set once here and shared by both modes
    (see .editor-preview below) so switching modes doesn't shift text
    size or spacing. */
@@ -40,6 +54,15 @@
    starts at the same on-screen position in both modes. */
 #notes .CodeMirror-lines {
   padding: 2rem;
+}
+
+/* easymde's default .CodeMirror-scroll carries a scrollbar-hiding hack
+   (negative margin-right/bottom + matching padding-right/bottom) that
+   can also affect the vertical starting offset of the text relative to
+   .editor-preview's plain padding-based offset. Reset it to 0 explicitly
+   so edit mode and preview mode start at the same vertical position. */
+#notes .CodeMirror-scroll {
+  padding-top: 0;
 }
 #notes .CodeMirror pre.CodeMirror-line,
 #notes .CodeMirror pre.CodeMirror-line-like {
