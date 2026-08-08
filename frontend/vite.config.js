@@ -20,8 +20,16 @@ export default defineConfig({
       // narrowly by trailing "/svg" rather than "^/maps"/"^/snapshots",
       // since "/maps/:uuid" (no "/svg" suffix) is a real frontend route
       // (see main.jsx) that must stay served by Vite itself.
-      "^/maps/.*/svg$": { target: "http://127.0.0.1:3000", changeOrigin: true },
-      "^/snapshots/.*/svg$": {
+      // The "(\\?|$)" (instead of a plain "$") allows a trailing query
+      // string (e.g. "?t=<updated>" for cache-busting thumbnails, see
+      // Catalog.jsx) -- Vite matches this pattern against the full
+      // request URL including its query string, so a bare "$" anchor
+      // would stop matching as soon as any query param is appended.
+      "^/maps/.*/svg(\\?|$)": {
+        target: "http://127.0.0.1:3000",
+        changeOrigin: true,
+      },
+      "^/snapshots/.*/svg(\\?|$)": {
         target: "http://127.0.0.1:3000",
         changeOrigin: true,
       },

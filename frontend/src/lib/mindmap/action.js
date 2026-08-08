@@ -48,6 +48,21 @@ export class InsertNewItem extends Action {
       if (parent.isRoot) {
         this.item.side = pickBalancedSide(parent);
       }
+      // Inherit the siblings' shape when they all agree: if every
+      // existing child of `parent` already shares the same explicit
+      // shape, treat that as a deliberate style choice for this branch
+      // and default the new sibling to it too, instead of falling back
+      // to the plain depth-based default shape (see item.js's
+      // resolvedShape getter). A single existing sibling counts as
+      // "agreeing" with itself too -- pickInheritedShape() already
+      // handles that case -- so adding a second node next to it also
+      // inherits, not just the third node onward.
+      if (parent.children.length >= 1) {
+        const inheritedShape = pickInheritedShape(parent);
+        if (inheritedShape) {
+          this.item.shape = inheritedShape;
+        }
+      }
     }
   }
   do() {
@@ -59,6 +74,22 @@ export class InsertNewItem extends Action {
     this.parent.removeChild(this.item);
     app.selectItem(this.parent);
   }
+}
+// Returns the shape shared by every one of parent's existing children,
+// or null if there are no children yet, or if any child has no explicit
+// shape (unset) or they disagree. With exactly one existing child, that
+// child's own shape is "shared" trivially, so a second sibling inherits
+// it too instead of only kicking in once there are two or more.
+function pickInheritedShape(parent) {
+  const { children } = parent;
+  if (children.length < 1) {
+    return null;
+  }
+  const first = children[0].shape;
+  if (!first) {
+    return null;
+  }
+  return children.every((child) => child.shape === first) ? first : null;
 }
 // Counts root's existing direct children by side (falling back to
 // "right", the same default MapLayout.getChildDirection uses for a

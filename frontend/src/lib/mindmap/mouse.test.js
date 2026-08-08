@@ -33,7 +33,10 @@ vi.mock("./action.js", () => ({
 const { mockActiveMode } = vi.hoisted(() => ({
   mockActiveMode: { value: "canvas" },
 }));
-vi.mock("./store.js", () => ({ activeMode: () => mockActiveMode.value }));
+vi.mock("./store.js", () => ({
+  activeMode: () => mockActiveMode.value,
+  setHoveredItem: vi.fn(),
+}));
 
 vi.mock("./my-mind.js", () => ({
   get currentMap() {

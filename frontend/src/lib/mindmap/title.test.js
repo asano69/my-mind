@@ -4,6 +4,12 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 // engine (my-mind.js, map.js, backend/pocketbase.js, ...) -- title.js
 // only calls io.setTitle() from rename(), which this test never exercises.
 vi.mock("./ui/io.js", () => ({ setTitle: vi.fn() }));
+// Use the synchronous dist build (same workaround as item.test.js) so
+// createEffect's first run and every subsequent update happen on the
+// same tick as the signal write below. The default "solid-js" export
+// schedules effect (re-)runs on a microtask, which this test's
+// synchronous assertions can't observe.
+vi.mock("solid-js", async () => await import("solid-js/dist/solid.js"));
 
 import { setCurrentTitle } from "./store.js";
 

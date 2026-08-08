@@ -109,9 +109,16 @@ export default function Catalog() {
                         {/* Server-rendered image (see
                             backend/pocketbase.js's listMaps() comment)
                             instead of innerHTML, so this SVG's embedded
-                            <style> can't leak into the page. */}
+                            <style> can't leak into the page.
+                            The "updated" timestamp is appended as a
+                            cache-busting query param: the image URL
+                            itself never changes when a map is edited, so
+                            without this the browser can keep serving a
+                            stale cached SVG even after listMaps() has
+                            already refetched fresh metadata (e.g. when
+                            navigating back to this page). */}
                         <img
-                          src={`/maps/${map.uuid}/svg`}
+                          src={`/maps/${map.uuid}/svg?t=${encodeURIComponent(map.updated)}`}
                           alt=""
                           class="pointer-events-none h-full w-full select-none object-contain p-2"
                         />
