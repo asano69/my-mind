@@ -25,8 +25,8 @@ export default function Spinner(props) {
 
   return (
     <div class={`spinner ${positionClass()}`} hidden={!isVisible()}>
-      <span class="dot1 absolute top-0 inline-block h-3/5 w-3/5 rounded-full bg-accent" />
-      <span class="dot2 absolute bottom-0 inline-block h-3/5 w-3/5 rounded-full bg-accent" />
+      <span class="dot1 absolute top-0 inline-block h-3/5 w-3/5 rounded-full bg-brand" />
+      <span class="dot2 absolute bottom-0 inline-block h-3/5 w-3/5 rounded-full bg-brand" />
       <style>{`
         .spinner { animation: spinner-rotate 2s infinite linear; }
         .dot1, .dot2 { animation: spinner-bounce 2s infinite ease-in-out; }

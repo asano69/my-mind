@@ -408,7 +408,7 @@ export default function RightPanel() {
               class="flex items-center gap-1.5"
             >
               <Switch.Input />
-              <Switch.Control class="relative inline-flex h-4 w-7 shrink-0 cursor-pointer items-center rounded-full bg-pane-hover transition-colors data-[checked]:bg-accent">
+              <Switch.Control class="relative inline-flex h-4 w-7 shrink-0 cursor-pointer items-center rounded-full bg-pane-hover transition-colors data-[checked]:bg-brand">
                 <Switch.Thumb class="block h-3 w-3 translate-x-0.5 rounded-full bg-white transition-transform data-[checked]:translate-x-[14px]" />
               </Switch.Control>
               <Switch.Label class="cursor-pointer text-xs text-text/70 select-none">

@@ -19,19 +19,20 @@ export function showToast(label, subject, options = {}) {
       toastId={props.toastId}
       duration={options.linger ?? 2500}
       class="flex flex-col gap-2 rounded-xl border border-black/[0.06]
-        bg-white px-4 py-3 text-base text-text shadow-[0_8px_24px_rgba(0,0,0,0.16),0_2px_6px_rgba(0,0,0,0.08)]
+        border-l-4 border-l-[#2ca02c] bg-white px-4 py-3 text-base text-text
+        shadow-[0_8px_24px_rgba(0,0,0,0.16),0_2px_6px_rgba(0,0,0,0.08)]
         transition-[opacity,transform] duration-200 data-[closed]:opacity-0
         data-[opened]:opacity-100 data-[closed]:translate-x-4
         data-[closed]:scale-95 data-[opened]:translate-x-0 data-[opened]:scale-100"
     >
-      <div class="flex items-baseline gap-2">
+      <div class="flex items-baseline gap-2 text-sm">
         <span>{label}</span>
         {subject !== undefined && (
           <span class="font-normal tracking-wide text-text/85">{subject}</span>
         )}
       </div>
       <Toast.ProgressTrack class="h-1 w-full overflow-hidden rounded-full bg-pane-hover">
-        <Toast.ProgressFill class="block h-full w-[var(--kb-toast-progress-fill-width)] rounded-full bg-accent transition-[width] duration-[250ms] ease-linear" />
+        <Toast.ProgressFill class="block h-full w-[var(--kb-toast-progress-fill-width)] rounded-full bg-brand transition-[width] duration-[250ms] ease-linear" />
       </Toast.ProgressTrack>
     </Toast>
   ));

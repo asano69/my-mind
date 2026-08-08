@@ -221,7 +221,7 @@ new (class Save extends Command {
   }
   async execute() {
     await io.quickSave();
-    showToast("Saved", app.currentMap.name);
+    showToast("Mind map saved");
   }
 })();
 // Renders the current map as a transparent PNG and copies it to the
@@ -240,7 +240,7 @@ async function copyMapImageToClipboard() {
       await navigator.clipboard.write([
         new ClipboardItem({ "image/png": blob }),
       ]);
-      showToast("Copied", app.currentMap.name);
+      showToast("Mind map image copied to clipboard");
     } else {
       window.open(url, "_blank");
     }
