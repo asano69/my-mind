@@ -53,10 +53,16 @@ export class InsertNewItem extends Action {
       // shape, treat that as a deliberate style choice for this branch
       // and default the new sibling to it too, instead of falling back
       // to the plain depth-based default shape (see item.js's
-      // resolvedShape).
-      const inheritedShape = pickInheritedShape(parent);
-      if (inheritedShape) {
-        this.item.shape = inheritedShape;
+      if (parent.isRoot) {
+        this.item.side = pickBalancedSide(parent);
+      }
+      // Inherit the siblings' shape only when there are at least two
+      // existing children that already agree on an explicit shape.
+      if (parent.children.length >= 2) {
+        const inheritedShape = pickInheritedShape(parent);
+        if (inheritedShape) {
+          this.item.shape = inheritedShape;
+        }
       }
     }
   }
