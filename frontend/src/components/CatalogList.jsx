@@ -1,6 +1,7 @@
 import { For, Show, createResource } from "solid-js";
 import { listMaps } from "../lib/mindmap/backend/pocketbase";
 import { A, useNavigate } from "@solidjs/router";
+import { catalogListVersion } from "../lib/mindmap/store";
 import Spinner from "./Spinner";
 
 // Read-only list of every saved map, shown inline in the left sidebar
@@ -11,7 +12,11 @@ import Spinner from "./Spinner";
 // no edit affordances (renaming/pinning/deleting stay on /catalog).
 export default function CatalogList() {
   const navigate = useNavigate();
-  const [maps] = createResource(() => listMaps());
+  // catalogListVersion as the resource's source: its value is ignored by
+  // listMaps() (called with no args), but any bump re-triggers the fetch
+  // -- see store.js's openCatalogList() for why a plain mount-only
+  // fetch isn't enough here.
+  const [maps] = createResource(catalogListVersion, () => listMaps());
 
   // Persist the current map first (mirrors LeftPanel.jsx's own
   // goToCatalog handler), then navigate via the router. Workspace.jsx
@@ -53,9 +58,14 @@ export default function CatalogList() {
                 <div class="relative flex h-20 items-center justify-center overflow-hidden bg-white/50">
                   {/* Server-rendered image (see backend/pocketbase.js's
                       listMaps() comment) instead of innerHTML, so this
-                      SVG's embedded <style> can't leak into the page. */}
+                      SVG's embedded <style> can't leak into the page.
+                      "updated" is a cache-busting query param, same as
+                      Catalog.jsx -- the URL itself never changes when a
+                      map is edited, so without this the browser can keep
+                      showing a stale cached SVG even after a fresh
+                      fetch. */}
                   <img
-                    src={`/maps/${map.uuid}/svg`}
+                    src={`/maps/${map.uuid}/svg?t=${encodeURIComponent(map.updated)}`}
                     alt=""
                     class="pointer-events-none h-full w-full select-none object-contain p-1"
                   />

@@ -159,10 +159,24 @@ export function openSnapshots() {
   setShowCatalogListRaw(false);
   setShowSnapshotsRaw(true);
 }
+// Bumped every time the "Browse maps" panel is (re-)opened, so
+// CatalogList.jsx's createResource refetches even when the panel was
+// already showing. Solid's <Show> (see LeftPanel.jsx) only remounts a
+// component on a false->true visibility transition -- re-invoking the
+// "catalog-list" command while the panel is already the active tab
+// wouldn't otherwise trigger a refetch. Same "changed marker" idea as
+// dirtyVersion above: nothing reads the value itself, only reacts to
+// it changing.
+export const [catalogListVersion, setCatalogListVersion] = createSignal(0);
+function bumpCatalogListVersion() {
+  setCatalogListVersion((v) => v + 1);
+}
+
 export function openCatalogList() {
   setHelpHiddenRaw(true);
   setShowSnapshotsRaw(false);
   setShowCatalogListRaw(true);
+  bumpCatalogListVersion();
 }
 
 // Whether the "Set value" dialog (see ValueDialog.jsx) is open. Replaces
