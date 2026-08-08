@@ -94,7 +94,7 @@ export default function LeftPanel() {
   async function goToCatalog(e) {
     e.preventDefault();
     const io = await import("../lib/mindmap/ui/io.js");
-    await io.saveWithSvg();
+    await io.saveBeforeLeaving();
     navigate("/catalog");
   }
 

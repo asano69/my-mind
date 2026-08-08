@@ -297,8 +297,9 @@ new (class New extends Command {
   }
   async execute() {
     // Persist the current map (with a fresh thumbnail) before switching
-    // away, mirroring GoToCatalog's save-before-navigate pattern.
-    await io.saveWithSvg();
+    // away, mirroring GoToCatalog's save-before-navigate pattern. Skips
+    // entirely when auto-save is off (see io.saveBeforeLeaving()).
+    await io.saveBeforeLeaving();
     // Forget the just-saved map's id/title/uuid so the new blank map
     // starts as an unsaved map, not as an edit of the old record.
     io.resetCurrentMap();
@@ -437,7 +438,7 @@ new (class GoToCatalog extends Command {
     this.keys = [{ code: "KeyP", ctrlKey: true }];
   }
   async execute() {
-    await io.saveWithSvg();
+    await io.saveBeforeLeaving();
     window.location.href = "/catalog";
   }
 })();

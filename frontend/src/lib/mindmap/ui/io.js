@@ -243,6 +243,20 @@ export function saveWithSvg() {
   return runGuarded(() => performSave(true));
 }
 
+// Best-effort save used before navigating away from the canvas
+// (switching maps via the catalog/file-switcher, starting a new map,
+// going to the catalog page). Unlike quickSave()/saveWithSvg(), this is
+// never triggered by an explicit user action (the Save button,
+// Ctrl+Shift+S) -- it's only here because leaving the canvas wants a
+// fresh thumbnail. When the user has turned auto-save off, no save may
+// happen here at all, or it would defeat the whole point of the toggle.
+export function saveBeforeLeaving() {
+  if (!autoSaveEnabled()) {
+    return Promise.resolve();
+  }
+  return saveWithSvg();
+}
+
 async function performSave(includeSvg) {
   const map = app.currentMap;
   const mymind = map.toJSON();

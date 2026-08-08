@@ -22,10 +22,10 @@ export default function CatalogList() {
     console.log("[CatalogList] handleOpen called, uuid =", uuid);
     const io = await import("../lib/mindmap/ui/io.js");
     try {
-      await io.saveWithSvg();
-      console.log("[CatalogList] saveWithSvg resolved");
+      await io.saveBeforeLeaving();
+      console.log("[CatalogList] saveBeforeLeaving resolved");
     } catch (e) {
-      console.log("[CatalogList] saveWithSvg threw", e);
+      console.log("[CatalogList] saveBeforeLeaving threw", e);
     }
     console.log("[CatalogList] calling navigate to", `/maps/${uuid}`);
     navigate(`/maps/${uuid}`);
