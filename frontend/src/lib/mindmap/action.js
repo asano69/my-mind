@@ -52,13 +52,39 @@ export class InsertNewItem extends Action {
   }
   do() {
     this.parent.collapsed = false; // FIXME remember?
-    this.parent.insertChild(this.item, this.index);
-    app.selectItem(this.item);
+      if (parent.isRoot) {
+        this.item.side = pickBalancedSide(parent);
+      }
+      // Inherit the siblings' shape when they all agree: if every
+      // existing child of `parent` already shares the same explicit
+      // shape, treat that as a deliberate style choice for this branch
+      // and default the new sibling to it too, instead of falling back
+      // to the plain depth-based default shape (see item.js's
+      // resolvedShape).
+      const inheritedShape = pickInheritedShape(parent);
+      if (inheritedShape) {
+        this.item.shape = inheritedShape;
+      }
+    }
   }
   undo() {
     this.parent.removeChild(this.item);
     app.selectItem(this.parent);
   }
+}
+// Returns the shape shared by every one of parent's existing children,
+// or null if there are fewer than two children, or if any child has no
+// explicit shape (unset) or they disagree.
+function pickInheritedShape(parent) {
+  const { children } = parent;
+  if (children.length < 2) {
+    return null;
+  }
+  const first = children[0].shape;
+  if (!first) {
+    return null;
+  }
+  return children.every((child) => child.shape === first) ? first : null;
 }
 // Counts root's existing direct children by side (falling back to
 // "right", the same default MapLayout.getChildDirection uses for a
