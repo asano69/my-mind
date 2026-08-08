@@ -132,7 +132,11 @@ new (class InsertSibling extends Command {
       let index = parent.children.indexOf(item);
       action = new actions.InsertNewItem(parent, index + 1);
     }
-    app.action(action);
+    // Insert the draft item directly, without pushing it to history yet.
+    // It only becomes an undoable action once it has real content (see
+    // command/edit.js's Finish) -- an empty node that's immediately
+    // discarded should never leave a trace in the undo stack.
+    action.do();
     repo.get("edit").execute();
   }
 })();
@@ -144,7 +148,8 @@ new (class InsertChild extends Command {
   execute() {
     let item = app.currentItem;
     let action = new actions.InsertNewItem(item, item.children.length);
-    app.action(action);
+    // See InsertSibling above: draft insertion is not pushed to history.
+    action.do();
     repo.get("edit").execute();
   }
 })();
