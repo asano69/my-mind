@@ -52,20 +52,21 @@ export class InsertNewItem extends Action {
   }
   do() {
     this.parent.collapsed = false; // FIXME remember?
-      if (parent.isRoot) {
-        this.item.side = pickBalancedSide(parent);
-      }
-      // Inherit the siblings' shape when they all agree: if every
-      // existing child of `parent` already shares the same explicit
-      // shape, treat that as a deliberate style choice for this branch
-      // and default the new sibling to it too, instead of falling back
-      // to the plain depth-based default shape (see item.js's
-      // resolvedShape).
-      const inheritedShape = pickInheritedShape(parent);
-      if (inheritedShape) {
-        this.item.shape = inheritedShape;
-      }
+    if (this.parent.isRoot) {
+      this.item.side = pickBalancedSide(this.parent);
     }
+    // Inherit the siblings' shape when they all agree: if every
+    // existing child of `parent` already shares the same explicit
+    // shape, treat that as a deliberate style choice for this branch
+    // and default the new sibling to it too, instead of falling back
+    // to the plain depth-based default shape (see item.js's
+    // resolvedShape).
+    const inheritedShape = pickInheritedShape(this.parent);
+    if (inheritedShape) {
+      this.item.shape = inheritedShape;
+    }
+    this.parent.insertChild(this.item, this.index);
+    app.selectItem(this.item);
   }
   undo() {
     this.parent.removeChild(this.item);
@@ -73,11 +74,13 @@ export class InsertNewItem extends Action {
   }
 }
 // Returns the shape shared by every one of parent's existing children,
-// or null if there are fewer than two children, or if any child has no
-// explicit shape (unset) or they disagree.
+// or null if there are no children yet, or if any child has no explicit
+// shape (unset) or they disagree. With exactly one existing child, that
+// child's own shape is "shared" trivially, so a second sibling inherits
+// it too instead of only kicking in once there are two or more.
 function pickInheritedShape(parent) {
   const { children } = parent;
-  if (children.length < 2) {
+  if (children.length < 1) {
     return null;
   }
   const first = children[0].shape;
