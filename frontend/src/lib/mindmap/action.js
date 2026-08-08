@@ -48,23 +48,24 @@ export class InsertNewItem extends Action {
       if (parent.isRoot) {
         this.item.side = pickBalancedSide(parent);
       }
+      // Inherit the siblings' shape when they all agree: if every
+      // existing child of `parent` already shares the same explicit
+      // shape, treat that as a deliberate style choice for this branch
+      // and default the new sibling to it too, instead of falling back
+      // to the plain depth-based default shape (see item.js's
+      // resolvedShape).
+      const inheritedShape = pickInheritedShape(parent);
+      if (inheritedShape) {
+        this.item.shape = inheritedShape;
+      }
     }
   }
   do() {
     this.parent.collapsed = false; // FIXME remember?
-    if (this.parent.isRoot) {
-      this.item.side = pickBalancedSide(this.parent);
-    }
-    // Inherit the siblings' shape when they all agree: if every
-    // existing child of `parent` already shares the same explicit
-    // shape, treat that as a deliberate style choice for this branch
-    // and default the new sibling to it too, instead of falling back
-    // to the plain depth-based default shape (see item.js's
-    // resolvedShape).
-    const inheritedShape = pickInheritedShape(this.parent);
-    if (inheritedShape) {
-      this.item.shape = inheritedShape;
-    }
+    this.parent.insertChild(this.item, this.index);
+    app.selectItem(this.item);
+  }
+  undo() {
     this.parent.insertChild(this.item, this.index);
     app.selectItem(this.item);
   }
