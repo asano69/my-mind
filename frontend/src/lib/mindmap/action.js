@@ -53,12 +53,11 @@ export class InsertNewItem extends Action {
       // shape, treat that as a deliberate style choice for this branch
       // and default the new sibling to it too, instead of falling back
       // to the plain depth-based default shape (see item.js's
-      if (parent.isRoot) {
-        this.item.side = pickBalancedSide(parent);
-      }
-      // Inherit the siblings' shape only when there are at least two
-      // existing children that already agree on an explicit shape.
-      if (parent.children.length >= 2) {
+      // resolvedShape getter). A single existing sibling counts as
+      // "agreeing" with itself too -- pickInheritedShape() already
+      // handles that case -- so adding a second node next to it also
+      // inherits, not just the third node onward.
+      if (parent.children.length >= 1) {
         const inheritedShape = pickInheritedShape(parent);
         if (inheritedShape) {
           this.item.shape = inheritedShape;
@@ -68,10 +67,6 @@ export class InsertNewItem extends Action {
   }
   do() {
     this.parent.collapsed = false; // FIXME remember?
-    this.parent.insertChild(this.item, this.index);
-    app.selectItem(this.item);
-  }
-  undo() {
     this.parent.insertChild(this.item, this.index);
     app.selectItem(this.item);
   }

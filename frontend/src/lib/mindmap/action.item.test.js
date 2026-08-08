@@ -144,7 +144,7 @@ describe("InsertNewItem shape inheritance", () => {
     expect(action.item.shape).toBe(null);
   });
 
-  it("leaves shape unset with only one existing sibling", () => {
+  it("inherits the single existing sibling's explicit shape", () => {
     const parent = new Item();
     const child1 = new Item();
     child1.shape = { id: "box" };
@@ -152,6 +152,6 @@ describe("InsertNewItem shape inheritance", () => {
 
     const action = new InsertNewItem(parent, parent.children.length);
 
-    expect(action.item.shape).toBe(null);
+    expect(action.item.shape).toBe(child1.shape);
   });
 });
