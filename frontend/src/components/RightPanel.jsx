@@ -315,7 +315,7 @@ export default function RightPanel() {
         id="ui"
         class="fixed inset-y-0 right-0 z-5 flex overflow-hidden bg-pane shadow-card transition-[width] duration-300 ease-in-out"
         style={{
-          width: rightPanelHidden() ? "0px" : "var(--side-panel-width)",
+          width: rightPanelHidden() ? "0px" : "var(--right-panel-width)",
         }}
       >
         <div
@@ -400,7 +400,7 @@ export default function RightPanel() {
           justify-center rounded-l-lg bg-pane text-accent shadow-card
           transition-[right] duration-300 ease-in-out hover:bg-pane-hover"
         style={{
-          right: rightPanelHidden() ? "0px" : "var(--side-panel-width)",
+          right: rightPanelHidden() ? "0px" : "var(--right-panel-width)",
         }}
         onClick={toggleRightPanel}
         title="Toggle sidebar"

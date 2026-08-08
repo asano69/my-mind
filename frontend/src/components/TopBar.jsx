@@ -201,7 +201,7 @@ export default function TopBar() {
         style={{
           right: rightPanelHidden()
             ? "8px"
-            : "calc(var(--side-panel-width) + 8px)",
+            : "calc(var(--right-panel-width) + 8px)",
         }}
       >
         <IconButton
