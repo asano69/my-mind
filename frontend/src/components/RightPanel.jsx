@@ -243,6 +243,18 @@ export default function RightPanel() {
     if (!item) {
       return;
     }
+    // Guard against Kobalte's Select firing onChange as a side effect of
+    // its controlled `value` prop changing (e.g. when selection switches
+    // to a different item whose layout differs from the previous one --
+    // see layoutValue() above). Without this, merely selecting a
+    // different node can silently push a spurious SetLayout action onto
+    // the undo stack, clobbering the redo history. Skip when the
+    // "change" is actually a no-op relative to the item's real state.
+    const currentLayoutId = item.layout ? item.layout.id : "";
+    if (currentLayoutId === value) {
+      returnFocusToCanvas();
+      return;
+    }
     const layout = layoutRepo.get(value);
     appModule.action(new actionsModule.SetLayout(item, layout));
     returnFocusToCanvas();
@@ -251,6 +263,13 @@ export default function RightPanel() {
   function setShape(value) {
     const item = currentItem();
     if (!item) {
+      return;
+    }
+    // See setLayout()'s comment above -- same guard against Kobalte's
+    // Select spuriously firing onChange on a controlled-value change.
+    const currentShapeId = item.shape ? item.shape.id : "";
+    if (currentShapeId === value) {
+      returnFocusToCanvas();
       return;
     }
     const shape = shapeRepo.get(value);
@@ -265,16 +284,32 @@ export default function RightPanel() {
     }
     if (value === "num") {
       // Same prompt()-based flow as the "value" keyboard shortcut/command.
+      // Always allowed to reopen (even if the item is already numeric),
+      // since opening the dialog has no history side effect of its own.
       commandRepo.get("value").execute();
-    } else {
-      appModule.action(new actionsModule.SetValue(item, value || null));
+      returnFocusToCanvas();
+      return;
     }
+    // See setLayout()'s comment above. Mirrors valueValue()'s own
+    // formatting so the comparison matches what's actually displayed.
+    const v = item.value;
+    const currentDisplay = v === null ? "" : typeof v === "number" ? "num" : v;
+    if (currentDisplay === value) {
+      returnFocusToCanvas();
+      return;
+    }
+    appModule.action(new actionsModule.SetValue(item, value || null));
     returnFocusToCanvas();
   }
 
   function setStatus(value) {
     const item = currentItem();
     if (!item) {
+      return;
+    }
+    // See setLayout()'s comment above.
+    if (statusToString(item.status) === value) {
+      returnFocusToCanvas();
       return;
     }
     const status = value in STATUS_MAP ? STATUS_MAP[value] : value;
@@ -373,7 +408,7 @@ export default function RightPanel() {
               class="flex items-center gap-1.5"
             >
               <Switch.Input />
-              <Switch.Control class="relative inline-flex h-4 w-7 shrink-0 cursor-pointer items-center rounded-full bg-pane-hover transition-colors data-[checked]:bg-accent">
+              <Switch.Control class="relative inline-flex h-4 w-7 shrink-0 cursor-pointer items-center rounded-full bg-pane-hover transition-colors data-[checked]:bg-brand">
                 <Switch.Thumb class="block h-3 w-3 translate-x-0.5 rounded-full bg-white transition-transform data-[checked]:translate-x-[14px]" />
               </Switch.Control>
               <Switch.Label class="cursor-pointer text-xs text-text/70 select-none">

@@ -58,7 +58,7 @@ export default function Catalog() {
   }
 
   return (
-    <div class="min-h-screen bg-bg p-8 text-text">
+    <div class="h-screen overflow-y-auto bg-bg p-8 text-text">
       <div class="mx-auto max-w-5xl">
         <div class="mb-6 flex items-center justify-between">
           <Logo showTitle />

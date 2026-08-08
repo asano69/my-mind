@@ -1,6 +1,7 @@
 // src/command/edit.ts
 import * as app from "../my-mind.js";
 import * as actions from "../action.js";
+import * as history from "../history.js";
 import * as notes from "../ui/notes.js";
 import * as mouse from "../mouse.js";
 import { closeHelp, openValueDialog } from "../store.js";
@@ -29,17 +30,33 @@ new (class Finish extends Command {
     // Escape's job (see the Cancel command below), not Enter's.
     let text = app.stopEditing();
     let item = app.currentItem;
-    // Exception: a brand-new node (inserted via InsertSibling/
-    // InsertChild, see action.js's InsertNewItem) left empty on its
-    // first confirm is discarded rather than committed as an empty
-    // node. An existing node's text becoming empty is left untouched —
-    // it may still carry notes — so this only ever applies to
-    // just-inserted items (item.isNew).
-    if (!text && item.isNew) {
-      app.action(new actions.RemoveItem(item));
+    // A brand-new node (inserted via InsertSibling/InsertChild as a
+    // draft -- see command.js, it is NOT pushed to history yet at this
+    // point) needs special handling: with no content, discard it
+    // directly instead of committing an empty node, so undo/redo never
+    // sees a "create empty node" step. With real content, this is the
+    // moment its creation is recorded as a single undo step.
+    if (item.isNew) {
+      const parent = item.parent;
+      const index = parent.children.indexOf(item);
+      if (!text) {
+        parent.removeChild(item);
+        app.selectItem(parent);
+        return;
+      }
+      item.isNew = false;
+      item.text = text;
+      let numText = Number(text);
+      // Root nodes never auto-set a numeric value.
+      if (!item.isRoot && String(numText) == text) {
+        item.value = numText;
+      }
+      // The item is already inserted and its content already set --
+      // push it to history without calling do() again (history.push()
+      // only records the action, see history.js).
+      history.push(new actions.InsertNewItem(parent, index, item));
       return;
     }
-    item.isNew = false;
     app.action(new actions.SetText(item, text));
   }
 })();
@@ -73,11 +90,14 @@ new (class Cancel extends Command {
   execute() {
     if (app.editing) {
       app.stopEditing();
-      var oldText = app.currentItem.text;
-      if (!oldText) {
-        // newly added node
-        var action = new actions.RemoveItem(app.currentItem);
-        app.action(action);
+      const item = app.currentItem;
+      // Same draft-discard case as Finish's empty-input branch: a
+      // brand-new node was never pushed to history, so removing it here
+      // needs no undo step either.
+      if (item.isNew) {
+        const parent = item.parent;
+        parent.removeChild(item);
+        app.selectItem(parent);
       }
     } else if (mouse.isDragging()) {
       // A node drag is in progress: cancel it instead of closing panels.

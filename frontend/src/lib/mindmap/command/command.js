@@ -132,7 +132,11 @@ new (class InsertSibling extends Command {
       let index = parent.children.indexOf(item);
       action = new actions.InsertNewItem(parent, index + 1);
     }
-    app.action(action);
+    // Insert the draft item directly, without pushing it to history yet.
+    // It only becomes an undoable action once it has real content (see
+    // command/edit.js's Finish) -- an empty node that's immediately
+    // discarded should never leave a trace in the undo stack.
+    action.do();
     repo.get("edit").execute();
   }
 })();
@@ -144,7 +148,8 @@ new (class InsertChild extends Command {
   execute() {
     let item = app.currentItem;
     let action = new actions.InsertNewItem(item, item.children.length);
-    app.action(action);
+    // See InsertSibling above: draft insertion is not pushed to history.
+    action.do();
     repo.get("edit").execute();
   }
 })();
@@ -216,7 +221,7 @@ new (class Save extends Command {
   }
   async execute() {
     await io.quickSave();
-    showToast("Saved", app.currentMap.name);
+    showToast("Mind map saved");
   }
 })();
 // Renders the current map as a transparent PNG and copies it to the
@@ -235,7 +240,7 @@ async function copyMapImageToClipboard() {
       await navigator.clipboard.write([
         new ClipboardItem({ "image/png": blob }),
       ]);
-      showToast("Copied", app.currentMap.name);
+      showToast("Mind map image copied to clipboard");
     } else {
       window.open(url, "_blank");
     }
@@ -292,8 +297,9 @@ new (class New extends Command {
   }
   async execute() {
     // Persist the current map (with a fresh thumbnail) before switching
-    // away, mirroring GoToCatalog's save-before-navigate pattern.
-    await io.saveWithSvg();
+    // away, mirroring GoToCatalog's save-before-navigate pattern. Skips
+    // entirely when auto-save is off (see io.saveBeforeLeaving()).
+    await io.saveBeforeLeaving();
     // Forget the just-saved map's id/title/uuid so the new blank map
     // starts as an unsaved map, not as an edit of the old record.
     io.resetCurrentMap();
@@ -432,7 +438,7 @@ new (class GoToCatalog extends Command {
     this.keys = [{ code: "KeyP", ctrlKey: true }];
   }
   async execute() {
-    await io.saveWithSvg();
+    await io.saveBeforeLeaving();
     window.location.href = "/catalog";
   }
 })();

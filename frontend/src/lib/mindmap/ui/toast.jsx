@@ -8,23 +8,32 @@ import { Toast, toaster } from "@kobalte/core/toast";
  *   showToast("Done!");             // plain message (subject omitted)
  *
  * Kobalte owns entrance/exit animation, stacking, and the auto-dismiss
- * timer (options.linger maps to its `duration` prop), so none of that
- * needs to be reimplemented here.
+ * timer (options.linger maps to its `duration` prop). The progress bar
+ * below (Toast.ProgressTrack/ProgressFill) is also driven by that same
+ * timer via Kobalte's --kb-toast-progress-fill-width CSS var, so no
+ * separate countdown logic is needed here either.
  */
 export function showToast(label, subject, options = {}) {
   toaster.show((props) => (
     <Toast
       toastId={props.toastId}
       duration={options.linger ?? 2500}
-      class="flex items-baseline gap-2 rounded-lg bg-pane-hover px-4 py-2
-        text-base text-text shadow-card transition-[opacity,transform]
-        duration-200 data-[closed]:opacity-0 data-[opened]:opacity-100
-        data-[closed]:translate-x-4 data-[opened]:translate-x-0"
+      class="flex flex-col gap-2 rounded-xl border border-black/[0.06]
+        border-l-4 border-l-[#2ca02c] bg-white px-4 py-3 text-base text-text
+        shadow-[0_8px_24px_rgba(0,0,0,0.16),0_2px_6px_rgba(0,0,0,0.08)]
+        transition-[opacity,transform] duration-200 data-[closed]:opacity-0
+        data-[opened]:opacity-100 data-[closed]:translate-x-4
+        data-[closed]:scale-95 data-[opened]:translate-x-0 data-[opened]:scale-100"
     >
-      <span>{label}</span>
-      {subject !== undefined && (
-        <span class="font-normal tracking-wide text-text/85">{subject}</span>
-      )}
+      <div class="flex items-baseline gap-2 text-sm">
+        <span>{label}</span>
+        {subject !== undefined && (
+          <span class="font-normal tracking-wide text-text/85">{subject}</span>
+        )}
+      </div>
+      <Toast.ProgressTrack class="h-1 w-full overflow-hidden rounded-full bg-pane-hover">
+        <Toast.ProgressFill class="block h-full w-[var(--kb-toast-progress-fill-width)] rounded-full bg-brand transition-[width] duration-[250ms] ease-linear" />
+      </Toast.ProgressTrack>
     </Toast>
   ));
 }

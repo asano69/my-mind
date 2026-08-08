@@ -51,7 +51,7 @@ const SECTIONS = [
       ["help"],
       ["notes"],
       ["ui"],
-      ["quick-load"],
+      ["file-switcher"],
       ["go-to-catalog"],
     ],
   },

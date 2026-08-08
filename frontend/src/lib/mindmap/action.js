@@ -21,22 +21,33 @@ export class Multi extends Action {
   }
 }
 export class InsertNewItem extends Action {
-  constructor(parent, index) {
+  // `item` lets a caller reuse an already-constructed (and already
+  // inserted) Item instead of creating a brand-new one -- see
+  // command/edit.js's Finish command, which creates a draft item
+  // directly (bypassing history) so the user can type into it, then
+  // constructs this action only once real content exists, reusing that
+  // same item so the whole creation becomes a single undo step instead
+  // of "insert empty node" + "set text" as two separate history entries.
+  constructor(parent, index, item = null) {
     super();
     this.parent = parent;
     this.index = index;
-    this.item = new Item();
-    // Marks this item as freshly inserted so Finish (see
-    // command/edit.js) can discard it instead of committing empty text,
-    // without affecting existing items that already had empty text.
-    this.item.isNew = true;
-    // Auto-balance left/right placement for new root-level children:
-    // assign whichever side currently has fewer children, so the map
-    // doesn't grow lopsided when nodes are added without an explicit
-    // side. Only meaningful for root's direct children -- side has no
-    // effect anywhere else in the tree (see command/command.js's SetSide).
-    if (parent.isRoot) {
-      this.item.side = pickBalancedSide(parent);
+    if (item) {
+      this.item = item;
+    } else {
+      this.item = new Item();
+      // Marks this item as freshly inserted so Finish (see
+      // command/edit.js) can discard it instead of committing empty text,
+      // without affecting existing items that already had empty text.
+      this.item.isNew = true;
+      // Auto-balance left/right placement for new root-level children:
+      // assign whichever side currently has fewer children, so the map
+      // doesn't grow lopsided when nodes are added without an explicit
+      // side. Only meaningful for root's direct children -- side has no
+      // effect anywhere else in the tree (see command/command.js's SetSide).
+      if (parent.isRoot) {
+        this.item.side = pickBalancedSide(parent);
+      }
     }
   }
   do() {

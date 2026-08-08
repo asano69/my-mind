@@ -34,7 +34,7 @@ function FileSwitcherPanel(props) {
   async function handleSelect(uuid) {
     const io = await import("../lib/mindmap/ui/io.js");
     try {
-      await io.saveWithSvg();
+      await io.saveBeforeLeaving();
     } catch {
       // ignore; still navigate
     }

@@ -24,6 +24,7 @@
   --color-pane-hover: #d9c9bb; /* hovered item inside panel  */
   --color-accent: #5a4a3a; /* primary interactive/active */
   --color-text: #2c2015; /* body text                  */
+  --color-brand: #5563a2; /* app brand color, e.g. Logo.jsx's icon fill */
   /* Shadows */
   --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.18), 0 1px 4px rgba(0, 0, 0, 0.1);
   /* soft hover highlight, shared across pages */
@@ -108,6 +109,7 @@
   --color-accent: var(--color-accent);
   --color-text: var(--color-text);
   --color-hover: var(--color-hover);
+  --color-brand: var(--color-brand);
 
   --font-sans: var(--font-sans);
   --font-serif: var(--font-serif);
