@@ -81,8 +81,8 @@ function ColorPicker(props) {
         <span class="mb-1 block text-[11px] font-semibold tracking-wider text-text/70 uppercase">
           {props.label}
         </span>
-        <span
-          class="mt-1 flex flex-row flex-wrap gap-1.5"
+       <span
+          class="mt-1 flex flex-row flex-wrap gap-1"
           onClick={props.onClick}
         >
           <For each={COLOR_SWATCHES}>
@@ -91,7 +91,7 @@ function ColorPicker(props) {
                 data-color={c.value}
                 title={c.title}
                 href="#"
-                class="h-5 w-5 rounded-[5px] shadow-[0_1px_4px_rgba(0,0,0,0.8)] transition-transform hover:scale-125"
+       class="h-4 w-4 rounded-[4px] shadow-[0_1px_4px_rgba(0,0,0,0.8)] transition-transform hover:scale-125"
                 style={c.value ? { "background-color": c.value } : {}}
               ></a>
             )}
