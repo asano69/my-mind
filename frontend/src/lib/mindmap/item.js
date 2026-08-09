@@ -1021,26 +1021,14 @@ function buildNotesIcon() {
 // 🔗 emoji glyph, which rendered inconsistently across platforms/fonts.
 function buildLinkIcon() {
   let s = svg.node("svg", {
-    viewBox: "0 0 24 24",
+    viewBox: "0 0 36 36",
     fill: "none",
-    stroke: "#000000",
-    "stroke-width": "2",
-    "stroke-linecap": "round",
-    "stroke-linejoin": "round",
   });
 
   s.append(
     svg.node("path", {
-      d: "M9 17H7A5 5 0 0 1 7 7h2",
-    }),
-    svg.node("path", {
-      d: "M15 7h2a5 5 0 1 1 0 10h-2",
-    }),
-    svg.node("line", {
-      x1: "8",
-      x2: "16",
-      y1: "12",
-      y2: "12",
+      d: "M34,17H28.23A6.25,6.25,0,0,0,22,12H14.15a6.25,6.25,0,0,0-6.21,5H2v2H7.93a6.22,6.22,0,0,0,6.22,5H22a6.22,6.22,0,0,0,6.22-5H34ZM17.08,22H14.15a4.17,4.17,0,0,1-4.31-4,4.17,4.17,0,0,1,4.31-4h2.94ZM22,22H19V14h3a4.17,4.17,0,0,1,4.31,4A4.17,4.17,0,0,1,22,22Z",
+      fill: "#000000",
     }),
   );
 
