@@ -13,6 +13,7 @@ import {
   setCurrentMapId,
   autoSaveEnabled,
   setAutoSaveEnabled,
+  setErrorDialogMessage,
 } from "../store.js";
 
 let currentMapId = null; // PocketBase record id, used for save/update calls
@@ -354,6 +355,6 @@ function error(e) {
       .join("; ");
     message = `${message} (${detail})`;
   }
-  alert(`IO error: ${message}`);
+  setErrorDialogMessage(`IO error: ${message}`);
 }
 

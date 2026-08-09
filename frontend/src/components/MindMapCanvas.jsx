@@ -2,6 +2,7 @@
 import RightPanel from "./RightPanel";
 import ValueDialog from "./ValueDialog";
 import FileSwitcher from "./FileSwitcher";
+import ErrorDialog from "./ErrorDialog";
 
 import ContextMenuContent from "./ContextMenu";
 import { ContextMenu } from "@kobalte/core/context-menu";
@@ -65,6 +66,7 @@ export default function MindMapCanvas(props) {
       <RightPanel />
       <ValueDialog />
       <FileSwitcher />
+      <ErrorDialog />
     </div>
   );
 }

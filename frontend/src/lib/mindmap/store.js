@@ -198,3 +198,11 @@ export function openFileSwitcher() {
 export function closeFileSwitcher() {
   setFileSwitcherOpen(false);
 }
+
+// Message for the global error dialog (see ErrorDialog.jsx), replacing
+// the native window.alert() previously used by io.js's error() handler.
+// null means the dialog is closed.
+export const [errorDialogMessage, setErrorDialogMessage] = createSignal(null);
+export function closeErrorDialog() {
+  setErrorDialogMessage(null);
+}
