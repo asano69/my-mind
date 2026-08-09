@@ -3,6 +3,7 @@ import { Switch } from "@kobalte/core/switch";
 import {
   autoSaveEnabled,
   currentItem,
+  reloadCanvas,
   saveStatus,
   rightPanelHidden,
   toggleRightPanel,
@@ -362,7 +363,18 @@ export default function RightPanel() {
         >
           <div class="flex-1 overflow-y-auto">
             <div class="flex justify-center p-1 border-b border-black/10"> 
-              <Logo size={28} showTitle linkable centerTitle />
+              {/* Clicking the logo used to navigate to the catalog
+                  (linkable). It now force-remounts the current map
+                  instead -- a lightweight full-reload, for when the
+                  map's client-side state gets into a broken state (see
+                  store.js's reloadCanvas()). */}
+              <Logo
+                size={28}
+                showTitle
+                centerTitle
+                onClick={reloadCanvas}
+                title="Reload map"
+              />
             </div>
             <SelectField
               label="Layout"

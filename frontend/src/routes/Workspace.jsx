@@ -1,7 +1,8 @@
 import { useParams } from "@solidjs/router";
-import { Show, createEffect, createSignal, onMount } from "solid-js";
+import { Show, createEffect, createMemo, createSignal, onMount } from "solid-js";
 import {
   activeMode,
+  canvasReloadVersion,
   leftPanelHidden,
   setLeftPanelHidden,
   rightPanelHidden,
@@ -26,6 +27,14 @@ export default function Workspace() {
   // all, so MindMapCanvas/io.restore() create a fresh, unsaved map
   // instead of trying to look up a map literally named "new".
   const uuid = () => (params.uuid === "new" ? undefined : params.uuid);
+
+  // Combines the route's uuid with a bump-only "reload" signal, so the
+  // logo's reload action (see RightPanel.jsx) can force MindMapCanvas to
+  // remount without touching the URL -- <Show keyed> remounts its child
+  // whenever the value passed to `when` changes.
+  const canvasKey = createMemo(
+    () => `${params.uuid ?? "__new__"}:${canvasReloadVersion()}`,
+  );
 
   // Loads the persisted panel visibility once on mount, then starts
   // writing back any subsequent toggle. settingsLoaded guards the two
@@ -72,7 +81,7 @@ export default function Workspace() {
         classList={{ "pointer-events-none": activeMode() !== "canvas" }}
         style={{ "z-index": activeMode() === "canvas" ? 1 : 0 }}
       >
-        <Show when={params.uuid ?? "__new__"} keyed>
+        <Show when={canvasKey()} keyed>
           {(key) => {
             console.log("[Workspace] Show children re-created, key =", key);
             return <MindMapCanvas uuid={uuid()} />;

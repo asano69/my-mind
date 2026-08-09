@@ -124,6 +124,20 @@ export function toggleNotesMode() {
 // react to which map is open without importing io.js directly.
 export const [currentMapId, setCurrentMapId] = createSignal(null);
 
+// Bumped when the user wants to force the mind-map canvas to remount --
+// a lightweight equivalent of a full page reload, without leaving the
+// route. Used by the RightPanel logo's "reload" action (see
+// RightPanel.jsx/Logo.jsx) for when the map's client-side state gets
+// into a broken state; Workspace.jsx folds this into the key it passes
+// to <Show keyed>, so a bump remounts MindMapCanvas (and thus re-runs
+// my-mind.js's mount(), which reloads the map fresh from the server).
+// Nothing reads the value itself, only reacts to it changing -- same
+// "changed marker" pattern as dirtyVersion/catalogListVersion above.
+export const [canvasReloadVersion, setCanvasReloadVersion] = createSignal(0);
+export function reloadCanvas() {
+  setCanvasReloadVersion((v) => v + 1);
+}
+
 // Whether the left sidebar is currently showing the snapshot recovery
 // list instead of its default reserved content area. Set by the
 // "recover" command (see command/command.js), read by LeftPanel.jsx.

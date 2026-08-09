@@ -22,7 +22,7 @@ export default function Catalog() {
   const navigate = useNavigate();
   const [query, setQuery] = createSignal("");
   // Re-fetches from PocketBase whenever query() changes.
-  const [maps, { mutate }] = createResource(query, listMaps);
+  const [maps, { mutate, refetch }] = createResource(query, listMaps);
   const [editMode, setEditMode] = createSignal(false);
 
   const [pendingDeleteId, setPendingDeleteId] = createSignal(null);
@@ -61,7 +61,12 @@ export default function Catalog() {
     <div class="h-screen overflow-y-auto bg-bg p-8 text-text">
       <div class="mx-auto max-w-5xl">
         <div class="mb-6 flex items-center justify-between">
-          <Logo showTitle />
+          {/* Clicking the logo re-fetches the map list, refreshing
+              thumbnails that may be stale (e.g. after editing a map in
+              another tab). Mirrors RightPanel.jsx's logo, which
+              force-remounts the canvas for the same "something looks
+              stale/broken, force a refresh" purpose. */}
+          <Logo showTitle onClick={refetch} title="Refresh maps" />
           <div class="flex gap-2">
             <IconButton
               onClick={() => setEditMode(!editMode())}
