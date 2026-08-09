@@ -168,10 +168,22 @@ export function openHelp() {
 export function closeHelp() {
   setHelpHiddenRaw(true);
 }
+// Bumped every time the "Snapshots" panel is (re-)opened or explicitly
+// refreshed (see LeftPanel.jsx's clickable pane title), mirroring
+// catalogListVersion below -- SnapshotsList.jsx's createResource already
+// refetches on currentMapId changes, but re-clicking the title while the
+// same map's snapshots are already showing needs its own "changed
+// marker" to force a refetch.
+export const [snapshotsListVersion, setSnapshotsListVersion] = createSignal(0);
+export function bumpSnapshotsListVersion() {
+  setSnapshotsListVersion((v) => v + 1);
+}
+
 export function openSnapshots() {
   setHelpHiddenRaw(true);
   setShowCatalogListRaw(false);
   setShowSnapshotsRaw(true);
+  bumpSnapshotsListVersion();
 }
 // Bumped every time the "Browse maps" panel is (re-)opened, so
 // CatalogList.jsx's createResource refetches even when the panel was
@@ -182,7 +194,7 @@ export function openSnapshots() {
 // dirtyVersion above: nothing reads the value itself, only reacts to
 // it changing.
 export const [catalogListVersion, setCatalogListVersion] = createSignal(0);
-function bumpCatalogListVersion() {
+export function bumpCatalogListVersion() {
   setCatalogListVersion((v) => v + 1);
 }
 

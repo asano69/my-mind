@@ -7,6 +7,8 @@ import {
   showSnapshots,
   showCatalogList,
   helpHidden,
+  bumpCatalogListVersion,
+  bumpSnapshotsListVersion,
 } from "../lib/mindmap/store";
 import SnapshotsList from "./SnapshotsList";
 import CatalogList from "./CatalogList";
@@ -50,6 +52,19 @@ export default function LeftPanel() {
     }
     return "Catalog";
   };
+
+  // Refreshes whichever list is currently showing. Help has no list to
+  // refetch, so the title is only clickable for Catalog/Snapshots (see
+  // the render below). Catalog is also the default fallback view (see
+  // the <Show> for CatalogList further down), so anything that isn't
+  // "Snapshots" and isn't "Help" refreshes the catalog list.
+  function refreshPane() {
+    if (showSnapshots()) {
+      bumpSnapshotsListVersion();
+    } else if (helpHidden()) {
+      bumpCatalogListVersion();
+    }
+  }
 
   // Closing the panel leaves focus on this toggle button, which lives
   // outside MindMapCanvas.jsx's containerRef (LeftPanel is a Workspace-
@@ -182,12 +197,27 @@ export default function LeftPanel() {
               Without this, the title renders serif only until the map's
               <style> tag is inserted, then silently flips to sans. Same
               fix Logo.jsx already uses for its own title text. */}
-          <p
-            class="truncate text-base font-semibold text-text"
-            style={{ "font-family": "var(--font-serif)" }}
+          <Show
+            when={!helpHidden()}
+            fallback={
+              <button
+                type="button"
+                onClick={refreshPane}
+                title="Refresh"
+                class="truncate text-left text-base font-semibold text-text hover:opacity-70"
+                style={{ "font-family": "var(--font-serif)" }}
+              >
+                {paneTitle()}
+              </button>
+            }
           >
-            {paneTitle()}
-          </p>
+            <p
+              class="truncate text-base font-semibold text-text"
+              style={{ "font-family": "var(--font-serif)" }}
+            >
+              {paneTitle()}
+            </p>
+          </Show>
         </div>
         <div class="min-w-0 flex-1 overflow-y-auto px-2 py-2">
           <Show when={showSnapshots()}>

@@ -1,5 +1,5 @@
-import { For, Show, createResource, createSignal } from "solid-js";
-import { currentMapId } from "../lib/mindmap/store";
+import { For, Show, createMemo, createResource, createSignal } from "solid-js";
+import { currentMapId, snapshotsListVersion } from "../lib/mindmap/store";
 import { listSnapshots, getSnapshot } from "../lib/mindmap/backend/pocketbase";
 import Spinner from "./Spinner";
 import ConfirmDialog from "./ConfirmDialog";
@@ -13,7 +13,17 @@ function formatDate(dateStr) {
 // command/command.js). Mirrors Catalog.jsx's map grid, but as a single
 // column since it lives inside the narrow left sidebar.
 export default function SnapshotsList() {
-  const [snapshots] = createResource(currentMapId, listSnapshots);
+  // Refetches whenever the open map changes OR snapshotsListVersion is
+  // bumped (see LeftPanel.jsx's clickable "Snapshots" pane title).
+  // createResource only refetches when the *source value itself* changes
+  // (a strict-inequality check) -- returning currentMapId() unchanged
+  // here would make a version-only bump a no-op, since re-clicking while
+  // the same map's snapshots are already showing never changes the map
+  // id. Returning a tuple of both values instead guarantees a fresh
+  // array reference (and thus a detected change) on every version bump,
+  // even when the map id hasn't moved.
+  const resourceSource = createMemo(() => [currentMapId(), snapshotsListVersion()]);
+  const [snapshots] = createResource(resourceSource, ([mapId]) => listSnapshots(mapId));
   // The snapshot awaiting restore confirmation, or null. Mirrors
   // Catalog.jsx's pendingDeleteId pattern -- confirmation itself is
   // handled by ConfirmDialog (see render below) instead of a native
