@@ -1001,18 +1001,17 @@ function buildToggle() {
 // inherits color via currentColor like every other inline icon here.
 function buildNotesIcon() {
   let s = svg.node("svg", {
-    viewBox: "0 0 24 24",
+    viewBox: "0 0 512 512",
     fill: "none",
-    stroke: "currentColor",
-    "stroke-width": "2",
-    "stroke-linecap": "round",
-    "stroke-linejoin": "round",
   });
+
   s.append(
     svg.node("path", {
-      d: "m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551",
+      d: "M359.784,103.784v262.919c0,57.226-46.557,103.784-103.784,103.784s-103.784-46.557-103.784-103.784V103.784c0-34.336,27.934-62.27,62.27-62.27c34.336,0,62.27,27.934,62.27,62.27v262.919c0,11.445-9.312,20.757-20.757,20.757s-20.757-9.311-20.757-20.757V103.784H193.73v262.919c0,34.336,27.934,62.27,62.27,62.27s62.27-27.934,62.27-62.27V103.784C318.27,46.557,271.713,0,214.487,0S110.703,46.557,110.703,103.784v262.919C110.703,446.82,175.883,512,256,512s145.297-65.18,145.297-145.297V103.784H359.784z",
+      fill: "#000000",
     }),
   );
+
   return s;
 }
 // Link-open icon (lucide "link-2"), built the same way as
@@ -1024,16 +1023,27 @@ function buildLinkIcon() {
   let s = svg.node("svg", {
     viewBox: "0 0 24 24",
     fill: "none",
-    stroke: "currentColor",
+    stroke: "#000000",
     "stroke-width": "2",
     "stroke-linecap": "round",
     "stroke-linejoin": "round",
   });
+
   s.append(
-    svg.node("path", { d: "M9 17H7A5 5 0 0 1 7 7h2" }),
-    svg.node("path", { d: "M15 7h2a5 5 0 1 1 0 10h-2" }),
-    svg.node("line", { x1: "8", x2: "16", y1: "12", y2: "12" }),
+    svg.node("path", {
+      d: "M9 17H7A5 5 0 0 1 7 7h2",
+    }),
+    svg.node("path", {
+      d: "M15 7h2a5 5 0 1 1 0 10h-2",
+    }),
+    svg.node("line", {
+      x1: "8",
+      x2: "16",
+      y1: "12",
+      y2: "12",
+    }),
   );
+
   return s;
 }
 const COLOR = "#999";
