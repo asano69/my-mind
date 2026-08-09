@@ -11,6 +11,7 @@ import { Dialog } from "@kobalte/core/dialog";
 import { fileSwitcherOpen, closeFileSwitcher } from "../lib/mindmap/store";
 import { listMaps } from "../lib/mindmap/backend/pocketbase";
 import Search from "./Search";
+import Pin from "lucide-solid/icons/pin";
 
 function formatDate(dateStr) {
   return new Date(dateStr).toLocaleString();
@@ -104,6 +105,16 @@ function FileSwitcherPanel(props) {
                   onKeyDown={handleListKeyDown}
                   class="flex w-full items-center gap-3 rounded px-3 py-2 text-left text-sm text-text hover:bg-hover focus:bg-hover focus:outline-none"
                 >
+                  <Show when={map.pin}>
+                    {/* style.css has a global `svg { position: absolute }`
+                        rule (see Logo.jsx's own icon for the same fix) --
+                        without overriding it here, this icon is yanked out
+                        of normal flow and stays put while the list around
+                        it scrolls. */}
+                    <span class="mr-1 flex h-4 w-4 flex-none items-center justify-center text-[#2ca02c]">
+                      <Pin size={14} style={{ position: "static" }} />
+                    </span>
+                  </Show>
                   <span class="min-w-0 flex-1 truncate">
                     {map.title || "Untitled"}
                   </span>
