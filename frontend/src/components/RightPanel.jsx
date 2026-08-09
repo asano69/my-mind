@@ -1,4 +1,4 @@
-import { createMemo, createSignal, For, onMount, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, For, onMount, Show } from "solid-js";
 import { Switch } from "@kobalte/core/switch";
 import {
   autoSaveEnabled,
@@ -98,6 +98,44 @@ function ColorPicker(props) {
             )}
           </For>
         </span>
+      </label>
+    </div>
+  );
+}
+
+// Returns true only for a non-empty string that isn't http(s) -- used to
+// block committing an obviously-wrong URL from the field below, mirroring
+// ValueDialog.jsx's isInvalidInput() guard.
+function isInvalidUrl(text) {
+  return text.length > 0 && !/^https?:\/\//i.test(text);
+}
+
+// Plain text field for an item's `url` (opened via the 🔗 icon appended
+// to its label, see item.js's updateLink()). Committed on blur/Enter,
+// not on every keystroke, so typing never spams the undo stack with
+// SetUrl actions -- same pattern TopBar.jsx uses for title editing.
+function UrlField(props) {
+  return (
+    <div class="border-b border-black/[0.07] px-3 py-2">
+      <label class="block">
+        <span class="mb-1 block text-[11px] font-semibold tracking-wider text-text/70 uppercase">
+          URL
+        </span>
+        <input
+          type="text"
+          value={props.value}
+          onInput={(e) => props.onInput(e.target.value)}
+          onBlur={props.onBlur}
+          onKeyDown={props.onKeyDown}
+          placeholder="http://"
+          disabled={props.disabled}
+          aria-invalid={props.invalid}
+          class="mt-1 w-full rounded border bg-bg px-2 py-1 text-sm text-text outline-none focus:border-accent"
+          classList={{
+            "border-pane-hover": !props.invalid,
+            "border-[#cc0000]": props.invalid,
+          }}
+        />
       </label>
     </div>
   );
@@ -229,6 +267,33 @@ export default function RightPanel() {
     const item = currentItem();
     return item ? statusToString(item.status) : "";
   });
+
+  // Local buffer for the URL field, separate from currentItem()?.url so
+  // typing doesn't dispatch a SetUrl action (and clutter the undo stack)
+  // on every keystroke -- only committed on blur/Enter (see commitUrl()).
+  const [urlInput, setUrlInput] = createSignal("");
+  createEffect(() => {
+    setUrlInput(currentItem()?.url || "");
+  });
+
+  function commitUrl() {
+    const item = currentItem();
+    if (!item) {
+      return;
+    }
+    const raw = urlInput().trim();
+    if (isInvalidUrl(raw)) {
+      // Block the commit; the field shows an error state instead (see
+      // isInvalidUrl() and the aria-invalid prop below).
+      return;
+    }
+    if (raw === (item.url || "")) {
+      returnFocusToCanvas();
+      return;
+    }
+    appModule.action(new actionsModule.SetUrl(item, raw));
+    returnFocusToCanvas();
+  }
 
   // Kobalte's Select trigger is a <button>, not a native <select>, so
   // there is no event target to blur directly here (unlike the old
@@ -406,6 +471,15 @@ export default function RightPanel() {
               onChange={setStatus}
               disabled={!ready() || !currentItem()}
               options={STATUS_OPTIONS}
+            />
+
+            <UrlField
+              value={urlInput()}
+              onInput={setUrlInput}
+              onBlur={commitUrl}
+              onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+              invalid={isInvalidUrl(urlInput())}
+              disabled={!ready() || !currentItem()}
             />
 
             <ColorPicker label="Item color" onClick={setColor} />

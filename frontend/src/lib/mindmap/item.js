@@ -47,6 +47,9 @@ export default class Item {
     const [icon, setIcon] = createSignal("");
     this._icon = icon;
     this._setIcon = setIcon;
+    const [url, setUrl] = createSignal("");
+    this._url = url;
+    this._setUrl = setUrl;
     const [notes, setNotes] = createSignal("");
     this._notes = notes;
     this._setNotes = setNotes;
@@ -209,6 +212,7 @@ export default class Item {
       icon: html.node("span"),
       value: html.node("span"),
       text: html.node("div"),
+      link: html.node("span"),
       toggle: buildToggle(),
     };
     const { dom } = this;
@@ -221,13 +225,29 @@ export default class Item {
     dom.value.classList.add("value");
     dom.text.classList.add("text");
     dom.icon.classList.add("icon");
+    dom.link.classList.add("link-icon");
+    dom.link.append(buildLinkIcon());
     let fo = svg.foreignObject();
     dom.node.append(dom.connectors, fo);
     fo.append(dom.content);
+    // dom.link is appended inline at the end of dom.text's own content
+    // (see updateText() below), not here as a separate flex sibling of
+    // .content -- keeping it a flex sibling caused it to overlap the
+    // label text under some layouts/shapes instead of trailing it.
     dom.content.append(dom.status, dom.value, dom.icon, dom.text, dom.notes);
     dom.toggle.addEventListener("click", (_) => {
       this.collapsed = !this.collapsed;
       app.selectItem(this);
+    });
+    // Opens this item's url in a new tab. Deliberately not stopping
+    // propagation: the click still bubbles up to mouse.js's own click
+    // listener afterwards, which selects the item as usual (per spec:
+    // clicking the 🔗 both opens the link and selects the node).
+    dom.link.addEventListener("click", () => {
+      const url = this._url();
+      if (url) {
+        window.open(url, "_blank", "noopener,noreferrer");
+      }
     });
     // updateStatus/updateValue are still called directly from
     // computeLayout() below, since resolvedStatus/resolvedValue read
@@ -244,6 +264,7 @@ export default class Item {
       createEffect(() => this.updateIcon());
       createEffect(() => this.updateNotes());
       createEffect(() => this.updateToggle());
+      createEffect(() => this.updateLink());
     });
 
     createRoot((dispose) => {
@@ -308,6 +329,9 @@ export default class Item {
     if (this._icon()) {
       data.icon = this._icon();
     }
+    if (this._url()) {
+      data.url = this._url();
+    }
     if (this._value() !== null) {
       data.value = this._value();
     }
@@ -353,6 +377,9 @@ export default class Item {
     if (data.icon) {
       this._setIcon(data.icon);
     }
+    if (data.url) {
+      this._setUrl(data.url);
+    }
     if (data.value !== undefined) {
       this._setValue(data.value);
     }
@@ -396,6 +423,9 @@ export default class Item {
     }
     if (this._icon() != data.icon) {
       this._setIcon(data.icon || "");
+    }
+    if (this._url() != data.url) {
+      this._setUrl(data.url || "");
     }
     if (this._value() != data.value) {
       this._setValue(data.value || null);
@@ -525,6 +555,12 @@ export default class Item {
   }
   set icon(icon) {
     this._setIcon(icon);
+  }
+  get url() {
+    return this._url();
+  }
+  set url(url) {
+    this._setUrl(url);
   }
   get side() {
     return this._side;
@@ -658,21 +694,34 @@ export default class Item {
   }
   startEditing() {
     this.originalText = this.text;
+    // dom.link is normally a trailing child of dom.text (see
+    // updateText() below), appended inline after the label so it reads
+    // as part of the text rather than overlapping it. Detach it before
+    // enabling contentEditable so the user can't accidentally type
+    // inside it, select it, or delete it as part of the edited text --
+    // it's reattached in stopEditing() below.
+    this.dom.link.remove();
     this.dom.text.contentEditable = "true";
     this.dom.text.focus();
     document.execCommand("styleWithCSS", false, "false");
     this.dom.text.addEventListener("input", this);
     this.dom.text.addEventListener("keydown", this);
     this.dom.text.addEventListener("blur", this);
+    this.dom.text.addEventListener("paste", this);
   }
   stopEditing() {
     this.dom.text.removeEventListener("input", this);
     this.dom.text.removeEventListener("keydown", this);
     this.dom.text.removeEventListener("blur", this);
+    this.dom.text.removeEventListener("paste", this);
     this.dom.text.blur();
     this.dom.text.contentEditable = "false";
     let result = this.dom.text.innerHTML;
     this.dom.text.innerHTML = this.originalText;
+    // Reattach dom.link (removed in startEditing()) now that innerHTML
+    // has been reset -- innerHTML assignment above wipes all children,
+    // including any earlier append from updateText().
+    this.dom.text.appendChild(this.dom.link);
     this.originalText = "";
     return result;
   }
@@ -690,6 +739,24 @@ export default class Item {
       case "blur":
         commandRepo.get("finish").execute();
         break;
+      case "paste": {
+        const pasted = e.clipboardData?.getData("text/plain") ?? "";
+        if (!isUrlOnly(pasted)) {
+          break;
+        }
+        const trimmed = pasted.trim();
+        // Defer until the browser has actually inserted the pasted text,
+        // so we can check whether it ended up being the item's *entire*
+        // content (e.g. pasted into an empty node, or replacing a full
+        // selection) -- see isUrlOnly()'s comment. Pasting a URL into
+        // non-empty text should NOT set the url field.
+        queueMicrotask(() => {
+          if (this.dom.text.textContent.trim() === trimmed) {
+            this.url = trimmed;
+          }
+        });
+        break;
+      }
     }
   }
   updateText() {
@@ -712,7 +779,12 @@ export default class Item {
       return;
     }
     this.dom.text.innerHTML = text;
-    findLinks(this.dom.text);
+    // innerHTML above wipes dom.text's children, including dom.link if it
+    // was appended by a previous run -- reattach it as the trailing
+    // element so the 🔗-replacement icon always reads as part of the
+    // label's own text, not a separate item stuck elsewhere in the
+    // layout.
+    this.dom.text.appendChild(this.dom.link);
     // Text size can change the content box; this effect runs independently
     // of computeLayout() now, so it must nudge the layout memo itself to
     // remeasure this item (and its ancestors) rather than relying on
@@ -748,6 +820,14 @@ export default class Item {
     // of .text, see map.css); this effect runs independently of
     // computeLayout() now (see the constructor), so nudge the layout memo
     // itself to remeasure this item (and its ancestors).
+    this._bumpContentVersion();
+  }
+  updateLink() {
+    const url = this._url();
+    this.dom.link.hidden = !url;
+    // Same reasoning as updateIcon() above: the link icon sits inline at
+    // the end of the text, so its presence/absence changes the content
+    // box and must nudge the layout memo to remeasure.
     this._bumpContentVersion();
   }
   updateValue() {
@@ -850,46 +930,16 @@ export default class Item {
     resolvedShape.update(this);
   }
 }
-function findLinks(node) {
-  // Defensive default: some lightweight DOM stand-ins used in tests don't
-  // implement childNodes, and this can now run outside computeLayout()'s
-  // controlled flow via the per-item text effect (see the constructor).
-  let children = [...(node.childNodes || [])];
-  for (let i = 0; i < children.length; i++) {
-    let child = children[i];
-    if (child instanceof Element) {
-      if (child.nodeName.toLowerCase() == "a") {
-        continue;
-      }
-      findLinks(child);
-    }
-    if (child instanceof Text) {
-      let str = child.nodeValue;
-      let result = str.match(RE);
-      if (!result) {
-        continue;
-      }
-      let before = str.substring(0, result.index);
-      let after = str.substring(result.index + result[0].length);
-      var link = document.createElement("a");
-      link.innerHTML = link.href = result[0];
-      // Open detected links in a new tab. rel="noopener noreferrer" is
-      // required alongside target="_blank" so the opened page cannot
-      // access window.opener (reverse tabnabbing).
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      if (before) {
-        node.insertBefore(document.createTextNode(before), child);
-      }
-      node.insertBefore(link, child);
-      if (after) {
-        child.nodeValue = after;
-        i--; // re-try with the aftertext
-      } else {
-        child.remove();
-      }
-    }
-  }
+// Matches a string that is *entirely* a URL (nothing else). Used only to
+// detect "the pasted clipboard text was a URL and nothing else" (see
+// handleEvent()'s "paste" case above) -- distinct from the old
+// findLinks()-based in-place linkification this replaces, which turned a
+// URL substring inside otherwise plain text into a clickable <a>. That
+// in-place linkification is gone; a URL is now only ever associated with
+// an item via the explicit `url` field (see the 🔗 icon/updateLink()).
+const URL_ONLY_RE = /^https?:\/\/\S+$/i;
+function isUrlOnly(str) {
+  return URL_ONLY_RE.test(str.trim());
 }
 function generateId() {
   let str = "";
@@ -929,18 +979,28 @@ function buildNotesIcon() {
   );
   return s;
 }
+// Link-open icon (lucide "link-2"), built the same way as
+// buildNotesIcon() above -- same viewBox/attributes as lucide-solid's
+// Link2 icon, so it renders identically and inherits color via
+// currentColor like every other inline icon here. Replaces the earlier
+// 🔗 emoji glyph, which rendered inconsistently across platforms/fonts.
+function buildLinkIcon() {
+  let s = svg.node("svg", {
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    "stroke-width": "2",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round",
+  });
+  s.append(
+    svg.node("path", { d: "M9 17H7A5 5 0 0 1 7 7h2" }),
+    svg.node("path", { d: "M15 7h2a5 5 0 1 1 0 10h-2" }),
+    svg.node("line", { x1: "8", x2: "16", y1: "12", y2: "12" }),
+  );
+  return s;
+}
 const COLOR = "#999";
-/* RE explanation:
- *            _________________________________________________________________________ One of the three possible variants
- *             ____________________ scheme://x
- *                                  ___________________________ aa.bb.cc
- *                                                              _______________________ aa.bb/
- *                                                                                      ______ path, search
- *                                                                                            __________________________ end with a non-forbidden char
- *                                                                                                                      ______ end of word or end of string
- */
-const RE =
-  /\b(([a-z][\w-]+:\/\/\w)|(([\w-]+\.){2,}[a-z][\w-]+)|([\w-]+\.[a-z][\w-]+\/))[^\s]*([^\s,.;:?!<>\(\)\[\]'"])?($|\b)/i;
 
 function computeLayout(item) {
   if (!item.dom) {

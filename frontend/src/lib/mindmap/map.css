@@ -72,6 +72,24 @@ svg > .item > .item > foreignObject > .content {
   font-size: x-large;
 }
 
+.item .link-icon {
+  cursor: pointer;
+  opacity: 0.7;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: -0.15em;
+  margin-left: 0.35em;
+}
+
+.item .link-icon:hover {
+  opacity: 1;
+}
+
+.item .link-icon svg {
+  width: 1em;
+  height: 1em;
+}
+
 .item foreignObject {
   overflow: visible;
 }

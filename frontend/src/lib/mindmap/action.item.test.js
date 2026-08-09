@@ -63,7 +63,7 @@ vi.mock("./layout/layout.js", () => ({ repo: { get: (id) => ({ id }) } }));
 vi.mock("./map.js", () => ({ default: class Map {} }));
 
 const { default: Item } = await import("./item.js");
-const { SetStatus, SetValue, SetColor, InsertNewItem } = await import(
+const { SetStatus, SetValue, SetColor, SetUrl, InsertNewItem } = await import(
   "./action.js"
 );
 
@@ -98,6 +98,15 @@ describe("action do()/undo() against signal-backed Item properties", () => {
     action.undo();
     expect(item.color).toBe("");
     expect(item.resolvedColor).toBe("#999"); // default COLOR in item.js
+  });
+
+  it("SetUrl: do()/undo() round-trip the signal", () => {
+    const item = new Item();
+    const action = new SetUrl(item, "https://example.com");
+    action.do();
+    expect(item.url).toBe("https://example.com");
+    action.undo();
+    expect(item.url).toBe("");
   });
 });
 
