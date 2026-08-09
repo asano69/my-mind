@@ -70,6 +70,8 @@ The demo takes about 50 seconds to start.
 - [x] サイドバーの開閉状態を記憶
 - [x] フロントエンドにおいて自動保存アルゴリズムの調整（スナップショットロード時に自動バックアップされないようにする）
 - [x] Ctrl+KによるFile Picker
+- [x] リロードボタンを設置。Catalog/Snapshot/Mapを再マウントする
+- [x] URLは、URLインジケータを表示するようにする
 
 ### Backend
 - [x] マインドマップのスナップショットのサーバサイドでの自動保存（1分ごと32世代、1時間毎8世代、1日ごと8世代）
@@ -78,7 +80,9 @@ The demo takes about 50 seconds to start.
 
 
 ## Work in Progress
-- [ ] リロードボタンを設置。Catalog/Snapshot/Mapを再マウントする
+- [ ] マインドマップのアイテムをsvg画像に変更
+- [ ] MDにペーストしやすいsvg画像リンクをコピーするボタン
+
 
 
 
