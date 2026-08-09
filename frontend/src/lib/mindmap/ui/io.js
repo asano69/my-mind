@@ -207,27 +207,34 @@ export async function setTitle(title) {
 }
 
 export function quickSave() {
-  saveWithSvg();
+  return saveWithSvg();
 }
 
 // Runs `task` (a performSave call) respecting the in-flight guard above.
 // If a save is already running, this just records that another run is
 // needed and returns immediately; the in-progress run re-executes `task`
-// once it finishes, so no update is lost even under rapid edits.
+// once it finishes, so no update is lost even under rapid edits. Returns
+// whether the save succeeded, so callers (e.g. the "Save" command's
+// toast) can tell a real save from a failed one instead of assuming
+// success just because the request round-tripped.
 async function runGuarded(task) {
   if (saveInFlight) {
     saveAgainRequested = true;
-    return;
+    // Already-running save will pick this request up via the do/while
+    // loop below; there's no result to report back for this call.
+    return true;
   }
   saveInFlight = true;
+  let success = true;
   try {
     do {
       saveAgainRequested = false;
-      await task();
+      success = await task();
     } while (saveAgainRequested);
   } finally {
     saveInFlight = false;
   }
+  return success;
 }
 
 // Auto-save: pushes the map JSON only, skipping the SVG snapshot.
@@ -279,9 +286,11 @@ async function performSave(includeSvg) {
   try {
     const record = await backend.save(currentMapId, title, mymind, svg, auto);
     setCurrentMap(record);
+    return true;
   } catch (e) {
     setSaveStatus("error");
     error(e);
+    return false;
   }
 }
 function setCurrentMap(record) {
