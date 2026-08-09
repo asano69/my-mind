@@ -82,6 +82,7 @@ The demo takes about 50 seconds to start.
 ## Work in Progress
 - [ ] マインドマップのアイテムをsvg画像に変更
 - [ ] MDにペーストしやすいsvg画像リンクをコピーするボタン
+- [ ] NoteEditorのホットキーの挙動の修正
 
 
 
