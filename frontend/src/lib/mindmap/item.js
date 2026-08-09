@@ -22,6 +22,18 @@ export function readItemLayoutResult(item) {
   return item[LAYOUT_RESULT]();
 }
 
+// Set by Workspace.jsx (the nearest ancestor rendered inside
+// @solidjs/router's <Router>) so same-origin link clicks below can use
+// Solid Router's client-side navigation instead of a full page reload.
+// item.js itself is a plain vanilla module with no router context of its
+// own, so this mirrors the registerEditorAPI bridge pattern notes.js
+// already uses for the same "vanilla module needs to reach into
+// Solid-owned APIs" problem.
+let navigateFn = null;
+export function registerNavigate(fn) {
+  navigateFn = fn;
+}
+
 export default class Item {
   static fromJSON(data) {
     return new this().fromJSON(data);
@@ -239,13 +251,26 @@ export default class Item {
       this.collapsed = !this.collapsed;
       app.selectItem(this);
     });
-    // Opens this item's url in a new tab. Deliberately not stopping
+    // Opens this item's url. Same-origin links use Solid Router's
+    // navigate() (registered via registerNavigate() above) for a
+    // client-side transition instead of a full page reload; external
+    // links open in a new tab as before. Deliberately not stopping
     // propagation: the click still bubbles up to mouse.js's own click
     // listener afterwards, which selects the item as usual (per spec:
     // clicking the 🔗 both opens the link and selects the node).
     dom.link.addEventListener("click", () => {
       const url = this._url();
-      if (url) {
+      if (!url) {
+        return;
+      }
+      if (isSameOrigin(url) && navigateFn) {
+        const target = new URL(url, window.location.href);
+        navigateFn(target.pathname + target.search + target.hash);
+      } else if (isSameOrigin(url)) {
+        // Same-origin but no navigate() registered yet (e.g. router not
+        // mounted): fall back to a normal same-tab navigation.
+        window.location.href = url;
+      } else {
         window.open(url, "_blank", "noopener,noreferrer");
       }
     });
@@ -940,6 +965,17 @@ export default class Item {
 const URL_ONLY_RE = /^https?:\/\/\S+$/i;
 function isUrlOnly(str) {
   return URL_ONLY_RE.test(str.trim());
+}
+// Whether `url` resolves to the same origin as the current page. Used by
+// the link-open click handler above to decide SPA-navigate-in-place vs
+// new-tab. Falls back to false (treat as external) for anything that
+// fails to parse as a URL, so a malformed value never throws.
+function isSameOrigin(url) {
+  try {
+    return new URL(url, window.location.href).origin === window.location.origin;
+  } catch {
+    return false;
+  }
 }
 function generateId() {
   let str = "";

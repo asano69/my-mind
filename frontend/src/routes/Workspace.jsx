@@ -1,4 +1,4 @@
-import { useParams } from "@solidjs/router";
+import { useNavigate, useParams } from "@solidjs/router";
 import { Show, createEffect, createMemo, createSignal, onMount } from "solid-js";
 import {
   activeMode,
@@ -22,6 +22,16 @@ const RIGHT_PANEL_SETTING_KEY = "rightPanelHidden";
 
 export default function Workspace() {
   const params = useParams();
+  const navigate = useNavigate();
+
+  // Registers this route's navigate() with item.js so same-origin link
+  // clicks (the 🔗 icon, see item.js's click handler) can use Solid
+  // Router's client-side navigation instead of a full page reload. See
+  // item.js's registerNavigate() comment for why this bridge exists.
+  onMount(async () => {
+    const itemModule = await import("../lib/mindmap/item.js");
+    itemModule.registerNavigate(navigate);
+  });
 
   // "/maps/new" is not a real map id — treat it the same as no uuid at
   // all, so MindMapCanvas/io.restore() create a fresh, unsaved map
