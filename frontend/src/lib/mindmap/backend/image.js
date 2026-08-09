@@ -26,6 +26,12 @@ export function serializeCurrentMap() {
   svgNode.querySelectorAll(".notes").forEach((el) => {
     el.style.display = "none";
   });
+  // The link-open icon is an interactive affordance, not part of the
+  // static rendered mind map -- hide it in exported/serialized SVGs the
+  // same way the notes badge above is hidden.
+  svgNode.querySelectorAll(".link-icon").forEach((el) => {
+    el.style.display = "none";
+  });
   // Embed CSS custom properties
   injectRootVariables(svgNode);
   const p = EXPORT_PADDING;

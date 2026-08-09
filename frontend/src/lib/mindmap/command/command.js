@@ -220,8 +220,12 @@ new (class Save extends Command {
     this.keys = [{ code: "KeyS", ctrlKey: true, shiftKey: true }];
   }
   async execute() {
-    await io.quickSave();
-    showToast("Mind map saved");
+    const saved = await io.quickSave();
+    if (saved) {
+      showToast("Mind map saved");
+    } else {
+      showToast("Failed to save mind map", undefined, { variant: "error" });
+    }
   }
 })();
 // Renders the current map as a transparent PNG and copies it to the

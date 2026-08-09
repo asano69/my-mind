@@ -72,6 +72,27 @@ svg > .item > .item > foreignObject > .content {
   font-size: x-large;
 }
 
+.item .link-icon {
+  cursor: pointer;
+  /* Matches the notes badge's resting opacity (see ".content .notes"
+     below) so both indicator icons read as the same "secondary info"
+     tier at a glance. */
+  opacity: 0.4;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: -0.2em;
+  margin-left: 0.35em;
+}
+
+.item .link-icon:hover {
+  opacity: 1;
+}
+
+.item .link-icon svg {
+  width: 1.3em;
+  height: 1.3em;
+}
+
 .item foreignObject {
   overflow: visible;
 }

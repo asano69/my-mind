@@ -3,6 +3,7 @@ import { listMaps } from "../lib/mindmap/backend/pocketbase";
 import { A, useNavigate } from "@solidjs/router";
 import { catalogListVersion } from "../lib/mindmap/store";
 import Spinner from "./Spinner";
+import Pin from "lucide-solid/icons/pin";
 
 // Read-only list of every saved map, shown inline in the left sidebar
 // (see LeftPanel.jsx's "catalog-list" command) instead of navigating away
@@ -69,9 +70,11 @@ export default function CatalogList() {
                     alt=""
                     class="pointer-events-none h-full w-full select-none object-contain p-1"
                   />
+                  {/* style.css's global `svg { position: absolute }` rule
+                      (see Logo.jsx) would otherwise apply here too. */}
                   <Show when={map.pin}>
-                    <span class="absolute top-1 right-1 text-sm drop-shadow">
-                      📍
+                    <span class="absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-white/70 text-[#2ca02c] drop-shadow">
+                      <Pin size={14} style={{ position: "static" }} />
                     </span>
                   </Show>
                 </div>

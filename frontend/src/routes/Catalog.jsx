@@ -8,6 +8,8 @@ import IconButton, { iconButtonClass } from "../components/IconButton";
 import FilePlus from "lucide-solid/icons/file-plus";
 import Settings2 from "lucide-solid/icons/settings-2";
 import Check from "lucide-solid/icons/check";
+import Trash2 from "lucide-solid/icons/trash-2";
+import Pin from "lucide-solid/icons/pin";
 import Logo from "../components/Logo";
 
 import {
@@ -17,12 +19,13 @@ import {
   deleteMap,
 } from "../lib/mindmap/backend/pocketbase";
 import ConfirmDialog from "../components/ConfirmDialog";
+import { showToast } from "../lib/mindmap/ui/toast.jsx";
 
 export default function Catalog() {
   const navigate = useNavigate();
   const [query, setQuery] = createSignal("");
   // Re-fetches from PocketBase whenever query() changes.
-  const [maps, { mutate }] = createResource(query, listMaps);
+  const [maps, { mutate, refetch }] = createResource(query, listMaps);
   const [editMode, setEditMode] = createSignal(false);
 
   const [pendingDeleteId, setPendingDeleteId] = createSignal(null);
@@ -32,8 +35,10 @@ export default function Catalog() {
   async function confirmDelete() {
     const id = pendingDeleteId();
     if (!id) return;
+    const deleted = maps()?.find((m) => m.id === id);
     await deleteMap(id);
     mutate((prev) => prev.filter((m) => m.id !== id));
+    showToast("Map deleted", deleted?.title || "Untitled");
   }
 
   async function handleRename(map, newTitle) {
@@ -55,13 +60,19 @@ export default function Catalog() {
         .map((m) => (m.id === map.id ? { ...m, pin: nextPin } : m))
         .sort((a, b) => (b.pin ? 1 : 0) - (a.pin ? 1 : 0)),
     );
+    showToast(nextPin ? "Pinned" : "Unpinned", map.title || "Untitled");
   }
 
   return (
     <div class="h-screen overflow-y-auto bg-bg p-8 text-text">
       <div class="mx-auto max-w-5xl">
         <div class="mb-6 flex items-center justify-between">
-          <Logo showTitle />
+          {/* Clicking the logo re-fetches the map list, refreshing
+              thumbnails that may be stale (e.g. after editing a map in
+              another tab). Mirrors RightPanel.jsx's logo, which
+              force-remounts the canvas for the same "something looks
+              stale/broken, force a refresh" purpose. */}
+          <Logo showTitle onClick={refetch} title="Refresh maps" />
           <div class="flex gap-2">
             <IconButton
               onClick={() => setEditMode(!editMode())}
@@ -123,9 +134,14 @@ export default function Catalog() {
                           class="pointer-events-none h-full w-full select-none object-contain p-2"
                         />
 
+                        {/* style.css's global `svg { position: absolute }`
+                            rule (see Logo.jsx) would otherwise apply to
+                            these icons too -- override back to static so
+                            they stay correctly positioned by their
+                            wrapping span/button instead of by that rule. */}
                         <Show when={!editMode() && map.pin}>
-                          <span class="absolute top-1 right-1 text-sm drop-shadow">
-                            📍
+                          <span class="absolute top-1 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-white/70 text-[#2ca02c] drop-shadow">
+                            <Pin size={16} style={{ position: "static" }} />
                           </span>
                         </Show>
                         <Show when={editMode()}>
@@ -135,10 +151,13 @@ export default function Catalog() {
                               handleTogglePin(map);
                             }}
                             title={map.pin ? "Unpin" : "Pin"}
-                            class="absolute top-1 right-1 flex h-7 w-7 items-center justify-center text-sm"
-                            classList={{ "opacity-30": !map.pin }}
+                            class="absolute top-1 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-white/70 drop-shadow"
+                            classList={{
+                              "text-[#2ca02c]": map.pin,
+                              "text-text/40": !map.pin,
+                            }}
                           >
-                            📍
+                            <Pin size={16} style={{ position: "static" }} />
                           </button>
                           <button
                             onClick={(e) => {
@@ -146,9 +165,9 @@ export default function Catalog() {
                               setPendingDeleteId(map.id);
                             }}
                             title="Delete"
-                            class="absolute top-1 left-1 flex h-7 w-7 items-center justify-center text-sm"
+                            class="absolute top-1 left-1 flex h-7 w-7 items-center justify-center rounded-full bg-white/70 text-[#cc0000] drop-shadow"
                           >
-                            🗑️
+                            <Trash2 size={16} style={{ position: "static" }} />
                           </button>
                         </Show>
                       </div>

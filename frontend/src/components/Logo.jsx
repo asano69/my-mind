@@ -9,6 +9,9 @@ import { A } from "@solidjs/router";
 // wrapping it in <A> there would break routing context. Only pass
 // linkable={true} from places that are guaranteed to render inside
 // <Router> (e.g. TopBar/LeftPanel-style chrome).
+// onClick: if provided, the logo becomes a plain clickable button
+// instead of a link, and `linkable` is ignored -- used by RightPanel.jsx
+// to trigger a canvas reload instead of navigating away.
 export default function Logo(props) {
   const size = () => props.size ?? 40;
 
@@ -83,10 +86,31 @@ export default function Logo(props) {
     </span>
   );
 
+  // Wraps `children` in whatever interactive element this instance
+  // needs: a plain button when onClick is given (takes priority over
+  // linkable), a home link when linkable, or nothing at all otherwise.
+  // "contents" keeps the wrapper out of the flex/centering layout below,
+  // the same way <A> (an inline <a>) already does.
+  const wrap = (children) =>
+    props.onClick ? (
+      <button
+        type="button"
+        onClick={props.onClick}
+        title={props.title}
+        class="contents"
+      >
+        {children}
+      </button>
+    ) : props.linkable ? (
+      <A href="/">{children}</A>
+    ) : (
+      children
+    );
+
   // When showTitle is off, layout is simple: icon only, no centering
   // concerns.
   if (!props.showTitle) {
-    return props.linkable ? <A href="/">{icon}</A> : icon;
+    return wrap(icon);
   }
 
   // centerTitle=true: for callers wrapping Logo in something like
@@ -116,5 +140,5 @@ export default function Logo(props) {
     </span>
   );
 
-  return props.linkable ? <A href="/">{content}</A> : content;
+  return wrap(content);
 }

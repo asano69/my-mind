@@ -316,6 +316,20 @@ export class SetIcon extends Action {
     this.item.icon = this.oldIcon;
   }
 }
+export class SetUrl extends Action {
+  constructor(item, url) {
+    super();
+    this.item = item;
+    this.url = url;
+    this.oldUrl = item.url;
+  }
+  do() {
+    this.item.url = this.url;
+  }
+  undo() {
+    this.item.url = this.oldUrl;
+  }
+}
 export class SetSide extends Action {
   constructor(item, side) {
     super();
