@@ -21,7 +21,7 @@ import ChevronLeft from "lucide-solid/icons/chevron-left";
 import ChevronRight from "lucide-solid/icons/chevron-right";
 import Images from "lucide-solid/icons/images";
 import FileCode from "lucide-solid/icons/file-code";
-import Download from "lucide-solid/icons/download";
+import ImageDown from "lucide-solid/icons/image-down";
 
 import Spinner from "./Spinner";
 import SelectField from "./SelectField";
@@ -500,7 +500,7 @@ export default function RightPanel() {
               />
             </div>
 
-            <div class="flex border-b  border-black/10 gap-1 px-4 py-1">
+            <div class="flex border-b  border-black/10 gap-1 px-4">
               <IconButton
                 onClick={copyImage}
                 title="Copy image (PNG)"
@@ -518,10 +518,10 @@ export default function RightPanel() {
               </IconButton>
               <IconButton
                 onClick={downloadImage}
-                title="Download image (PNG)"
+                title="ImageDown image (PNG)"
                 disabled={!ready()}
               >
-                <Download size={20} />
+                <ImageDown size={20} />
               </IconButton>
             </div>
 
