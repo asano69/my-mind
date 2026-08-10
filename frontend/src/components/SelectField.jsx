@@ -97,13 +97,13 @@ export default function SelectField(props) {
           </Select.Section>
         )}
       >
-        <Select.Trigger class="flex w-full items-center rounded border border-black/20 bg-white px-2 py-1.5 text-sm text-text shadow-[inset_0_1px_2px_rgba(0,0,0,0.08)] outline-none transition-colors focus:border-accent disabled:opacity-50">
+        <Select.Trigger class="flex w-full items-center rounded border border-pane-hover bg-bg px-2 py-1.5 text-sm text-text shadow-[inset_0_1px_2px_rgba(0,0,0,0.08)] outline-none transition-colors focus:border-accent disabled:opacity-50">
           <Select.Value class="truncate text-left">
             {(state) => state.selectedOption()?.label ?? ""}
           </Select.Value>
         </Select.Trigger>
         <Select.Portal>
-          <Select.Content class="z-20 rounded-md border border-black/20 bg-pane shadow-card">
+          <Select.Content class="z-20 rounded-md border border-pane-hover bg-pane shadow-card">
             <Select.Listbox class="max-h-64 overflow-y-auto p-1" />
           </Select.Content>
         </Select.Portal>
