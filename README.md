@@ -72,6 +72,8 @@ The demo takes about 50 seconds to start.
 - [x] Ctrl+KによるFile Picker
 - [x] リロードボタンを設置。Catalog/Snapshot/Mapを再マウントする
 - [x] URLは、URLインジケータを表示するようにする
+- [ ] Right-paneの再構成
+- [ ] item.jsのリファクタリング
 
 ### Backend
 - [x] マインドマップのスナップショットのサーバサイドでの自動保存（1分ごと32世代、1時間毎8世代、1日ごと8世代）
@@ -81,7 +83,7 @@ The demo takes about 50 seconds to start.
 
 ## Work in Progress
 - [ ] マインドマップのアイテムをsvg画像に変更
-- [ ] MDにペーストしやすいsvg画像リンクをコピーするボタン
+- [x] MDにペーストしやすいsvg画像リンクをコピーするボタン
 - [ ] NoteEditorのホットキーの挙動の修正
 - [ ] Catalogの整理機能の強化
 - [ ] ログアウトのボタンの設置
