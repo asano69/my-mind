@@ -25,17 +25,11 @@ export default function CatalogList() {
   // navigation still gets a clean engine unmount()/mount() cycle for
   // the newly opened map -- a full page reload is no longer needed.
   async function handleOpen(uuid) {
-    console.log("[CatalogList] handleOpen called, uuid =", uuid);
     const io = await import("../lib/mindmap/ui/io.js");
-    try {
-      await io.saveBeforeLeaving();
-      console.log("[CatalogList] saveBeforeLeaving resolved");
-    } catch (e) {
-      console.log("[CatalogList] saveBeforeLeaving threw", e);
+    if (!(await io.confirmLeave())) {
+      return;
     }
-    console.log("[CatalogList] calling navigate to", `/maps/${uuid}`);
     navigate(`/maps/${uuid}`);
-    console.log("[CatalogList] navigate() call returned");
   }
 
   return (

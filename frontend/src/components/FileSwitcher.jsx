@@ -34,10 +34,8 @@ function FileSwitcherPanel(props) {
   // should never block switching maps.
   async function handleSelect(uuid) {
     const io = await import("../lib/mindmap/ui/io.js");
-    try {
-      await io.saveBeforeLeaving();
-    } catch {
-      // ignore; still navigate
+    if (!(await io.confirmLeave())) {
+      return;
     }
     props.onSelect();
     navigate(`/maps/${uuid}`);
