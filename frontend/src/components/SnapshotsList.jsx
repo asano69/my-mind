@@ -22,8 +22,13 @@ export default function SnapshotsList() {
   // id. Returning a tuple of both values instead guarantees a fresh
   // array reference (and thus a detected change) on every version bump,
   // even when the map id hasn't moved.
-  const resourceSource = createMemo(() => [currentMapId(), snapshotsListVersion()]);
-  const [snapshots] = createResource(resourceSource, ([mapId]) => listSnapshots(mapId));
+  const resourceSource = createMemo(() => [
+    currentMapId(),
+    snapshotsListVersion(),
+  ]);
+  const [snapshots] = createResource(resourceSource, ([mapId]) =>
+    listSnapshots(mapId),
+  );
   // The snapshot awaiting restore confirmation, or null. Mirrors
   // Catalog.jsx's pendingDeleteId pattern -- confirmation itself is
   // handled by ConfirmDialog (see render below) instead of a native
@@ -59,7 +64,9 @@ export default function SnapshotsList() {
         >
           <Show
             when={snapshots()?.length}
-            fallback={<p class="px-1 text-sm text-text/50">No snapshots yet.</p>}
+            fallback={
+              <p class="px-1 text-sm text-text/50">No snapshots yet.</p>
+            }
           >
             <div class="flex flex-col gap-2">
               <For each={snapshots()}>

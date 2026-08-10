@@ -23,7 +23,6 @@ import FilePlus from "lucide-solid/icons/file-plus";
 
 import CircleQuestionMark from "lucide-solid/icons/circle-question-mark";
 
-import Images from "lucide-solid/icons/images";
 //import History from "lucide-solid/icons/history";
 import DatabaseBackup from "lucide-solid/icons/database-backup";
 // The left sidebar. All positioning/animation lives here as Tailwind
@@ -109,7 +108,9 @@ export default function LeftPanel() {
   async function goToCatalog(e) {
     e.preventDefault();
     const io = await import("../lib/mindmap/ui/io.js");
-    await io.saveBeforeLeaving();
+    if (!(await io.confirmLeave())) {
+      return;
+    }
     navigate("/catalog");
   }
 
@@ -150,6 +151,13 @@ export default function LeftPanel() {
           <FolderOpen size={20} />
         </IconButton>
 
+        <IconButton
+          onClick={() => runCommand("recover")}
+          title="Restore snapshot"
+        >
+          <DatabaseBackup size={20} />
+        </IconButton>
+
         <A
           href="/catalog"
           class={iconButtonClass}
@@ -159,16 +167,6 @@ export default function LeftPanel() {
           <Book size={20} />
         </A>
 
-        <IconButton onClick={() => runCommand("save-as")} title="Save as">
-          <Images size={20} />
-        </IconButton>
-
-        <IconButton
-          onClick={() => runCommand("recover")}
-          title="Restore snapshot"
-        >
-          <DatabaseBackup size={20} />
-        </IconButton>
         <IconButton onClick={() => runCommand("help")} title="Help">
           <CircleQuestionMark size={20} />
         </IconButton>

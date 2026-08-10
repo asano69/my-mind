@@ -124,6 +124,12 @@ export function toggleNotesMode() {
 // react to which map is open without importing io.js directly.
 export const [currentMapId, setCurrentMapId] = createSignal(null);
 
+// Public uuid of the currently open map, mirrored the same way as
+// currentMapId above. Used to build shareable URLs (e.g. the SVG
+// thumbnail route, see RightPanel.jsx's "copy markdown link" button)
+// without importing ui/io.js's private currentMapUuid variable.
+export const [currentMapUuid, setCurrentMapUuid] = createSignal(null);
+
 // Bumped when the user wants to force the mind-map canvas to remount --
 // a lightweight equivalent of a full page reload, without leaving the
 // route. Used by the RightPanel logo's "reload" action (see
@@ -231,4 +237,24 @@ export function closeFileSwitcher() {
 export const [errorDialogMessage, setErrorDialogMessage] = createSignal(null);
 export function closeErrorDialog() {
   setErrorDialogMessage(null);
+}
+
+// Pending confirmation for leaving a map that has never been saved (no
+// uuid yet), shown by LeaveConfirmDialog.jsx. io.js's confirmLeave()
+// awaits the promise requestLeaveConfirm() returns instead of owning a
+// dialog component itself -- same "vanilla module writes to a signal"
+// bridge as errorDialogMessage above, but resolved with a boolean
+// (proceed or not) instead of just being dismissed.
+export const [leaveConfirmOpen, setLeaveConfirmOpen] = createSignal(false);
+let leaveConfirmResolve = null;
+export function requestLeaveConfirm() {
+  return new Promise((resolve) => {
+    leaveConfirmResolve = resolve;
+    setLeaveConfirmOpen(true);
+  });
+}
+export function resolveLeaveConfirm(result) {
+  setLeaveConfirmOpen(false);
+  leaveConfirmResolve?.(result);
+  leaveConfirmResolve = null;
 }

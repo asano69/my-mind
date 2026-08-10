@@ -68,14 +68,28 @@ export default function TopBar() {
     });
   }
 
+  // Returns focus to the mindmap container after the title editor
+  // closes. This title input lives outside #mindmap-container (see
+  // MindMapCanvas.jsx), so blurring or unmounting it leaves focus on
+  // document.body instead of triggering a "focusout" on the container
+  // that keyboard.js's own self-heal guard could catch (see
+  // keyboard.js's handleFocusOut). Without this, a shortcut like
+  // Ctrl+K falls through to the browser's own hotkey (e.g. focusing
+  // the address bar) instead of reaching keyboard.js's listener.
+  function returnFocusToCanvas() {
+    document.getElementById("mindmap-container")?.focus();
+  }
+
   function commitTitle() {
     setIsEditingTitle(false);
     titleModule?.rename(editValue());
+    returnFocusToCanvas();
   }
 
   function cancelEditingTitle() {
     setEditValue(titleBeforeEdit);
     setIsEditingTitle(false);
+    returnFocusToCanvas();
   }
 
   function handleTitleKeyDown(e) {

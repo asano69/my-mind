@@ -11,9 +11,11 @@ import {
   setSaveStatus,
   dirtyVersion,
   setCurrentMapId,
+  setCurrentMapUuid,
   autoSaveEnabled,
   setAutoSaveEnabled,
   setErrorDialogMessage,
+  requestLeaveConfirm,
 } from "../store.js";
 
 let currentMapId = null; // PocketBase record id, used for save/update calls
@@ -35,6 +37,20 @@ let saveAgainRequested = false;
 
 const AUTO_SAVE_DELAY_MS = 1000;
 const AUTO_SAVE_SETTING_KEY = "autoSaveEnabled";
+
+// Warns the user before leaving the page (closing the tab, reloading, or
+// navigating away outside the app) while the current map has never been
+// saved and so has no server-assigned uuid yet. A map that already has a
+// uuid is not covered here -- once a map exists on the server, its edits
+// are safe (auto-save persists them); this only guards the narrow window
+// before the very first save.
+function handleBeforeUnload(e) {
+  if (currentMapUuid) {
+    return;
+  }
+  e.preventDefault();
+  e.returnValue = "";
+}
 
 // The #io save-confirmation panel was removed: Ctrl+Shift+S now saves
 // directly (see quickSave() below), so there is no longer a DOM node
@@ -83,6 +99,8 @@ export function init() {
       ),
     );
   });
+
+  window.addEventListener("beforeunload", handleBeforeUnload);
 }
 
 // Toggles auto-save on/off (see RightPanel.jsx's footer switch) and
@@ -107,6 +125,7 @@ export async function setAutoSave(enabled) {
 // along with the DOM element (Solid removes #io on unmount), so only the
 // module-level timer and map-identity state need explicit teardown here.
 export function dispose() {
+  window.removeEventListener("beforeunload", handleBeforeUnload);
   disposeAutoSaveEffect?.();
   disposeAutoSaveEffect = null;
   if (autoSaveTimeout !== null) {
@@ -115,6 +134,7 @@ export function dispose() {
   }
   currentMapId = null;
   currentMapUuid = null;
+  setCurrentMapUuid(null);
 
   // Deliberately does NOT reset currentTitle to "" here. dispose() runs
   // on every map switch (unmount() before the next mount()'s async
@@ -265,6 +285,22 @@ export function saveBeforeLeaving() {
   return saveWithSvg();
 }
 
+// Called before any SPA navigation away from the current map (switching
+// maps via the catalog/file-switcher, starting a new map, going to the
+// catalog page). Saves first if auto-save is on (see saveBeforeLeaving()
+// above); if the map still has no uuid afterwards -- auto-save is off,
+// or the save itself failed -- asks the user to confirm discarding it
+// (see store.js's requestLeaveConfirm(), rendered by
+// LeaveConfirmDialog.jsx). Returns whether it's safe to proceed with
+// leaving.
+export async function confirmLeave() {
+  await saveBeforeLeaving();
+  if (currentMapUuid) {
+    return true;
+  }
+  return requestLeaveConfirm();
+}
+
 async function performSave(includeSvg) {
   const map = app.currentMap;
   const mymind = map.toJSON();
@@ -299,6 +335,7 @@ function setCurrentMap(record) {
   setCurrentTitle(record ? record.title || "" : "");
   setTitleAuto(record ? (record.titleAuto ?? true) : true);
   setCurrentMapId(currentMapId);
+  setCurrentMapUuid(currentMapUuid);
   // A record just loaded from (or written to) the server is by definition
   // in sync with it -- covers restore(), performSave()'s success path,
   // resetCurrentMap(), and deleteCurrentMap() all at once.
@@ -366,4 +403,3 @@ function error(e) {
   }
   setErrorDialogMessage(`IO error: ${message}`);
 }
-
