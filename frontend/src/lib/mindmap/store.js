@@ -124,6 +124,12 @@ export function toggleNotesMode() {
 // react to which map is open without importing io.js directly.
 export const [currentMapId, setCurrentMapId] = createSignal(null);
 
+// Public uuid of the currently open map, mirrored the same way as
+// currentMapId above. Used to build shareable URLs (e.g. the SVG
+// thumbnail route, see RightPanel.jsx's "copy markdown link" button)
+// without importing ui/io.js's private currentMapUuid variable.
+export const [currentMapUuid, setCurrentMapUuid] = createSignal(null);
+
 // Bumped when the user wants to force the mind-map canvas to remount --
 // a lightweight equivalent of a full page reload, without leaving the
 // route. Used by the RightPanel logo's "reload" action (see

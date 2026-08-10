@@ -91,9 +91,7 @@ export default function ValueDialog() {
               value={value()}
               onInput={(e) => setValue(e.target.value)}
               onKeyDown={(e) =>
-                e.key === "Enter" &&
-                !isInvalidInput(value()) &&
-                handleConfirm()
+                e.key === "Enter" && !isInvalidInput(value()) && handleConfirm()
               }
               aria-invalid={isInvalidInput(value())}
               class="mt-3 w-full rounded-md border bg-bg px-3 py-2 text-text outline-none focus:border-accent"

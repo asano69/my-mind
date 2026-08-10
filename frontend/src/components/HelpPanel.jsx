@@ -157,9 +157,7 @@ export default function HelpPanel() {
                   {(row) => (
                     <tr>
                       <td class="py-0.5 pr-3">{row.labels}</td>
-                      <td class="py-0.5 text-right text-text/50">
-                        {row.keys}
-                      </td>
+                      <td class="py-0.5 text-right text-text/50">{row.keys}</td>
                     </tr>
                   )}
                 </For>
@@ -174,7 +172,6 @@ export default function HelpPanel() {
       <div class="flex-none border-t border-black/10">
         <span class="text-xs text-text/75">{version() && `v${version()}`}</span>
       </div>
- 
     </div>
   );
 }

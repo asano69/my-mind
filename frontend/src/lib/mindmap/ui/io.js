@@ -11,6 +11,7 @@ import {
   setSaveStatus,
   dirtyVersion,
   setCurrentMapId,
+  setCurrentMapUuid,
   autoSaveEnabled,
   setAutoSaveEnabled,
   setErrorDialogMessage,
@@ -115,6 +116,7 @@ export function dispose() {
   }
   currentMapId = null;
   currentMapUuid = null;
+  setCurrentMapUuid(null);
 
   // Deliberately does NOT reset currentTitle to "" here. dispose() runs
   // on every map switch (unmount() before the next mount()'s async
@@ -299,6 +301,7 @@ function setCurrentMap(record) {
   setCurrentTitle(record ? record.title || "" : "");
   setTitleAuto(record ? (record.titleAuto ?? true) : true);
   setCurrentMapId(currentMapId);
+  setCurrentMapUuid(currentMapUuid);
   // A record just loaded from (or written to) the server is by definition
   // in sync with it -- covers restore(), performSave()'s success path,
   // resetCurrentMap(), and deleteCurrentMap() all at once.
@@ -366,4 +369,3 @@ function error(e) {
   }
   setErrorDialogMessage(`IO error: ${message}`);
 }
-

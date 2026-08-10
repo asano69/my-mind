@@ -63,9 +63,8 @@ vi.mock("./layout/layout.js", () => ({ repo: { get: (id) => ({ id }) } }));
 vi.mock("./map.js", () => ({ default: class Map {} }));
 
 const { default: Item } = await import("./item.js");
-const { SetStatus, SetValue, SetColor, SetUrl, InsertNewItem } = await import(
-  "./action.js"
-);
+const { SetStatus, SetValue, SetColor, SetUrl, InsertNewItem } =
+  await import("./action.js");
 
 describe("action do()/undo() against signal-backed Item properties", () => {
   it("SetStatus: do()/undo() round-trip the signal and its resolved memo", () => {

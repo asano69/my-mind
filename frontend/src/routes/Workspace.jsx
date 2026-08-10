@@ -1,5 +1,11 @@
 import { useNavigate, useParams } from "@solidjs/router";
-import { Show, createEffect, createMemo, createSignal, onMount } from "solid-js";
+import {
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  onMount,
+} from "solid-js";
 import {
   activeMode,
   canvasReloadVersion,

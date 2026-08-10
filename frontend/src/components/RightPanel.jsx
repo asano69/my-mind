@@ -1,8 +1,17 @@
-import { createEffect, createMemo, createSignal, For, onMount, Show } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  onMount,
+  Show,
+} from "solid-js";
 import { Switch } from "@kobalte/core/switch";
 import {
   autoSaveEnabled,
   currentItem,
+  currentMapUuid,
+  currentTitle,
   reloadCanvas,
   saveStatus,
   rightPanelHidden,
@@ -10,8 +19,12 @@ import {
 } from "../lib/mindmap/store";
 import ChevronLeft from "lucide-solid/icons/chevron-left";
 import ChevronRight from "lucide-solid/icons/chevron-right";
+import Images from "lucide-solid/icons/images";
+import FileCode from "lucide-solid/icons/file-code";
+
 import Spinner from "./Spinner";
 import SelectField from "./SelectField";
+import IconButton from "./IconButton";
 
 import Logo from "./Logo";
 
@@ -82,7 +95,7 @@ function ColorPicker(props) {
         <span class="mb-1 block text-[11px] font-semibold tracking-wider text-text/70 uppercase">
           {props.label}
         </span>
-       <span
+        <span
           class="mt-1 flex flex-row flex-wrap gap-1"
           onClick={props.onClick}
         >
@@ -92,7 +105,7 @@ function ColorPicker(props) {
                 data-color={c.value}
                 title={c.title}
                 href="#"
-       class="h-4 w-4 rounded-[4px] shadow-[0_1px_4px_rgba(0,0,0,0.8)] transition-transform hover:scale-125"
+                class="h-4 w-4 rounded-[4px] shadow-[0_1px_4px_rgba(0,0,0,0.8)] transition-transform hover:scale-125"
                 style={c.value ? { "background-color": c.value } : {}}
               ></a>
             )}
@@ -410,6 +423,32 @@ export default function RightPanel() {
     ioModule?.setAutoSave(checked);
   }
 
+  // Runs the same "save-as" command that used to live in LeftPanel.jsx
+  // (renders the map as a transparent PNG and copies it to the system
+  // clipboard) -- moved here so both "copy" actions live together in
+  // one row instead of being split across two panels.
+  function copyImage() {
+    commandRepo?.get("save-as").execute();
+  }
+
+  // Copies a Markdown image-embed pointing at this map's server-rendered
+  // SVG thumbnail (see internal/cmd/serve/serve.go's "/maps/{uuid}/svg"
+  // route), so pasting into a Markdown document embeds a live snapshot
+  // instead of a static file. Disabled until the map has been saved at
+  // least once -- currentMapUuid() is null for a brand-new, unsaved map,
+  // and there is no stable URL to point at yet.
+  async function copyMarkdownLink() {
+    const uuid = currentMapUuid();
+    if (!uuid) {
+      return;
+    }
+    const title = currentTitle() || "Untitled";
+    const url = `${window.location.origin}/maps/${uuid}/svg`;
+    await navigator.clipboard.writeText(`![${title}](${url})`);
+    const { showToast } = await import("../lib/mindmap/ui/toast.jsx");
+    showToast("Markdown link copied to clipboard");
+  }
+
   return (
     <>
       <div
@@ -427,7 +466,7 @@ export default function RightPanel() {
           }}
         >
           <div class="flex-1 overflow-y-auto">
-            <div class="flex justify-center p-1 border-b border-black/10"> 
+            <div class="flex justify-center p-1 border-b border-black/10">
               {/* Clicking the logo used to navigate to the catalog
                   (linkable). It now force-remounts the current map
                   instead -- a lightweight full-reload, for when the
@@ -440,6 +479,22 @@ export default function RightPanel() {
                 onClick={reloadCanvas}
                 title="Reload map"
               />
+            </div>
+            <div class="flex justify-center gap-2 border-b border-black/10 px-3 py-2">
+              <IconButton
+                onClick={copyImage}
+                title="Copy image (PNG)"
+                disabled={!ready()}
+              >
+                <Images size={28} />
+              </IconButton>
+              <IconButton
+                onClick={copyMarkdownLink}
+                title="Copy markdown link"
+                disabled={!currentMapUuid()}
+              >
+                <FileCode size={28} />
+              </IconButton>
             </div>
             <SelectField
               label="Layout"
