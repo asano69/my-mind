@@ -116,7 +116,7 @@ export default function Catalog() {
                       class="flex flex-col overflow-hidden rounded-md border border-pane-hover bg-pane text-left shadow-card transition hover:bg-pane-hover"
                       classList={{ "cursor-pointer": !editMode() }}
                     >
-                      <div class="relative flex h-32 items-center justify-center overflow-hidden bg-white/50">
+                      <div class="relative flex h-32 items-center justify-center overflow-hidden bg-bg">
                         {/* Server-rendered image (see
                             backend/pocketbase.js's listMaps() comment)
                             instead of innerHTML, so this SVG's embedded
