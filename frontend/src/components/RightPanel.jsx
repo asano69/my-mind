@@ -21,6 +21,7 @@ import ChevronLeft from "lucide-solid/icons/chevron-left";
 import ChevronRight from "lucide-solid/icons/chevron-right";
 import Images from "lucide-solid/icons/images";
 import FileCode from "lucide-solid/icons/file-code";
+import Download from "lucide-solid/icons/download";
 
 import Spinner from "./Spinner";
 import SelectField from "./SelectField";
@@ -175,6 +176,7 @@ export default function RightPanel() {
   let layoutRepo;
   let shapeRepo;
   let ioModule;
+  let imageModule;
 
   const [ready, setReady] = createSignal(false);
 
@@ -183,7 +185,7 @@ export default function RightPanel() {
   );
 
   onMount(async () => {
-    const [actionsMod, appMod, cmdMod, layoutMod, shapeMod, ioMod] =
+    const [actionsMod, appMod, cmdMod, layoutMod, shapeMod, ioMod, imageMod] =
       await Promise.all([
         import("../lib/mindmap/action.js"),
         import("../lib/mindmap/my-mind.js"),
@@ -191,6 +193,7 @@ export default function RightPanel() {
         import("../lib/mindmap/layout/layout.js"),
         import("../lib/mindmap/shape/shape.js"),
         import("../lib/mindmap/ui/io.js"),
+        import("../lib/mindmap/backend/image.js"),
       ]);
     actionsModule = actionsMod;
     appModule = appMod;
@@ -198,6 +201,7 @@ export default function RightPanel() {
     layoutRepo = layoutMod.repo;
     shapeRepo = shapeMod.repo;
     ioModule = ioMod;
+    imageModule = imageMod;
 
     setReady(true);
   });
@@ -431,6 +435,21 @@ export default function RightPanel() {
     commandRepo?.get("save-as").execute();
   }
 
+  // Renders the current map as a PNG and downloads it straight to disk,
+  // reusing ImageBackend's existing save()/download() pair (see
+  // backend/image.js) instead of duplicating its PNG-rendering logic.
+  async function downloadImage() {
+    appModule.setThrobber(true);
+    try {
+      const backend = new imageModule.default();
+      const url = await backend.save("png");
+      backend.download(url);
+      URL.revokeObjectURL(url);
+    } finally {
+      appModule.setThrobber(false);
+    }
+  }
+
   // Copies a Markdown image-embed pointing at this map's server-rendered
   // SVG thumbnail (see internal/cmd/serve/serve.go's "/maps/{uuid}/svg"
   // route), so pasting into a Markdown document embeds a live snapshot
@@ -481,7 +500,7 @@ export default function RightPanel() {
               />
             </div>
 
-      <div class="flex border-b  border-black/10 gap-1 px-4 py-1">
+            <div class="flex border-b  border-black/10 gap-1 px-4 py-1">
               <IconButton
                 onClick={copyImage}
                 title="Copy image (PNG)"
@@ -489,6 +508,7 @@ export default function RightPanel() {
               >
                 <Images size={20} />
               </IconButton>
+
               <IconButton
                 onClick={copyMarkdownLink}
                 title="Copy markdown link"
@@ -496,9 +516,16 @@ export default function RightPanel() {
               >
                 <FileCode size={20} />
               </IconButton>
+              <IconButton
+                onClick={downloadImage}
+                title="Download image (PNG)"
+                disabled={!ready()}
+              >
+                <Download size={20} />
+              </IconButton>
             </div>
 
-                 <SelectField
+            <SelectField
               label="Layout"
               value={layoutValue()}
               onChange={setLayout}
@@ -541,10 +568,7 @@ export default function RightPanel() {
 
             <ColorPicker label="Item color" onClick={setColor} />
             <ColorPicker label="Text color" onClick={setTextColor} />
-
-     
           </div>
-
 
           <footer class="flex min-h-[28px] flex-none items-center justify-between border-t border-black/10 px-3 py-1.5">
             <Switch
