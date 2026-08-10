@@ -83,6 +83,7 @@ The demo takes about 50 seconds to start.
 
 ## Work in Progress
 - [ ] マインドマップのアイテムをsvg画像に変更
+- [ ] **マインドマップのダークモードへの対応（文字が黒くで読めない）**
 - [x] MDにペーストしやすいsvg画像リンクをコピーするボタン
 - [ ] NoteEditorのホットキーの挙動の修正
 - [ ] Catalogの整理機能の強化
