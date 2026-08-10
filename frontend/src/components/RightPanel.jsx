@@ -480,7 +480,25 @@ export default function RightPanel() {
                 title="Reload map"
               />
             </div>
-            <SelectField
+
+      <div class="flex border-b  border-black/10 gap-1 px-4 py-1">
+              <IconButton
+                onClick={copyImage}
+                title="Copy image (PNG)"
+                disabled={!ready()}
+              >
+                <Images size={20} />
+              </IconButton>
+              <IconButton
+                onClick={copyMarkdownLink}
+                title="Copy markdown link"
+                disabled={!currentMapUuid()}
+              >
+                <FileCode size={20} />
+              </IconButton>
+            </div>
+
+                 <SelectField
               label="Layout"
               value={layoutValue()}
               onChange={setLayout}
@@ -524,23 +542,9 @@ export default function RightPanel() {
             <ColorPicker label="Item color" onClick={setColor} />
             <ColorPicker label="Text color" onClick={setTextColor} />
 
-            <div class="flex justify-center gap-2 border-t border-black/10 px-3 py-1">
-              <IconButton
-                onClick={copyImage}
-                title="Copy image (PNG)"
-                disabled={!ready()}
-              >
-                <Images size={28} />
-              </IconButton>
-              <IconButton
-                onClick={copyMarkdownLink}
-                title="Copy markdown link"
-                disabled={!currentMapUuid()}
-              >
-                <FileCode size={28} />
-              </IconButton>
-            </div>
+     
           </div>
+
 
           <footer class="flex min-h-[28px] flex-none items-center justify-between border-t border-black/10 px-3 py-1.5">
             <Switch
