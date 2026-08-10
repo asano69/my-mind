@@ -61,14 +61,15 @@ export default function RightPanelProperties() {
   const [ready, setReady] = createSignal(false);
 
   onMount(async () => {
-    const [actionsMod, appMod, cmdMod, layoutMod, shapeMod] =
-      await Promise.all([
+    const [actionsMod, appMod, cmdMod, layoutMod, shapeMod] = await Promise.all(
+      [
         import("../lib/mindmap/action.js"),
         import("../lib/mindmap/my-mind.js"),
         import("../lib/mindmap/command/command.js"),
         import("../lib/mindmap/layout/layout.js"),
         import("../lib/mindmap/shape/shape.js"),
-      ]);
+      ],
+    );
     actionsModule = actionsMod;
     appModule = appMod;
     commandRepo = cmdMod.repo;

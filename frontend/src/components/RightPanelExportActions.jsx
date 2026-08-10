@@ -72,6 +72,14 @@ export default function RightPanelExportActions() {
   return (
     <div class="flex border-b  border-black/10 gap-1 px-4">
       <IconButton
+        onClick={copyMarkdownLink}
+        title="Copy markdown link"
+        disabled={!currentMapUuid()}
+      >
+        <FileCode size={20} />
+      </IconButton>
+
+      <IconButton
         onClick={copyImage}
         title="Copy image (PNG)"
         disabled={!ready()}
@@ -79,13 +87,6 @@ export default function RightPanelExportActions() {
         <Images size={20} />
       </IconButton>
 
-      <IconButton
-        onClick={copyMarkdownLink}
-        title="Copy markdown link"
-        disabled={!currentMapUuid()}
-      >
-        <FileCode size={20} />
-      </IconButton>
       <IconButton
         onClick={downloadImage}
         title="ImageDown image (PNG)"
