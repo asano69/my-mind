@@ -84,6 +84,7 @@ The demo takes about 50 seconds to start.
 - [ ] MDにペーストしやすいsvg画像リンクをコピーするボタン
 - [ ] NoteEditorのホットキーの挙動の修正
 - [ ] Catalogの整理機能の強化
+- [ ] ログアウトのボタンの設置
 
 
 
