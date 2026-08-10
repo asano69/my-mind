@@ -106,32 +106,36 @@ export default class ImageBackend {
 function injectRootVariables(svgNode) {
   var _a;
   const rootStyle = getComputedStyle(document.documentElement);
-  const varNames = [
-    "--node-shadow",
-    "--node-shadow-hover",
-    "--node-shadow-current",
-    "--node-bg-current",
-    "--node-border-width",
-    "--underline-hover-outline",
-    "--underline-hover-bg",
-    "--toggle-color",
-    "--status-yes-color",
-    "--status-no-color",
-    "--shadow-card",
-    "--color-bg",
-    "--color-pane",
-    "--color-pane-hover",
-    "--color-accent",
-    "--color-text",
-    "--color-hover",
-    "--font-sans",
-    "--font-serif",
-    "--font-mono",
-  ];
-  const declarations = varNames
+  // Font tokens are not color-scheme dependent, so it's safe (and keeps
+  // this in sync automatically) to read their computed values.
+  const fontVarNames = ["--font-sans", "--font-serif", "--font-mono"];
+  const fontDeclarations = fontVarNames
     .map((name) => `${name}: ${rootStyle.getPropertyValue(name).trim()}`)
-    .filter((decl) => !decl.endsWith(": ")) // exclude unset variables
-    .join("; ");
+    .filter((decl) => !decl.endsWith(": ")); // exclude unset variables
+
+  // Color tokens must NOT be read via getComputedStyle(): style.css
+  // defines them with light-dark(...), and getComputedStyle() returns
+  // the value already resolved to whichever branch was active in the
+  // exporting browser at save time. Baking a single resolved color here
+  // would permanently freeze this standalone SVG (served at
+  // /maps/{uuid}/svg, e.g. for catalog thumbnails) to that one scheme,
+  // even after the viewer's own light/dark preference changes.
+  // Duplicated from style.css's :root -- keep these two in sync.
+  // color-scheme must also be declared here: a standalone SVG document
+  // (e.g. rendered via <img>) has no page-level <meta name="color-scheme">
+  // to inherit from, and light-dark() only switches branches once its
+  // containing document declares support for both.
+  const colorDeclarations = [
+    "color-scheme: light dark",
+    "--color-bg: light-dark(#f5ede4, #1c1a17)",
+    "--color-pane: light-dark(#ede0d4, #26221d)",
+    "--color-pane-hover: light-dark(#d9c9bb, #37302a)",
+    "--color-accent: light-dark(#5a4a3a, #c9b79c)",
+    "--color-text: light-dark(#2c2015, #e8dfd2)",
+    "--color-hover: light-dark(rgba(90, 74, 58, 0.3), rgba(201, 183, 156, 0.2))",
+  ];
+
+  const declarations = [...colorDeclarations, ...fontDeclarations].join("; ");
   const rootBlock = `:root { ${declarations} }\n`;
   const style = svgNode.querySelector("style");
   if (style) {
