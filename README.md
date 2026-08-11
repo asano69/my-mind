@@ -89,6 +89,7 @@ The demo takes about 50 seconds to start.
 - [ ] Catalogの整理機能の強化
 - [ ] ログアウトのボタンの設置
 - [ ] cssの整理
+- [ ] doc01の見直し
 
 
 
