@@ -88,7 +88,7 @@ The demo takes about 50 seconds to start.
 - [ ] NoteEditorのホットキーの挙動の修正
 - [ ] Catalogの整理機能の強化
 - [ ] ログアウトのボタンの設置
-
+- [ ] cssの整理
 
 
 
