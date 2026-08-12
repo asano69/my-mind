@@ -22,6 +22,7 @@ import {
   setEditing,
 } from "./itemSelection.js";
 import { startEditing, commitEditing, discardEditing } from "./newEdit.js";
+import * as history from "./history.js";
 
 function isMac() {
   return !!(globalThis.navigator?.platform ?? "").match(/mac/i);
@@ -148,6 +149,32 @@ commands.push(
       }
       discardEditing(item);
       setEditing(false);
+    },
+  },
+);
+
+// Undo/redo (Phase 4.6 of docs/08-mindmap-engine-refactor.md): history.js
+// is item-agnostic, so the same undo stack newAction.js's action() pushes
+// onto (see commitEditing() in newEdit.js) can be walked directly here,
+// with no per-engine history state to keep in sync. Mirrors
+// command/command.js's Undo/Redo commands' key bindings.
+commands.push(
+  {
+    mode: "normal",
+    keys: [{ code: "KeyZ", ctrlKey: true }],
+    execute() {
+      if (history.canBack()) {
+        history.back();
+      }
+    },
+  },
+  {
+    mode: "normal",
+    keys: [{ code: "KeyY", ctrlKey: true }],
+    execute() {
+      if (history.canForward()) {
+        history.forward();
+      }
     },
   },
 );

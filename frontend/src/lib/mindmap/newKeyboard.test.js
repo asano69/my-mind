@@ -22,6 +22,7 @@ const {
 const { startEditing, commitEditing, discardEditing } = await import(
   "./newEdit.js"
 );
+const history = await import("./history.js");
 
 function eventTarget() {
   const listeners = new Map();
@@ -407,6 +408,95 @@ describe("newKeyboard.js text editing (Phase 4.5)", () => {
     });
 
     expect(commitEditing).not.toHaveBeenCalled();
+
+    newKeyboard.dispose(container);
+  });
+});
+
+describe("newKeyboard.js undo/redo (Phase 4.6)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockActiveMode.value = "canvas";
+    resetSelectionState();
+    history.reset();
+    globalThis.document = {
+      activeElement: null,
+      body: {},
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+    globalThis.requestAnimationFrame = vi.fn(() => 0);
+    globalThis.cancelAnimationFrame = vi.fn();
+  });
+
+  it("Ctrl+Z undoes the last pushed action", () => {
+    const container = eventTarget();
+    newKeyboard.init(container);
+    const log = [];
+    history.push({
+      do() {
+        log.push("do");
+      },
+      undo() {
+        log.push("undo");
+      },
+    });
+
+    container.dispatch("keydown", {
+      code: "KeyZ",
+      ctrlKey: true,
+      shiftKey: false,
+      metaKey: false,
+      isComposing: false,
+      preventDefault: vi.fn(),
+    });
+
+    expect(log).toEqual(["undo"]);
+    newKeyboard.dispose(container);
+  });
+
+  it("Ctrl+Y redoes the last undone action", () => {
+    const container = eventTarget();
+    newKeyboard.init(container);
+    const log = [];
+    history.push({
+      do() {
+        log.push("do");
+      },
+      undo() {
+        log.push("undo");
+      },
+    });
+    history.back(); // sets up the redo state; itself logs "undo"
+    log.length = 0; // only the Ctrl+Y dispatch below is under test
+
+    container.dispatch("keydown", {
+      code: "KeyY",
+      ctrlKey: true,
+      shiftKey: false,
+      metaKey: false,
+      isComposing: false,
+      preventDefault: vi.fn(),
+    });
+
+    expect(log).toEqual(["do"]);
+    newKeyboard.dispose(container);
+  });
+
+  it("does nothing when there is nothing to undo/redo", () => {
+    const container = eventTarget();
+    newKeyboard.init(container);
+
+    expect(() =>
+      container.dispatch("keydown", {
+        code: "KeyZ",
+        ctrlKey: true,
+        shiftKey: false,
+        metaKey: false,
+        isComposing: false,
+        preventDefault: vi.fn(),
+      }),
+    ).not.toThrow();
 
     newKeyboard.dispose(container);
   });

@@ -80,7 +80,7 @@ export class InsertNewItem extends Action {
 // shape (unset) or they disagree. With exactly one existing child, that
 // child's own shape is "shared" trivially, so a second sibling inherits
 // it too instead of only kicking in once there are two or more.
-function pickInheritedShape(parent) {
+export function pickInheritedShape(parent) {
   const { children } = parent;
   if (children.length < 1) {
     return null;
@@ -95,7 +95,7 @@ function pickInheritedShape(parent) {
 // "right", the same default MapLayout.getChildDirection uses for a
 // child with no side set) and returns whichever side currently has
 // fewer children.
-function pickBalancedSide(root) {
+export function pickBalancedSide(root) {
   let left = 0;
   let right = 0;
   root.children.forEach((child) => {

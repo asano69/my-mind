@@ -7,6 +7,7 @@ import {
   discardEditing,
   isEditing,
 } from "./newEdit.js";
+import * as history from "./history.js";
 
 // Plain stub mimicking the DOM API newEdit.js touches on an item's
 // ".text" element -- no real DOM needed, matching the stub pattern used
@@ -61,6 +62,11 @@ describe("newEdit.js", () => {
   beforeEach(() => {
     globalThis.document = { execCommand: vi.fn() };
     registerDomRefs(null);
+    // commitEditing() now pushes a SetText action onto history.js's
+    // shared undo stack (Phase 4.6, see newAction.js) -- reset it so
+    // one test's edit never leaks into the next test's canBack()/
+    // canForward() state.
+    history.reset();
   });
 
   it("returns null when the item has no registered DOM ref", () => {

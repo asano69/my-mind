@@ -16,6 +16,7 @@
 // registerNavigate() and notes.js's registerEditorAPI() already use.
 import { isUrlOnly } from "./urlUtils.js";
 import { measureContentSize } from "./itemStore.js";
+import { action, SetText } from "./newAction.js";
 
 let domRefs = null;
 export function registerDomRefs(refs) {
@@ -104,7 +105,13 @@ export function commitEditing(item) {
   if (!textEl) {
     return;
   }
-  item.text = textEl.innerHTML;
+  // Routed through history.js via newAction.js's action() (Phase 4.6 of
+  // docs/08-mindmap-engine-refactor.md) instead of a direct `item.text =`
+  // assignment, so a text edit becomes a real undo/redo step -- SetText
+  // itself is action.js's unchanged implementation (a plain property
+  // mutator, works against ItemNode the same way it works against the
+  // old engine's Item, see newAction.js's own comment).
+  action(new SetText(item, textEl.innerHTML));
   // Force an immediate remeasure using the already-painted DOM (the
   // browser laid out the edited text live, so this is accurate without
   // waiting for a reactive effect) -- see itemStore.js's setMeasuredSize
