@@ -5,9 +5,16 @@ import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
 import { repo as shapeRepo } from "../lib/mindmap/shape/shape.js";
 import { loadByUuid } from "../lib/mindmap/backend/pocketbase.js";
 import "../lib/mindmap/layout/map.js";
-import "../lib/mindmap/shape/box.js";
-import "../lib/mindmap/shape/ellipse.js";
-import "../lib/mindmap/shape/underline.js";
+// Named imports also run each module's own registration side effect
+// (new Box()/new Ellipse()/new Underline()), so the old blank
+// import "../lib/mindmap/shape/box.js" style imports are no longer
+// needed alongside these (see docs/08-mindmap-engine-refactor.md's
+// Phase 3.7: this preview now shares the same pure style/path
+// functions the real engine's shape/*.js update() methods use, instead
+// of duplicating that branching here).
+import { computeBoxStyle } from "../lib/mindmap/shape/box.js";
+import { computeEllipseStyle } from "../lib/mindmap/shape/ellipse.js";
+import { computeUnderlinePath } from "../lib/mindmap/shape/underline.js";
 import mapCss from "../lib/mindmap/map.css?raw";
 
 // Phase 3.5 (see docs/08-mindmap-engine-refactor.md): layout computation
@@ -16,41 +23,24 @@ import mapCss from "../lib/mindmap/map.css?raw";
 // setMeasuredSize. This file only reads that memo and writes measured
 // sizes back to it from a createEffect -- see ItemNodeView below.
 
+// Delegates to the same pure functions shape/box.js and shape/ellipse.js
+// use for the real engine's DOM updates (see docs/08-mindmap-engine-
+// refactor.md's Phase 3.7), instead of duplicating their branching here.
+// Every non-box shape (ellipse, underline, ...) shares ellipse's simpler
+// fallback, matching this function's own previous behavior.
 function shapeStyle(item) {
-  const raw = item.color;
-  const resolved = item.resolvedColor;
-  const style = {};
-
-  if (raw && raw !== "#ffffff") {
-    style["--item-color"] = raw;
-    return style;
-  }
-
-  if (
-    item.resolvedShape.id === "box" &&
-    resolved !== "#999" &&
-    resolved !== "#999999"
-  ) {
-    style["--item-color"] = resolved;
-    return style;
-  }
-
-  style["border-color"] = resolved;
-  return style;
+  const { itemColor, borderColor } =
+    item.resolvedShape.id === "box"
+      ? computeBoxStyle(item)
+      : computeEllipseStyle(item);
+  return itemColor
+    ? { "--item-color": itemColor }
+    : { "border-color": borderColor };
 }
 
 function textStyleFor(item) {
   const color = item.resolvedTextColor;
   return color ? { color } : {};
-}
-
-function underlinePathFor(item) {
-  const contentPosition = item.contentPosition ?? [0, 0];
-  const contentSize = item.contentSize ?? contentSizeFor(item);
-  const left = contentPosition[0];
-  const right = left + contentSize[0];
-  const top = contentPosition[1] + contentSize[1] - 4 + 0.5;
-  return `M ${left} ${top} L ${right} ${top}`;
 }
 
 function statusClassFor(item) {
@@ -144,9 +134,9 @@ function ItemNodeView(props) {
     ];
   };
 
-  const underlineD = () => {
+  const underlinePath = () => {
     layout();
-    return underlinePathFor(props.item);
+    return computeUnderlinePath(props.item);
   };
 
   const togglePosition = () => togglePositionFor(layout().connectorPaths);
@@ -195,8 +185,8 @@ function ItemNodeView(props) {
       <Show when={props.item.resolvedShape.id === "underline"}>
         <path
           class="shape-underline"
-          d={underlineD()}
-          stroke={props.item.resolvedColor}
+          d={underlinePath().d}
+          stroke={underlinePath().stroke}
           fill="none"
           stroke-width="2"
         />

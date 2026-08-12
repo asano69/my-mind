@@ -241,3 +241,36 @@ revisit with the double-rAF pattern described in this doc's earlier
 draft of Phase 3.6.
 
 No code changes were needed as a result of this phase.
+
+### Phase 3.7 progress note
+
+Extracted `computeBoxStyle(item)` (shape/box.js), `computeEllipseStyle(item)`
+(shape/ellipse.js), and `computeUnderlinePath(item)`/
+`getUnderlineVerticalAnchor(item)` (shape/underline.js) as pure,
+DOM-free functions, mirroring the descriptor pattern layout/*.js already
+established in Phase 3.1-3.3. Each shape's `update(item)` now just reads
+its own descriptor and writes it to `item.dom.content.style` (box/
+ellipse) or a new SVG `<path>` (underline) -- the branching logic itself
+did not change, only where it lives.
+
+`NewMindMapPreview.jsx`'s duplicate `shapeStyle()`/`underlinePathFor()`
+were removed. `shapeStyle()` now delegates to `computeBoxStyle()` for
+box-shaped items and `computeEllipseStyle()` for everything else
+(ellipse, underline, ...), which is exactly the fallback the old merged
+function already used -- confirmed behavior-preserving by comparing the
+two branch structures directly rather than by inspection alone.
+`underlinePathFor()` is gone entirely; `ItemNodeView` now calls
+`computeUnderlinePath(props.item)` directly, which also incidentally
+drops a latent bug in the old function (a call to an undefined
+`contentSizeFor()` helper that was never reachable in practice since
+`layout()` is always read before it, but was dead-code risk
+nonetheless).
+
+Added `frontend/src/lib/mindmap/shape/pure-shape.test.js`, mirroring
+`layout/pure-layout.test.js`'s plain-stub-item pattern, covering each
+extracted function's explicit-color, inherited-color, and default
+branches.
+
+This closes Phase 3.7's "重複実装の解消" goal: box/ellipse/underline's
+visual computation now has exactly one implementation, shared by both
+the real engine and the `?newEngine=1` preview.

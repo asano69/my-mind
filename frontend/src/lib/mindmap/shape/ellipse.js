@@ -1,18 +1,30 @@
 // src/shape/ellipse.ts
-// ellipse.ts（同様）
 import Shape from "./shape.js";
+
+// Pure: same idea as box.js's computeBoxStyle(), but ellipse never falls
+// back to an inherited color for --item-color -- only an item's own
+// explicit color sets it, matching this shape's original update().
+export function computeEllipseStyle(item) {
+  const raw = item.color;
+  if (raw && raw !== "#ffffff") {
+    return { itemColor: raw, borderColor: null };
+  }
+  return { itemColor: null, borderColor: item.resolvedColor };
+}
+
 export default class Ellipse extends Shape {
   constructor() {
     super("ellipse", "Ellipse");
   }
   update(item) {
-    const raw = item.color;
-    if (raw && raw !== "#ffffff") {
-      item.dom.content.style.setProperty("--item-color", raw);
-      item.dom.content.style.borderColor = "";
+    const { itemColor, borderColor } = computeEllipseStyle(item);
+    const style = item.dom.content.style;
+    if (itemColor) {
+      style.setProperty("--item-color", itemColor);
+      style.borderColor = "";
     } else {
-      item.dom.content.style.removeProperty("--item-color");
-      item.dom.content.style.borderColor = item.resolvedColor;
+      style.removeProperty("--item-color");
+      style.borderColor = borderColor;
     }
   }
 }
