@@ -8,7 +8,10 @@ import LeaveConfirmDialog from "./LeaveConfirmDialog";
 import ContextMenuContent from "./ContextMenu";
 import { ContextMenu } from "@kobalte/core/context-menu";
 import { onMount, onCleanup } from "solid-js";
+import { render } from "solid-js/web";
 import { activeMode } from "../lib/mindmap/store";
+import { isNewEngineEnabled } from "../lib/mindmap/newEngineFlag.js";
+import NewMindMapPreview from "./NewMindMapPreview.jsx";
 
 export default function MindMapCanvas(props) {
   let mainRef;
@@ -20,11 +23,28 @@ export default function MindMapCanvas(props) {
   // for shortcuts to work when nothing else is focused.
   let containerRef;
   let engine;
+  let disposeNewEngine;
+  const newEngine = isNewEngineEnabled();
   let mouseModule; // cached after the first dynamic import, see onMount
 
   onMount(async () => {
     console.log("[MindMapCanvas] onMount, uuid =", props.uuid);
     containerRef.focus();
+
+    if (newEngine) {
+      disposeNewEngine = render(
+        () => (
+          <NewMindMapPreview title={new Date().toISOString().slice(0, 10)} />
+        ),
+        mainRef,
+      );
+      console.log(
+        "[MindMapCanvas] new engine preview mounted, uuid =",
+        props.uuid,
+      );
+      return;
+    }
+
     engine = await import("../lib/mindmap/my-mind.js");
     engine.mount(mainRef, containerRef, props.uuid);
     console.log("[MindMapCanvas] mount() finished, uuid =", props.uuid);
@@ -35,6 +55,8 @@ export default function MindMapCanvas(props) {
 
   onCleanup(() => {
     console.log("[MindMapCanvas] onCleanup, uuid =", props.uuid);
+    disposeNewEngine?.();
+    disposeNewEngine = null;
     engine?.unmount();
   });
 
@@ -59,7 +81,11 @@ export default function MindMapCanvas(props) {
           as="main"
           ref={mainRef}
           disabled={activeMode() !== "canvas"}
-          onContextMenu={(e) => mouseModule?.handleContextMenu(e)}
+          onContextMenu={(e) => {
+            if (!newEngine) {
+              mouseModule?.handleContextMenu(e);
+            }
+          }}
         />
         <ContextMenuContent />
       </ContextMenu>
