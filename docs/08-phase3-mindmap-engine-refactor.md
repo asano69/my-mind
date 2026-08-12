@@ -211,3 +211,33 @@ function ItemNodeView(props) {
 - テストファイル（`NewMindMapPreview.test.jsx`）：`computePreviewTreeLayout`を直接呼んでいるテストは、`root.layoutResult()`を呼ぶ形に書き換えが必要。
 
 この方向で3.5の実装に進めてよいか、あるいは先に`itemStore.js`側の`layoutResult`memoだけを最小実装してテストを書くところから始めるか、どちらがよいですか。
+
+
+### Phase 3.6 progress note
+
+Manually verified in a real browser (`?newEngine=1`, dev server) via a
+temporary `window.__previewRoot` debug hook plus a `console.log` inside
+`ItemNodeView`'s measurement `createEffect`.
+
+- Initial load: content boxes render at their correct measured size
+  immediately; no stale/zero-size flash observed.
+- Collapse -> expand round trip (verified on a direct child of root;
+  the tested map did not have deep enough nesting to exercise a
+  multi-level collapse/expand): the re-mounted subtree renders at its
+  correct measured size on first paint, with no visible flash of
+  `defaultContentSize()`'s placeholder dimensions.
+
+No reproduction of the `foreignObject` first-paint quirk that item.js's
+`collapsed` setter and `insertChild()` work around with a double-rAF
+remeasure. Solid's `createEffect` (which runs after DOM commit) appears
+sufficient here, unlike the old engine's manual DOM manipulation path.
+
+Caveat: selection and the "F" fold hotkey are not wired into this
+preview yet (no `currentItem`/command integration until Phase 4), so
+verification used direct signal writes (`item.collapsed = true/false`)
+rather than real UI interaction. If Phase 4's mouse/keyboard
+integration surfaces the quirk under real click-driven interaction,
+revisit with the double-rAF pattern described in this doc's earlier
+draft of Phase 3.6.
+
+No code changes were needed as a result of this phase.
