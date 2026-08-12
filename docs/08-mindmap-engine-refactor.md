@@ -286,3 +286,18 @@ Phase 3はリスクが高いため、まず既存エンジンの挙動を変え�
 - `frontend/src/lib/mindmap/layout/pure-layout.test.js`を追加し、graph/tree/mapそれぞれについてDOM refなしのプレーンなitem stubだけで座標とconnector descriptorを検証した。これによりPhase 3後続で`<ItemNode>`の`createMemo`から同じ計算を呼び、`createEffect`でSVGへ反映するための最小単位ができた。
 
 この小分けではまだ`<For each={item.children()}>`による再帰描画や`foreignObject`実測の移設には入っていない。次の小分けでは、今回追加したdescriptor APIを`NewMindMapPreview`側のSolidコンポーネントから読み、子ノードを再帰描画するところまで進める。
+
+### Phase 3 progress note 2 — NewMindMapPreviewでの再帰描画descriptor利用
+
+Phase 3 progress note 1で切り出した純粋layout descriptorを、feature flag配下の新エンジンプレビュー側から実際に読むところまで進めた。今回も既存`item.js`エンジンの本番経路は変更せず、`?newEngine=1`で表示される`NewMindMapPreview`だけを対象にした小分けである。
+
+- `ItemNode` storeに`childItems` getterを追加した。既存の`children`配列は互換性のためそのまま残しつつ、JSXの`<For>`やlayout memoが`_childrenVersion()`を直接読まずに子リスト変更へ追従できる入口を用意した。
+- `NewMindMapPreview`の`ItemNodeView`を、固定1ノード表示から`<For each={item.childItems}>`による再帰描画に変えた。子ノードは親layoutが計算した`child.position`を`transform=translate(...)`として受け取り、親子構造をSVGツリー上にもそのまま表現する。
+- `computePreviewTreeLayout(item)`を追加し、子孫layoutを先に計算して`child.size`を親へ渡してから、親の`computeMapLayout()`を呼ぶpost-orderの足場を作った。現時点ではDOM実測移設前なので、`contentSize`はroot/childごとの固定値を使っている。
+- connector描画は旧layout writerではなく、`computeMapLayout()`が返す`connectorPaths` descriptorをJSXの`<path>`へ変換する形にした。これにより、Phase 3の次段階で`foreignObject`実測値を`createEffect`/`ref`経由に差し替える準備ができた。
+- `frontend/src/components/NewMindMapPreview.test.jsx`を追加し、root左右ブランチ＋孫ノードの小さな木で、子孫が親より先にsizeを持つこと、root connector descriptorが生成されること、左右の子がrootを挟んで配置されることを検証した。
+
+制約と次の作業:
+
+- 今回の`contentSize`は固定値であり、まだ`foreignObject`の実測サイズ（`offsetWidth`/`scrollWidth`）には接続していない。次の小分けでは`ref`登録と`createEffect`での測定更新を入れ、旧実装の二重rAF remeasureがどの程度不要になるかを確認する。
+- `computePreviewTreeLayout()`はプレビュー用の足場で、まだ本番のMap/Item APIやmouse/keyboard/clipboardとは統合していない。Phase 4までは旧エンジンが操作系の正規実装であり続ける。

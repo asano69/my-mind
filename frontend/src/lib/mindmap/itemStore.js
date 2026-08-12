@@ -121,7 +121,9 @@ export default class ItemNode {
           return own;
         }
         const parent = this.parent;
-        return parent instanceof ItemNode ? parent.resolvedColor : DEFAULT_COLOR;
+        return parent instanceof ItemNode
+          ? parent.resolvedColor
+          : DEFAULT_COLOR;
       });
 
       this._resolvedTextColor = createMemo(() => {
@@ -228,6 +230,11 @@ export default class ItemNode {
   }
   set text(text) {
     this._setText(text);
+  }
+
+  get childItems() {
+    this._childrenVersion();
+    return this.children;
   }
 
   get notes() {
