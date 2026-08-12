@@ -7,7 +7,8 @@
 My Mind is a web application for creating and managing Mind maps.  
 New to Mind maps? They are useful, aesthetic and cool! Read more about these special diagrams in [the Wikipedia article](https://en.wikipedia.org/wiki/Mind_map).
 
-This mind map application was refactored from an imperative Pub/Sub architecture to Solid.js's declarative fine-grained reactivity model.
+>[!NOTE]
+> This mind map application is currently being refactored from an imperative Pub/Sub architecture to Solid.js's declarative fine-grained reactivity model.
 
 <img src=".github/assets/sample-01.png" width="800">
 
