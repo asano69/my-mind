@@ -88,7 +88,12 @@ rAF二重待ちのハックは、「DOMへ挿入した直後に同期的に計�
 
 - `item.test.js`/`action.item.test.js`/`map.test.js`/`mouse.test.js`など、既存のテストスイート全体を「移行後も壊れてはいけない仕様書」として扱う。今回のリファクタは実装方式の変更であり、挙動の変更ではない。
 - 手動確認のためのシナリオ一覧を作る: テキスト編集、collapse/expand、色・レイアウト・シェイプの継承、value/statusの自動計算、undo/redo、ドラッグ&ドロップ（append/sibling判定）、コピー&ペースト、ズーム、大量ノード（50〜100）でのレイアウト崩れの有無。
-- `docs/06.1-recursive-memo-layout-refactor.md`のPhase 0で使った計測手法（訪問ノード数のカウント）を再利用できるようにしておき、新実装でも同水準以上の局所再計算が維持されていることを確認できるようにする。
+- `docs/06.1-recursive-memo-layout-refactor.md`のPhase 0はブラウザDevToolsコンソールから対話的にカウンタを仕込む計測手法を前提にしていたが、本計画ではそれを踏襲しない。CIで繰り返し実行でき、手動操作を伴わない`frontend/src/lib/mindmap/layout-measurement.test.js`（vitest）を新設し、同じ「訪問ノード数のカウント」をプログラマブルに検証する。
+  - `item.js`の`_updateLayoutContent`/`_measureOwnContent`/`_writeOwnLayout`を各Itemインスタンス単位でラップし、呼び出し回数を数える（`item.test.js`の`instrumentLayout()`と同じパターン）。
+  - 深さ4×分岐3（121ノード）程度の木を組み立て、葉ノードのテキスト編集・status/value/icon/notes変更・中間ノードのcollapse切り替え・ルートの色変更、それぞれについて変更後の`readItemLayoutResult(root)`呼び出しでの訪問数をアサートする。
+  - `requestAnimationFrame`はvitestのデフォルト環境に存在しないため、`item.js`の`collapsed`セッターが使う二重rAFの remeasure をテストファイル全体でスタブする（`item.test.js`の個別スタブと同じ対処をファイル単位で行う）。
+  - Solidの実リアクティビティを使うため木の構築・計測を複数回繰り返すとデフォルトの5秒テストタイムアウトを超えることがあり、このテストには明示的に長めのタイムアウトを指定している。
+  - 新実装（Phase 3以降）でも、このテストを流用して同水準以上の局所再計算が維持されていることを確認する。
 
 リスク: なし。
 

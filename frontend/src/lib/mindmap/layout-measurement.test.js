@@ -8,7 +8,7 @@
 // spy-and-count pattern from). Runs entirely under vitest -- no browser
 // devtools session required, matching the request to avoid interactive
 // console-based measurement.
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeAll, afterAll } from "vitest";
 
 function classList() {
   return { add: vi.fn(), remove: vi.fn(), toggle: vi.fn() };
@@ -144,6 +144,26 @@ describe("doc06.1 Phase 0 locality measurement (programmatic, no browser console
   const DEPTH = 4;
   const WIDTH = 3; // 1 + 3 + 9 + 27 + 81 = 121 nodes
 
+  // item.js's `collapsed` setter schedules a double-rAF remeasure (see
+  // its own comment) -- irrelevant to this test, which only reads the
+  // synchronous layout-memo result, but requestAnimationFrame does not
+  // exist in vitest's default node environment. Stubbed for the whole
+  // file rather than per-test since any scenario could end up touching
+  // `collapsed`.
+  let originalRaf;
+  beforeAll(() => {
+    originalRaf = globalThis.requestAnimationFrame;
+    globalThis.requestAnimationFrame = () => 0;
+  });
+  afterAll(() => {
+    globalThis.requestAnimationFrame = originalRaf;
+  });
+
+  // Building/reading a 121-node reactive tree five times (once for the
+  // node count, once per scenario) under real Solid reactivity (not a
+  // mocked scheduler) is slow enough to exceed vitest's default 5s
+  // timeout -- this is inherent to exercising the real memo chain, not
+  // an infinite loop, so just give it more room.
   it("logs per-scenario visit counts against total tree size", () => {
     // Each mutator gets a fresh tree, so scenarios never interfere with
     // one another's dirty state.
@@ -188,5 +208,5 @@ describe("doc06.1 Phase 0 locality measurement (programmatic, no browser console
         expect(calls.update).toBeLessThan(totalNodes);
       }
     }
-  });
+  }, 20000);
 });
