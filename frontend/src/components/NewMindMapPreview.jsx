@@ -1,4 +1,11 @@
-import { createEffect, createResource, For, Show } from "solid-js";
+import {
+  createEffect,
+  createResource,
+  For,
+  Show,
+  onCleanup,
+  onMount,
+} from "solid-js";
 import ItemNode from "../lib/mindmap/itemStore.js";
 import { TOGGLE_SIZE } from "../lib/mindmap/item.js";
 import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
@@ -151,6 +158,21 @@ function ItemNodeView(props) {
     item.setMeasuredSize(measured);
   });
 
+  // Registers/unregisters this item's content element in the shared
+  // domRefs Map (see registerDomRef/unregisterDomRef above), created
+  // once by the top-level NewMindMapPreview and threaded down through
+  // every recursive ItemNodeView instance (see the <For> below and
+  // NewMindMapPreview's own render). Refs are attached before onMount
+  // runs, so contentRef is guaranteed to be a real element here.
+  // Nothing reads from domRefs yet -- this phase only wires the
+  // registry itself, not its consumers.
+  onMount(() => {
+    registerDomRef(props.domRefs, props.item, contentRef);
+  });
+  onCleanup(() => {
+    unregisterDomRef(props.domRefs, props.item);
+  });
+
   return (
     <g
       class="item"
@@ -218,6 +240,7 @@ function ItemNodeView(props) {
         {(child) => (
           <ItemNodeView
             item={child}
+            domRefs={props.domRefs}
             // Bound to the PARENT's own layout() (not the child's): a
             // child's `position` field is written as a side effect of
             // ITS PARENT's _computeLayout(), not its own -- see
@@ -243,6 +266,22 @@ function ItemNodeView(props) {
 // counts as visible" definition can't drift between the two.
 export function visiblePreviewChildren(item) {
   return item.collapsed ? [] : item.childItems;
+}
+
+// Indirect DOM reference registry: Map<item.id, HTMLElement>. Lets a
+// vanilla module (mouse.js's drag math in Phase 4.7, clipboard.js's
+// cut-visual toggling in Phase 4.8) locate an item's rendered content
+// element without touching item.dom directly, since ItemNode (the
+// Phase 1 data store) never holds a DOM reference itself -- see
+// docs/08-phase4.0-dependency-inventory.md, section 9. Kept as two
+// tiny pure functions (rather than inlined in ItemNodeView's
+// onMount/onCleanup) so registration/cleanup can be unit-tested
+// without rendering an actual Solid component tree.
+export function registerDomRef(domRefs, item, el) {
+  domRefs.set(item.id, el);
+}
+export function unregisterDomRef(domRefs, item) {
+  domRefs.delete(item.id);
 }
 
 // Extracts the connector layout's togglePosition, shared by every
@@ -311,6 +350,14 @@ export default function NewMindMapPreview(props) {
     ({ uuid, title }) => loadPreviewRoot(uuid, title),
   );
 
+  // Plain (non-reactive) Map, not a signal: this registry is an
+  // imperative side-table for later phases (see registerDomRef's
+  // comment above), not something any component reads reactively.
+  // Created once per NewMindMapPreview mount -- Solid component bodies
+  // run once, not on every re-render, so this persists across
+  // subsequent resource updates without needing memoization.
+  const domRefs = new Map();
+
   return (
     <svg
       data-engine="solid-item-node-preview"
@@ -329,7 +376,7 @@ export default function NewMindMapPreview(props) {
       >
         {(loadedRoot) => (
           <g transform="translate(40,40)">
-            <ItemNodeView item={loadedRoot()} />
+            <ItemNodeView item={loadedRoot()} domRefs={domRefs} />
           </g>
         )}
       </Show>

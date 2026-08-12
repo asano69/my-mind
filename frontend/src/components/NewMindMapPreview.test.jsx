@@ -18,8 +18,10 @@ import "../lib/mindmap/shape/ellipse.js";
 import "../lib/mindmap/shape/underline.js";
 import {
   measureContentSize,
+  registerDomRef,
   rootFromMapData,
   togglePositionFor,
+  unregisterDomRef,
   visiblePreviewChildren,
 } from "./NewMindMapPreview.jsx";
 
@@ -245,6 +247,52 @@ describe("rootFromMapData", () => {
   it("returns null for missing map data", () => {
     expect(rootFromMapData(null)).toBeNull();
     expect(rootFromMapData({})).toBeNull();
+  });
+});
+
+// Phase 4.1 of docs/08-phase4-dependency-inventory.md: the domRefs
+// registry itself is not yet consumed by anything (mouse.js's drag
+// math and clipboard.js's cut-visual toggling wire up in Phase 4.7/4.8),
+// so these tests only pin down registerDomRef/unregisterDomRef's own
+// Map bookkeeping -- no Solid rendering involved, matching the plan's
+// "no real DOM required, spying on ref call counts is enough" note.
+describe("registerDomRef / unregisterDomRef", () => {
+  it("registers an item's element under its id", () => {
+    const domRefs = new Map();
+    const item = { id: "abc" };
+    const el = {};
+
+    registerDomRef(domRefs, item, el);
+
+    expect(domRefs.get("abc")).toBe(el);
+    expect(domRefs.size).toBe(1);
+  });
+
+  it("removes only the given item's entry on unregister", () => {
+    const domRefs = new Map();
+    const itemA = { id: "a" };
+    const itemB = { id: "b" };
+    registerDomRef(domRefs, itemA, {});
+    registerDomRef(domRefs, itemB, {});
+
+    unregisterDomRef(domRefs, itemA);
+
+    expect(domRefs.has("a")).toBe(false);
+    expect(domRefs.has("b")).toBe(true);
+    expect(domRefs.size).toBe(1);
+  });
+
+  it("re-registering the same item id overwrites the previous element", () => {
+    const domRefs = new Map();
+    const item = { id: "x" };
+    const first = {};
+    const second = {};
+
+    registerDomRef(domRefs, item, first);
+    registerDomRef(domRefs, item, second);
+
+    expect(domRefs.get("x")).toBe(second);
+    expect(domRefs.size).toBe(1);
   });
 });
 
