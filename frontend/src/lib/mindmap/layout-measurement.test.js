@@ -253,4 +253,40 @@ describe("doc06.1 Phase 0 locality measurement (programmatic, no browser console
       }
     }
   }, 20000);
+
+  // Visit-count locality (above) doesn't tell us whether a full-tree
+  // visit is actually slow in wall-clock terms -- doc08's rationale for
+  // a large rewrite only holds if this cost is user-visible. Measures
+  // real elapsed time instead of node counts, on a tree well past the
+  // "100+" size doc08's own proposal names. This is a soft sanity check
+  // (catches a catastrophic regression, e.g. an accidental O(n^2) pass),
+  // not a strict perf gate -- absolute timings are environment-dependent
+  // (CI runner speed, JIT warm-up, ...), so the assertion threshold is
+  // deliberately generous. The logged numbers, not the assertion, are
+  // the actual result to record in docs/08-mindmap-engine-refactor.md.
+  it("benchmarks wall-clock time: leaf edit vs. full-tree color propagation", () => {
+    const BENCH_DEPTH = 4;
+    const BENCH_WIDTH = 5; // 1 + 5 + 25 + 125 + 625 = 781 nodes
+    const root = buildTree(BENCH_DEPTH, BENCH_WIDTH);
+    const totalNodes = countNodes(root);
+    readItemLayoutResult(root); // warm up: exclude tree construction from the timing
+
+    const leafStart = performance.now();
+    findDeepLeaf(root).text = "changed";
+    readItemLayoutResult(root);
+    const leafMs = performance.now() - leafStart;
+
+    const colorStart = performance.now();
+    root.color = "#d33";
+    readItemLayoutResult(root);
+    const colorMs = performance.now() - colorStart;
+
+    console.log(
+      `benchmark (${totalNodes} nodes): leaf text edit = ${leafMs.toFixed(3)}ms, ` +
+        `root color change (full-tree propagation) = ${colorMs.toFixed(3)}ms`,
+    );
+
+    // Sanity bound only, not a real perf budget -- see comment above.
+    expect(colorMs).toBeLessThan(2000);
+  }, 20000);
 });
