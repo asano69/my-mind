@@ -275,3 +275,14 @@ feature flag.
 - Phase 4のドラッグ&ドロップ実装で、DOM参照の間接化（`domRefs.get(item.id)`方式）がパフォーマンス上またはコードの見通し上、現状の`item.dom`直接参照より明確に劣る。
 
 これらに該当する場合は、該当フェーズを差し戻し、doc06.1時点の実装（再帰的memoチェーン + 手動versionカウンタ）を現状の到達点として維持し、本計画は凍結する。
+
+### Phase 3 progress note 1 — layout計算の純粋関数化の足場
+
+Phase 3はリスクが高いため、まず既存エンジンの挙動を変えずに、`layout/*.js`から「SVG DOMへ書き込む処理」と「座標・connector pathを計算する処理」を分離する足場を入れた。
+
+- `layout/graph.js`に`computeGraphLayout(layout, item, rankDirection)`を追加した。`layoutItem()`は従来どおり`contentPosition`/`position`を計算するが、connector描画は`computeLinesHorizontal()`/`computeLinesVertical()`が`{ d, stroke, togglePosition }`のプレーンなdescriptor配列を返し、`writeConnectorPaths()`だけが`svg.node()`/`dom.connectors.append()`/toggle位置書き込みを担当する形に分離した。
+- `layout/tree.js`に`computeTreeLayout(layout, item, rankDirection)`を追加し、tree connectorも同じdescriptor→writer方式にした。
+- `layout/map.js`に`computeMapLayout(layout, item)`を追加した。rootでは`layoutRoot()`がroot connector descriptorを返し、非rootでは既存の`graph-left/right`計算を`computeGraphLayout()`経由で呼ぶ。旧`update(item)` APIは残しており、既存の`item.js`ベースの描画経路はdescriptorを書き戻すだけなので互換性を保っている。
+- `frontend/src/lib/mindmap/layout/pure-layout.test.js`を追加し、graph/tree/mapそれぞれについてDOM refなしのプレーンなitem stubだけで座標とconnector descriptorを検証した。これによりPhase 3後続で`<ItemNode>`の`createMemo`から同じ計算を呼び、`createEffect`でSVGへ反映するための最小単位ができた。
+
+この小分けではまだ`<For each={item.children()}>`による再帰描画や`foreignObject`実測の移設には入っていない。次の小分けでは、今回追加したdescriptor APIを`NewMindMapPreview`側のSolidコンポーネントから読み、子ノードを再帰描画するところまで進める。

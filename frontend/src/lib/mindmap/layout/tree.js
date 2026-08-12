@@ -5,10 +5,24 @@ import * as svg from "../svg.js";
 const SPACING_RANK = 32;
 const R = SPACING_RANK / 4;
 const LINE_OFFSET = SPACING_RANK / 2;
+export function computeTreeLayout(
+  layout,
+  item,
+  rankDirection = layout.childDirection,
+) {
+  const totalWidth = layout.layoutItem(item, rankDirection);
+  const connectorPaths = layout.computeLines(item, rankDirection, totalWidth);
+  return { connectorPaths, totalWidth };
+}
+
 export default class TreeLayout extends Layout {
   update(item) {
-    let totalWidth = this.layoutItem(item, this.childDirection);
-    this.drawLines(item, this.childDirection, totalWidth);
+    const { connectorPaths } = computeTreeLayout(
+      this,
+      item,
+      this.childDirection,
+    );
+    this.writeConnectorPaths(item, connectorPaths);
   }
   layoutItem(item, rankDirection) {
     const { contentSize, children } = item;
@@ -43,19 +57,16 @@ export default class TreeLayout extends Layout {
       offset[1] += size[1] + this.SPACING_CHILD; /* offset for next child */
     });
   }
-  drawLines(item, direction, totalWidth) {
-    const { resolvedShape, resolvedColor, children, dom } = item;
+  computeLines(item, direction, totalWidth) {
+    const { resolvedShape, resolvedColor, children } = item;
     const dirModifier = direction == "right" ? 1 : -1;
     const lineX =
       (direction == "left" ? totalWidth - LINE_OFFSET : LINE_OFFSET) + 0.5;
     const toggleDistance = TOGGLE_SIZE + 2;
     let pointAnchor = [lineX, resolvedShape.getVerticalAnchor(item)];
-    this.positionToggle(item, [
-      pointAnchor[0],
-      pointAnchor[1] + toggleDistance,
-    ]);
+    const togglePosition = [pointAnchor[0], pointAnchor[1] + toggleDistance];
     if (children.length == 0 || item.collapsed) {
-      return;
+      return [{ togglePosition }];
     }
     let lastChild = children[children.length - 1];
     let lineEnd = [
@@ -75,13 +86,24 @@ export default class TreeLayout extends Layout {
         `L ${this.getChildAnchor(child, direction)} ${y}`,
       );
     });
-    let path = svg.node("path", {
-      d: d.join(" "),
-      stroke: resolvedColor,
-      fill: "none",
-      "stroke-width": "2",
-    });
-    dom.connectors.append(path);
+    return [{ d: d.join(" "), stroke: resolvedColor, togglePosition }];
+  }
+  writeConnectorPaths(item, connectorPaths) {
+    for (const pathInfo of connectorPaths) {
+      if (pathInfo.togglePosition) {
+        this.positionToggle(item, pathInfo.togglePosition);
+      }
+      if (!pathInfo.d) {
+        continue;
+      }
+      const path = svg.node("path", {
+        d: pathInfo.d,
+        stroke: pathInfo.stroke,
+        fill: "none",
+        "stroke-width": "2",
+      });
+      item.dom.connectors.append(path);
+    }
   }
 }
 new TreeLayout("tree-left", "Left", "left");
