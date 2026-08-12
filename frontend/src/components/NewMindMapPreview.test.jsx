@@ -6,7 +6,10 @@ import "../lib/mindmap/layout/map.js";
 import "../lib/mindmap/shape/box.js";
 import "../lib/mindmap/shape/ellipse.js";
 import "../lib/mindmap/shape/underline.js";
-import { computePreviewTreeLayout } from "./NewMindMapPreview.jsx";
+import {
+  computePreviewTreeLayout,
+  measureContentSize,
+} from "./NewMindMapPreview.jsx";
 
 function previewTree() {
   const root = new ItemNode();
@@ -51,5 +54,46 @@ describe("computePreviewTreeLayout", () => {
     expect(root.size[0]).toBeGreaterThan(right.size[0]);
     expect(root.contentPosition[0]).toBeGreaterThan(left.position[0]);
     expect(right.position[0]).toBeGreaterThan(root.contentPosition[0]);
+  });
+
+  it("uses measured content sizes when they are available", () => {
+    const { root, right, grandchild } = previewTree();
+    const measuredSizes = new Map([
+      [root.id, [260, 90]],
+      [right.id, [180, 60]],
+      [grandchild.id, [110, 30]],
+    ]);
+
+    const result = computePreviewTreeLayout(root, measuredSizes);
+
+    expect(root.contentSize).toEqual([260, 90]);
+    expect(right.contentSize).toEqual([180, 60]);
+    expect(grandchild.contentSize).toEqual([110, 30]);
+    expect(result.size[0]).toBeGreaterThan(260);
+  });
+});
+
+describe("measureContentSize", () => {
+  it("uses the largest rendered and scroll dimensions", () => {
+    expect(
+      measureContentSize(
+        {
+          offsetWidth: 100.2,
+          scrollWidth: 128.1,
+          offsetHeight: 24,
+          scrollHeight: 40.4,
+        },
+        [150, 44],
+      ),
+    ).toEqual([129, 41]);
+  });
+
+  it("falls back when the element has no measurable size yet", () => {
+    expect(
+      measureContentSize(
+        { offsetWidth: 0, scrollWidth: 0, offsetHeight: 0, scrollHeight: 0 },
+        [150, 44],
+      ),
+    ).toEqual([150, 44]);
   });
 });

@@ -317,3 +317,17 @@ Phase 3 progress note 1で切り出した純粋layout descriptorを、feature fl
 - `NewMindMapPreview`はコンポーネント初期化時にfixture rootを作成し、その場で`computePreviewTreeLayout(root)`を同期的に1回計算する。
 - `ItemNodeView`側の`shape`/`textStyle`も小さな`createMemo`をやめ、渡されたlayout snapshotから通常の関数呼び出しで読むようにした。
 - Phase 3でDOM実測や操作系へ進むときは、layout計算を直接`createMemo`へ戻すのではなく、実測値用signalと純粋layout snapshotの依存境界を先に分けてから再導入する。
+
+### Phase 3 progress note 5 — preview content size measurement signal
+
+Phase 3 progress note 4でpreviewのlayout snapshotを一旦同期計算に戻したうえで、次の小分けとして`foreignObject`内contentの実測値をlayout計算へ戻すための最小配線を追加した。今回も対象は`?newEngine=1`の`NewMindMapPreview`のみで、本番の旧`item.js`エンジン経路は変更していない。
+
+- `NewMindMapPreview`のrootに`measuredSizes` signal（`Map<item.id, [width, height]>`）を持たせ、各`ItemNodeView`が`ref`付き`.content`を`createEffect`内で測定してrootへ報告するようにした。
+- `computePreviewTreeLayout(item, measuredSizes)`は、測定値があるノードでは固定fixture sizeではなく実測sizeを`contentSize`として使う。測定値がまだ0または未登録の初回renderでは従来の固定fallbackを使うため、`foreignObject`が0×0になってlayoutが消えることはない。
+- 測定値更新は同一sizeなら同じ`Map`参照を返して再計算を抑止する。これにより、初回DOM commit後に必要な1回の再layoutは許容しつつ、安定後に`createEffect`が無限にlayoutを回し続けることを避けている。
+- `measureContentSize()`を小さな純粋helperとして切り出し、`offsetWidth/offsetHeight`と`scrollWidth/scrollHeight`の大きい方をceilして採用するようにした。Vitestでは実DOMを使わず、このhelperと`computePreviewTreeLayout()`の測定値overrideだけを検証している。
+
+制約と次の作業:
+
+- Vitestはnode環境のため、SVG内`foreignObject`の実ブラウザpaint timingはまだ検証できていない。今回の変更は「実測値を受け取ったlayout snapshotが再計算される」配線の確認までであり、doc06.1で問題になったcollapsed→expand直後の二重rAF remeasureが不要かどうかの判断は、ブラウザでの手動確認またはjsdom/browser test導入後に残す。
+- 現在のpreviewは静的fixture treeなので、次は測定signalとlayout snapshotの境界を保ったまま、collapse状態変更やtext変更のような実データsignal更新をpreview内で局所的に流せるかを確認する。

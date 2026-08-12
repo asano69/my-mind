@@ -1,4 +1,4 @@
-import { For } from "solid-js";
+import { createEffect, createSignal, For } from "solid-js";
 import ItemNode from "../lib/mindmap/itemStore.js";
 import { computeMapLayout } from "../lib/mindmap/layout/map.js";
 import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
@@ -35,8 +35,12 @@ function shapeStyle(item) {
   return style;
 }
 
-function contentSizeFor(item) {
+function fallbackContentSizeFor(item) {
   return item.isRoot ? ROOT_CONTENT_SIZE : CHILD_CONTENT_SIZE;
+}
+
+function contentSizeFor(item, measuredSizes = new Map()) {
+  return measuredSizes.get(item.id) ?? fallbackContentSizeFor(item);
 }
 
 function previewLayoutFor(item) {
@@ -62,8 +66,8 @@ function computedSizeFor(item, layoutResult) {
   return [layoutResult.width ?? width, layoutResult.height ?? height];
 }
 
-function computePreviewLayout(item, childLayouts) {
-  item.contentSize = contentSizeFor(item);
+function computePreviewLayout(item, childLayouts, measuredSizes) {
+  item.contentSize = contentSizeFor(item, measuredSizes);
   for (const childLayout of childLayouts) {
     childLayout.item.size = childLayout.size;
   }
@@ -83,6 +87,18 @@ function textStyleFor(item) {
 }
 
 function ItemNodeView(props) {
+  let contentRef;
+
+  createEffect(() => {
+    const item = props.layout.item;
+    measureAndStoreSize(
+      item,
+      contentRef,
+      fallbackContentSizeFor(item),
+      props.onMeasure,
+    );
+  });
+
   return (
     <g
       class="item"
@@ -115,7 +131,11 @@ function ItemNodeView(props) {
           contentSizeFor(props.layout.item)[1]
         }
       >
-        <div class="content" style={shapeStyle(props.layout.item)}>
+        <div
+          ref={contentRef}
+          class="content"
+          style={shapeStyle(props.layout.item)}
+        >
           <span class="text" style={textStyleFor(props.layout.item)}>
             {props.layout.item.text}
           </span>
@@ -126,6 +146,7 @@ function ItemNodeView(props) {
           <ItemNodeView
             layout={childLayout}
             transform={`translate(${childLayout.item.position?.[0] ?? 0},${childLayout.item.position?.[1] ?? 0})`}
+            onMeasure={props.onMeasure}
           />
         )}
       </For>
@@ -133,11 +154,33 @@ function ItemNodeView(props) {
   );
 }
 
-export function computePreviewTreeLayout(item) {
+export function computePreviewTreeLayout(item, measuredSizes = new Map()) {
   const childLayouts = item.childItems.map((child) =>
-    computePreviewTreeLayout(child),
+    computePreviewTreeLayout(child, measuredSizes),
   );
-  return computePreviewLayout(item, childLayouts);
+  return computePreviewLayout(item, childLayouts, measuredSizes);
+}
+
+export function measureContentSize(element, fallbackSize) {
+  if (!element) {
+    return fallbackSize;
+  }
+  const width = Math.ceil(
+    Math.max(element.offsetWidth || 0, element.scrollWidth || 0),
+  );
+  const height = Math.ceil(
+    Math.max(element.offsetHeight || 0, element.scrollHeight || 0),
+  );
+  return [width || fallbackSize[0], height || fallbackSize[1]];
+}
+
+function sameSize(a, b) {
+  return a[0] === b[0] && a[1] === b[1];
+}
+
+function measureAndStoreSize(item, element, fallbackSize, updateMeasuredSize) {
+  const measured = measureContentSize(element, fallbackSize);
+  updateMeasuredSize(item.id, measured);
 }
 
 function createPreviewRoot(title) {
@@ -163,7 +206,19 @@ function createPreviewRoot(title) {
 
 export default function NewMindMapPreview(props) {
   const root = createPreviewRoot(props.title);
-  const layout = computePreviewTreeLayout(root);
+  const [measuredSizes, setMeasuredSizes] = createSignal(new Map());
+  const updateMeasuredSize = (id, size) => {
+    setMeasuredSizes((current) => {
+      const existing = current.get(id);
+      if (existing && sameSize(existing, size)) {
+        return current;
+      }
+      const next = new Map(current);
+      next.set(id, size);
+      return next;
+    });
+  };
+  const layout = () => computePreviewTreeLayout(root, measuredSizes());
 
   return (
     <svg
@@ -174,7 +229,7 @@ export default function NewMindMapPreview(props) {
     >
       <style>{mapCss}</style>
       <g transform="translate(40,40)">
-        <ItemNodeView layout={layout} />
+        <ItemNodeView layout={layout()} onMeasure={updateMeasuredSize} />
       </g>
     </svg>
   );
