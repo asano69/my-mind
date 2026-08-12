@@ -79,7 +79,12 @@ export default class GraphLayout extends Layout {
       if (rankDirection == "top") {
         offset[1] = bbox[1] - size[1];
       }
-      child.position = offset;
+      // Copy the current cursor rather than storing the mutable `offset`
+      // array itself. The class-based Item setter stringified this value
+      // immediately, but the new DOM-free item store keeps `position` as a
+      // plain array; sharing `offset` made every sibling observe the final
+      // cursor value and render on top of each other in the Solid preview.
+      child.position = [...offset];
       offset[childIndex] +=
         size[childIndex] + this.SPACING_CHILD; /* offset for next child */
     });

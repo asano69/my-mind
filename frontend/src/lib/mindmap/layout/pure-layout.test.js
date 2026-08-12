@@ -51,7 +51,7 @@ describe("pure layout computations", () => {
 
     expect(layoutResult).toBe(20);
     expect(root.contentPosition).toEqual([0, 0]);
-    expect(child.position).toEqual([66, 19]);
+    expect(child.position).toEqual([66, 5]);
     expect(connectors).toHaveLength(1);
     expect(connectors[0]).toMatchObject({ stroke: "#abc" });
     expect(connectors[0].togglePosition).toEqual([58.5, 10]);
@@ -93,8 +93,8 @@ describe("pure layout computations", () => {
     const result = computeMapLayout(repo.get("map"), root);
 
     expect(root.contentPosition).toEqual([56, 0]);
-    expect(left.position).toEqual([0, 29]);
-    expect(right.position).toEqual([132, 29]);
+    expect(left.position).toEqual([0, 5]);
+    expect(right.position).toEqual([132, 5]);
     expect(result.width).toBe(172);
     expect(result.connectorPaths.map((path) => path.fill)).toEqual([
       "#f00",

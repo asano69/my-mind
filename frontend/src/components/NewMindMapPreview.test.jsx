@@ -59,6 +59,26 @@ describe("computePreviewTreeLayout", () => {
     expect(right.position[0]).toBeGreaterThan(root.contentPosition[0]);
   });
 
+  it("stores independent position arrays for siblings", () => {
+    const root = new ItemNode();
+    root.layout = layoutRepo.get("map");
+
+    const first = new ItemNode();
+    first.text = "First";
+    first.side = "right";
+    const second = new ItemNode();
+    second.text = "Second";
+    second.side = "right";
+    root.insertChild(first);
+    root.insertChild(second);
+
+    computePreviewTreeLayout(root);
+
+    expect(first.position).not.toBe(second.position);
+    expect(first.position[1]).toBe(0);
+    expect(second.position[1]).toBe(first.size[1] + 4);
+  });
+
   it("omits descendant layout snapshots when a node is collapsed", () => {
     const { root, right, grandchild } = previewTree();
     right.collapsed = true;
