@@ -18,7 +18,10 @@ import {
   selectionCursor,
   selectItem,
   extendSelection,
+  editing,
+  setEditing,
 } from "./itemSelection.js";
+import { startEditing, commitEditing, discardEditing } from "./newEdit.js";
 
 function isMac() {
   return !!(globalThis.navigator?.platform ?? "").match(/mac/i);
@@ -33,6 +36,7 @@ const DIRS = {
 
 const commands = [
   {
+    mode: "normal",
     keys: [
       { code: "ArrowLeft", ctrlKey: false, shiftKey: false },
       { code: "ArrowUp", ctrlKey: false, shiftKey: false },
@@ -49,6 +53,7 @@ const commands = [
     },
   },
   {
+    mode: "normal",
     keys: [
       { code: "ArrowLeft", ctrlKey: false, shiftKey: true },
       { code: "ArrowUp", ctrlKey: false, shiftKey: true },
@@ -69,6 +74,7 @@ const commands = [
     },
   },
   {
+    mode: "normal",
     keys: [{ code: "Home" }],
     execute() {
       let item = currentItem();
@@ -87,6 +93,7 @@ const commands = [
 // comment for the same reasoning).
 if (!isMac()) {
   commands.push({
+    mode: "normal",
     keys: [{ code: "Backspace" }],
     execute() {
       const item = currentItem();
@@ -97,6 +104,53 @@ if (!isMac()) {
     },
   });
 }
+
+// Starts/commits/cancels live text editing of the currentItem -- see
+// newEdit.js for the DOM-toggle mechanics. Phase 4.5 of
+// docs/08-mindmap-engine-refactor.md. Mirrors item.js's Edit/Finish/
+// Cancel commands (see command/edit.js), gated by `mode` here instead of
+// the old engine's Command.editMode + ui.isActive() combination.
+commands.push(
+  {
+    mode: "normal",
+    keys: [{ code: "Space" }, { code: "F2" }],
+    execute() {
+      const item = currentItem();
+      if (!item) {
+        return;
+      }
+      if (startEditing(item)) {
+        setEditing(true);
+      }
+    },
+  },
+  {
+    mode: "editing",
+    keys: [
+      { code: "Enter", altKey: false, ctrlKey: false, shiftKey: false },
+    ],
+    execute() {
+      const item = currentItem();
+      if (!item) {
+        return;
+      }
+      commitEditing(item);
+      setEditing(false);
+    },
+  },
+  {
+    mode: "editing",
+    keys: [{ code: "Escape" }],
+    execute() {
+      const item = currentItem();
+      if (!item) {
+        return;
+      }
+      discardEditing(item);
+      setEditing(false);
+    },
+  },
+);
 
 function keyOK(key, e) {
   return Object.entries(key).every(([k, v]) => e[k] == v);
@@ -111,7 +165,19 @@ function handleEvent(e) {
   if (e.isComposing) {
     return;
   }
-  const command = commands.find((c) => c.keys.find((key) => keyOK(key, e)));
+  // While editing, only commands flagged mode: "editing" apply (Enter to
+  // commit, Escape to cancel); everything else -- including plain
+  // character keys, which never match any command's keys anyway -- falls
+  // through to the browser's normal contentEditable typing. This mirrors
+  // the old engine's Command.editMode + ui.isActive() gate (see
+  // command/command.js), just expressed as a plain string per command
+  // instead of a class hierarchy.
+  const editingNow = editing();
+  const command = commands.find(
+    (c) =>
+      (c.mode === "editing") === editingNow &&
+      c.keys.find((key) => keyOK(key, e)),
+  );
   if (command) {
     e.preventDefault();
     command.execute(e);

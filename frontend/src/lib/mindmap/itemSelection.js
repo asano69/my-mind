@@ -27,6 +27,14 @@ export const [selectedItems, setSelectedItems] = createSignal(new Set());
 // my-mind.js's app.selectionCursor. See extendSelection() below.
 export const [selectionCursor, setSelectionCursor] = createSignal(null);
 
+// Whether the currentItem is in live text-edit mode, analogous to
+// my-mind.js's app.editing / store.js's editing signal for the old
+// engine. Written by newKeyboard.js's Space/Enter/Escape commands and
+// newMouse.js's double-click handler (Phase 4.5 of
+// docs/08-mindmap-engine-refactor.md); read by newKeyboard.js to gate
+// which shortcuts apply while editing is in progress.
+export const [editing, setEditing] = createSignal(false);
+
 // Clears any multi-selection without touching currentItem, mirroring
 // my-mind.js's clearMultiSelection() -- but item.js's unmarkSelected()
 // DOM calls have no counterpart here, since itemStateClassList() (see

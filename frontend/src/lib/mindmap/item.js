@@ -14,6 +14,7 @@ import { repo as commandRepo } from "./command/command.js";
 import { repo as shapeRepo } from "./shape/shape.js";
 import { repo as layoutRepo } from "./layout/layout.js";
 import Map from "./map.js";
+import { isUrlOnly } from "./urlUtils.js";
 
 export const TOGGLE_SIZE = 7;
 const LAYOUT_RESULT = Symbol("Item.layoutResult");
@@ -955,17 +956,16 @@ export default class Item {
     resolvedShape.update(this);
   }
 }
-// Matches a string that is *entirely* a URL (nothing else). Used only to
-// detect "the pasted clipboard text was a URL and nothing else" (see
-// handleEvent()'s "paste" case above) -- distinct from the old
+// isUrlOnly() now lives in urlUtils.js (imported above), shared with
+// newEdit.js's paste handler for the ?newEngine=1 preview (Phase 4.5 of
+// docs/08-mindmap-engine-refactor.md) -- see that file's own paste
+// handling. It matches a string that is *entirely* a URL (nothing else),
+// used to detect "the pasted clipboard text was a URL and nothing else"
+// (see handleEvent()'s "paste" case above) -- distinct from the old
 // findLinks()-based in-place linkification this replaces, which turned a
 // URL substring inside otherwise plain text into a clickable <a>. That
 // in-place linkification is gone; a URL is now only ever associated with
 // an item via the explicit `url` field (see the 🔗 icon/updateLink()).
-const URL_ONLY_RE = /^https?:\/\/\S+$/i;
-function isUrlOnly(str) {
-  return URL_ONLY_RE.test(str.trim());
-}
 // Whether `url` resolves to the same origin as the current page. Used by
 // the link-open click handler above to decide SPA-navigate-in-place vs
 // new-tab. Falls back to false (treat as external) for anything that

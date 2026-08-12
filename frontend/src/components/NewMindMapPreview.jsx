@@ -6,9 +6,13 @@ import {
   onCleanup,
   onMount,
 } from "solid-js";
-import ItemNode from "../lib/mindmap/itemStore.js";
+import ItemNode, { measureContentSize } from "../lib/mindmap/itemStore.js";
 import { itemStateClassList } from "../lib/mindmap/itemSelection.js";
-import { handleItemClick } from "../lib/mindmap/newMouse.js";
+import {
+  handleItemClick,
+  handleItemDblClick,
+} from "../lib/mindmap/newMouse.js";
+import { registerDomRefs } from "../lib/mindmap/newEdit.js";
 import { TOGGLE_SIZE } from "../lib/mindmap/item.js";
 import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
 import { repo as shapeRepo } from "../lib/mindmap/shape/shape.js";
@@ -166,8 +170,9 @@ function ItemNodeView(props) {
   // every recursive ItemNodeView instance (see the <For> below and
   // NewMindMapPreview's own render). Refs are attached before onMount
   // runs, so contentRef is guaranteed to be a real element here.
-  // Nothing reads from domRefs yet -- this phase only wires the
-  // registry itself, not its consumers.
+  // Read by newEdit.js (Phase 4.5) to locate an item's text element for
+  // live editing; mouse.js's drag math (Phase 4.7) and clipboard.js's
+  // cut-visual toggling (Phase 4.8) are still pending consumers.
   onMount(() => {
     registerDomRef(props.domRefs, props.item, contentRef);
   });
@@ -222,6 +227,7 @@ function ItemNodeView(props) {
           class="content"
           style={shapeStyle(props.item)}
           onClick={(e) => handleItemClick(props.item, e)}
+          onDblClick={(e) => handleItemDblClick(props.item, e)}
         >
           <Show when={hasStatus(props.item)}>
             <span class={statusClassFor(props.item)} />
@@ -302,18 +308,11 @@ export function togglePositionFor(connectorPaths) {
   return withToggle ? withToggle.togglePosition : null;
 }
 
-export function measureContentSize(element, fallbackSize) {
-  if (!element) {
-    return fallbackSize;
-  }
-  const width = Math.ceil(
-    Math.max(element.offsetWidth || 0, element.scrollWidth || 0),
-  );
-  const height = Math.ceil(
-    Math.max(element.offsetHeight || 0, element.scrollHeight || 0),
-  );
-  return [width || fallbackSize[0], height || fallbackSize[1]];
-}
+// Re-exported here since NewMindMapPreview.test.jsx imports it from this
+// file -- the implementation itself now lives in itemStore.js (see
+// measureContentSize's own comment there), since newEdit.js's
+// commitEditing() also needs it (Phase 4.5).
+export { measureContentSize };
 
 export function createPreviewRoot(title) {
   const root = new ItemNode();
@@ -365,6 +364,11 @@ export default function NewMindMapPreview(props) {
   // run once, not on every re-render, so this persists across
   // subsequent resource updates without needing memoization.
   const domRefs = new Map();
+  // Lets newEdit.js (a vanilla module outside Solid's component tree)
+  // locate an item's rendered text element by id -- same bridge pattern
+  // as item.js's registerNavigate()/notes.js's registerEditorAPI().
+  registerDomRefs(domRefs);
+  onCleanup(() => registerDomRefs(null));
 
   return (
     <svg

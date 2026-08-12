@@ -64,6 +64,25 @@ function generateId() {
   return str;
 }
 
+// Reads an element's rendered content-box size, falling back to
+// `fallbackSize` if the element hasn't produced any measurable size yet
+// (e.g. not yet painted). Shared by ItemNodeView's post-render
+// measurement effect (see NewMindMapPreview.jsx, which re-exports this)
+// and newEdit.js's post-commit remeasure (Phase 4.5 of
+// docs/08-mindmap-engine-refactor.md).
+export function measureContentSize(element, fallbackSize) {
+  if (!element) {
+    return fallbackSize;
+  }
+  const width = Math.ceil(
+    Math.max(element.offsetWidth || 0, element.scrollWidth || 0),
+  );
+  const height = Math.ceil(
+    Math.max(element.offsetHeight || 0, element.scrollHeight || 0),
+  );
+  return [width || fallbackSize[0], height || fallbackSize[1]];
+}
+
 export default class ItemNode {
   static fromJSON(data) {
     return new this().fromJSON(data);

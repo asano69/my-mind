@@ -2,18 +2,23 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const mockActiveMode = { value: "canvas" };
 vi.mock("./store.js", () => ({ activeMode: () => mockActiveMode.value }));
+vi.mock("./newEdit.js", () => ({ startEditing: vi.fn(() => ({})) }));
 
-const { handleItemClick } = await import("./newMouse.js");
+const { handleItemClick, handleItemDblClick } = await import("./newMouse.js");
 const {
   currentItem,
   setCurrentItem,
   selectedItems,
   setSelectedItems,
+  editing,
+  setEditing,
 } = await import("./itemSelection.js");
+const { startEditing } = await import("./newEdit.js");
 
 function resetSelectionState() {
   setCurrentItem(null);
   setSelectedItems(new Set());
+  setEditing(false);
 }
 
 describe("newMouse.js handleItemClick (Phase 4.3)", () => {
@@ -57,5 +62,37 @@ describe("newMouse.js handleItemClick (Phase 4.3)", () => {
     handleItemClick(item, {});
 
     expect(currentItem()).toBeNull();
+  });
+});
+
+describe("newMouse.js handleItemDblClick (Phase 4.5)", () => {
+  beforeEach(() => {
+    mockActiveMode.value = "canvas";
+    resetSelectionState();
+    vi.clearAllMocks();
+  });
+
+  it("starts editing on double-click", () => {
+    const item = { id: "a" };
+    handleItemDblClick(item, {});
+
+    expect(startEditing).toHaveBeenCalledWith(item);
+    expect(editing()).toBe(true);
+  });
+
+  it("does not enter editing mode if startEditing() finds no DOM ref", () => {
+    startEditing.mockReturnValueOnce(null);
+    const item = { id: "a" };
+    handleItemDblClick(item, {});
+
+    expect(editing()).toBe(false);
+  });
+
+  it("ignores double-clicks while the canvas is backgrounded", () => {
+    mockActiveMode.value = "notes";
+    const item = { id: "a" };
+    handleItemDblClick(item, {});
+
+    expect(startEditing).not.toHaveBeenCalled();
   });
 });

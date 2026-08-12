@@ -2,6 +2,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockActiveMode = { value: "canvas" };
 vi.mock("./store.js", () => ({ activeMode: () => mockActiveMode.value }));
+vi.mock("./newEdit.js", () => ({
+  startEditing: vi.fn(() => ({})),
+  commitEditing: vi.fn(),
+  discardEditing: vi.fn(),
+}));
 
 const newKeyboard = await import("./newKeyboard.js");
 const {
@@ -11,7 +16,12 @@ const {
   setSelectedItems,
   selectionCursor,
   setSelectionCursor,
+  editing,
+  setEditing,
 } = await import("./itemSelection.js");
+const { startEditing, commitEditing, discardEditing } = await import(
+  "./newEdit.js"
+);
 
 function eventTarget() {
   const listeners = new Map();
@@ -33,6 +43,7 @@ function resetSelectionState() {
   setCurrentItem(null);
   setSelectedItems(new Set());
   setSelectionCursor(null);
+  setEditing(false);
 }
 
 describe("newKeyboard.js selection shortcuts (Phase 4.4)", () => {
@@ -260,6 +271,142 @@ describe("newKeyboard.js selection shortcuts (Phase 4.4)", () => {
     });
 
     expect(item.resolvedLayout.pick).not.toHaveBeenCalled();
+
+    newKeyboard.dispose(container);
+  });
+});
+
+describe("newKeyboard.js text editing (Phase 4.5)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockActiveMode.value = "canvas";
+    resetSelectionState();
+    globalThis.document = {
+      activeElement: null,
+      body: {},
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+    globalThis.requestAnimationFrame = vi.fn(() => 0);
+    globalThis.cancelAnimationFrame = vi.fn();
+  });
+
+  it("Space starts editing when startEditing() finds a DOM ref", () => {
+    const container = eventTarget();
+    newKeyboard.init(container);
+    const item = { id: "a" };
+    setCurrentItem(item);
+
+    container.dispatch("keydown", {
+      code: "Space",
+      isComposing: false,
+      preventDefault: vi.fn(),
+    });
+
+    expect(startEditing).toHaveBeenCalledWith(item);
+    expect(editing()).toBe(true);
+
+    newKeyboard.dispose(container);
+  });
+
+  it("does not enter editing mode if startEditing() finds no DOM ref", () => {
+    startEditing.mockReturnValueOnce(null);
+    const container = eventTarget();
+    newKeyboard.init(container);
+    setCurrentItem({ id: "a" });
+
+    container.dispatch("keydown", {
+      code: "Space",
+      isComposing: false,
+      preventDefault: vi.fn(),
+    });
+
+    expect(editing()).toBe(false);
+
+    newKeyboard.dispose(container);
+  });
+
+  it("Enter commits editing and leaves edit mode", () => {
+    const container = eventTarget();
+    newKeyboard.init(container);
+    const item = { id: "a" };
+    setCurrentItem(item);
+    setEditing(true);
+
+    container.dispatch("keydown", {
+      code: "Enter",
+      altKey: false,
+      ctrlKey: false,
+      shiftKey: false,
+      isComposing: false,
+      preventDefault: vi.fn(),
+    });
+
+    expect(commitEditing).toHaveBeenCalledWith(item);
+    expect(editing()).toBe(false);
+
+    newKeyboard.dispose(container);
+  });
+
+  it("Escape discards editing and leaves edit mode", () => {
+    const container = eventTarget();
+    newKeyboard.init(container);
+    const item = { id: "a" };
+    setCurrentItem(item);
+    setEditing(true);
+
+    container.dispatch("keydown", {
+      code: "Escape",
+      isComposing: false,
+      preventDefault: vi.fn(),
+    });
+
+    expect(discardEditing).toHaveBeenCalledWith(item);
+    expect(editing()).toBe(false);
+
+    newKeyboard.dispose(container);
+  });
+
+  it("ignores normal-mode shortcuts (e.g. arrow-key selection) while editing", () => {
+    const container = eventTarget();
+    newKeyboard.init(container);
+    const next = { id: "next" };
+    const item = {
+      id: "current",
+      resolvedLayout: { pick: vi.fn(() => next) },
+    };
+    setCurrentItem(item);
+    setEditing(true);
+
+    container.dispatch("keydown", {
+      code: "ArrowRight",
+      ctrlKey: false,
+      shiftKey: false,
+      metaKey: false,
+      isComposing: false,
+      preventDefault: vi.fn(),
+    });
+
+    expect(item.resolvedLayout.pick).not.toHaveBeenCalled();
+
+    newKeyboard.dispose(container);
+  });
+
+  it("ignores Enter/Escape editing commands while not editing", () => {
+    const container = eventTarget();
+    newKeyboard.init(container);
+    setCurrentItem({ id: "a" });
+
+    container.dispatch("keydown", {
+      code: "Enter",
+      altKey: false,
+      ctrlKey: false,
+      shiftKey: false,
+      isComposing: false,
+      preventDefault: vi.fn(),
+    });
+
+    expect(commitEditing).not.toHaveBeenCalled();
 
     newKeyboard.dispose(container);
   });

@@ -10,6 +10,8 @@ import {
   clearMultiSelection,
   selectItem,
   addToSelection,
+  editing,
+  setEditing,
 } from "./itemSelection.js";
 
 // Phase 4.2 of docs/08-mindmap-engine-refactor.md: selection state only
@@ -20,6 +22,7 @@ import {
 function resetSelectionState() {
   setCurrentItem(null);
   setSelectedItems(new Set());
+  setEditing(false);
 }
 
 describe("itemSelection.js", () => {
@@ -140,5 +143,17 @@ describe("itemSelection.js", () => {
       expect(currentItem()).toBe(a);
       expect(selectedItems().size).toBe(0);
     });
+  });
+});
+
+describe("editing (Phase 4.5)", () => {
+  beforeEach(() => setEditing(false));
+
+  it("defaults to false and can be toggled", () => {
+    expect(editing()).toBe(false);
+    setEditing(true);
+    expect(editing()).toBe(true);
+    setEditing(false);
+    expect(editing()).toBe(false);
   });
 });
