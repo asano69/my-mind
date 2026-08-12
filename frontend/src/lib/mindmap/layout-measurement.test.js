@@ -66,7 +66,22 @@ vi.mock("./pubsub.js", () => ({ publish: vi.fn() }));
 vi.mock("./my-mind.js", () => ({ selectItem: vi.fn() }));
 vi.mock("./command/command.js", () => ({ repo: { get: vi.fn() } }));
 vi.mock("./shape/shape.js", () => ({
-  repo: { get: (id) => ({ id, update: vi.fn() }) },
+  // update() reads item.resolvedColor, mirroring the minimal real
+  // dependency box.js/ellipse.js establish (see their own update()).
+  // A no-op vi.fn() here would never read the color memo, so Solid's
+  // automatic dependency tracking would never register computeLayout()
+  // as depending on item._color() at all -- silently making every
+  // color-change scenario measure zero regardless of the real
+  // implementation's propagation, the same class of mocking artifact
+  // buildTree()'s missing root.layout caused earlier in this file.
+  repo: {
+    get: (id) => ({
+      id,
+      update: vi.fn((item) => {
+        item.resolvedColor;
+      }),
+    }),
+  },
 }));
 vi.mock("./layout/layout.js", () => ({
   repo: {
@@ -207,6 +222,15 @@ describe("doc06.1 Phase 0 locality measurement (programmatic, no browser console
       "root color change": (root) => {
         root.color = "#d33";
       },
+      // Comparison case: _applyOwnStyle() (called unconditionally inside
+      // computeLayout(), not gated behind the shape mock) always reads
+      // this.resolvedTextColor, so this scenario exercises the same
+      // inheritance-chain propagation without depending on the shape
+      // mock's behavior at all -- a cross-check against the color case
+      // above.
+      "root textColor change": (root) => {
+        root.textColor = "#d33";
+      },
     };
 
     const totalNodes = countNodes(buildTree(DEPTH, WIDTH));
@@ -224,7 +248,7 @@ describe("doc06.1 Phase 0 locality measurement (programmatic, no browser console
       console.log(
         `${name}: update=${calls.update} measure=${calls.measure} write=${calls.write} / total=${totalNodes}`,
       );
-      if (name !== "root color change") {
+      if (name !== "root color change" && name !== "root textColor change") {
         expect(calls.update).toBeLessThan(totalNodes);
       }
     }

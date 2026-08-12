@@ -106,14 +106,16 @@ rAF二重待ちのハックは、「DOMへ挿入した直後に同期的に計�
 | 葉ノードのテキスト編集 | 5 | 121 |
 | 葉ノードのstatus/value/icon/notes変更（4プロパティ一括） | 15 | 121 |
 | 中間ノード（depth 1）のcollapse切り替え | 2 | 121 |
-| ルートの色変更 | 0 | 121 |
+| ルートの色変更 | 121 | 121 |
+| ルートのtextColor変更 | 121 | 121 |
 
 観察事項:
 
 - 葉のテキスト編集は5（木の深さ4+1）に一致し、変更経路（葉→ルート）だけが再計算され、無関係な兄弟枝（このシナリオでは残り116ノード）は一切訪問されない。ローカリティは期待通り機能している。
 - status/value/icon/notes変更は15（5×3）になった。4つのプロパティを連続してセットしているが、`notes`のsetterは`_bumpContentVersion`を呼ばない設計（`updateNotes()`のコメント参照）である一方、`status`/`value`/`icon`はそれぞれ独立にバージョンをbumpするため、`batch()`で束ねられていないこの一括変更は変更経路を複数回（3回）再計算させている。これは正しさには影響しないが（Solidのmemoが最終的に収束した値を返すため）、`batch()`で包めば1回に減らせる可能性がある——最適化の余地として記録しておく。実装自体は変更しない（本フェーズはNon-goalsの通り計測のみ）。
 - 中間ノードのcollapse切り替えは2（そのノード自身＋ルートまでの祖先）で、期待通り局所的。この計測では`collapsed`セッターの二重rAF remeasure（展開時の子孫全体remeasure）はテストファイル全体で`requestAnimationFrame`をスタブしているため発火しない——collapse方向（`_bumpContentVersion`のみ、rAF不要な同期パス）だけを見ている点に注意。
-- ルートの色変更はupdate=0という結果になった。これは経路5にはならず0になったという点が重要な発見: `resolvedColor`は`_updateLayoutContent`/`computeLayout`の再計算経路に乗らない独立した下方向memoであり、`color`のsetterはレイアウトバージョンを一切bumpしない。つまり色変更単体では`readItemLayoutResult`を再度呼んでも何も再計算されず、`resolvedColor`を実際に読んでいる箇所（DOM描画側、`dom.text.style.color`など）が独立に更新される。ドキュメント本文の「ルートの色変更は全ノードに波及する」という想定（doc05の「継承チェーンに影響する変更」の記述）は、少なくともこの計測ハーネス（DOM書き込みを伴わない`_measureOwnContent`/`_writeOwnLayout`カウントのみ）では実証されなかった——実ブラウザでのDOM反映経路まで含めた計測ではない点に留意し、Phase 3以降で新実装と比較する際はこの限界を踏まえる。
+- ルートのcolor/textColor変更は、当初update=0という結果になった。これはテストハーネスの欠陥（`shape.js`モックの`update`が完全な空振り`vi.fn()`で、本物の`box.js`/`ellipse.js`が行う`item.resolvedColor`の読み取りを再現していなかったため、Solidの依存追跡がそもそも`color`シグナルへの依存を持たなかった）によるものと判明した。モックを実際に`item.resolvedColor`を読むよう修正したところ、update=121（全ノード）という結果になり、**doc05/doc08本文の前提「継承プロパティ（color/textColor/shape/layout）の変更は配下全体に波及する」が実測でも確認された**。`textColor`は`_applyOwnStyle()`が無条件で`resolvedTextColor`を読むため、モック修正なしでも同じ121という結果になり、上記の修正が正しかったことのクロスチェックにもなっている。
+- 結論: 現状の実装は「葉ノードの独立プロパティ変更・collapse切り替え」は良好に局所化されている一方、「継承プロパティ（color/textColor/shape/layout）の変更」は木のサイズに比例して全ノードを再計算する。これはdoc05.1/doc06.1が設計時に認識していた既知の制約と一致しており、doc08が動機として挙げる「収穫逓減」は主にこの継承チェーンのケースに当てはまる。Phase 3以降で新実装（再帰描画＋分離されたレイアウトmemo）を評価する際は、このcolor/textColor=121を基準値として比較する。
 
 ---
 
