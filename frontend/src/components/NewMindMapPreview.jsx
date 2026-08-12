@@ -1,5 +1,6 @@
-import { createEffect, createSignal, For } from "solid-js";
+import { createEffect, createSignal, For, Show } from "solid-js";
 import ItemNode from "../lib/mindmap/itemStore.js";
+import { TOGGLE_SIZE } from "../lib/mindmap/item.js";
 import { computeMapLayout } from "../lib/mindmap/layout/map.js";
 import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
 import { repo as shapeRepo } from "../lib/mindmap/shape/shape.js";
@@ -86,6 +87,30 @@ function textStyleFor(item) {
   return color ? { color } : {};
 }
 
+const D_MINUS = `M ${-(TOGGLE_SIZE - 2)} 0 L ${TOGGLE_SIZE - 2} 0`;
+const D_PLUS = `${D_MINUS} M 0 ${-(TOGGLE_SIZE - 2)} L 0 ${TOGGLE_SIZE - 2}`;
+
+// Minimal collapse/expand toggle, matching item.js's buildToggle() glyph
+// (a circle with a minus/plus path, same TOGGLE_SIZE imported directly
+// from item.js so the two engines can't drift). Clicking mutates the
+// preview store's `collapsed` signal directly -- there is no selection
+// or undo/redo integration yet, that lands with Phase 4's operation
+// integration (see docs/08-mindmap-engine-refactor.md).
+function ToggleControl(props) {
+  return (
+    <g
+      class="toggle"
+      transform={`translate(${props.position[0]},${props.position[1]})`}
+      onClick={() => {
+        props.item.collapsed = !props.item.collapsed;
+      }}
+    >
+      <circle cx="0" cy="0" r={TOGGLE_SIZE} />
+      <path d={props.item.collapsed ? D_PLUS : D_MINUS} />
+    </g>
+  );
+}
+
 function ItemNodeView(props) {
   let contentRef;
 
@@ -98,6 +123,12 @@ function ItemNodeView(props) {
       props.onMeasure,
     );
   });
+
+  // Memoized (not inlined into the Show below) so both the `when` guard
+  // and ToggleControl's `position` prop read the exact same computed
+  // value -- computing it twice risked one call seeing a stale
+  // connectorPaths reference relative to the other.
+  const togglePosition = () => togglePositionFor(props.layout.connectorPaths);
 
   return (
     <g
@@ -119,6 +150,16 @@ function ItemNodeView(props) {
           }
         </For>
       </g>
+      {/* Root's own toggle is never rendered: layoutRoot()'s connector
+          descriptors (computeRootConnectors) carry no togglePosition at
+          all, matching item.js/map.css's real behavior where the root
+          toggle is hidden outright (`svg > .item > .toggle { display:
+          none; }`). Guard on the resolved position itself, not just
+          children.length, so a null togglePosition (root, or any other
+          connector shape that omits it) never reaches ToggleControl. */}
+      <Show when={togglePosition()}>
+        <ToggleControl item={props.layout.item} position={togglePosition()} />
+      </Show>
       <foreignObject
         x={props.layout.item.contentPosition?.[0] ?? 0}
         y={props.layout.item.contentPosition?.[1] ?? 0}
@@ -154,12 +195,29 @@ function ItemNodeView(props) {
   );
 }
 
+// Single place both computePreviewTreeLayout() and the JSX recursion
+// read to decide which children are part of the visible tree -- mirrors
+// item.js's `!item.collapsed && item.children.forEach(...)` guard, kept
+// here rather than inlined so the "what counts as visible" definition
+// can't drift between the layout pass and the render pass.
+export function visiblePreviewChildren(item) {
+  return item.collapsed ? [] : item.childItems;
+}
+
+// Extracts the connector layout's togglePosition, shared by every
+// layout kind (graph/tree/map, see layout/*.js's writeConnectorPaths).
+// A collapsed item's connector descriptors carry only togglePosition
+// (no `d`), so this still resolves correctly while collapsed -- the
+// toggle glyph must stay addressable so the node can be re-expanded.
+export function togglePositionFor(connectorPaths) {
+  const withToggle = connectorPaths.find((path) => path.togglePosition);
+  return withToggle ? withToggle.togglePosition : null;
+}
+
 export function computePreviewTreeLayout(item, measuredSizes = new Map()) {
-  const childLayouts = item.collapsed
-    ? []
-    : item.childItems.map((child) =>
-        computePreviewTreeLayout(child, measuredSizes),
-      );
+  const childLayouts = visiblePreviewChildren(item).map((child) =>
+    computePreviewTreeLayout(child, measuredSizes),
+  );
   return computePreviewLayout(item, childLayouts, measuredSizes);
 }
 

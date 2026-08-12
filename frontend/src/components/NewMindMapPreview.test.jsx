@@ -9,6 +9,8 @@ import "../lib/mindmap/shape/underline.js";
 import {
   computePreviewTreeLayout,
   measureContentSize,
+  togglePositionFor,
+  visiblePreviewChildren,
 } from "./NewMindMapPreview.jsx";
 
 function previewTree() {
@@ -84,6 +86,48 @@ describe("computePreviewTreeLayout", () => {
     expect(right.contentSize).toEqual([180, 60]);
     expect(grandchild.contentSize).toEqual([110, 30]);
     expect(result.size[0]).toBeGreaterThan(260);
+  });
+});
+
+describe("toggle descriptor and collapsed signal boundary", () => {
+  it("returns null for the root's own connectors (root's toggle is never rendered, see map.css)", () => {
+    const { root } = previewTree();
+
+    const layout = computePreviewTreeLayout(root);
+
+    expect(togglePositionFor(layout.connectorPaths)).toBeNull();
+  });
+
+  it("keeps a togglePosition for a node with children, expanded or collapsed", () => {
+    const { root, right } = previewTree();
+
+    const expanded = computePreviewTreeLayout(root);
+    const rightExpanded = expanded.childLayouts.find(
+      (layout) => layout.item === right,
+    );
+    expect(togglePositionFor(rightExpanded.connectorPaths)).not.toBeNull();
+
+    right.collapsed = true;
+    const collapsed = computePreviewTreeLayout(root);
+    const rightCollapsed = collapsed.childLayouts.find(
+      (layout) => layout.item === right,
+    );
+    // The toggle glyph stays addressable while collapsed; only the
+    // connector line itself (`d`) disappears.
+    expect(togglePositionFor(rightCollapsed.connectorPaths)).not.toBeNull();
+    expect(rightCollapsed.connectorPaths.some((path) => path.d)).toBe(false);
+  });
+
+  it("visiblePreviewChildren tracks the collapsed signal directly", () => {
+    const { root } = previewTree();
+
+    expect(visiblePreviewChildren(root)).toEqual(root.childItems);
+
+    root.collapsed = true;
+    expect(visiblePreviewChildren(root)).toEqual([]);
+
+    root.collapsed = false;
+    expect(visiblePreviewChildren(root)).toEqual(root.childItems);
   });
 });
 

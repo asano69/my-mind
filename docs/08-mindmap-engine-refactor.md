@@ -359,3 +359,63 @@ Phase 3 progress note 6で可視subtreeだけをlayout対象にしたため、�
 
 - Toggleのclickはpreview fixtureに対する最小操作であり、まだ既存の`app.currentItem`/selection/historyとは接続していない。undo/redo対象のcollapse操作にするのはPhase 4以降の操作統合で扱う。
 - `foreignObject`の実ブラウザpaint timing検証は引き続き未実施。今回の変更でcollapse/expand時にlayout snapshotを再作成する入口はできたため、次はブラウザまたはbrowser-mode testで実測effectがexpand直後に正しいsizeへ収束するかを確認する。
+
+### Phase 3 progress note 8 — toggle rendering brought in sync with note 7
+
+Note 7 above described `togglePositionFor()`/`ToggleControl`/
+`visiblePreviewChildren()`, but `NewMindMapPreview.jsx` had not actually
+been updated to include them yet. This pass makes the code match:
+
+- `togglePositionFor(connectorPaths)` extracts the shared
+  `togglePosition` descriptor field (present whether or not the
+  connector also carries a `d`), so the toggle glyph stays addressable
+  even while a branch is collapsed.
+- `visiblePreviewChildren(item)` is now the single place both
+  `computePreviewTreeLayout()` and the JSX recursion read to decide
+  which children are part of the visible tree, replacing the inline
+  `item.collapsed ? [] : item.childItems` check.
+- `ToggleControl` renders the same minus/plus glyph as item.js's
+  `buildToggle()`, importing `TOGGLE_SIZE` directly from `item.js`
+  rather than redefining it, so the two engines can't drift apart on
+  this constant. Its click handler flips `item.collapsed` directly on
+  the preview store node -- still no selection/undo integration, per
+  note 7's own caveat.
+- `NewMindMapPreview.test.jsx` gained two tests: a togglePosition stays
+  defined across expand/collapse while `d` disappears once collapsed,
+  and `visiblePreviewChildren()` reacts to the `collapsed` signal.
+
+Still outstanding, unchanged from note 7: real browser/jsdom
+verification that the `foreignObject` measurement effect converges to
+the correct size immediately after an expand (the timing quirk already
+documented in item.js's `collapsed` setter and map.js's `show()`).
+`vitest.config.js` deliberately runs this project's tests under the
+`node` environment (no DOM), so this remains a manual or browser-mode
+check to do before Phase 4 wires this preview path into the real
+mouse/keyboard/clipboard integration.
+
+### Phase 3 progress note 9 — root toggle crash
+
+`?newEngine=1` crashed on mount with `can't access property 0,
+props.position is null`, thrown from `ToggleControl`. Root cause:
+`layoutRoot()`'s connector descriptors (`computeRootConnectors()`, see
+`layout/map.js`) never set a `togglePosition` field at all -- this
+matches the real engine, where `map.css` hides the root's own toggle
+unconditionally (`svg > .item > .toggle { display: none; }`; `map.js`'s
+`MapLayout.update()` only calls `writeRootConnectorPaths()` for root,
+never `positionToggle()`). `togglePositionFor()` therefore correctly
+returned `null` for the root, but the `Show` guard only checked
+`children.length > 0` -- true for the root -- so `ToggleControl` still
+mounted and immediately dereferenced a null `position` prop.
+
+Fixed by guarding `Show` on the resolved `togglePosition()` value
+itself rather than `children.length`, so any connector descriptor
+lacking a toggle position (currently just the root) skips rendering the
+control entirely instead of rendering it with a broken position. Pulled
+`togglePositionFor(props.layout.connectorPaths)` into a single local
+`togglePosition()` accessor read by both the `Show when` and
+`ToggleControl`'s `position` prop, so the two can't diverge if
+`connectorPaths` changes between reads.
+
+Added a regression test asserting `togglePositionFor()` returns `null`
+for the root's own layout result, pinning down the root-has-no-toggle
+behavior this fix relies on.
