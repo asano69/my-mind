@@ -56,6 +56,20 @@ describe("computePreviewTreeLayout", () => {
     expect(right.position[0]).toBeGreaterThan(root.contentPosition[0]);
   });
 
+  it("omits descendant layout snapshots when a node is collapsed", () => {
+    const { root, right, grandchild } = previewTree();
+    right.collapsed = true;
+
+    const result = computePreviewTreeLayout(root);
+    const rightLayout = result.childLayouts.find(
+      (layout) => layout.item === right,
+    );
+
+    expect(rightLayout.childLayouts).toEqual([]);
+    expect(rightLayout.connectorPaths.some((path) => path.d)).toBe(false);
+    expect(grandchild.size).toBeUndefined();
+  });
+
   it("uses measured content sizes when they are available", () => {
     const { root, right, grandchild } = previewTree();
     const measuredSizes = new Map([

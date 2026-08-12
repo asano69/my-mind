@@ -45,7 +45,9 @@ function ItemNode(props) {
 
   // Pure: reads signals, returns a value, touches no DOM.
   const childLayouts = createMemo(() =>
-    props.item.collapsed() ? [] : props.item.children().map((c) => c.layoutResult()),
+    props.item.collapsed()
+      ? []
+      : props.item.children().map((c) => c.layoutResult()),
   );
 
   // Side effect: runs after the DOM (this item's own content box) has
@@ -60,7 +62,9 @@ function ItemNode(props) {
   return (
     <g class="item">
       <foreignObject>
-        <div ref={contentRef} class="content">{props.item.text()}</div>
+        <div ref={contentRef} class="content">
+          {props.item.text()}
+        </div>
       </foreignObject>
       <For each={props.item.children()}>
         {(child) => <ItemNode item={child} />}
@@ -101,13 +105,13 @@ rAF二重待ちのハックは、「DOMへ挿入した直後に同期的に計�
 
 `frontend/src/lib/mindmap/layout-measurement.test.js`を実装し、深さ4×分岐3（121ノード）の木に対する現行実装（doc06.1完了時点、旧`_layoutResult`方式）のベースライン計測値を記録した。`_updateLayoutContent`/`_measureOwnContent`/`_writeOwnLayout`の呼び出し回数（update/measure/write は常に同数、1回の`readItemLayoutResult(root)`につき1アイテム最大1回ずつ呼ばれるため）:
 
-| シナリオ | update/measure/write | 全ノード数 |
-|---|---|---|
-| 葉ノードのテキスト編集 | 5 | 121 |
-| 葉ノードのstatus/value/icon/notes変更（4プロパティ一括） | 15 | 121 |
-| 中間ノード（depth 1）のcollapse切り替え | 2 | 121 |
-| ルートの色変更 | 121 | 121 |
-| ルートのtextColor変更 | 121 | 121 |
+| シナリオ                                                 | update/measure/write | 全ノード数 |
+| -------------------------------------------------------- | -------------------- | ---------- |
+| 葉ノードのテキスト編集                                   | 5                    | 121        |
+| 葉ノードのstatus/value/icon/notes変更（4プロパティ一括） | 15                   | 121        |
+| 中間ノード（depth 1）のcollapse切り替え                  | 2                    | 121        |
+| ルートの色変更                                           | 121                  | 121        |
+| ルートのtextColor変更                                    | 121                  | 121        |
 
 観察事項:
 
@@ -121,10 +125,10 @@ rAF二重待ちのハックは、「DOMへ挿入した直後に同期的に計�
 
 訪問数だけでは「体感できる遅延かどうか」が分からないため、`performance.now()`で実測時間を計測するテストケースを追加した（同ファイル内、781ノード＝深さ4×分岐5の木）。木の構築とウォームアップ用の1回目の`readItemLayoutResult(root)`はタイミング計測から除外している。
 
-| シナリオ | 実測時間（781ノード） |
-|---|---|
-| 葉ノードのテキスト編集 | 1.513ms |
-| ルートの色変更（全木伝播） | 39.391ms |
+| シナリオ                   | 実測時間（781ノード） |
+| -------------------------- | --------------------- |
+| 葉ノードのテキスト編集     | 1.513ms               |
+| ルートの色変更（全木伝播） | 39.391ms              |
 
 観察事項:
 
@@ -256,15 +260,15 @@ feature flag.
 
 ## フェーズ一覧
 
-| Phase | 内容 | 主な成果物 | リスク |
-|---|---|---|---|
-| 0 | 現状の仕様固定 | 既存テストを仕様として確定、計測シナリオ一覧 | なし |
-| 1 | データモデルの分離 | `itemStore.js`、DOM抜きのデータ操作テスト | 中 |
-| 2 | `<ItemNode>`導入（単一ノード、並行稼働） | feature flag、text/color/shapeの検証 | 低 |
-| 3 | 再帰描画とレイアウト分離 | 純粋関数化したlayout計算、`createEffect`ベースのDOM書き込み | 高 |
-| 4 | マウス/キーボード/クリップボード統合 | `MindMapCanvas`への統合、`currentItem`の一本化 | 中〜高 |
-| 5 | bridge patternの解体 | 不要になった`registerXxx`系APIの削除 | 低〜中 |
-| 6 | 旧エンジン削除 | `item.js`旧実装・手動versionカウンタ群の削除 | 低 |
+| Phase | 内容                                     | 主な成果物                                                  | リスク |
+| ----- | ---------------------------------------- | ----------------------------------------------------------- | ------ |
+| 0     | 現状の仕様固定                           | 既存テストを仕様として確定、計測シナリオ一覧                | なし   |
+| 1     | データモデルの分離                       | `itemStore.js`、DOM抜きのデータ操作テスト                   | 中     |
+| 2     | `<ItemNode>`導入（単一ノード、並行稼働） | feature flag、text/color/shapeの検証                        | 低     |
+| 3     | 再帰描画とレイアウト分離                 | 純粋関数化したlayout計算、`createEffect`ベースのDOM書き込み | 高     |
+| 4     | マウス/キーボード/クリップボード統合     | `MindMapCanvas`への統合、`currentItem`の一本化              | 中〜高 |
+| 5     | bridge patternの解体                     | 不要になった`registerXxx`系APIの削除                        | 低〜中 |
+| 6     | 旧エンジン削除                           | `item.js`旧実装・手動versionカウンタ群の削除                | 低     |
 
 各フェーズは、既存ドキュメント群（doc01〜doc07）と同じ運用方針で、1コミット/PRとして独立させ、動作確認してから次に進む。特にPhase 3は最もリスクが高いため、レイアウト種別（graph/tree/map）ごとにさらに細分化し、doc06.1のPhase 0が示した「計測して効果が出なければ中断する」という判断基準をここでも踏襲する——大量ノードでの再計算範囲が旧実装より悪化するようであれば、Phase 3を差し戻し、旧`_layoutResult`方式を維持したまま他の改善（doc07のような機能追加）を優先する。
 
@@ -331,3 +335,13 @@ Phase 3 progress note 4でpreviewのlayout snapshotを一旦同期計算に戻�
 
 - Vitestはnode環境のため、SVG内`foreignObject`の実ブラウザpaint timingはまだ検証できていない。今回の変更は「実測値を受け取ったlayout snapshotが再計算される」配線の確認までであり、doc06.1で問題になったcollapsed→expand直後の二重rAF remeasureが不要かどうかの判断は、ブラウザでの手動確認またはjsdom/browser test導入後に残す。
 - 現在のpreviewは静的fixture treeなので、次は測定signalとlayout snapshotの境界を保ったまま、collapse状態変更やtext変更のような実データsignal更新をpreview内で局所的に流せるかを確認する。
+
+### Phase 3 progress note 6 — collapsed preview subtrees stay unrendered
+
+Phase 3 progress note 5で実測sizeをlayoutへ戻す最小配線を入れた後、previewの再帰layoutが常に全子孫のlayout snapshotを作っていることが残っていた。旧エンジンではcollapsedノードの配下はlayout/描画対象から外れるため、新エンジンプレビュー側も同じ境界に揃えた。
+
+- `computePreviewTreeLayout(item, measuredSizes)`で、`item.collapsed`がtrueのときは子孫の`computePreviewTreeLayout()`を呼ばず、`childLayouts: []`として親layoutへ渡すようにした。
+- 既存の`computeMapLayout()`/`computeGraphLayout()`側は`item.children`を見てtoggle descriptorを返せるため、collapsedノード自身のtoggle位置計算は残しつつ、JSX再帰描画だけを止める形にしている。
+- `NewMindMapPreview.test.jsx`にcollapsedノード配下のlayout snapshotが生成されないこと、孫ノードの`size`へ副作用的に書き込まれないことを確認する回帰テストを追加した。
+
+これでpreviewのpost-order layout足場は、展開中の可視subtreeだけを再帰するようになった。Phase 3の次段階では、この境界を保ったまま測定effectの依存範囲とconnector/toggle描画の分離を進める。

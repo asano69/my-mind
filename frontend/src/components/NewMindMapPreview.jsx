@@ -155,9 +155,11 @@ function ItemNodeView(props) {
 }
 
 export function computePreviewTreeLayout(item, measuredSizes = new Map()) {
-  const childLayouts = item.childItems.map((child) =>
-    computePreviewTreeLayout(child, measuredSizes),
-  );
+  const childLayouts = item.collapsed
+    ? []
+    : item.childItems.map((child) =>
+        computePreviewTreeLayout(child, measuredSizes),
+      );
   return computePreviewLayout(item, childLayouts, measuredSizes);
 }
 
