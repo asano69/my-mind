@@ -6,7 +6,8 @@
 // (memo) inheritance/aggregation getters, but never touches an SVG or
 // HTML element -- nothing in this file imports html.js/svg.js. item.js
 // still owns rendering until a later phase replaces it with JSX (see
-// doc08's Phase 2 onward); this module is only read by tests today.
+// doc08's Phase 2 onward); NewMindMapPreview.jsx (behind the
+// ?newEngine=1 flag) is the first real consumer.
 //
 // Field-for-field this mirrors item.js's own signal-backed properties
 // (text/notes/collapsed/icon/url/side/color/textColor/value/status/
@@ -18,11 +19,41 @@
 // plan -- they already only touch `.side`/`.shape`/`.children`/
 // `.isRoot`, which this node exposes with the same API, so they can be
 // wired up against ItemNode unchanged in a later phase.
-import { createSignal, batch } from "solid-js";
+//
+// Phase 3.5 (see docs/08-mindmap-engine-refactor.md) adds layoutResult:
+// a per-item recursive layout memo mirroring item.js's own proven
+// _layoutResult (docs/06.1-recursive-memo-layout-refactor.md). A parent
+// reads a child's layoutResult() directly from inside its own
+// computation, so post-order evaluation is guaranteed by plain
+// synchronous function calls, not by Solid's scheduler or by JSX mount
+// order. This replaces the plain recursive computePreviewTreeLayout()
+// function NewMindMapPreview.jsx used to own -- that approach recomputed
+// the whole visible tree from scratch on every change (see doc08's
+// Phase 3.4 post-mortem), while this memo only recomputes the changed
+// item and its ancestors.
+//
+// Hard rule enforced throughout this file: layoutResult's computation
+// (_computeLayout() below) must only READ signals and write plain
+// (non-reactive) fields -- it must never call a signal setter or touch
+// the DOM. Writing a signal from inside a memo's own computation is
+// exactly what caused doc08's Phase 3.4 recursion crash. The one signal
+// this file exposes for layout purposes (_measuredSize, written via
+// setMeasuredSize()) is only ever meant to be called from a component's
+// createEffect, strictly after the DOM has actually been committed.
+import { createSignal, createMemo, createRoot, batch } from "solid-js";
 import { repo as shapeRepo } from "./shape/shape.js";
 import { repo as layoutRepo } from "./layout/layout.js";
+import { computeMapLayout } from "./layout/map.js";
 
 const DEFAULT_COLOR = "#999";
+// Placeholder content-box sizes used until an item's real DOM has been
+// measured at least once (see setMeasuredSize()/_computeLayout()
+// below). Root renders with a larger font-size (see map.css), hence
+// the bigger default -- these replace the ROOT_CONTENT_SIZE/
+// CHILD_CONTENT_SIZE constants NewMindMapPreview.jsx used to own
+// before layoutResult moved the measurement bookkeeping into the store.
+const DEFAULT_ROOT_CONTENT_SIZE = [220, 72];
+const DEFAULT_CHILD_CONTENT_SIZE = [150, 44];
 
 function generateId() {
   let str = "";
@@ -107,10 +138,145 @@ export default class ItemNode {
     this._layout = layout;
     this._setLayout = setLayout;
 
-    // Resolved values are computed in getters below instead of cached in
-    // createMemo(). The preview tree is populated from saved JSON after
-    // construction, and these accessors must always reflect those post-load
-    // writes before the first JSX layout/render pass.
+    // Resolved values (resolvedColor/resolvedTextColor/resolvedShape/
+    // resolvedLayout/resolvedValue/resolvedStatus) are computed in
+    // getters below instead of cached in createMemo(). The preview tree
+    // is populated from saved JSON after construction, and these
+    // accessors must always reflect those post-load writes before the
+    // first JSX layout/render pass.
+
+    // Measured size of this item's own rendered content box, written
+    // only from a component's createEffect once it has actually
+    // mounted (see NewMindMapPreview.jsx's ItemNodeView) -- never from
+    // inside layoutResult's own computation. null until the first real
+    // measurement, so _computeLayout() below falls back to a
+    // placeholder size instead of collapsing to 0x0 on the first pass.
+    const [measuredSize, setMeasuredSize] = createSignal(null);
+    this._measuredSize = measuredSize;
+    // Wrapped so an unchanged measurement (the common case once a node
+    // has stabilized) is a no-op rather than writing a fresh array
+    // reference every time -- a plain createSignal setter would
+    // otherwise invalidate layoutResult (and every ancestor's) on every
+    // resize-observer-style tick even when nothing actually changed.
+    this.setMeasuredSize = (size) => {
+      const current = measuredSize();
+      if (current && current[0] === size[0] && current[1] === size[1]) {
+        return;
+      }
+      setMeasuredSize(size);
+    };
+
+    // contentSize/contentPosition/position/size are plain (non-signal)
+    // fields written by the pure layout functions in layout/*.js
+    // (computeMapLayout()/computeGraphLayout(), see
+    // docs/08-mindmap-engine-refactor.md's Phase 3.1-3.3 progress
+    // notes) as a side effect of _computeLayout() below. They are left
+    // undefined until layoutResult() is first pulled for this item --
+    // an item hidden behind a collapsed ancestor is never pulled, so
+    // its fields deliberately stay undefined rather than defaulting to
+    // some placeholder, mirroring item.js's own "detached/never-laid-
+    // out item" behavior. Anything outside the post-order pass (e.g.
+    // JSX) that reads them must first read layoutResult() itself in the
+    // same tracked scope, or it will not notice when these plain fields
+    // change -- see NewMindMapPreview.jsx's ItemNodeView for the pattern.
+
+    // Per-item recursive layout memo (see this file's header comment
+    // and docs/08-mindmap-engine-refactor.md's Phase 3.4/3.5). Wrapped
+    // in its own createRoot for the same reason item.js's own memos
+    // are (see that file's constructor comment): a memo created outside
+    // a component tree needs an explicit owner or Solid warns it will
+    // never be disposed.
+    createRoot((dispose) => {
+      this._disposeLayoutMemo = dispose;
+      this.layoutResult = createMemo(() => this._computeLayout());
+    });
+  }
+
+  // Resolves the layout algorithm used to compute this item's own
+  // position/connectors. Unlike the public resolvedLayout getter below,
+  // this never throws for a disconnected item -- it falls back to the
+  // "map" layout instead, so a node whose ancestor hasn't had its
+  // layout signal set yet doesn't crash layoutResult(). Mirrors the
+  // fallback NewMindMapPreview.jsx's old previewLayoutFor() used before
+  // this memo moved into the store itself.
+  _layoutForCompute() {
+    let node = this;
+    while (node) {
+      if (node._layout()) {
+        return node._layout();
+      }
+      node = node.parent;
+    }
+    return layoutRepo.get("map");
+  }
+
+  // Placeholder content-box size used until setMeasuredSize() has been
+  // called at least once for this item (see the constructor's comment
+  // on _measuredSize above). Public (no underscore) since components
+  // read this directly to size a first-paint foreignObject before any
+  // real measurement exists.
+  defaultContentSize() {
+    return this.isRoot
+      ? DEFAULT_ROOT_CONTENT_SIZE
+      : DEFAULT_CHILD_CONTENT_SIZE;
+  }
+
+  // Pure computation: reads signals (this item's own, and -- via the
+  // recursive layoutResult() calls below -- every visible descendant's
+  // too), writes only plain (non-reactive) fields on this and
+  // descendant items, and returns a layout snapshot. Must never call a
+  // signal setter or touch the DOM -- see this file's header comment.
+  _computeLayout() {
+    this.contentSize = this._measuredSize() ?? this.defaultContentSize();
+
+    // Post-order: pull every visible child's layoutResult() first, so
+    // each child's `.size` (written inside its own _computeLayout()) is
+    // already set by the time computeMapLayout() below reads it via
+    // computeChildrenBBox(). Collapsed items are excluded here exactly
+    // like item.js's own `!item.collapsed` guard -- their subtree's
+    // layoutResult is never pulled while collapsed, so it never
+    // recomputes on an unrelated change while hidden.
+    const childLayouts = this.collapsed
+      ? []
+      : this.childItems.map((child) => child.layoutResult());
+
+    const result = computeMapLayout(this._layoutForCompute(), this);
+    // layoutRoot() reports {width, height} directly; the non-root graph
+    // layout path only reports totalHeight (see layout/graph.js) and
+    // leaves size to be derived from contentPosition/contentSize and
+    // children's own positions -- same fallback
+    // NewMindMapPreview.jsx's old computedSizeFor() used.
+    this.size = [
+      result.width ?? this._fallbackComputedWidth(),
+      result.height ?? this._fallbackComputedHeight(),
+    ];
+
+    return {
+      item: this,
+      childLayouts,
+      connectorPaths: result.connectorPaths,
+      size: this.size,
+    };
+  }
+
+  _fallbackComputedWidth() {
+    let width = this.contentPosition[0] + this.contentSize[0];
+    if (!this.collapsed) {
+      for (const child of this.childItems) {
+        width = Math.max(width, (child.position?.[0] ?? 0) + child.size[0]);
+      }
+    }
+    return width;
+  }
+
+  _fallbackComputedHeight() {
+    let height = this.contentPosition[1] + this.contentSize[1];
+    if (!this.collapsed) {
+      for (const child of this.childItems) {
+        height = Math.max(height, (child.position?.[1] ?? 0) + child.size[1]);
+      }
+    }
+    return height;
   }
 
   get id() {

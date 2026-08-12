@@ -7,7 +7,6 @@ import "../lib/mindmap/shape/box.js";
 import "../lib/mindmap/shape/ellipse.js";
 import "../lib/mindmap/shape/underline.js";
 import {
-  computePreviewTreeLayout,
   measureContentSize,
   rootFromMapData,
   togglePositionFor,
@@ -37,11 +36,11 @@ function previewTree() {
   return { root, left, right, grandchild };
 }
 
-describe("computePreviewTreeLayout", () => {
+describe("ItemNode.layoutResult (Phase 3.5)", () => {
   it("computes descendants before root and exposes connector descriptors", () => {
     const { root, left, right, grandchild } = previewTree();
 
-    const result = computePreviewTreeLayout(root);
+    const result = root.layoutResult();
 
     expect(result.item).toBe(root);
     expect(result.childLayouts.map((layout) => layout.item)).toEqual([
@@ -72,7 +71,7 @@ describe("computePreviewTreeLayout", () => {
     root.insertChild(first);
     root.insertChild(second);
 
-    computePreviewTreeLayout(root);
+    root.layoutResult();
 
     expect(first.position).not.toBe(second.position);
     expect(first.position[1]).toBe(0);
@@ -83,7 +82,7 @@ describe("computePreviewTreeLayout", () => {
     const { root, right, grandchild } = previewTree();
     right.collapsed = true;
 
-    const result = computePreviewTreeLayout(root);
+    const result = root.layoutResult();
     const rightLayout = result.childLayouts.find(
       (layout) => layout.item === right,
     );
@@ -95,18 +94,30 @@ describe("computePreviewTreeLayout", () => {
 
   it("uses measured content sizes when they are available", () => {
     const { root, right, grandchild } = previewTree();
-    const measuredSizes = new Map([
-      [root.id, [260, 90]],
-      [right.id, [180, 60]],
-      [grandchild.id, [110, 30]],
-    ]);
+    root.setMeasuredSize([260, 90]);
+    right.setMeasuredSize([180, 60]);
+    grandchild.setMeasuredSize([110, 30]);
 
-    const result = computePreviewTreeLayout(root, measuredSizes);
+    const result = root.layoutResult();
 
     expect(root.contentSize).toEqual([260, 90]);
     expect(right.contentSize).toEqual([180, 60]);
     expect(grandchild.contentSize).toEqual([110, 30]);
     expect(result.size[0]).toBeGreaterThan(260);
+  });
+
+  it("recomputes the changed child and its ancestors, but not an untouched sibling (Phase 3.5 locality)", () => {
+    const { root, left, right, grandchild } = previewTree();
+    root.layoutResult(); // warm up
+
+    const leftBefore = left.layoutResult();
+    right.setMeasuredSize([300, 50]);
+    root.layoutResult();
+
+    // right's own memo, and root's (right's only ancestor), must have
+    // recomputed -- but left's memo, never invalidated, must return the
+    // exact same cached object reference as before.
+    expect(left.layoutResult()).toBe(leftBefore);
   });
 });
 
@@ -114,7 +125,7 @@ describe("toggle descriptor and collapsed signal boundary", () => {
   it("returns null for the root's own connectors (root's toggle is never rendered, see map.css)", () => {
     const { root } = previewTree();
 
-    const layout = computePreviewTreeLayout(root);
+    const layout = root.layoutResult();
 
     expect(togglePositionFor(layout.connectorPaths)).toBeNull();
   });
@@ -122,14 +133,14 @@ describe("toggle descriptor and collapsed signal boundary", () => {
   it("keeps a togglePosition for a node with children, expanded or collapsed", () => {
     const { root, right } = previewTree();
 
-    const expanded = computePreviewTreeLayout(root);
+    const expanded = root.layoutResult();
     const rightExpanded = expanded.childLayouts.find(
       (layout) => layout.item === right,
     );
     expect(togglePositionFor(rightExpanded.connectorPaths)).not.toBeNull();
 
     right.collapsed = true;
-    const collapsed = computePreviewTreeLayout(root);
+    const collapsed = root.layoutResult();
     const rightCollapsed = collapsed.childLayouts.find(
       (layout) => layout.item === right,
     );

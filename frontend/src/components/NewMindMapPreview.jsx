@@ -1,13 +1,6 @@
-import {
-  createEffect,
-  createResource,
-  createSignal,
-  For,
-  Show,
-} from "solid-js";
+import { createEffect, createResource, For, Show } from "solid-js";
 import ItemNode from "../lib/mindmap/itemStore.js";
 import { TOGGLE_SIZE } from "../lib/mindmap/item.js";
-import { computeMapLayout } from "../lib/mindmap/layout/map.js";
 import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
 import { repo as shapeRepo } from "../lib/mindmap/shape/shape.js";
 import { loadByUuid } from "../lib/mindmap/backend/pocketbase.js";
@@ -17,8 +10,11 @@ import "../lib/mindmap/shape/ellipse.js";
 import "../lib/mindmap/shape/underline.js";
 import mapCss from "../lib/mindmap/map.css?raw";
 
-const ROOT_CONTENT_SIZE = [220, 72];
-const CHILD_CONTENT_SIZE = [150, 44];
+// Phase 3.5 (see docs/08-mindmap-engine-refactor.md): layout computation
+// (computeMapLayout, content-size fallbacks, measured-size bookkeeping)
+// moved into itemStore.js's ItemNode.layoutResult/defaultContentSize/
+// setMeasuredSize. This file only reads that memo and writes measured
+// sizes back to it from a createEffect -- see ItemNodeView below.
 
 function shapeStyle(item) {
   const raw = item.color;
@@ -41,52 +37,6 @@ function shapeStyle(item) {
 
   style["border-color"] = resolved;
   return style;
-}
-
-function fallbackContentSizeFor(item) {
-  return item.isRoot ? ROOT_CONTENT_SIZE : CHILD_CONTENT_SIZE;
-}
-
-function contentSizeFor(item, measuredSizes = new Map()) {
-  return measuredSizes.get(item.id) ?? fallbackContentSizeFor(item);
-}
-
-function previewLayoutFor(item) {
-  let node = item;
-  while (node) {
-    if (node.layout) {
-      return node.layout;
-    }
-    node = node.parent;
-  }
-  return layoutRepo.get("map");
-}
-
-function computedSizeFor(item, layoutResult) {
-  let width = item.contentPosition[0] + item.contentSize[0];
-  let height = item.contentPosition[1] + item.contentSize[1];
-  if (!item.collapsed) {
-    for (const child of item.childItems) {
-      width = Math.max(width, (child.position?.[0] ?? 0) + child.size[0]);
-      height = Math.max(height, (child.position?.[1] ?? 0) + child.size[1]);
-    }
-  }
-  return [layoutResult.width ?? width, layoutResult.height ?? height];
-}
-
-function computePreviewLayout(item, childLayouts, measuredSizes) {
-  item.contentSize = contentSizeFor(item, measuredSizes);
-  for (const childLayout of childLayouts) {
-    childLayout.item.size = childLayout.size;
-  }
-  const result = computeMapLayout(previewLayoutFor(item), item);
-  item.size = computedSizeFor(item, result);
-  return {
-    item,
-    childLayouts,
-    connectorPaths: result.connectorPaths,
-    size: item.size,
-  };
 }
 
 function textStyleFor(item) {
@@ -164,34 +114,62 @@ function ToggleControl(props) {
   );
 }
 
+// Renders one item and recurses into its visible children. Reads
+// props.item.layoutResult() itself (rather than receiving a pre-computed
+// snapshot from the parent) so that <For>'s default identity-based
+// reconciliation below can key each child on the stable ItemNode
+// instance -- if the parent instead passed down a fresh layout snapshot
+// object on every recompute, <For> would see a "new" object at that
+// index even for an untouched child and needlessly unmount/remount its
+// whole subtree (see docs/08-mindmap-engine-refactor.md's Phase 3.5
+// design notes).
+//
+// contentPosition/contentSize/position (see itemStore.js) are plain,
+// non-reactive fields written as a side effect of layoutResult's own
+// computation -- reading them safely requires first reading layout()
+// (the memo itself) in the same tracked scope, which is why every
+// accessor below that touches one of those fields calls layout() first.
 function ItemNodeView(props) {
   let contentRef;
+  const layout = () => props.item.layoutResult();
 
+  const box = () => {
+    layout();
+    const item = props.item;
+    return [
+      item.contentPosition?.[0] ?? 0,
+      item.contentPosition?.[1] ?? 0,
+      item.contentSize?.[0] ?? 0,
+      item.contentSize?.[1] ?? 0,
+    ];
+  };
+
+  const underlineD = () => {
+    layout();
+    return underlinePathFor(props.item);
+  };
+
+  const togglePosition = () => togglePositionFor(layout().connectorPaths);
+
+  // The ONLY signal write for this item: strictly after Solid has
+  // committed contentRef to the DOM, in an effect -- never inside
+  // layoutResult's own computation (see itemStore.js's _computeLayout()
+  // comment and this file's header note on Phase 3.4's post-mortem).
   createEffect(() => {
-    const item = props.layout.item;
-    measureAndStoreSize(
-      item,
-      contentRef,
-      fallbackContentSizeFor(item),
-      props.onMeasure,
-    );
+    const item = props.item;
+    const measured = measureContentSize(contentRef, item.defaultContentSize());
+    item.setMeasuredSize(measured);
   });
-
-  // Memoized (not inlined into the Show below) so both the `when` guard
-  // and ToggleControl's `position` prop read the exact same computed
-  // value -- computing it twice risked one call seeing a stale
-  // connectorPaths reference relative to the other.
-  const togglePosition = () => togglePositionFor(props.layout.connectorPaths);
 
   return (
     <g
       class="item"
-      data-shape={props.layout.item.resolvedShape.id}
-      data-align={alignmentFor(props.layout.item)}
-      transform={props.transform ?? ""}
+      data-shape={props.item.resolvedShape.id}
+      data-align={alignmentFor(props.item)}
+      transform={props.transform ? props.transform() : ""}
     >
       <g class="connectors">
-        <For each={props.layout.connectorPaths}>
+        <For each={layout().connectorPaths}>
           {(pathInfo) =>
             pathInfo.d ? (
               <path
@@ -212,61 +190,55 @@ function ItemNodeView(props) {
           children.length, so a null togglePosition (root, or any other
           connector shape that omits it) never reaches ToggleControl. */}
       <Show when={togglePosition()}>
-        <ToggleControl item={props.layout.item} position={togglePosition()} />
+        <ToggleControl item={props.item} position={togglePosition()} />
       </Show>
-      <Show when={props.layout.item.resolvedShape.id === "underline"}>
+      <Show when={props.item.resolvedShape.id === "underline"}>
         <path
           class="shape-underline"
-          d={underlinePathFor(props.layout.item)}
-          stroke={props.layout.item.resolvedColor}
+          d={underlineD()}
+          stroke={props.item.resolvedColor}
           fill="none"
           stroke-width="2"
         />
       </Show>
-      <foreignObject
-        x={props.layout.item.contentPosition?.[0] ?? 0}
-        y={props.layout.item.contentPosition?.[1] ?? 0}
-        width={
-          props.layout.item.contentSize?.[0] ??
-          contentSizeFor(props.layout.item)[0]
-        }
-        height={
-          props.layout.item.contentSize?.[1] ??
-          contentSizeFor(props.layout.item)[1]
-        }
-      >
-        <div
-          ref={contentRef}
-          class="content"
-          style={shapeStyle(props.layout.item)}
-        >
-          <Show when={hasStatus(props.layout.item)}>
-            <span class={statusClassFor(props.layout.item)} />
+      <foreignObject x={box()[0]} y={box()[1]} width={box()[2]} height={box()[3]}>
+        <div ref={contentRef} class="content" style={shapeStyle(props.item)}>
+          <Show when={hasStatus(props.item)}>
+            <span class={statusClassFor(props.item)} />
           </Show>
-          <Show when={props.layout.item.value !== null}>
-            <span class="value">{valueTextFor(props.layout.item)}</span>
+          <Show when={props.item.value !== null}>
+            <span class="value">{valueTextFor(props.item)}</span>
           </Show>
-          <Show when={props.layout.item.icon}>
-            <span class={`icon fa ${props.layout.item.icon}`} />
+          <Show when={props.item.icon}>
+            <span class={`icon fa ${props.item.icon}`} />
           </Show>
           <div
             class="text"
-            style={textStyleFor(props.layout.item)}
-            innerHTML={props.layout.item.text}
+            style={textStyleFor(props.item)}
+            innerHTML={props.item.text}
           />
-          <Show when={hasNotes(props.layout.item)}>
+          <Show when={hasNotes(props.item)}>
             <div class="notes" aria-label="Has notes">
               📎
             </div>
           </Show>
         </div>
       </foreignObject>
-      <For each={props.layout.childLayouts}>
-        {(childLayout) => (
+      <For each={visiblePreviewChildren(props.item)}>
+        {(child) => (
           <ItemNodeView
-            layout={childLayout}
-            transform={`translate(${childLayout.item.position?.[0] ?? 0},${childLayout.item.position?.[1] ?? 0})`}
-            onMeasure={props.onMeasure}
+            item={child}
+            // Bound to the PARENT's own layout() (not the child's): a
+            // child's `position` field is written as a side effect of
+            // ITS PARENT's _computeLayout(), not its own -- see
+            // itemStore.js's layoutChildren() usage. Passed as an
+            // accessor (not a plain string) so <For> can still key this
+            // entry on `child` itself for reconciliation, while the
+            // transform attribute stays live.
+            transform={() => {
+              layout();
+              return `translate(${child.position?.[0] ?? 0},${child.position?.[1] ?? 0})`;
+            }}
           />
         )}
       </For>
@@ -274,11 +246,11 @@ function ItemNodeView(props) {
   );
 }
 
-// Single place both computePreviewTreeLayout() and the JSX recursion
-// read to decide which children are part of the visible tree -- mirrors
-// item.js's `!item.collapsed && item.children.forEach(...)` guard, kept
-// here rather than inlined so the "what counts as visible" definition
-// can't drift between the layout pass and the render pass.
+// Single place both layoutResult()'s computation (see itemStore.js) and
+// the JSX recursion above read to decide which children are part of the
+// visible tree -- mirrors item.js's `!item.collapsed && item.children
+// .forEach(...)` guard, kept here rather than inlined so the "what
+// counts as visible" definition can't drift between the two.
 export function visiblePreviewChildren(item) {
   return item.collapsed ? [] : item.childItems;
 }
@@ -293,13 +265,6 @@ export function togglePositionFor(connectorPaths) {
   return withToggle ? withToggle.togglePosition : null;
 }
 
-export function computePreviewTreeLayout(item, measuredSizes = new Map()) {
-  const childLayouts = visiblePreviewChildren(item).map((child) =>
-    computePreviewTreeLayout(child, measuredSizes),
-  );
-  return computePreviewLayout(item, childLayouts, measuredSizes);
-}
-
 export function measureContentSize(element, fallbackSize) {
   if (!element) {
     return fallbackSize;
@@ -311,15 +276,6 @@ export function measureContentSize(element, fallbackSize) {
     Math.max(element.offsetHeight || 0, element.scrollHeight || 0),
   );
   return [width || fallbackSize[0], height || fallbackSize[1]];
-}
-
-function sameSize(a, b) {
-  return a[0] === b[0] && a[1] === b[1];
-}
-
-function measureAndStoreSize(item, element, fallbackSize, updateMeasuredSize) {
-  const measured = measureContentSize(element, fallbackSize);
-  updateMeasuredSize(item.id, measured);
 }
 
 export function createPreviewRoot(title) {
@@ -364,24 +320,6 @@ export default function NewMindMapPreview(props) {
     () => ({ uuid: props.uuid ?? null, title: props.title }),
     ({ uuid, title }) => loadPreviewRoot(uuid, title),
   );
-  const [measuredSizes, setMeasuredSizes] = createSignal(new Map());
-  const updateMeasuredSize = (id, size) => {
-    setMeasuredSizes((current) => {
-      const existing = current.get(id);
-      if (existing && sameSize(existing, size)) {
-        return current;
-      }
-      const next = new Map(current);
-      next.set(id, size);
-      return next;
-    });
-  };
-  const layout = () => {
-    const loadedRoot = root();
-    return loadedRoot
-      ? computePreviewTreeLayout(loadedRoot, measuredSizes())
-      : null;
-  };
 
   return (
     <svg
@@ -392,19 +330,16 @@ export default function NewMindMapPreview(props) {
     >
       <style>{mapCss}</style>
       <Show
-        when={layout()}
+        when={root()}
         fallback={
           <text class="content" x="40" y="64">
             Loading map...
           </text>
         }
       >
-        {(currentLayout) => (
+        {(loadedRoot) => (
           <g transform="translate(40,40)">
-            <ItemNodeView
-              layout={currentLayout()}
-              onMeasure={updateMeasuredSize}
-            />
+            <ItemNodeView item={loadedRoot()} />
           </g>
         )}
       </Show>
