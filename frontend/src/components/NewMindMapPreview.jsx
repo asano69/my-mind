@@ -7,6 +7,7 @@ import {
   onMount,
 } from "solid-js";
 import ItemNode from "../lib/mindmap/itemStore.js";
+import { itemStateClassList } from "../lib/mindmap/itemSelection.js";
 import { TOGGLE_SIZE } from "../lib/mindmap/item.js";
 import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
 import { repo as shapeRepo } from "../lib/mindmap/shape/shape.js";
@@ -176,6 +177,7 @@ function ItemNodeView(props) {
   return (
     <g
       class="item"
+      classList={itemStateClassList(props.item)}
       data-shape={props.item.resolvedShape.id}
       data-align={alignmentFor(props.item)}
       transform={props.transform ? props.transform() : ""}
