@@ -15,7 +15,12 @@ function classList() {
 }
 
 function node() {
-  const attrs = new Map();
+  // globalThis.Map, not the mindmap Map class this file imports below
+  // (`const { default: Map } = await import("./map.js")`) -- that import
+  // shadows the built-in Map within this module, so a plain `new Map()`
+  // here would construct a mindmap Map instance (no .set()) instead of a
+  // JS Map. Same fix item.test.js's own node() helper already applies.
+  const attrs = new globalThis.Map();
   return {
     classList: classList(),
     dataset: {},
@@ -80,6 +85,21 @@ function buildTree(depth, width) {
   const map = new Map();
   const root = new Item();
   root.parent = map;
+  // buildTree() wires the tree by hand (root.parent = map) instead of
+  // going through Map's own `set root(root)`, so root never gets the
+  // explicit layout Map's constructor normally assigns to its internal
+  // root. Without it, resolvedLayout resolves to null for the whole
+  // tree (no Item ancestor to inherit from), and computeLayout()'s
+  // "!item._resolvedLayout()" guard bails out before ever calling
+  // _updateLayoutContent/_measureOwnContent/_writeOwnLayout -- silently
+  // making every scenario below measure zero, regardless of the real
+  // implementation's locality. Matches item.test.js's own stand-in
+  // layout object (id/computeAlignment/update) used for the same reason.
+  root.layout = {
+    id: "map",
+    computeAlignment: () => "left",
+    update: () => {},
+  };
   function grow(item, remaining) {
     if (remaining === 0) return;
     for (let i = 0; i < width; i++) {

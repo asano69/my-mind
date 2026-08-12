@@ -97,6 +97,24 @@ rAF二重待ちのハックは、「DOMへ挿入した直後に同期的に計�
 
 リスク: なし。
 
+### Phase 0 progress note
+
+`frontend/src/lib/mindmap/layout-measurement.test.js`を実装し、深さ4×分岐3（121ノード）の木に対する現行実装（doc06.1完了時点、旧`_layoutResult`方式）のベースライン計測値を記録した。`_updateLayoutContent`/`_measureOwnContent`/`_writeOwnLayout`の呼び出し回数（update/measure/write は常に同数、1回の`readItemLayoutResult(root)`につき1アイテム最大1回ずつ呼ばれるため）:
+
+| シナリオ | update/measure/write | 全ノード数 |
+|---|---|---|
+| 葉ノードのテキスト編集 | 5 | 121 |
+| 葉ノードのstatus/value/icon/notes変更（4プロパティ一括） | 15 | 121 |
+| 中間ノード（depth 1）のcollapse切り替え | 2 | 121 |
+| ルートの色変更 | 0 | 121 |
+
+観察事項:
+
+- 葉のテキスト編集は5（木の深さ4+1）に一致し、変更経路（葉→ルート）だけが再計算され、無関係な兄弟枝（このシナリオでは残り116ノード）は一切訪問されない。ローカリティは期待通り機能している。
+- status/value/icon/notes変更は15（5×3）になった。4つのプロパティを連続してセットしているが、`notes`のsetterは`_bumpContentVersion`を呼ばない設計（`updateNotes()`のコメント参照）である一方、`status`/`value`/`icon`はそれぞれ独立にバージョンをbumpするため、`batch()`で束ねられていないこの一括変更は変更経路を複数回（3回）再計算させている。これは正しさには影響しないが（Solidのmemoが最終的に収束した値を返すため）、`batch()`で包めば1回に減らせる可能性がある——最適化の余地として記録しておく。実装自体は変更しない（本フェーズはNon-goalsの通り計測のみ）。
+- 中間ノードのcollapse切り替えは2（そのノード自身＋ルートまでの祖先）で、期待通り局所的。この計測では`collapsed`セッターの二重rAF remeasure（展開時の子孫全体remeasure）はテストファイル全体で`requestAnimationFrame`をスタブしているため発火しない——collapse方向（`_bumpContentVersion`のみ、rAF不要な同期パス）だけを見ている点に注意。
+- ルートの色変更はupdate=0という結果になった。これは経路5にはならず0になったという点が重要な発見: `resolvedColor`は`_updateLayoutContent`/`computeLayout`の再計算経路に乗らない独立した下方向memoであり、`color`のsetterはレイアウトバージョンを一切bumpしない。つまり色変更単体では`readItemLayoutResult`を再度呼んでも何も再計算されず、`resolvedColor`を実際に読んでいる箇所（DOM描画側、`dom.text.style.color`など）が独立に更新される。ドキュメント本文の「ルートの色変更は全ノードに波及する」という想定（doc05の「継承チェーンに影響する変更」の記述）は、少なくともこの計測ハーネス（DOM書き込みを伴わない`_measureOwnContent`/`_writeOwnLayout`カウントのみ）では実証されなかった——実ブラウザでのDOM反映経路まで含めた計測ではない点に留意し、Phase 3以降で新実装と比較する際はこの限界を踏まえる。
+
 ---
 
 ### Phase 1 — データモデルの分離（Item = プレーンなreactiveデータ）
