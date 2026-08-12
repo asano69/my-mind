@@ -1,4 +1,13 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+// Use the synchronous dist build (same workaround as item.test.js/
+// action.item.test.js/title.test.js) so a memo's recomputation is
+// visible to a plain synchronous read immediately after the signal
+// write that invalidated it. The default "solid-js" export schedules
+// some of this work on a microtask, which this file's synchronous
+// assertions (write an ancestor's signal, then immediately read a
+// descendant memo) can't observe.
+vi.mock("solid-js", async () => await import("solid-js/dist/solid.js"));
 
 // Registers shape/layout kinds into their repos (see shape/shape.js's
 // and layout/layout.js's `repo` Maps), the same side-effect-import
