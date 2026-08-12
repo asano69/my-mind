@@ -153,6 +153,47 @@ doc08本文が挙げている本来の動機は性能ではなくDX（開発体�
 
 リスク: 中。既存の`Item`クラスが担っていた責務のうち「データ」と「DOM」をどこで線引きするかが今後の全フェーズに影響するため、ここを慎重に設計する。特に`side`のような非継承・非集約の単純フィールドと、`resolvedColor`のような継承memoを同じ扱いにしない（doc05.1の教訓通り、継承方向のmemoと集約方向のmemoは別物として扱う）。
 
+### Phase 1 progress note
+
+Implemented as `frontend/src/lib/mindmap/itemStore.js`, exporting a
+single `ItemNode` class. Every signal-backed property and every
+`resolvedXxx` memo (`resolvedColor`/`resolvedTextColor`/`resolvedShape`/
+`resolvedLayout`/`resolvedValue`/`resolvedStatus`) is copied unchanged
+from `item.js` -- same field names, same inheritance/aggregation logic,
+same `#999` default color and depth-based shape fallback. The only
+things dropped are `dom`, every `updateXxx()` DOM-sync method, and the
+`contentEditable` guard in `mergeWith()` (there is no live-editing DOM
+state to guard against yet).
+
+One deliberate deviation from the plan's literal field list: `isRoot`
+is `this.parent === null` rather than `instanceof Map`, since this store
+has no separate Map/DOM wrapper class at this phase -- "no parent" is
+the root condition directly. `resolvedLayout` still throws
+`"Non-connected item does not have layout"` for a disconnected item,
+exactly matching `item.js`'s behavior, since that only depends on the
+parent chain of `ItemNode`s, not on any Map instance.
+
+`action.js`'s `pickBalancedSide`/`pickInheritedShape` were **not**
+duplicated here, per the plan -- they only touch `.side`/`.shape`/
+`.children`/`.isRoot`, which `ItemNode` exposes with the same shape, so
+they can be pointed at this store unchanged once a later phase wires
+`action.js` up to it.
+
+`frontend/src/lib/mindmap/itemStore.test.js` covers the risk areas the
+plan called out: the color/textColor inheritance chain vs. shape's
+depth-only default (never inherited), `resolvedLayout` throwing on a
+disconnected item, `resolvedValue`/`resolvedStatus` recomputing when
+children are inserted after the formula is set, `insertChild`
+reparenting an already-attached item, `toJSON`/`fromJSON`/`clone`
+round-tripping every explicit field, `mergeWith` reconciling children by
+id, and `side`'s version signal only bumping on a real change. No DOM
+stub was needed (unlike `item.test.js`'s elaborate `node()`/`classList()`
+helpers) since nothing in `itemStore.js` imports `html.js`/`svg.js`.
+
+Nothing renders from this store yet, as planned -- `item.js` remains the
+live implementation until Phase 2 introduces `<ItemNode>` behind a
+feature flag.
+
 ---
 
 ### Phase 2 — `<ItemNode>` コンポーネントの導入（単一ノードのみ、並行稼働）
