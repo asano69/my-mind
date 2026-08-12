@@ -38,6 +38,11 @@ describe("computePreviewTreeLayout", () => {
     const result = computePreviewTreeLayout(root);
 
     expect(result.item).toBe(root);
+    expect(result.childLayouts.map((layout) => layout.item)).toEqual([
+      left,
+      right,
+    ]);
+    expect(result.childLayouts[1].childLayouts[0].item).toBe(grandchild);
     expect(result.connectorPaths).toHaveLength(2);
     expect(result.connectorPaths.every((path) => path.d)).toBe(true);
     expect(left.size).toEqual([150, 44]);

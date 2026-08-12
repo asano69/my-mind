@@ -301,3 +301,19 @@ Phase 3 progress note 1で切り出した純粋layout descriptorを、feature fl
 
 - 今回の`contentSize`は固定値であり、まだ`foreignObject`の実測サイズ（`offsetWidth`/`scrollWidth`）には接続していない。次の小分けでは`ref`登録と`createEffect`での測定更新を入れ、旧実装の二重rAF remeasureがどの程度不要になるかを確認する。
 - `computePreviewTreeLayout()`はプレビュー用の足場で、まだ本番のMap/Item APIやmouse/keyboard/clipboardとは統合していない。Phase 4までは旧エンジンが操作系の正規実装であり続ける。
+
+### Phase 3 progress note 3 — NewMindMapPreview再帰layoutの単一パス化
+
+`?newEngine=1`で`NewMindMapPreview`の描画時に`InternalError: too much recursion`が発生し、rootノードすら表示されない状態になっていたため、Phase 3の続きに入る前に再帰layoutの呼び出し構造を修正した。
+
+- `ItemNodeView`ごとに子孫layoutを再計算する構造をやめ、rootで`computePreviewTreeLayout()`を一度だけ実行して、その戻り値に含めた`childLayouts`を再帰描画へ渡す単一パスにした。
+- これにより、親layout計算と子コンポーネント側layout計算が同じツリーに対して重複して走る状態を避け、connector descriptorと`child.position`を同一のlayout snapshotから読むようにした。
+- `computePreviewLayout()`の戻り値に`childLayouts`を含めたため、今後のPhase 3で実測済みsizeやconnector/toggle descriptorをJSX描画へ段階的に広げる際にも、親子layout結果を明示的に受け渡せる。
+
+### Phase 3 progress note 4 — preview render経路からSolid memo layoutを除去
+
+前回の単一パス化後も`?newEngine=1`で同じ`InternalError: too much recursion`が残っていた。stack trace上では`layout`の`createMemo`から`computePreviewTreeLayout()`に入り、layout計算中に`resolvedShape` memoを読む経路で再帰していたため、previewの静的fixtureツリーではSolid memoでlayout snapshot自体を包まない方針に切り替えた。
+
+- `NewMindMapPreview`はコンポーネント初期化時にfixture rootを作成し、その場で`computePreviewTreeLayout(root)`を同期的に1回計算する。
+- `ItemNodeView`側の`shape`/`textStyle`も小さな`createMemo`をやめ、渡されたlayout snapshotから通常の関数呼び出しで読むようにした。
+- Phase 3でDOM実測や操作系へ進むときは、layout計算を直接`createMemo`へ戻すのではなく、実測値用signalと純粋layout snapshotの依存境界を先に分けてから再導入する。

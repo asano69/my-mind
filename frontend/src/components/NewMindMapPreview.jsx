@@ -1,4 +1,4 @@
-import { For, createMemo } from "solid-js";
+import { For } from "solid-js";
 import ItemNode from "../lib/mindmap/itemStore.js";
 import { computeMapLayout } from "../lib/mindmap/layout/map.js";
 import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
@@ -69,25 +69,28 @@ function computePreviewLayout(item, childLayouts) {
   }
   const result = computeMapLayout(previewLayoutFor(item), item);
   item.size = computedSizeFor(item, result);
-  return { item, connectorPaths: result.connectorPaths, size: item.size };
+  return {
+    item,
+    childLayouts,
+    connectorPaths: result.connectorPaths,
+    size: item.size,
+  };
+}
+
+function textStyleFor(item) {
+  const color = item.resolvedTextColor;
+  return color ? { color } : {};
 }
 
 function ItemNodeView(props) {
-  const children = createMemo(() => props.item.childItems);
-  const childLayouts = createMemo(() => props.childLayouts?.() ?? []);
-  const layoutResult = createMemo(() =>
-    computePreviewLayout(props.item, childLayouts()),
-  );
-  const shape = createMemo(() => props.item.resolvedShape);
-  const textStyle = createMemo(() => {
-    const color = props.item.resolvedTextColor;
-    return color ? { color } : {};
-  });
-
   return (
-    <g class="item" data-shape={shape().id} transform={props.transform ?? ""}>
+    <g
+      class="item"
+      data-shape={props.layout.item.resolvedShape.id}
+      transform={props.transform ?? ""}
+    >
       <g class="connectors">
-        <For each={layoutResult().connectorPaths}>
+        <For each={props.layout.connectorPaths}>
           {(pathInfo) =>
             pathInfo.d ? (
               <path
@@ -101,39 +104,32 @@ function ItemNodeView(props) {
         </For>
       </g>
       <foreignObject
-        x={props.item.contentPosition?.[0] ?? 0}
-        y={props.item.contentPosition?.[1] ?? 0}
-        width={props.item.contentSize?.[0] ?? contentSizeFor(props.item)[0]}
-        height={props.item.contentSize?.[1] ?? contentSizeFor(props.item)[1]}
+        x={props.layout.item.contentPosition?.[0] ?? 0}
+        y={props.layout.item.contentPosition?.[1] ?? 0}
+        width={
+          props.layout.item.contentSize?.[0] ??
+          contentSizeFor(props.layout.item)[0]
+        }
+        height={
+          props.layout.item.contentSize?.[1] ??
+          contentSizeFor(props.layout.item)[1]
+        }
       >
-        <div class="content" style={shapeStyle(props.item)}>
-          <span class="text" style={textStyle()}>
-            {props.item.text}
+        <div class="content" style={shapeStyle(props.layout.item)}>
+          <span class="text" style={textStyleFor(props.layout.item)}>
+            {props.layout.item.text}
           </span>
         </div>
       </foreignObject>
-      <For each={children()}>
-        {(child) => (
-          <RecursiveItemNodeView
-            item={child}
-            transform={`translate(${child.position?.[0] ?? 0},${child.position?.[1] ?? 0})`}
+      <For each={props.layout.childLayouts}>
+        {(childLayout) => (
+          <ItemNodeView
+            layout={childLayout}
+            transform={`translate(${childLayout.item.position?.[0] ?? 0},${childLayout.item.position?.[1] ?? 0})`}
           />
         )}
       </For>
     </g>
-  );
-}
-
-function RecursiveItemNodeView(props) {
-  const childLayouts = createMemo(() =>
-    props.item.childItems.map((child) => computePreviewTreeLayout(child)),
-  );
-  return (
-    <ItemNodeView
-      item={props.item}
-      childLayouts={childLayouts}
-      transform={props.transform}
-    />
   );
 }
 
@@ -166,7 +162,8 @@ function createPreviewRoot(title) {
 }
 
 export default function NewMindMapPreview(props) {
-  const root = createMemo(() => createPreviewRoot(props.title));
+  const root = createPreviewRoot(props.title);
+  const layout = computePreviewTreeLayout(root);
 
   return (
     <svg
@@ -177,7 +174,7 @@ export default function NewMindMapPreview(props) {
     >
       <style>{mapCss}</style>
       <g transform="translate(40,40)">
-        <RecursiveItemNodeView item={root()} />
+        <ItemNodeView layout={layout} />
       </g>
     </svg>
   );
