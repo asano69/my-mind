@@ -34,7 +34,10 @@ export default function MindMapCanvas(props) {
     if (newEngine) {
       disposeNewEngine = render(
         () => (
-          <NewMindMapPreview title={new Date().toISOString().slice(0, 10)} />
+          <NewMindMapPreview
+            uuid={props.uuid}
+            title={new Date().toISOString().slice(0, 10)}
+          />
         ),
         mainRef,
       );

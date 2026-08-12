@@ -419,3 +419,14 @@ control entirely instead of rendering it with a broken position. Pulled
 Added a regression test asserting `togglePositionFor()` returns `null`
 for the root's own layout result, pinning down the root-has-no-toggle
 behavior this fix relies on.
+
+### Phase 3 progress note 10 — preview loads saved map data
+
+The `?newEngine=1` path now prioritizes rendering the real saved map tree instead of the static preview fixture. `MindMapCanvas` passes the route `uuid` into `NewMindMapPreview`, and the preview uses the existing PocketBase `loadByUuid()` backend helper to fetch the `maps.mymind` JSON and convert `mymind.root` into the Phase 1 `ItemNode` store via `ItemNode.fromJSON()`.
+
+- The old static `createPreviewRoot()` fixture remains only as a no-uuid/fallback path for isolated preview usage; saved maps now take the normal rendering path.
+- `rootFromMapData()` is exported as a small conversion seam and covered by tests so the preview can verify real saved fields (`id`, `text`, `layout`, `shape`, `color`, child order, and `side`) reach the store before layout is computed.
+- `NewMindMapPreview` keeps the existing measured-size signal and recursive `computePreviewTreeLayout()` path unchanged after load. This keeps Phase 3 focused on “actual data renders through the descriptor-based recursive layout” while still deferring editing, selection, history, and mouse/keyboard/clipboard integration to later phases.
+- While the fetch is pending, the preview SVG renders a simple loading label rather than the fixture tree, avoiding a misleading flash of non-user data.
+
+This still does not integrate editing operations. Collapse toggles remain preview-local store mutations only, and there is no auto-save/history bridge yet.

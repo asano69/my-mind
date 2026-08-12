@@ -1,9 +1,16 @@
-import { createEffect, createSignal, For, Show } from "solid-js";
+import {
+  createEffect,
+  createResource,
+  createSignal,
+  For,
+  Show,
+} from "solid-js";
 import ItemNode from "../lib/mindmap/itemStore.js";
 import { TOGGLE_SIZE } from "../lib/mindmap/item.js";
 import { computeMapLayout } from "../lib/mindmap/layout/map.js";
 import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
 import { repo as shapeRepo } from "../lib/mindmap/shape/shape.js";
+import { loadByUuid } from "../lib/mindmap/backend/pocketbase.js";
 import "../lib/mindmap/layout/map.js";
 import "../lib/mindmap/shape/box.js";
 import "../lib/mindmap/shape/ellipse.js";
@@ -243,7 +250,7 @@ function measureAndStoreSize(item, element, fallbackSize, updateMeasuredSize) {
   updateMeasuredSize(item.id, measured);
 }
 
-function createPreviewRoot(title) {
+export function createPreviewRoot(title) {
   const root = new ItemNode();
   root.text = title;
   root.layout = layoutRepo.get("map");
@@ -264,8 +271,27 @@ function createPreviewRoot(title) {
   return root;
 }
 
+export function rootFromMapData(data) {
+  const rootData = data?.root;
+  if (!rootData) {
+    return null;
+  }
+  return ItemNode.fromJSON(rootData);
+}
+
+async function loadPreviewRoot(uuid, fallbackTitle) {
+  if (!uuid) {
+    return createPreviewRoot(fallbackTitle);
+  }
+  const record = await loadByUuid(uuid);
+  return rootFromMapData(record.mymind) ?? createPreviewRoot(fallbackTitle);
+}
+
 export default function NewMindMapPreview(props) {
-  const root = createPreviewRoot(props.title);
+  const [root] = createResource(
+    () => ({ uuid: props.uuid ?? null, title: props.title }),
+    ({ uuid, title }) => loadPreviewRoot(uuid, title),
+  );
   const [measuredSizes, setMeasuredSizes] = createSignal(new Map());
   const updateMeasuredSize = (id, size) => {
     setMeasuredSizes((current) => {
@@ -278,7 +304,12 @@ export default function NewMindMapPreview(props) {
       return next;
     });
   };
-  const layout = () => computePreviewTreeLayout(root, measuredSizes());
+  const layout = () => {
+    const loadedRoot = root();
+    return loadedRoot
+      ? computePreviewTreeLayout(loadedRoot, measuredSizes())
+      : null;
+  };
 
   return (
     <svg
@@ -288,9 +319,23 @@ export default function NewMindMapPreview(props) {
       style={{ "font-size": "15px", left: "40px", top: "40px" }}
     >
       <style>{mapCss}</style>
-      <g transform="translate(40,40)">
-        <ItemNodeView layout={layout()} onMeasure={updateMeasuredSize} />
-      </g>
+      <Show
+        when={layout()}
+        fallback={
+          <text class="content" x="40" y="64">
+            Loading map...
+          </text>
+        }
+      >
+        {(currentLayout) => (
+          <g transform="translate(40,40)">
+            <ItemNodeView
+              layout={currentLayout()}
+              onMeasure={updateMeasuredSize}
+            />
+          </g>
+        )}
+      </Show>
     </svg>
   );
 }

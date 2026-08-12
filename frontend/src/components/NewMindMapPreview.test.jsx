@@ -9,6 +9,7 @@ import "../lib/mindmap/shape/underline.js";
 import {
   computePreviewTreeLayout,
   measureContentSize,
+  rootFromMapData,
   togglePositionFor,
   visiblePreviewChildren,
 } from "./NewMindMapPreview.jsx";
@@ -128,6 +129,43 @@ describe("toggle descriptor and collapsed signal boundary", () => {
 
     root.collapsed = false;
     expect(visiblePreviewChildren(root)).toEqual(root.childItems);
+  });
+});
+
+describe("rootFromMapData", () => {
+  it("loads the saved map root into the preview item store", () => {
+    const root = rootFromMapData({
+      root: {
+        id: "root-id",
+        text: "Saved root",
+        layout: "map",
+        shape: "ellipse",
+        color: "#ffcc00",
+        children: [
+          { id: "left-id", text: "Saved left", side: "left" },
+          { id: "right-id", text: "Saved right", side: "right" },
+        ],
+      },
+    });
+
+    expect(root.id).toBe("root-id");
+    expect(root.text).toBe("Saved root");
+    expect(root.layout).toBe(layoutRepo.get("map"));
+    expect(root.resolvedShape).toBe(shapeRepo.get("ellipse"));
+    expect(root.color).toBe("#ffcc00");
+    expect(root.childItems.map((child) => child.text)).toEqual([
+      "Saved left",
+      "Saved right",
+    ]);
+    expect(root.childItems.map((child) => child.side)).toEqual([
+      "left",
+      "right",
+    ]);
+  });
+
+  it("returns null for missing map data", () => {
+    expect(rootFromMapData(null)).toBeNull();
+    expect(rootFromMapData({})).toBeNull();
   });
 });
 
