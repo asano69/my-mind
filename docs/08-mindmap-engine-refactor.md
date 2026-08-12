@@ -345,3 +345,17 @@ Phase 3 progress note 5で実測sizeをlayoutへ戻す最小配線を入れた�
 - `NewMindMapPreview.test.jsx`にcollapsedノード配下のlayout snapshotが生成されないこと、孫ノードの`size`へ副作用的に書き込まれないことを確認する回帰テストを追加した。
 
 これでpreviewのpost-order layout足場は、展開中の可視subtreeだけを再帰するようになった。Phase 3の次段階では、この境界を保ったまま測定effectの依存範囲とconnector/toggle描画の分離を進める。
+
+### Phase 3 progress note 7 — preview toggle descriptor rendering and collapsed signal boundary
+
+Phase 3 progress note 6で可視subtreeだけをlayout対象にしたため、次の小分けとしてconnector descriptorに含まれていた`togglePosition`を`NewMindMapPreview`のJSX描画へ戻した。今回も`?newEngine=1`のpreview限定で、旧`item.js`エンジンの本番経路は変更していない。
+
+- `togglePositionFor(connectorPaths)`を追加し、connector pathの`d`描画とcollapse toggleの位置決めを別々に読めるようにした。collapsedノードでは`d`を持たないdescriptorだけが返るため、子への線は描かずtoggleだけを残せる。
+- `ToggleControl`を追加し、既存エンジンと同じminus/plus glyphをJSXで描画するようにした。click handlerはpreview storeの`item.collapsed` signalを直接反転するため、Phase 4の操作統合前でもpreview内でcollapse/expandのデータ更新経路を試せる。
+- `visiblePreviewChildren(item)`を切り出し、`computePreviewTreeLayout()`がcollapsed signal境界を1か所から読むようにした。これにより、layout snapshot生成とJSX再帰描画が同じ「可視子ノード」定義を共有できる。
+- `NewMindMapPreview.test.jsx`に、expanded/collapsedの両方でtoggle descriptorが維持されること、collapsed時はconnector path本体だけが消えること、`visiblePreviewChildren()`がcollapsed signalに追従することを追加した。
+
+制約と次の作業:
+
+- Toggleのclickはpreview fixtureに対する最小操作であり、まだ既存の`app.currentItem`/selection/historyとは接続していない。undo/redo対象のcollapse操作にするのはPhase 4以降の操作統合で扱う。
+- `foreignObject`の実ブラウザpaint timing検証は引き続き未実施。今回の変更でcollapse/expand時にlayout snapshotを再作成する入口はできたため、次はブラウザまたはbrowser-mode testで実測effectがexpand直後に正しいsizeへ収束するかを確認する。
