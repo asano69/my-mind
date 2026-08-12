@@ -23,12 +23,41 @@ export const [currentItem, setCurrentItem] = createSignal(null);
 // leave reactive reads (isSelected() below) silently stale.
 export const [selectedItems, setSelectedItems] = createSignal(new Set());
 
+// The anchor for a Shift+Arrow selection-extension chain, analogous to
+// my-mind.js's app.selectionCursor. See extendSelection() below.
+export const [selectionCursor, setSelectionCursor] = createSignal(null);
+
 // Clears any multi-selection without touching currentItem, mirroring
 // my-mind.js's clearMultiSelection() -- but item.js's unmarkSelected()
 // DOM calls have no counterpart here, since itemStateClassList() (see
 // below) already derives its display purely from these signals.
 export function clearMultiSelection() {
   setSelectedItems(new Set());
+  setSelectionCursor(null);
+}
+
+// Extends the multi-selection from the current selectionCursor (or
+// currentItem, if no cursor exists yet) to `item`, mirroring
+// my-mind.js's extendSelection() -- used by Shift+Arrow (see
+// newKeyboard.js's SelectAdd-equivalent command).
+export function extendSelection(item) {
+  if (item === currentItem()) {
+    clearMultiSelection();
+    return;
+  }
+  const cursor = selectionCursor();
+  const selected = selectedItems();
+  if (cursor !== null && selected.has(item)) {
+    const updated = new Set(selected);
+    updated.delete(cursor);
+    setSelectedItems(updated);
+    setSelectionCursor(item);
+    return;
+  }
+  const updated = new Set(selected);
+  updated.add(item);
+  setSelectedItems(updated);
+  setSelectionCursor(item);
 }
 
 // Sets the single focused item and drops any multi-selection, mirroring
@@ -44,6 +73,7 @@ export function selectItem(item) {
 // swaps in a fresh Set (see the module comment on selectedItems) rather
 // than mutating the current one in place.
 export function addToSelection(item) {
+  setSelectionCursor(null);
   const current = currentItem();
   if (item === current) {
     const selected = selectedItems();

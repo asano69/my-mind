@@ -12,6 +12,7 @@ import { render } from "solid-js/web";
 import { activeMode } from "../lib/mindmap/store";
 import { isNewEngineEnabled } from "../lib/mindmap/newEngineFlag.js";
 import NewMindMapPreview from "./NewMindMapPreview.jsx";
+import * as newKeyboard from "../lib/mindmap/newKeyboard.js";
 
 export default function MindMapCanvas(props) {
   let mainRef;
@@ -41,6 +42,7 @@ export default function MindMapCanvas(props) {
         ),
         mainRef,
       );
+      newKeyboard.init(containerRef);
       console.log(
         "[MindMapCanvas] new engine preview mounted, uuid =",
         props.uuid,
@@ -58,6 +60,9 @@ export default function MindMapCanvas(props) {
 
   onCleanup(() => {
     console.log("[MindMapCanvas] onCleanup, uuid =", props.uuid);
+    if (newEngine) {
+      newKeyboard.dispose(containerRef);
+    }
     disposeNewEngine?.();
     disposeNewEngine = null;
     engine?.unmount();
