@@ -81,3 +81,133 @@ layout側と同じ「DOM書き込みを含まない純粋関数を切り出す�
 | 4 | mouse/keyboard/clipboard統合、`currentItem`一本化 | 中〜高 | 3.8完了後に着手 |
 
 3.4の意思決定（論点A）だけは、進める前に一度相談させてください。案(b)（同期フル再計算を正式採用）を推す場合、doc08本文の「再帰的memoチェーンではなくJSXツリー構造で順序保証する」という設計思想の一部を諦めることになるため、これは実装上の詳細ではなく設計方針の変更に当たります。
+
+
+---
+
+
+## Phase 3.4を「プランA」で確定する場合の設計
+
+doc06.1が実機（`item.js`）で既に実証している「各アイテムが自分専用の`createMemo`を持ち、親が子のmemoを直接呼ぶ（pull-based再帰memoチェーン）」は、それ自体は健全な設計です。note3/4の再帰クラッシュは、この設計を**JSXコンポーネントツリー側で再現しようとした際の実装ミス**であって、設計思想そのものが破綻していたわけではないはずです。まずそこを切り分けます。
+
+### なぜ再帰したのか（root cause仮説）
+
+note3/4の記述を素直に読むと、崩れた実装はおそらく次のような形になっていました。
+
+```jsx
+// 推定される問題のあった実装（NG例）
+const layout = createMemo(() => computePreviewTreeLayout(root, measuredSizes()));
+```
+
+`computePreviewTreeLayout()`は**プレーンな再帰関数**であり、`ItemNode`（store）側にはmemoが存在しません。つまり「1つの巨大な`createMemo`が、ツリー全体をプレーン関数呼び出しで毎回フルスキャンする」設計になっていました。これは doc06.1 が却下した「独立effectを乱立させる案」の逆側の失敗で、**memoは1つなのに責務がitem数分ある**状態です。
+
+再帰の直接原因としては、以下のいずれか（あるいは複合）が濃厚です。
+
+1. `ItemNodeView`側の`shape`/`textStyle`用の小さな`createMemo`が`item.resolvedColor`等（itemStore側のmemo）を読む一方、それが**外側の`layout`memoの追跡スコープの中で**評価されていた（JSXの評価自体がレンダー中に同期実行されるため、外側memoの実行→中でJSX生成→中の別memo初期化→それが外側memoの依存先と交差、という形でSolidの依存グラフが自己参照に近い形になった）。
+2. `measuredSizes`のsetterが、`layout`memoの追跡スコープ内（＝同期実行中）に直接呼ばれていた。Solidでは「今評価中のcomputationが依存しているsignalを、そのcomputation自身の実行中に書き換える」と即時再実行のループに入り得ます。
+
+いずれにせよ根本原因は「**1つの巨大memoが計算とDOM測定書き込みを同一スコープに混在させ、しかも子孫の計算も自分の内側で全部やっていた**」ことに尽きます。doc06.1・doc05.1が既に整理した鉄則（「計算」と「副作用（signal write／DOM書き込み）」を同一computationに混ぜない）に単純に違反していた、というのが最も筋の通る説明です。
+
+### 採用する設計：store側にmemoを戻す（doc06.1と同型）
+
+JSXコンポーネント側で頑張るのではなく、**doc06.1で実証済みの「store（`ItemNode`）が自分専用のlayoutResult memoを持つ」パターンをそのまま`itemStore.js`に移植**します。これがdoc08本文が言う「JSXツリー構造がpost-order順序を保証する」の正しい実装です。
+
+```js
+// itemStore.js — ItemNode constructor に追加
+// Mirrors item.js's proven per-item recursive memo chain (see
+// docs/06.1-recursive-memo-layout-refactor.md and item.js's own
+// _layoutResult). Owned by the store node itself, not by the JSX
+// component, so parent/child pull-based dependency works the same way
+// regardless of whether anything is currently mounted.
+const [measuredSize, setMeasuredSize] = createSignal([0, 0]);
+this._measuredSize = measuredSize;
+this.setMeasuredSize = setMeasuredSize; // written only from a component's createEffect, never from inside a memo
+
+createRoot((dispose) => {
+  this._disposeLayoutMemo = dispose;
+  // Pure computation only: reads signals (own + children's memos),
+  // returns a layout snapshot. NEVER writes a signal here — that rule
+  // is exactly what note3/4's crash violated.
+  this.layoutResult = createMemo(() => this._computeLayout());
+});
+```
+
+```js
+_computeLayout() {
+  // Pull children's memos first (post-order, guaranteed by plain JS
+  // call order — not by Solid's scheduler, matching doc05.1's insight).
+  const childLayouts = this.collapsed
+    ? []
+    : this.childItems.map((child) => child.layoutResult());
+
+  this.contentSize = this._measuredSize(); // read-only here, never written
+  const result = computeMapLayout(previewLayoutFor(this), this); // pure fn from Phase 3.1-3.3
+  this.size = /* derive from result */;
+  return { item: this, childLayouts, connectorPaths: result.connectorPaths, size: this.size };
+}
+```
+
+コンポーネント側は**計算をせず、読むだけ**にします。
+
+```jsx
+// NewMindMapPreview.jsx — ItemNodeView
+function ItemNodeView(props) {
+  let contentRef;
+  const layout = () => props.item.layoutResult(); // just reads the store's own memo
+
+  // The ONLY place a signal write happens: after Solid has actually
+  // committed this item's DOM (contentRef exists), in an effect — never
+  // inside layoutResult's own computation.
+  createEffect(() => {
+    const measured = measureContentSize(contentRef, fallbackContentSizeFor(props.item));
+    props.item.setMeasuredSize(measured);
+  });
+
+  return (
+    <g class="item" transform={props.transform ?? ""}>
+      {/* ... */}
+      <For each={layout().childLayouts}>
+        {(childLayout) => (
+          <ItemNodeView
+            item={childLayout.item}
+            transform={`translate(${childLayout.item.position})`}
+          />
+        )}
+      </For>
+    </g>
+  );
+}
+```
+
+この形なら：
+
+- **局所性が本物になる**: `child.text`が変わる→`child.layoutResult`memoだけが無効化→それを読んでいる親の`layoutResult`memoだけが連鎖的に無効化→無関係な兄弟の`layoutResult`はSolidのメモ化で一切再評価されない。doc08が目指していた性質そのもの。
+- **手動versionカウンタが不要**: `_contentVersion`のような仕組みを一切増やさずに済む（doc08本文の狙い通り）。
+- **再帰しない**: `layoutResult`memoの中では信号の「読み取り」しかしない。DOM測定という副作用は必ず`createEffect`（コンポーネントのマウント後）に隔離されている。measuredSize signalの書き込みが同期的にmemoの評価中に起きることは構造上あり得ない。
+
+### Phase 3.4（確定）でやること
+
+- 上記アーキテクチャを設計として確定する（このメッセージの内容がその記録）。
+- 「計算はmemo、副作用はeffect」という境界を`itemStore.js`のコード内コメントとして明記し、以後のPhase（3.5, 3.7, Phase 4）で同じ境界を破らないことをルール化する。
+- コード変更はまだ最小限（`ItemNode`に`layoutResult`memoの骨格を追加する程度）に留め、実装本体はPhase 3.5で行う。
+
+### Phase 3.5（見直し）— 実装と計測
+
+- `computePreviewTreeLayout()`（プレーン再帰関数）を廃止し、`root.layoutResult()`を呼ぶだけの形に`NewMindMapPreview`を書き換える。
+- `layout-measurement.test.js`と同型のテストを新エンジン向けに追加し、次を確認する:
+  - 葉ノードのテキスト編集で、無関係な兄弟の`layoutResult`memoが再評価されないこと（`vi.spyOn`でmemo内部の計算関数呼び出し回数を数える、`item.test.js`と同じ手法）。
+  - collapsedノード配下のmemoが呼ばれないこと（note6の境界を維持）。
+  - 継承プロパティ（color等）変更時は旧エンジン同様に全木へ伝播すること（これはdoc08/doc06.1が最初から認めている正しい挙動なので、局所化の対象外として明記）。
+- 得られた訪問数を、doc06.1 Phase 0の基準値（葉編集=5/121、色変更=121/121）と直接比較できる形で記録する。
+
+### Phase 3.6・3.7は変更なし
+
+`foreignObject`実機検証（3.6）とshape側純粋関数化（3.7）は、このアーキテクチャ変更と独立なので、前回提示した内容のまま進めます。ただし3.7でshapeの見た目計算を抜き出す際も、「計算はmemo、副作用はeffect」の同じ境界を踏襲してください（例えば`Underline`の線描画のような、サイズ確定後にしか計算できない値は、`_computeLayout()`側で完結させ、DOM書き込みだけを`createEffect`に置く）。
+
+### この設計変更が波及する箇所
+
+- `itemStore.js`：`layoutResult`memoの追加（新規、既存フィールドには影響なし）。
+- `NewMindMapPreview.jsx`：`computePreviewTreeLayout()`呼び出し箇所を`root.layoutResult()`に置き換え。`measuredSizes`という**Map単位で全ノードの測定値を持つトップレベルsignal**は不要になる（各itemが自分の`measuredSize`を持つため）。これも複雑さの削減になります。
+- テストファイル（`NewMindMapPreview.test.jsx`）：`computePreviewTreeLayout`を直接呼んでいるテストは、`root.layoutResult()`を呼ぶ形に書き換えが必要。
+
+この方向で3.5の実装に進めてよいか、あるいは先に`itemStore.js`側の`layoutResult`memoだけを最小実装してテストを書くところから始めるか、どちらがよいですか。
