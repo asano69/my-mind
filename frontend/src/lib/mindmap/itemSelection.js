@@ -23,6 +23,52 @@ export const [currentItem, setCurrentItem] = createSignal(null);
 // leave reactive reads (isSelected() below) silently stale.
 export const [selectedItems, setSelectedItems] = createSignal(new Set());
 
+// Clears any multi-selection without touching currentItem, mirroring
+// my-mind.js's clearMultiSelection() -- but item.js's unmarkSelected()
+// DOM calls have no counterpart here, since itemStateClassList() (see
+// below) already derives its display purely from these signals.
+export function clearMultiSelection() {
+  setSelectedItems(new Set());
+}
+
+// Sets the single focused item and drops any multi-selection, mirroring
+// my-mind.js's selectItem(). Editing is not integrated yet (see Phase
+// 4.5), so unlike the old engine's version this never needs to finish
+// an in-progress edit before switching selection.
+export function selectItem(item) {
+  clearMultiSelection();
+  setCurrentItem(item);
+}
+
+// Ctrl/Cmd+click toggle, mirroring my-mind.js's addToSelection(). Always
+// swaps in a fresh Set (see the module comment on selectedItems) rather
+// than mutating the current one in place.
+export function addToSelection(item) {
+  const current = currentItem();
+  if (item === current) {
+    const selected = selectedItems();
+    if (selected.size === 0) {
+      return;
+    }
+    // Promote one previously multi-selected item to be the new current
+    // item, same as my-mind.js's own "toggling off the current item
+    // hands focus to another selected item" behavior.
+    const next = selected.values().next().value;
+    const updated = new Set(selected);
+    updated.delete(next);
+    setSelectedItems(updated);
+    setCurrentItem(next);
+    return;
+  }
+  const updated = new Set(selectedItems());
+  if (updated.has(item)) {
+    updated.delete(item);
+  } else {
+    updated.add(item);
+  }
+  setSelectedItems(updated);
+}
+
 export function isCurrent(item) {
   return currentItem() === item;
 }

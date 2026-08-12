@@ -7,6 +7,9 @@ import {
   isCurrent,
   isSelected,
   itemStateClassList,
+  clearMultiSelection,
+  selectItem,
+  addToSelection,
 } from "./itemSelection.js";
 
 // Phase 4.2 of docs/08-mindmap-engine-refactor.md: selection state only
@@ -63,6 +66,79 @@ describe("itemSelection.js", () => {
     expect(itemStateClassList({ id: "c" })).toEqual({
       current: false,
       selected: false,
+    });
+  });
+
+  describe("selectItem", () => {
+    it("sets currentItem and clears any multi-selection", () => {
+      const a = { id: "a" };
+      const b = { id: "b" };
+      setSelectedItems(new Set([b]));
+
+      selectItem(a);
+
+      expect(currentItem()).toBe(a);
+      expect(selectedItems().size).toBe(0);
+    });
+  });
+
+  describe("clearMultiSelection", () => {
+    it("empties selectedItems without touching currentItem", () => {
+      const a = { id: "a" };
+      const b = { id: "b" };
+      setCurrentItem(a);
+      setSelectedItems(new Set([b]));
+
+      clearMultiSelection();
+
+      expect(currentItem()).toBe(a);
+      expect(selectedItems().size).toBe(0);
+    });
+  });
+
+  describe("addToSelection", () => {
+    it("adds a not-yet-selected item to the multi-selection", () => {
+      const a = { id: "a" };
+      const b = { id: "b" };
+      setCurrentItem(a);
+
+      addToSelection(b);
+
+      expect(isSelected(b)).toBe(true);
+      expect(currentItem()).toBe(a);
+    });
+
+    it("toggles off an already-selected item", () => {
+      const a = { id: "a" };
+      const b = { id: "b" };
+      setCurrentItem(a);
+      setSelectedItems(new Set([b]));
+
+      addToSelection(b);
+
+      expect(isSelected(b)).toBe(false);
+    });
+
+    it("toggling off the current item promotes another selected item to current", () => {
+      const a = { id: "a" };
+      const b = { id: "b" };
+      setCurrentItem(a);
+      setSelectedItems(new Set([b]));
+
+      addToSelection(a);
+
+      expect(currentItem()).toBe(b);
+      expect(isSelected(b)).toBe(false);
+    });
+
+    it("toggling off the current item with nothing else selected is a no-op", () => {
+      const a = { id: "a" };
+      setCurrentItem(a);
+
+      addToSelection(a);
+
+      expect(currentItem()).toBe(a);
+      expect(selectedItems().size).toBe(0);
     });
   });
 });

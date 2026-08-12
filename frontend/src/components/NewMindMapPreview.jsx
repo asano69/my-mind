@@ -8,6 +8,7 @@ import {
 } from "solid-js";
 import ItemNode from "../lib/mindmap/itemStore.js";
 import { itemStateClassList } from "../lib/mindmap/itemSelection.js";
+import { handleItemClick } from "../lib/mindmap/newMouse.js";
 import { TOGGLE_SIZE } from "../lib/mindmap/item.js";
 import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
 import { repo as shapeRepo } from "../lib/mindmap/shape/shape.js";
@@ -216,7 +217,12 @@ function ItemNodeView(props) {
         />
       </Show>
       <foreignObject x={box()[0]} y={box()[1]} width={box()[2]} height={box()[3]}>
-        <div ref={contentRef} class="content" style={shapeStyle(props.item)}>
+        <div
+          ref={contentRef}
+          class="content"
+          style={shapeStyle(props.item)}
+          onClick={(e) => handleItemClick(props.item, e)}
+        >
           <Show when={hasStatus(props.item)}>
             <span class={statusClassFor(props.item)} />
           </Show>
