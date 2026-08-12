@@ -18,7 +18,7 @@
 // plan -- they already only touch `.side`/`.shape`/`.children`/
 // `.isRoot`, which this node exposes with the same API, so they can be
 // wired up against ItemNode unchanged in a later phase.
-import { createSignal, createMemo, createRoot, batch } from "solid-js";
+import { createSignal, batch } from "solid-js";
 import { repo as shapeRepo } from "./shape/shape.js";
 import { repo as layoutRepo } from "./layout/layout.js";
 
@@ -107,104 +107,10 @@ export default class ItemNode {
     this._layout = layout;
     this._setLayout = setLayout;
 
-    // The memos below are computations, so Solid needs an owning root
-    // (see item.js's constructor comment for the identical reasoning).
-    // Nodes aren't explicitly torn down today -- they're just dropped
-    // from the tree and garbage collected -- so `dispose` is kept for
-    // future use rather than called anywhere right now.
-    createRoot((dispose) => {
-      this._disposeMemos = dispose;
-
-      this._resolvedColor = createMemo(() => {
-        const own = this._color();
-        if (own && own !== "#ffffff") {
-          return own;
-        }
-        const parent = this.parent;
-        return parent instanceof ItemNode
-          ? parent.resolvedColor
-          : DEFAULT_COLOR;
-      });
-
-      this._resolvedTextColor = createMemo(() => {
-        const own = this._textColor();
-        if (own && own !== "#ffffff") {
-          return own;
-        }
-        const parent = this.parent;
-        return parent instanceof ItemNode ? parent.resolvedTextColor : "";
-      });
-
-      this._resolvedValue = createMemo(() => {
-        this._childrenVersion();
-        const value = this._value();
-        if (typeof value == "number") {
-          return value;
-        }
-        const childValues = this.children.map((child) => child.resolvedValue);
-        switch (value) {
-          case "max":
-            return Math.max(...childValues);
-          case "min":
-            return Math.min(...childValues);
-          case "sum":
-            return childValues.reduce((prev, cur) => prev + cur, 0);
-          case "avg": {
-            const sum = childValues.reduce((prev, cur) => prev + cur, 0);
-            return childValues.length ? sum / childValues.length : 0;
-          }
-          default:
-            return 0;
-        }
-      });
-
-      this._resolvedStatus = createMemo(() => {
-        this._childrenVersion();
-        const status = this._status();
-        if (status == "computed") {
-          return this.children.every((child) => child.resolvedStatus !== false);
-        }
-        return status;
-      });
-
-      this._resolvedLayout = createMemo(() => {
-        const layout = this._layout();
-        if (layout) {
-          return layout;
-        }
-        const parent = this.parent;
-        return parent instanceof ItemNode ? parent._resolvedLayout() : null;
-      });
-
-      this._depth = createMemo(() => {
-        let depth = 0;
-        let node = this;
-        while (node.parent instanceof ItemNode) {
-          depth++;
-          node = node.parent;
-        }
-        return depth;
-      });
-
-      // Same as item.js: shape is intentionally NOT inherited from an
-      // ancestor's explicit shape. An item with no explicit shape of
-      // its own always falls back to the depth-based default,
-      // regardless of what shape any ancestor has set.
-      this._resolvedShape = createMemo(() => {
-        const shape = this._shape();
-        if (shape) {
-          return shape;
-        }
-        switch (this._depth()) {
-          case 0:
-            return shapeRepo.get("ellipse");
-          case 1:
-            return shapeRepo.get("box");
-          default:
-            return shapeRepo.get("underline");
-        }
-      });
-    });
+    // Resolved values are computed in getters below instead of cached in
+    // createMemo(). The preview tree is populated from saved JSON after
+    // construction, and these accessors must always reflect those post-load
+    // writes before the first JSX layout/render pass.
   }
 
   get id() {
@@ -258,7 +164,25 @@ export default class ItemNode {
     this._setValue(value);
   }
   get resolvedValue() {
-    return this._resolvedValue();
+    const value = this._value();
+    if (typeof value == "number") {
+      return value;
+    }
+    const childValues = this.childItems.map((child) => child.resolvedValue);
+    switch (value) {
+      case "max":
+        return Math.max(...childValues);
+      case "min":
+        return Math.min(...childValues);
+      case "sum":
+        return childValues.reduce((prev, cur) => prev + cur, 0);
+      case "avg": {
+        const sum = childValues.reduce((prev, cur) => prev + cur, 0);
+        return childValues.length ? sum / childValues.length : 0;
+      }
+      default:
+        return 0;
+    }
   }
 
   get status() {
@@ -268,7 +192,11 @@ export default class ItemNode {
     this._setStatus(status);
   }
   get resolvedStatus() {
-    return this._resolvedStatus();
+    const status = this._status();
+    if (status == "computed") {
+      return this.childItems.every((child) => child.resolvedStatus !== false);
+    }
+    return status;
   }
 
   get icon() {
@@ -308,7 +236,12 @@ export default class ItemNode {
     this._setColor(color);
   }
   get resolvedColor() {
-    return this._resolvedColor();
+    const own = this._color();
+    if (own && own !== "#ffffff") {
+      return own;
+    }
+    const parent = this.parent;
+    return parent instanceof ItemNode ? parent.resolvedColor : DEFAULT_COLOR;
   }
 
   get textColor() {
@@ -318,7 +251,12 @@ export default class ItemNode {
     this._setTextColor(textColor);
   }
   get resolvedTextColor() {
-    return this._resolvedTextColor();
+    const own = this._textColor();
+    if (own && own !== "#ffffff") {
+      return own;
+    }
+    const parent = this.parent;
+    return parent instanceof ItemNode ? parent.resolvedTextColor : "";
   }
 
   get layout() {
@@ -328,7 +266,12 @@ export default class ItemNode {
     this._setLayout(layout);
   }
   get resolvedLayout() {
-    const layout = this._resolvedLayout();
+    const own = this._layout();
+    if (own) {
+      return own;
+    }
+    const parent = this.parent;
+    const layout = parent instanceof ItemNode ? parent.resolvedLayout : null;
     if (!layout) {
       throw new Error("Non-connected item does not have layout");
     }
@@ -342,7 +285,28 @@ export default class ItemNode {
     this._setShape(shape);
   }
   get resolvedShape() {
-    return this._resolvedShape();
+    const shape = this._shape();
+    if (shape) {
+      return shape;
+    }
+    switch (this.depth) {
+      case 0:
+        return shapeRepo.get("ellipse");
+      case 1:
+        return shapeRepo.get("box");
+      default:
+        return shapeRepo.get("underline");
+    }
+  }
+
+  get depth() {
+    let depth = 0;
+    let node = this;
+    while (node.parent instanceof ItemNode) {
+      depth++;
+      node = node.parent;
+    }
+    return depth;
   }
 
   // Wrapped in batch() for the same reason as item.js's insertChild():

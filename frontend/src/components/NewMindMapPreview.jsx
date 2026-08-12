@@ -94,6 +94,52 @@ function textStyleFor(item) {
   return color ? { color } : {};
 }
 
+function underlinePathFor(item) {
+  const contentPosition = item.contentPosition ?? [0, 0];
+  const contentSize = item.contentSize ?? contentSizeFor(item);
+  const left = contentPosition[0];
+  const right = left + contentSize[0];
+  const top = contentPosition[1] + contentSize[1] - 4 + 0.5;
+  return `M ${left} ${top} L ${right} ${top}`;
+}
+
+function statusClassFor(item) {
+  switch (item.resolvedStatus) {
+    case true:
+      return "status yes";
+    case false:
+      return "status no";
+    default:
+      return "status";
+  }
+}
+
+function hasStatus(item) {
+  return item.resolvedStatus === true || item.resolvedStatus === false;
+}
+
+function valueTextFor(item) {
+  const value = item.value;
+  if (value === null) {
+    return "";
+  }
+  if (typeof value === "number") {
+    return String(value);
+  }
+  const resolved = item.resolvedValue;
+  return String(
+    Math.round(resolved) === resolved ? resolved : resolved.toFixed(3),
+  );
+}
+
+function hasNotes(item) {
+  return !!item.notes;
+}
+
+function alignmentFor(item) {
+  return item.resolvedLayout.computeAlignment(item);
+}
+
 const D_MINUS = `M ${-(TOGGLE_SIZE - 2)} 0 L ${TOGGLE_SIZE - 2} 0`;
 const D_PLUS = `${D_MINUS} M 0 ${-(TOGGLE_SIZE - 2)} L 0 ${TOGGLE_SIZE - 2}`;
 
@@ -141,6 +187,7 @@ function ItemNodeView(props) {
     <g
       class="item"
       data-shape={props.layout.item.resolvedShape.id}
+      data-align={alignmentFor(props.layout.item)}
       transform={props.transform ?? ""}
     >
       <g class="connectors">
@@ -167,6 +214,15 @@ function ItemNodeView(props) {
       <Show when={togglePosition()}>
         <ToggleControl item={props.layout.item} position={togglePosition()} />
       </Show>
+      <Show when={props.layout.item.resolvedShape.id === "underline"}>
+        <path
+          class="shape-underline"
+          d={underlinePathFor(props.layout.item)}
+          stroke={props.layout.item.resolvedColor}
+          fill="none"
+          stroke-width="2"
+        />
+      </Show>
       <foreignObject
         x={props.layout.item.contentPosition?.[0] ?? 0}
         y={props.layout.item.contentPosition?.[1] ?? 0}
@@ -184,9 +240,25 @@ function ItemNodeView(props) {
           class="content"
           style={shapeStyle(props.layout.item)}
         >
-          <span class="text" style={textStyleFor(props.layout.item)}>
-            {props.layout.item.text}
-          </span>
+          <Show when={hasStatus(props.layout.item)}>
+            <span class={statusClassFor(props.layout.item)} />
+          </Show>
+          <Show when={props.layout.item.value !== null}>
+            <span class="value">{valueTextFor(props.layout.item)}</span>
+          </Show>
+          <Show when={props.layout.item.icon}>
+            <span class={`icon fa ${props.layout.item.icon}`} />
+          </Show>
+          <div
+            class="text"
+            style={textStyleFor(props.layout.item)}
+            innerHTML={props.layout.item.text}
+          />
+          <Show when={hasNotes(props.layout.item)}>
+            <div class="notes" aria-label="Has notes">
+              📎
+            </div>
+          </Show>
         </div>
       </foreignObject>
       <For each={props.layout.childLayouts}>

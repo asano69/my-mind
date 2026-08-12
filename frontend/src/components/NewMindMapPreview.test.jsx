@@ -183,6 +183,34 @@ describe("rootFromMapData", () => {
     ]);
   });
 
+  it("preserves saved rich node fields needed by the JSX renderer", () => {
+    const root = rootFromMapData({
+      root: {
+        text: "Root",
+        children: [
+          {
+            text: "<b>Bold</b> <s>done</s>",
+            shape: "underline",
+            status: "yes",
+            value: 42,
+            icon: "fa-star",
+            notes: "note",
+          },
+        ],
+      },
+    });
+    const child = root.childItems[0];
+
+    expect(child.text).toBe("<b>Bold</b> <s>done</s>");
+    expect(child.resolvedShape).toBe(shapeRepo.get("underline"));
+    expect(child.status).toBe(true);
+    expect(child.resolvedStatus).toBe(true);
+    expect(child.value).toBe(42);
+    expect(child.resolvedValue).toBe(42);
+    expect(child.icon).toBe("fa-star");
+    expect(child.notes).toBe("note");
+  });
+
   it("returns null for missing map data", () => {
     expect(rootFromMapData(null)).toBeNull();
     expect(rootFromMapData({})).toBeNull();
