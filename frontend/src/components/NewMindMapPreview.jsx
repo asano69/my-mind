@@ -17,6 +17,9 @@ import { registerDomRefs } from "../lib/mindmap/newEdit.js";
 import * as newMouse from "../lib/mindmap/newMouse.js";
 import * as newClipboard from "../lib/mindmap/newClipboard.js";
 import * as newViewport from "../lib/mindmap/newViewport.js";
+import * as io from "../lib/mindmap/ui/io.js";
+import * as newIo from "../lib/mindmap/newIo.js";
+import { bumpDirty, titleAuto, setCurrentTitle } from "../lib/mindmap/store.js";
 import { TOGGLE_SIZE } from "../lib/mindmap/item.js";
 import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
 import { repo as shapeRepo } from "../lib/mindmap/shape/shape.js";
@@ -364,15 +367,24 @@ export function rootFromMapData(data) {
   return ItemNode.fromJSON(rootData);
 }
 
-async function loadPreviewRoot(uuid, fallbackTitle) {
-  if (!uuid) {
-    return createPreviewRoot(fallbackTitle);
-  }
-  const record = await loadByUuid(uuid);
-  return rootFromMapData(record.mymind) ?? createPreviewRoot(fallbackTitle);
-}
-
 export default function NewMindMapPreview(props) {
+  // Set by loadPreviewRoot() below whenever a real saved map was loaded
+  // (stays null for a brand-new, unsaved map) -- read by the
+  // root-loaded effect further down to restore io.js's currentMapId/
+  // currentMapUuid/title bookkeeping via newIo.applyLoadedRecord(), the
+  // same bookkeeping the old engine's io.restore() applies internally.
+  let lastLoadedRecord = null;
+
+  async function loadPreviewRoot(uuid, fallbackTitle) {
+    if (!uuid) {
+      lastLoadedRecord = null;
+      return createPreviewRoot(fallbackTitle);
+    }
+    const record = await loadByUuid(uuid);
+    lastLoadedRecord = record;
+    return rootFromMapData(record.mymind) ?? createPreviewRoot(fallbackTitle);
+  }
+
   const [root] = createResource(
     () => ({ uuid: props.uuid ?? null, title: props.title }),
     ({ uuid, title }) => loadPreviewRoot(uuid, title),
@@ -424,11 +436,19 @@ export default function NewMindMapPreview(props) {
     // docs/d01-clipboard-event-targeting.md for why cut/copy/paste can't
     // be scoped to a container element the way mousedown/keydown can.
     newClipboard.init(domRefs);
+    // Registers the debounced auto-save effect and loads the persisted
+    // auto-save preference (see ui/io.js's init()). The old engine's
+    // my-mind.js mount() does this via ui.init(); the new engine never
+    // called it, which is why Save/Delete/auto-save silently did
+    // nothing under ?newEngine=1 until this call was added.
+    io.init();
   });
   onCleanup(() => {
     newMouse.dispose();
     newClipboard.dispose();
     newViewport.dispose();
+    io.dispose();
+    newIo.detach();
   });
 
   // Keeps the root node visually anchored across layout recomputes, and
@@ -443,6 +463,11 @@ export default function NewMindMapPreview(props) {
   // instead of silently keeping the previous root's anchor baseline.
   let centered = false;
   let lastRootSeen = null;
+  // Skips the very first layout pass after a (re)load from bumping
+  // dirtyVersion -- otherwise loading a saved map would immediately look
+  // like an edit and trigger a pointless auto-save of unchanged data
+  // (see ui/io.js's dirtyVersion effect).
+  let dirtyArmed = false;
   createEffect(() => {
     const loadedRoot = root();
     if (!loadedRoot || !svgRef) {
@@ -451,7 +476,19 @@ export default function NewMindMapPreview(props) {
     if (loadedRoot !== lastRootSeen) {
       lastRootSeen = loadedRoot;
       centered = false;
+      dirtyArmed = false;
       newViewport.resetAnchor();
+      // Registers this root/svg as the source ui/io.js's save/autosave
+      // logic reads from (see newIo.js). Only apply the loaded record's
+      // bookkeeping when a real saved map was actually loaded -- doing
+      // this unconditionally for a brand-new map would prematurely
+      // rewrite the URL to "/" before the user ever saves (mirrors the
+      // old engine's io.restore(), which only calls its own
+      // setCurrentMap() when a record was actually found).
+      newIo.attach(loadedRoot, svgRef);
+      if (lastLoadedRecord) {
+        newIo.applyLoadedRecord(lastLoadedRecord);
+      }
     }
     // Reading layoutResult() here (rather than only contentPosition/size
     // directly) is what subscribes this effect to every relevant layout
@@ -460,6 +497,16 @@ export default function NewMindMapPreview(props) {
     // after pulling the memo in the same tracked scope (see
     // itemStore.js's header comment).
     loadedRoot.layoutResult();
+    // Keeps the <svg>'s own width/height in sync with the actual content
+    // bounding box, mirroring map.js's layout computed (which calls
+    // `this.node.setAttribute("width"/"height", ...)` on every pass).
+    // Without this, the <svg> stayed at its hardcoded 640x240 default
+    // forever, which serializeCurrentMap() (see backend/image.js) reads
+    // as the content size when building a saved map's thumbnail --
+    // producing a wrongly cropped/offset export unrelated to what's
+    // actually on screen.
+    svgRef.setAttribute("width", String(loadedRoot.size[0]));
+    svgRef.setAttribute("height", String(loadedRoot.size[1]));
     newViewport.anchorRootPosition(loadedRoot.contentPosition);
     if (!centered) {
       const containerRect = (
@@ -470,6 +517,17 @@ export default function NewMindMapPreview(props) {
         : [window.innerWidth, window.innerHeight];
       newViewport.center(loadedRoot.size, containerSize);
       centered = true;
+    }
+    // Keeps the map's title synced to the root node's label whenever
+    // titleAuto is on, mirroring map.js's own layout computed for the
+    // old engine.
+    if (titleAuto()) {
+      setCurrentTitle(loadedRoot.name);
+    }
+    if (dirtyArmed) {
+      bumpDirty();
+    } else {
+      dirtyArmed = true;
     }
   });
 
@@ -495,14 +553,20 @@ export default function NewMindMapPreview(props) {
           // > .content` rule (root-only bold/140% font-size) requires
           // the root's own <g class="item"> to be a direct child of
           // <svg>, matching the old engine's map.js (`this.node.append
-          // (root.dom.node, ...)`). Passing the initial offset as the
-          // root's own transform (instead of wrapping it in a <g>) keeps
-          // that direct-child relationship intact.
-          <ItemNodeView
-            item={loadedRoot()}
-            domRefs={domRefs}
-            transform={() => "translate(40,40)"}
-          />
+          // (root.dom.node, ...)`).
+          //
+          // No transform on the root itself either -- matching the old
+          // engine, where root.dom.node never gets a `position` (only
+          // its children do, via layoutChildren()) and on-screen
+          // placement is handled entirely by the <svg>'s own style.left/
+          // top (see newViewport.js's moveTo()). An earlier version
+          // passed a fixed "translate(40,40)" here as a stand-in initial
+          // screen offset, but that baked an offset into the exported
+          // SVG's own content coordinates (serializeCurrentMap() clones
+          // this tree as-is), throwing off saved-map thumbnails relative
+          // to the old engine's output, which always starts content at
+          // (0,0) local to the <svg>.
+          <ItemNodeView item={loadedRoot()} domRefs={domRefs} />
         )}
       </Show>
     </svg>

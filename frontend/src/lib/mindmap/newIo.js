@@ -1,0 +1,50 @@
+// newIo.js — adapts the ?newEngine=1 preview's ItemNode tree to
+// ui/io.js's save/autosave/delete/title bookkeeping (see
+// docs/08-mindmap-engine-refactor.md). ui/io.js already owns everything
+// that has nothing to do with which engine owns the tree (currentMapId/
+// currentMapUuid tracking, the debounced auto-save effect, error
+// handling, leave-confirmation); the only engine-specific pieces are
+// "how to serialize the current tree" and "which SVG root to snapshot"
+// -- this module supplies just those two through io.js's pluggable
+// setTreeProvider()/setSvgNodeProvider() hooks instead of duplicating
+// the save machinery itself.
+import * as io from "./ui/io.js";
+
+// Wraps an ItemNode root so it exposes the same toJSON()/name shape
+// ui/io.js's performSave() expects from the old engine's Map instance.
+function adapt(root) {
+  return {
+    toJSON: () => ({ root: root.toJSON() }),
+    get name() {
+      return root.name;
+    },
+  };
+}
+
+// Registers `root`/`svgNode` as the source io.js reads from for save/
+// autosave/SVG snapshotting. Called whenever the preview's root
+// ItemNode (re)loads -- see NewMindMapPreview.jsx.
+export function attach(root, svgNode) {
+  io.setTreeProvider(() => adapt(root));
+  io.setSvgNodeProvider(() => svgNode);
+}
+
+// Restores the record bookkeeping (currentMapId/currentMapUuid/title)
+// for an already-fetched map record, mirroring what the old engine's
+// io.restore() applies internally via its own setCurrentMap() call --
+// the new engine fetches the record itself (see NewMindMapPreview.jsx's
+// loadPreviewRoot()), so this only needs to apply the bookkeeping, not
+// re-fetch anything. Only call this for a map that was actually loaded
+// from the server; a brand-new, never-saved map should leave io.js's
+// currentMapId/currentMapUuid at their defaults instead (see the call
+// site's own comment).
+export function applyLoadedRecord(record) {
+  io.setCurrentMap(record);
+}
+
+// Called on unmount so a stale provider can't outlive this preview
+// instance (e.g. leaking into the next mount before it re-attaches).
+export function detach() {
+  io.setTreeProvider(null);
+  io.setSvgNodeProvider(null);
+}

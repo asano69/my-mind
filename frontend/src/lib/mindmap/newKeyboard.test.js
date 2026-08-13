@@ -396,7 +396,17 @@ describe("newKeyboard.js text editing (Phase 4.5)", () => {
   it("ignores Enter/Escape editing commands while not editing", () => {
     const container = eventTarget();
     newKeyboard.init(container);
-    setCurrentItem({ id: "a" });
+    // Deliberately no currentItem selected here: while not editing,
+    // Enter also matches the mode:"normal" insert-sibling command (see
+    // command/command.js's old InsertSibling, which binds Enter the
+    // same way with no editMode restriction), which is real intended
+    // behavior, not something to suppress. This test only cares that
+    // the mode:"editing" commit command isn't the one that fires; a
+    // real ItemNode would carry isRoot/parent/children, but a stub
+    // missing those would crash inside InsertNewItem's do() for
+    // reasons unrelated to what this test checks. No selection at all
+    // keeps the insert command's own `if (!item) return;` guard as the
+    // early exit instead.
 
     container.dispatch("keydown", {
       code: "Enter",

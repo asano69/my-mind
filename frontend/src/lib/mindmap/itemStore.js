@@ -44,6 +44,7 @@ import { createSignal, createMemo, createRoot, batch } from "solid-js";
 import { repo as shapeRepo } from "./shape/shape.js";
 import { repo as layoutRepo } from "./layout/layout.js";
 import { computeMapLayout } from "./layout/map.js";
+import { br2nl } from "./format/format.js";
 
 const DEFAULT_COLOR = "#999";
 // Placeholder content-box sizes used until an item's real DOM has been
@@ -300,6 +301,18 @@ export default class ItemNode {
 
   get id() {
     return this._id;
+  }
+
+  // Mirrors map.js's Map.prototype.name: the map's display name derived
+  // from the root's own text, used as the auto title (see newIo.js's
+  // adapt() and NewMindMapPreview.jsx's title-sync effect).
+  get name() {
+    return br2nl(this.text)
+      .replace(/\n/g, " ")
+      .replace(/&nbsp;/gi, " ")
+      .replace(/\u00a0/g, " ")
+      .replace(/[<>]/g, "")
+      .trim();
   }
 
   get parent() {

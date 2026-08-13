@@ -18,6 +18,24 @@ import {
   requestLeaveConfirm,
 } from "../store.js";
 
+// Pluggable source for "the tree currently being edited" and "the SVG
+// root to snapshot", so this module's save/autosave/delete bookkeeping
+// can be shared by both engines instead of duplicated (see newIo.js,
+// the ?newEngine=1 preview's adapter). Defaults to the old engine's
+// globals; the new engine registers its own while mounted and clears
+// them on unmount.
+let treeProvider = null;
+let svgNodeProvider = null;
+export function setTreeProvider(provider) {
+  treeProvider = provider;
+}
+export function setSvgNodeProvider(provider) {
+  svgNodeProvider = provider;
+}
+function getCurrentTree() {
+  return treeProvider ? treeProvider() : app.currentMap;
+}
+
 let currentMapId = null; // PocketBase record id, used for save/update calls
 let currentMapUuid = null; // public uuid, used in the URL
 // PocketBase "title" field itself now lives in store.js as a Solid signal
@@ -302,7 +320,7 @@ export async function confirmLeave() {
 }
 
 async function performSave(includeSvg) {
-  const map = app.currentMap;
+  const map = getCurrentTree();
   const mymind = map.toJSON();
   // While titleAuto is on, the title saved is always the root node's
   // current label; otherwise it's whatever the user explicitly set.
@@ -314,7 +332,9 @@ async function performSave(includeSvg) {
   let svg;
   if (includeSvg) {
     try {
-      svg = serializeCurrentMap().xml;
+      svg = serializeCurrentMap(
+        svgNodeProvider ? svgNodeProvider() : undefined,
+      ).xml;
     } catch (e) {
       console.warn("failed to generate SVG snapshot:", e);
     }
@@ -329,7 +349,7 @@ async function performSave(includeSvg) {
     return false;
   }
 }
-function setCurrentMap(record) {
+export function setCurrentMap(record) {
   currentMapId = record ? record.id : null;
   currentMapUuid = record ? record.uuid : null;
   setCurrentTitle(record ? record.title || "" : "");
@@ -375,13 +395,20 @@ export async function deleteCurrentMap() {
 }
 
 function updateURL() {
+  // Preserves the current query string (e.g. "?newEngine=1") -- this
+  // used to always drop it, which was harmless for the old engine (it
+  // has no query-string-driven behavior) but silently kicked the new
+  // engine's preview back to the default path every time a map was
+  // loaded or saved, since this now also runs from the new engine's
+  // newIo.js adapter.
+  const search = globalThis.location?.search ?? "";
   if (!currentMapUuid) {
-    history.replaceState(null, "", "/");
+    history.replaceState(null, "", `/${search}`);
   } else {
     history.replaceState(
       null,
       "",
-      `/maps/${encodeURIComponent(currentMapUuid)}`,
+      `/maps/${encodeURIComponent(currentMapUuid)}${search}`,
     );
   }
 }

@@ -6,12 +6,16 @@ const EXPORT_PADDING = 24;
  * properties embedded so the snapshot renders correctly outside the app,
  * e.g. on the catalog page), along with its final width/height.
  */
-export function serializeCurrentMap() {
+export function serializeCurrentMap(rootSvgNode = app.currentMap.node) {
   const serializer = new XMLSerializer();
   // Clone so we can mutate freely without affecting the live map. The live
   // canvas may be browser-zoomed with CSS transform; exports intentionally use
   // the underlying 100% layout because zoom is only viewport state.
-  const svgNode = app.currentMap.node.cloneNode(true);
+  // rootSvgNode defaults to the old engine's live map node, but callers
+  // (e.g. newIo.js, for the ?newEngine=1 preview) can pass any other SVG
+  // root instead -- this function only clones/reads it, never assumes
+  // which engine produced it.
+  const svgNode = rootSvgNode.cloneNode(true);
   svgNode.style.transform = "";
   svgNode.style.transformOrigin = "";
   // Notes indicator badges (the paperclip icon, see item.js's dom.notes)
