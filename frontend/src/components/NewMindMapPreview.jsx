@@ -194,13 +194,66 @@ function ItemNodeView(props) {
   // change, including the initial one.
   onMount(() => {
     registerDomRef(props.domRefs, props.item, contentRef);
-    const resizeObserver = new ResizeObserver(() => {
-      const item = props.item;
-      const measured = measureContentSize(contentRef, item.defaultContentSize());
-      item.setMeasuredSize(measured);
-    });
-    resizeObserver.observe(contentRef);
-    onCleanup(() => resizeObserver.disconnect());
+  });
+  onCleanup(() => {
+    unregisterDomRef(props.domRefs, props.item);
+  });
+
+  // Remeasures the content box whenever anything that can change its
+  // rendered size changes -- mirrors the old engine's explicit
+  // _bumpContentVersion() calls in item.js's updateText()/updateIcon()/
+  // updateLink() (text, icon, and link-icon presence all affect the box),
+  // plus resolvedShape (box/ellipse/underline swap padding and border via
+  // map.css) and value/status/notes (each toggles a sibling span/badge in
+  // .content, see the JSX below). Reading offsetWidth/offsetHeight forces
+  // the browser to resolve layout on demand, so this always reflects the
+  // DOM state Solid just committed -- no async ResizeObserver callback
+  // needed, and no risk of a stale measurement surviving into the next
+  // layout pass (the bug this replaces: a shape change committing new
+  // CSS padding/border before a lagging ResizeObserver callback caught
+  // up, producing stray gaps or overlap with neighboring nodes).
+  //
+  // Font-loading-driven size changes (FOUT/FOIT) are not covered here,
+  // same as the old engine -- item.js never guarded against that either,
+  // so this is not a new gap relative to prior behavior.
+  createEffect(() => {
+    const item = props.item;
+    // Track every content-affecting signal explicitly.
+    item.resolvedShape;
+    item.text;
+    item.icon;
+    item.url;
+    item.value;
+    item.resolvedValue;
+    item.resolvedStatus;
+    item.notes;
+    if (!contentRef) {
+      return;
+    }
+    item.setMeasuredSize(measureContentSize(contentRef, item.defaultContentSize()));
+  });
+  // Shape changes (ellipse -> underline, box -> ellipse, ...) swap which
+  // map.css rule applies to ".content" (padding/border differ per
+  // shape), changing the rendered content box the moment this render's
+  // data-shape/style writes below commit. ResizeObserver alone is not
+  // enough here: its callback is asynchronous, so contentSize (and thus
+  // foreignObject/connector geometry) can stay stale for a visible
+  // frame -- extra blank space or overlap with a neighboring node. The
+  // old engine avoids this entirely by remeasuring synchronously right
+  // after applying shape-affecting styles, inside the same layout pass
+  // (see item.js's _applyOwnStyle()/_measureOwnContent()). Reading
+  // resolvedShape here is a tracked signal read, so this effect reruns
+  // synchronously right after Solid commits a shape-driven DOM change;
+  // reading offsetWidth/offsetHeight forces the browser to resolve
+  // layout on demand, so the remeasure is never stale.
+  createEffect(() => {
+    props.item.resolvedShape; // track shape changes
+    if (!contentRef) {
+      return;
+    }
+    const item = props.item;
+    const measured = measureContentSize(contentRef, item.defaultContentSize());
+    item.setMeasuredSize(measured);
   });
   onCleanup(() => {
     unregisterDomRef(props.domRefs, props.item);
