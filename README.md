@@ -4,7 +4,9 @@
 <img src="frontend/public/favicon.svg" width="100" align="right" />
 
 Solid Mind is a web application for creating and managing Mind maps.  
-New to Mind maps? They are useful, aesthetic and cool! Read more about these special diagrams in [the Wikipedia article](https://en.wikipedia.org/wiki/Mind_map).
+It is based on a customized and lightweight version of the My Mind JavaScript library (MIT), available at [My Mind GitHub repository](https://github.com/ondras/my-mind).
+
+
 
 >[!NOTE]
 > This mind map application is currently being refactored from an imperative Pub/Sub architecture to Solid.js's declarative fine-grained reactivity model.
