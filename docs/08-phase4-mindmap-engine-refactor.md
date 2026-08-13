@@ -260,6 +260,19 @@ its own stated goals. Phase 5 (bridge pattern dissolution) may proceed.
 
 Phase 6（旧エンジン削除）は従来通り、Phase 5完了後・feature flagなしで新エンジンのみが動作することを確認してからの純粋な削除作業として維持する。
 
+### Phase 5 progress note
+
+Reviewed each of the four bridge points doc08/このドキュメントが挙げていたもの:
+
+- `ui/notes.js`↔`NotesEditor.jsx`（`registerEditorAPI`）: unchanged. EasyMDE remains a vanilla library outside Solid's tree, so this bridge stays, per the original plan.
+- `title.js`↔`store.js`: unchanged. `document.title` is a plain browser API a vanilla module must still poke.
+- `ui/context-menu.js`: already dissolved (doc01, Phase 4) — nothing to do here.
+- `item.js`'s `dom.link` click handler: **dissolved**. Its `isSameOrigin()` helper moved to `urlUtils.js` (already the shared home for `isUrlOnly()`), and its `navigateFn`/`registerNavigate()` module state moved to a new `navigation.js` module shared by both engines, rather than each engine owning its own copy of the same registration bridge. `Workspace.jsx` now registers `navigate()` against `navigation.js` directly instead of reaching into `item.js`.
+
+The new engine's link-open behavior (previously entirely missing from `NewMindMapPreview.jsx`) is now implemented as `newMouse.js`'s `handleItemLinkClick()`, wired as a plain JSX `onClick` prop on a `<span class="link-icon">` in `ItemNodeView` — no imperative `addEventListener` call in a vanilla constructor, matching this phase's stated goal ("これはブリッジというより単純化"). It reuses the same `isSameOrigin()`/`navigateTo()` pair `item.js` now also calls, so the two engines can't drift on same-origin-vs-external navigation logic.
+
+This closes doc08's Phase 5. Phase 6 (old-engine deletion) can proceed once the old engine is no longer needed as the default render path.
+
 
 ---
 

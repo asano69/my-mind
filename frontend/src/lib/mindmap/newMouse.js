@@ -23,6 +23,8 @@ import {
 import { startEditing, commitEditing } from "./newEdit.js";
 import { action, MoveItem, Multi } from "./newAction.js";
 import { decideDropPlacement, isDraggedAncestor } from "./dragPlacement.js";
+import { isSameOrigin } from "./urlUtils.js";
+import { navigateTo } from "./navigation.js";
 
 // --- Stage 4.7.2 (see docs/08-phase4.7-drag-and-drop-refactor.md) ---
 // domRefs-based rect resolution and ghost construction for drag-and-
@@ -476,5 +478,33 @@ export function handleItemDblClick(item, e) {
   }
   if (startEditing(item)) {
     setEditing(true);
+  }
+}
+
+// Opens an item's link (see itemStore.js's `url` field), mirroring the
+// old engine's item.js dom.link click handler -- same-origin links use
+// the shared navigation.js bridge for a client-side transition, external
+// links open in a new tab. Unlike item.js's version (an imperative
+// addEventListener call inside a vanilla constructor), this is wired as
+// a plain JSX onClick prop (see NewMindMapPreview.jsx's ItemNodeView).
+// Deliberately does not stop propagation: the click still bubbles up to
+// the item's own onClick (handleItemClick above), so clicking the link
+// icon both opens the link and selects the node, matching item.js's own
+// spec.
+export function handleItemLinkClick(item) {
+  if (!isCanvasActive()) {
+    return;
+  }
+  const url = item.url;
+  if (!url) {
+    return;
+  }
+  if (isSameOrigin(url)) {
+    const target = new URL(url, window.location.href);
+    if (!navigateTo(target.pathname + target.search + target.hash)) {
+      window.location.href = url;
+    }
+  } else {
+    window.open(url, "_blank", "noopener,noreferrer");
   }
 }

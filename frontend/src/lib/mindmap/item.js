@@ -14,25 +14,14 @@ import { repo as commandRepo } from "./command/command.js";
 import { repo as shapeRepo } from "./shape/shape.js";
 import { repo as layoutRepo } from "./layout/layout.js";
 import Map from "./map.js";
-import { isUrlOnly } from "./urlUtils.js";
+import { isSameOrigin, isUrlOnly } from "./urlUtils.js";
+import { navigateTo } from "./navigation.js";
 
 export const TOGGLE_SIZE = 7;
 const LAYOUT_RESULT = Symbol("Item.layoutResult");
 
 export function readItemLayoutResult(item) {
   return item[LAYOUT_RESULT]();
-}
-
-// Set by Workspace.jsx (the nearest ancestor rendered inside
-// @solidjs/router's <Router>) so same-origin link clicks below can use
-// Solid Router's client-side navigation instead of a full page reload.
-// item.js itself is a plain vanilla module with no router context of its
-// own, so this mirrors the registerEditorAPI bridge pattern notes.js
-// already uses for the same "vanilla module needs to reach into
-// Solid-owned APIs" problem.
-let navigateFn = null;
-export function registerNavigate(fn) {
-  navigateFn = fn;
 }
 
 export default class Item {
@@ -264,13 +253,13 @@ export default class Item {
       if (!url) {
         return;
       }
-      if (isSameOrigin(url) && navigateFn) {
+      if (isSameOrigin(url)) {
         const target = new URL(url, window.location.href);
-        navigateFn(target.pathname + target.search + target.hash);
-      } else if (isSameOrigin(url)) {
-        // Same-origin but no navigate() registered yet (e.g. router not
-        // mounted): fall back to a normal same-tab navigation.
-        window.location.href = url;
+        if (!navigateTo(target.pathname + target.search + target.hash)) {
+          // No navigate() registered yet (e.g. router not mounted): fall
+          // back to a normal same-tab navigation.
+          window.location.href = url;
+        }
       } else {
         window.open(url, "_blank", "noopener,noreferrer");
       }
@@ -966,17 +955,6 @@ export default class Item {
 // URL substring inside otherwise plain text into a clickable <a>. That
 // in-place linkification is gone; a URL is now only ever associated with
 // an item via the explicit `url` field (see the 🔗 icon/updateLink()).
-// Whether `url` resolves to the same origin as the current page. Used by
-// the link-open click handler above to decide SPA-navigate-in-place vs
-// new-tab. Falls back to false (treat as external) for anything that
-// fails to parse as a URL, so a malformed value never throws.
-function isSameOrigin(url) {
-  try {
-    return new URL(url, window.location.href).origin === window.location.origin;
-  } catch {
-    return false;
-  }
-}
 function generateId() {
   let str = "";
   for (var i = 0; i < 8; i++) {

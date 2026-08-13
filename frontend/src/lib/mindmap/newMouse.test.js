@@ -6,6 +6,8 @@ vi.mock("./newEdit.js", () => ({
   startEditing: vi.fn(() => ({})),
   commitEditing: vi.fn(),
 }));
+vi.mock("./urlUtils.js", () => ({ isSameOrigin: vi.fn(() => false) }));
+vi.mock("./navigation.js", () => ({ navigateTo: vi.fn(() => false) }));
 
 // newAction.js is mocked the same way mouse.test.js mocks action.js:
 // MoveItem/Multi just record their constructor args, and action() is a
@@ -31,6 +33,7 @@ vi.mock("./newAction.js", () => ({
 const {
   handleItemClick,
   handleItemDblClick,
+  handleItemLinkClick,
   getContentRectFor,
   buildDragGhost,
   moveDragGhost,
@@ -43,6 +46,8 @@ const {
   init: initMouse,
   dispose: disposeMouse,
 } = await import("./newMouse.js");
+const { isSameOrigin } = await import("./urlUtils.js");
+const { navigateTo } = await import("./navigation.js");
 const {
   currentItem,
   setCurrentItem,
@@ -580,5 +585,55 @@ describe("mousedown/mousemove/mouseup wiring (Stage 4.7.3)", () => {
 
     expect(commitEditing).toHaveBeenCalledWith(target);
     disposeMouse();
+  });
+});
+
+// Phase 5 of docs/08-mindmap-engine-refactor.md: handleItemLinkClick
+// replaces item.js's imperative dom.link addEventListener() with a
+// plain JSX onClick handler (see NewMindMapPreview.jsx), sharing the
+// isSameOrigin/navigateTo bridge with the old engine instead of each
+// engine owning its own copy.
+describe("newMouse.js handleItemLinkClick (Phase 5)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockActiveMode.value = "canvas";
+    globalThis.window = { location: { href: "https://example.com/maps/abc" } };
+  });
+
+  it("ignores clicks while the canvas is backgrounded", () => {
+    mockActiveMode.value = "notes";
+    handleItemLinkClick({ url: "https://example.com/maps/xyz" });
+    expect(navigateTo).not.toHaveBeenCalled();
+  });
+
+  it("does nothing when the item has no url", () => {
+    handleItemLinkClick({ url: "" });
+    expect(navigateTo).not.toHaveBeenCalled();
+  });
+
+  it("navigates in place for a same-origin url", () => {
+    isSameOrigin.mockReturnValue(true);
+    navigateTo.mockReturnValue(true);
+    handleItemLinkClick({ url: "https://example.com/maps/xyz" });
+    expect(navigateTo).toHaveBeenCalledWith("/maps/xyz");
+  });
+
+  it("falls back to a full navigation when nothing is registered yet", () => {
+    isSameOrigin.mockReturnValue(true);
+    navigateTo.mockReturnValue(false);
+    handleItemLinkClick({ url: "https://example.com/maps/xyz" });
+    expect(window.location.href).toBe("https://example.com/maps/xyz");
+  });
+
+  it("opens external urls in a new tab", () => {
+    isSameOrigin.mockReturnValue(false);
+    const openSpy = vi.fn();
+    globalThis.window.open = openSpy;
+    handleItemLinkClick({ url: "https://external.example/" });
+    expect(openSpy).toHaveBeenCalledWith(
+      "https://external.example/",
+      "_blank",
+      "noopener,noreferrer",
+    );
   });
 });

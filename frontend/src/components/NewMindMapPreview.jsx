@@ -11,6 +11,7 @@ import { itemStateClassList } from "../lib/mindmap/itemSelection.js";
 import {
   handleItemClick,
   handleItemDblClick,
+  handleItemLinkClick,
 } from "../lib/mindmap/newMouse.js";
 import { registerDomRefs } from "../lib/mindmap/newEdit.js";
 import * as newMouse from "../lib/mindmap/newMouse.js";
@@ -245,6 +246,23 @@ function ItemNodeView(props) {
             style={textStyleFor(props.item)}
             innerHTML={props.item.text}
           />
+          {/* Link icon: same lucide "link-2" path as item.js's
+              buildLinkIcon(), rendered as a plain JSX element instead of
+              an imperatively built SVG node -- see newMouse.js's
+              handleItemLinkClick for the click behavior it shares with
+              the old engine. Reuses map.css's ".item .link-icon" rule
+              (already injected via <style>{mapCss}</style> above), so no
+              new CSS is needed here. */}
+          <Show when={props.item.url}>
+            <span class="link-icon" onClick={() => handleItemLinkClick(props.item)}>
+              <svg viewBox="0 0 36 36" fill="none">
+                <path
+                  d="M34,17H28.23A6.25,6.25,0,0,0,22,12H14.15a6.25,6.25,0,0,0-6.21,5H2v2H7.93a6.22,6.22,0,0,0,6.22,5H22a6.22,6.22,0,0,0,6.22-5H34ZM17.08,22H14.15a4.17,4.17,0,0,1-4.31-4,4.17,4.17,0,0,1,4.31-4h2.94ZM22,22H19V14h3a4.17,4.17,0,0,1,4.31,4A4.17,4.17,0,0,1,22,22Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </span>
+          </Show>
           <Show when={hasNotes(props.item)}>
             <div class="notes" aria-label="Has notes">
               📎
