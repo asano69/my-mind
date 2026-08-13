@@ -3,6 +3,7 @@ import * as actions from "./action.js";
 import { repo as commandRepo } from "./command/command.js";
 import { isCanvasActive } from "./scope.js";
 import { setHoveredItem } from "./store.js";
+import { decideDropPlacement } from "./dragPlacement.js";
 
 const TOUCH_DELAY = 500;
 const SHADOW_OFFSET = 5;
@@ -427,6 +428,13 @@ function finishDragDrop(state) {
  * Compute a state object for a drag: current result (""/"append"/"sibling"), parent/sibling, direction.
  * Returns result="" if the drop target is a dragged item itself or one of its descendants.
  */
+// Resolves the drop target, then delegates the actual append/sibling
+// decision to dragPlacement.js's decideDropPlacement() (see
+// docs/08-phase4.7-drag-and-drop-refactor.md, Stage 4.7.1). Only the
+// target/rect resolution stays here, since that part is genuinely
+// DOM-dependent (getStableDropCollision/getContentRect); the decision
+// logic itself is now shared with the ?newEngine=1 preview's upcoming
+// drag-and-drop port, which will source targetRect via domRefs instead.
 function computeDragState() {
   if (!app.currentMap) {
     return { result: "", target: null, direction: "left" };
@@ -437,57 +445,15 @@ function computeDragState() {
   let point = current.cursor;
   let closest = getStableDropCollision(point);
   let target = closest.item;
-  let state = {
-    result: "",
+  const targetRect = target.isRoot ? null : getContentRect(target);
+  return decideDropPlacement({
+    point,
     target,
-    direction: "left",
-  };
-  // Reject drop if target is inside any of the dragged subtrees
-  for (const draggedItem of current.items) {
-    let tmp = target;
-    while (!tmp.isRoot) {
-      if (tmp === draggedItem) {
-        return state;
-      }
-      tmp = tmp.parent;
-    }
-    if (tmp === draggedItem) {
-      return state;
-    } // root check
-  }
-  if (target.isRoot) {
-    // append here
-    state.result = "append";
-    return state;
-  }
-  // The append zone is exactly the rectangle used to highlight a selected
-  // node (target's content box -- see map.css's
-  // ".item.current > foreignObject > .content" rule). Anywhere inside
-  // that rect drops the dragged item(s) as a child of target; outside it,
-  // insert as a sibling before/after depending on which side of the
-  // layout axis the cursor landed on.
-  const rect = getContentRect(target);
-  const insideContentRect =
-    point[0] >= rect.left &&
-    point[0] <= rect.right &&
-    point[1] >= rect.top &&
-    point[1] <= rect.bottom;
-  if (insideContentRect) {
-    state.result = "append";
-    return state;
-  }
-  let childDirection = target.parent.resolvedLayout.getChildDirection(target);
-  const isVerticalSiblings =
-    childDirection == "left" || childDirection == "right";
-  state.result = "sibling";
-  state.direction = isVerticalSiblings
-    ? closest.dy < 0
-      ? "bottom"
-      : "top"
-    : closest.dx < 0
-      ? "right"
-      : "left";
-  return state;
+    targetRect,
+    dx: closest.dx,
+    dy: closest.dy,
+    draggedItems: current.items,
+  });
 }
 function getStableDropCollision(point) {
   // Whatever the pointer is actually over must always win: this is
