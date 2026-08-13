@@ -157,3 +157,82 @@ refactor.md`, which already pass through the shared `decideDropPlacement`
 and so are expected to hold, but haven't been re-run against this
 wiring specifically) and large-tree locality/performance checks.
 
+### Stage 4.7.4 progress note
+
+Ported the remaining `mouse.test.js` scenarios this stage's plan called
+out, and added the large-tree locality check the plan asks for.
+
+- **Sticky collision hysteresis**: `newMouse.test.js`'s
+  `getStableDropCollisionFor` tests previously covered only "direct hit"
+  and "nothing hit, falls back to plain closest-item" -- neither
+  actually exercised the hysteresis branch itself. Added two tests: with
+  no `previousTarget`, a point resolves to whichever item is nearest by
+  raw distance (the dragged item, in the new case); with a
+  `previousTarget` passed in and the point still inside that target's
+  padded rect, the previous target is kept even though it is no longer
+  the nearest item by raw distance. This mirrors `mouse.js`'s own
+  `getStableDropCollision()` hysteresis, which `getStableDropCollisionFor()`
+  was already supposed to replicate (Stage 4.7.3) but had no direct test
+  proving the hysteresis path, as opposed to the two simpler paths
+  around it.
+- **Axis-margin append/sibling boundary**: already covered indirectly.
+  `decideDropPlacement()` (Stage 4.7.1) is the exact same function both
+  `mouse.js` and `newMouse.js` call, and `dragPlacement.test.js` already
+  exercises its append/sibling boundary directly against that shared
+  function. No new tests were needed here -- re-testing the same pure
+  function a second time from `newMouse.test.js` would only duplicate
+  coverage without protecting against anything new.
+- **Post-drag click suppression / direct-hit target resolution / focus
+  handoff**: already covered by Stage 4.7.3's own `newMouse.test.js`
+  tests ("suppresses the synthetic post-drag click", "drags a node onto
+  another and dispatches a MoveItem action on mouseup", the
+  `container.focus` assertions in both the successful-drag and
+  backgrounded-canvas tests). No gaps found.
+- **Wheel-zoom / pan / touch**: intentionally left unported, matching
+  this document's own Non-goals and Stage 4.7.3's scoping note -- the
+  new engine has no pan command yet, and touch/pinch was never in scope
+  for this refactor.
+- **Large-tree locality**: added
+  `frontend/src/lib/mindmap/newMouse-drag-locality.test.js`, mirroring
+  `itemStore-layout-locality.test.js`'s instrumentation pattern (spying
+  on every item's `_computeLayout`). Dispatches a real `newAction.js`
+  `MoveItem` (the same action `finishNewDragDrop()` builds) moving a
+  deep leaf from one branch to a sibling branch, then confirms: (1) a
+  completely untouched third branch never has its `_computeLayout`
+  called at all, and (2) on a 781-node tree the total recompute count
+  stays under 10% of the tree -- proportional to the two affected
+  root-to-branch paths, not the whole tree. This closes the "大量ノード
+  でのドラッグが局所再計算を壊していないか" item this stage's plan
+  called for.
+
+**Prerequisite gap fixed alongside this stage**: `newMouse.init()` was
+never actually called from `NewMindMapPreview.jsx`/`MindMapCanvas.jsx`.
+Stage 4.7.3 built and unit-tested the module in isolation but never
+wired it into the real component tree, so drag-and-drop silently did
+nothing end-to-end despite every unit test passing. `NewMindMapPreview.jsx`
+now attaches a `ref` to its own `<svg>` and calls `newMouse.init()`/
+`newMouse.dispose()` from `onMount`/`onCleanup`; `MindMapCanvas.jsx`
+passes its `containerRef` through as `containerEl` so `onDragStart`'s
+focus-handoff still targets the shared focusable wrapper, not the SVG
+element itself.
+
+**Known follow-up, not fixed in this stage**: `newMouse.js`'s
+`buildDragGhost()` calls `port.append(ghost)`, and `port` is now an
+`<svg>` element (unlike `mouse.js`'s `<main>`). Appending an HTML
+`<div class="ghost">` as a direct child of an `<svg>` is not valid
+without a wrapping `<foreignObject>`, so the drag ghost's visual
+rendering may be broken even though the underlying selection/
+drop-target/action-dispatch logic (covered by this stage's tests) is
+correct. Tracked as a separate follow-up since it is a rendering
+concern, not a functional one, and out of scope for a "test porting and
+regression checklist" stage.
+
+## Stage一覧（更新）
+
+| Stage | 内容 | リスク | 状態 |
+|---|---|---|---|
+| 4.7.1 | append/sibling判定の純粋関数抽出（旧エンジンのみ、挙動不変） | 低 | 完了 |
+| 4.7.2 | domRefsベースのrect取得・ゴースト構築（新エンジン、未配線） | 中 | 完了 |
+| 4.7.3 | イベント配線・要素逆引き・action統合 | 中〜高 | 完了（実コンポーネントへの配線漏れは4.7.4で修正） |
+| 4.7.4 | テスト移植・回帰チェックリスト | 低〜中 | 完了 |
+

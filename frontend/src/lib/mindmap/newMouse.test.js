@@ -381,6 +381,33 @@ describe("getStableDropCollisionFor (Stage 4.7.3)", () => {
 
     expect(result.item).toBe(target); // closest to point 150,150
   });
+
+  // Mirrors mouse.js's own getStableDropCollision() hysteresis (see
+  // docs/d... no cross-doc reference needed, this is DOM/UX behavior
+  // shared by both engines): a point at (80, 210) is, by raw distance,
+  // closer to "dragged" (rect 0,200-60,230, center 30,215) than to
+  // "target" (rect 100,100-200,200, center 150,150) -- but it still
+  // falls inside target's DROP_TARGET_STICKY_PADDING-expanded rect
+  // (76,76-224,224). Without hysteresis this point would resolve to
+  // "dragged"; with a previousTarget of "target" passed in, it must
+  // stay "target" instead, avoiding flicker in gaps between nodes.
+  it("without a previousTarget, resolves to whichever item is nearest by raw distance", () => {
+    const { root, dragged, domRefs } = buildTree();
+    document.elementFromPoint.mockReturnValue(null);
+
+    const result = getStableDropCollisionFor(root, domRefs, [80, 210], null);
+
+    expect(result.item).toBe(dragged);
+  });
+
+  it("with a previousTarget still within its expanded rect, keeps it via hysteresis even though it is no longer the nearest item", () => {
+    const { root, target, domRefs } = buildTree();
+    document.elementFromPoint.mockReturnValue(null);
+
+    const result = getStableDropCollisionFor(root, domRefs, [80, 210], target);
+
+    expect(result.item).toBe(target);
+  });
 });
 
 describe("finishNewDragDrop (Stage 4.7.3)", () => {
