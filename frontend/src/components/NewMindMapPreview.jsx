@@ -16,6 +16,7 @@ import {
 import { registerDomRefs } from "../lib/mindmap/newEdit.js";
 import * as newMouse from "../lib/mindmap/newMouse.js";
 import * as newClipboard from "../lib/mindmap/newClipboard.js";
+import * as newViewport from "../lib/mindmap/newViewport.js";
 import { TOGGLE_SIZE } from "../lib/mindmap/item.js";
 import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
 import { repo as shapeRepo } from "../lib/mindmap/shape/shape.js";
@@ -399,6 +400,10 @@ export default function NewMindMapPreview(props) {
   // loading, or the user can switch maps, after this component mounts.
   let svgRef;
   onMount(() => {
+    // Initial position matches this <svg>'s own static left/top below
+    // (40px, 40px), so wiring pan/zoom in doesn't cause a visible jump
+    // on mount.
+    newViewport.init(svgRef, [40, 40]);
     newMouse.init(domRefs, svgRef, props.containerEl ?? svgRef, () => root());
     // Listens on `document`'s capture phase, not this component's own
     // <svg> ref -- see newClipboard.js's header comment and
@@ -409,6 +414,7 @@ export default function NewMindMapPreview(props) {
   onCleanup(() => {
     newMouse.dispose();
     newClipboard.dispose();
+    newViewport.dispose();
   });
 
   return (

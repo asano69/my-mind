@@ -25,6 +25,7 @@ import { action, MoveItem, Multi } from "./newAction.js";
 import { decideDropPlacement, isDraggedAncestor } from "./dragPlacement.js";
 import { isSameOrigin } from "./urlUtils.js";
 import { navigateTo } from "./navigation.js";
+import * as viewport from "./newViewport.js";
 
 // --- Stage 4.7.2 (see docs/08-phase4.7-drag-and-drop-refactor.md) ---
 // domRefs-based rect resolution and ghost construction for drag-and-
@@ -301,6 +302,7 @@ export function init(domRefs, port_, container_, getRoot) {
   getRootFn = getRoot;
   port.addEventListener("mousedown", onDragStart);
   port.addEventListener("click", onClick);
+  port.addEventListener("wheel", onWheel);
 }
 
 // Called on unmount. Removes every listener registered by init(),
@@ -312,6 +314,7 @@ export function dispose() {
     port.removeEventListener("mousemove", onDragMove);
     port.removeEventListener("mouseup", onDragEnd);
     port.removeEventListener("click", onClick);
+    port.removeEventListener("wheel", onWheel);
   }
   if (current.ghost) {
     current.ghost.remove();
@@ -339,6 +342,20 @@ function onClick(e) {
   }
 }
 
+// Mirrors mouse.js's onWheel(): zooms around the wheel cursor position.
+function onWheel(e) {
+  if (!isCanvasActive()) {
+    return;
+  }
+  const { deltaY } = e;
+  if (!deltaY) {
+    return;
+  }
+  e.preventDefault();
+  const dir = deltaY > 0 ? -1 : 1;
+  viewport.adjustZoom(dir, [e.clientX, e.clientY]);
+}
+
 function eventToPoint(e) {
   return [e.clientX, e.clientY];
 }
@@ -352,9 +369,6 @@ function onDragStart(e) {
     return;
   }
   const item = getItemForElement(root, domRefsRef, e.target);
-  if (!item || item.isRoot) {
-    return;
-  }
   if (editing()) {
     const editedItem = currentItem();
     if (item === editedItem) {
@@ -370,17 +384,25 @@ function onDragStart(e) {
   // container.focus() call here.
   container?.focus();
   current.cursor = eventToPoint(e);
-  current.mode = "drag";
-  const isSelected = item === currentItem() || selectedItems().has(item);
-  if (isSelected) {
-    current.items = getAllSelectedItems().filter((i) => i && !i.isRoot);
+  if (item && !item.isRoot) {
+    current.mode = "drag";
+    const isSelected = item === currentItem() || selectedItems().has(item);
+    if (isSelected) {
+      current.items = getAllSelectedItems().filter((i) => i && !i.isRoot);
+    } else {
+      // Selection itself is deferred to the first real move (see
+      // onDragMove) so a plain click's Ctrl+click multi-selection isn't
+      // clobbered before the click event has a chance to run -- same
+      // reasoning as mouse.js's own onDragStart.
+      current.items = [item];
+      current.ctrlHeld = e.ctrlKey || e.metaKey;
+    }
   } else {
-    // Selection itself is deferred to the first real move (see
-    // onDragMove) so a plain click's Ctrl+click multi-selection isn't
-    // clobbered before the click event has a chance to run -- same
-    // reasoning as mouse.js's own onDragStart.
-    current.items = [item];
-    current.ctrlHeld = e.ctrlKey || e.metaKey;
+    // No item under the pointer (or the root itself, which never
+    // participates in drag-and-drop) -- pan the viewport instead,
+    // mirroring mouse.js's own else-branch.
+    current.mode = "pan";
+    port.style.cursor = "move";
   }
   e.preventDefault();
   port.addEventListener("mousemove", onDragMove);
@@ -391,6 +413,11 @@ function onDragMove(e) {
   const point = eventToPoint(e);
   const delta = [point[0] - current.cursor[0], point[1] - current.cursor[1]];
   current.cursor = point;
+  if (current.mode === "pan") {
+    e.preventDefault();
+    viewport.moveBy(delta);
+    return;
+  }
   if (current.mode !== "drag") {
     return;
   }
@@ -425,9 +452,14 @@ function onDragMove(e) {
 }
 
 function onDragEnd(_e) {
+  port.style.cursor = "";
   port.removeEventListener("mousemove", onDragMove);
   port.removeEventListener("mouseup", onDragEnd);
   const { mode, ghost, previousDragState } = current;
+  if (mode === "pan") {
+    current.mode = "";
+    return;
+  }
   if (mode !== "drag") {
     current.mode = "";
     return;
