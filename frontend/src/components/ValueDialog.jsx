@@ -1,10 +1,8 @@
 import { createEffect, createSignal, Show } from "solid-js";
 import { Dialog } from "@kobalte/core/dialog";
-import {
-  currentItem,
-  valueDialogOpen,
-  closeValueDialog,
-} from "../lib/mindmap/store";
+import { currentItem as oldCurrentItem, valueDialogOpen, closeValueDialog } from "../lib/mindmap/store";
+import { currentItem as newCurrentItem } from "../lib/mindmap/itemSelection";
+import { isNewEngineEnabled } from "../lib/mindmap/newEngineFlag";
 
 // Replaces command/edit.js's old prompt()-based "Set value" flow with a
 // Kobalte dialog, mirroring ConfirmDialog.jsx's structure. Always
@@ -24,11 +22,18 @@ export default function ValueDialog() {
   let inputRef;
   const [value, setValue] = createSignal("");
 
-  // Dynamically imported on first confirm, like RightPanel.jsx does for
-  // the same modules -- avoids pulling the engine bundle in before the
-  // canvas actually mounts.
-  let actionsModule;
-  let appModule;
+  // Same engine-selection pattern as RightPanelProperties.jsx: pick the
+  // right selection signal once, up front, so the rest of this component
+  // stays engine-agnostic.
+  const newEngine = isNewEngineEnabled();
+  const currentItem = newEngine ? newCurrentItem : oldCurrentItem;
+
+  // Dynamically imported on first confirm, like RightPanelProperties.jsx
+  // does for the same modules -- avoids pulling the engine bundle in
+  // before the canvas actually mounts. SetValueClass is the action
+  // class; dispatchAction pushes it onto history and runs it.
+  let SetValueClass;
+  let dispatchAction;
 
   // Pre-fills the input with the current item's value whenever the
   // dialog opens, mirroring window.prompt()'s default-text behavior.
@@ -57,16 +62,24 @@ export default function ValueDialog() {
       // stale keydown racing a fresh value() update.
       return;
     }
-    if (!actionsModule || !appModule) {
-      [actionsModule, appModule] = await Promise.all([
-        import("../lib/mindmap/action.js"),
-        import("../lib/mindmap/my-mind.js"),
-      ]);
+    if (!dispatchAction) {
+      if (newEngine) {
+        const mod = await import("../lib/mindmap/newAction.js");
+        SetValueClass = mod.SetValue;
+        dispatchAction = mod.action;
+      } else {
+        const [actionsMod, appMod] = await Promise.all([
+          import("../lib/mindmap/action.js"),
+          import("../lib/mindmap/my-mind.js"),
+        ]);
+        SetValueClass = actionsMod.SetValue;
+        dispatchAction = appMod.action;
+      }
     }
     // Empty input clears the value; otherwise it's always a real
     // number now that isInvalidInput() rejects anything else.
     const newValue = raw.length ? Number(raw) : null;
-    appModule.action(new actionsModule.SetValue(item, newValue));
+    dispatchAction(new SetValueClass(item, newValue));
     closeValueDialog();
   }
 

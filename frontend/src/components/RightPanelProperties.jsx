@@ -1,5 +1,7 @@
 import { createEffect, createMemo, createSignal, onMount } from "solid-js";
-import { currentItem } from "../lib/mindmap/store";
+import { currentItem as oldCurrentItem, openValueDialog } from "../lib/mindmap/store";
+import { currentItem as newCurrentItem } from "../lib/mindmap/itemSelection";
+import { isNewEngineEnabled } from "../lib/mindmap/newEngineFlag";
 import SelectField from "./SelectField";
 import ColorPicker from "./ColorPicker";
 import UrlField from "./UrlField";
@@ -49,30 +51,42 @@ function isInvalidUrl(text) {
 // currently selected item" concern, independent of the panel's export
 // actions or footer.
 export default function RightPanelProperties() {
+  // Picks the right engine's selection signal once, at component setup
+  // (the flag never changes mid-session, see newEngineFlag.js), so every
+  // handler below can just call currentItem()/dispatchAction(...) without
+  // knowing which engine is active.
+  const newEngine = isNewEngineEnabled();
+  const currentItem = newEngine ? newCurrentItem : oldCurrentItem;
+
   // Cached after the first dynamic import, see onMount -- loaded lazily
   // so the engine bundle isn't pulled in before the canvas actually
-  // mounts.
+  // mounts. actionsModule exposes the Set* action classes; dispatchAction
+  // is the function that pushes an action onto history and runs it --
+  // newAction.js bundles both into one module for the new engine, while
+  // the old engine splits them across action.js and my-mind.js. There is
+  // no "value" command repo dependency anymore (see setValue() below):
+  // that command only ever opened store.js's shared valueDialogOpen
+  // signal, which this component now does directly.
   let actionsModule;
-  let appModule;
-  let commandRepo;
+  let dispatchAction;
   let layoutRepo;
   let shapeRepo;
 
   const [ready, setReady] = createSignal(false);
 
   onMount(async () => {
-    const [actionsMod, appMod, cmdMod, layoutMod, shapeMod] = await Promise.all(
-      [
-        import("../lib/mindmap/action.js"),
-        import("../lib/mindmap/my-mind.js"),
-        import("../lib/mindmap/command/command.js"),
-        import("../lib/mindmap/layout/layout.js"),
-        import("../lib/mindmap/shape/shape.js"),
-      ],
-    );
+    const [[actionsMod, dispatch], layoutMod, shapeMod] = await Promise.all([
+      newEngine
+        ? import("../lib/mindmap/newAction.js").then((mod) => [mod, mod.action])
+        : Promise.all([
+            import("../lib/mindmap/action.js"),
+            import("../lib/mindmap/my-mind.js"),
+          ]).then(([actionsMod, appMod]) => [actionsMod, appMod.action]),
+      import("../lib/mindmap/layout/layout.js"),
+      import("../lib/mindmap/shape/shape.js"),
+    ]);
     actionsModule = actionsMod;
-    appModule = appMod;
-    commandRepo = cmdMod.repo;
+    dispatchAction = dispatch;
     layoutRepo = layoutMod.repo;
     shapeRepo = shapeMod.repo;
     setReady(true);
@@ -187,7 +201,7 @@ export default function RightPanelProperties() {
       returnFocusToCanvas();
       return;
     }
-    appModule.action(new actionsModule.SetUrl(item, raw));
+    dispatchAction(new actionsModule.SetUrl(item, raw));
     returnFocusToCanvas();
   }
 
@@ -209,7 +223,7 @@ export default function RightPanelProperties() {
       return;
     }
     const layout = layoutRepo.get(value);
-    appModule.action(new actionsModule.SetLayout(item, layout));
+    dispatchAction(new actionsModule.SetLayout(item, layout));
     returnFocusToCanvas();
   }
 
@@ -226,7 +240,7 @@ export default function RightPanelProperties() {
       return;
     }
     const shape = shapeRepo.get(value);
-    appModule.action(new actionsModule.SetShape(item, shape));
+    dispatchAction(new actionsModule.SetShape(item, shape));
     returnFocusToCanvas();
   }
 
@@ -236,10 +250,14 @@ export default function RightPanelProperties() {
       return;
     }
     if (value === "num") {
-      // Same prompt()-based flow as the "value" keyboard shortcut/command.
-      // Always allowed to reopen (even if the item is already numeric),
-      // since opening the dialog has no history side effect of its own.
-      commandRepo.get("value").execute();
+      // Opens the Kobalte-based ValueDialog directly via store.js's
+      // shared signal, rather than routing through command/command.js's
+      // "value" command -- that command repo is old-engine-only (its
+      // Command class reads app.editing/app.currentItem), while
+      // valueDialogOpen/ValueDialog.jsx are already shared by both
+      // engines. Always allowed to reopen (even if the item is already
+      // numeric), since opening the dialog has no history side effect.
+      openValueDialog();
       returnFocusToCanvas();
       return;
     }
@@ -251,7 +269,7 @@ export default function RightPanelProperties() {
       returnFocusToCanvas();
       return;
     }
-    appModule.action(new actionsModule.SetValue(item, value || null));
+    dispatchAction(new actionsModule.SetValue(item, value || null));
     returnFocusToCanvas();
   }
 
@@ -266,7 +284,7 @@ export default function RightPanelProperties() {
       return;
     }
     const status = value in STATUS_MAP ? STATUS_MAP[value] : value;
-    appModule.action(new actionsModule.SetStatus(item, status));
+    dispatchAction(new actionsModule.SetStatus(item, status));
     returnFocusToCanvas();
   }
 
@@ -277,7 +295,7 @@ export default function RightPanelProperties() {
     if (color === undefined || !item || !actionsModule) {
       return;
     }
-    appModule.action(new actionsModule.SetColor(item, color));
+    dispatchAction(new actionsModule.SetColor(item, color));
   }
 
   function setTextColor(e) {
@@ -287,7 +305,7 @@ export default function RightPanelProperties() {
     if (color === undefined || !item || !actionsModule) {
       return;
     }
-    appModule.action(new actionsModule.SetTextColor(item, color));
+    dispatchAction(new actionsModule.SetTextColor(item, color));
   }
 
   return (
