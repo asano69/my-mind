@@ -2,7 +2,7 @@ import { A } from "@solidjs/router";
 
 // size: overall pixel size of the icon (width == height). Defaults to
 // 40px (the old fixed "w-10 h-10" Tailwind size).
-// showTitle: whether to render "My Mind" next to the icon.
+// showTitle: whether to render "Solid Mind" next to the icon.
 // linkable: whether clicking the logo navigates home ("/"). Defaults to
 // false and must stay false for Login.jsx's usage: Login is rendered by
 // AuthGate as a fallback *outside* the Router (see main.jsx), so
@@ -82,7 +82,7 @@ export default function Logo(props) {
         "font-size": `${titleFontSize()}px`,
       }}
     >
-      My Mind
+      Solid Mind
     </span>
   );
 
