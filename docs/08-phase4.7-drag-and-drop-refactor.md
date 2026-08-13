@@ -73,3 +73,37 @@ collision、post-dragクリック抑制）を`domRefs`ベースの新実装向�
 | 4.7.4 | テスト移植・回帰チェックリスト | 低〜中 | 4.7.3 |
 
 各段階は独立してコミット/検証してから次に進む（doc01以来の運用方針）。
+
+### Stage 4.7.2 progress note
+
+Added four DOM-free-testable helpers to `newMouse.js`, sourcing elements
+through the `domRefs` registry (Phase 4.1) instead of `item.dom`:
+
+- `getContentRectFor(domRefs, item)` — mirrors `mouse.js`'s
+  `getContentRect()`, including its `contentSize`-based fallback and the
+  explicit field-by-field `DOMRect` copy (spreading a `DOMRect` silently
+  drops its accessor-based fields, same pitfall noted in `mouse.js`'s
+  own comment).
+- `buildDragGhost(domRefs, port, items, cursorPoint)` — mirrors
+  `buildGhost()`, cloning the dragged item's registered content element,
+  adding the multi-drag count badge, and centering the ghost on the
+  cursor relative to `port`'s own box. Returns `{ ghost, position }`
+  instead of mutating shared module state (`newMouse.js` has no
+  `current`-style mutable drag state yet — that arrives with Stage
+  4.7.3's actual event wiring), or `null` if the item has no registered
+  ref.
+- `moveDragGhost(ghost, position, delta)` — mirrors `moveGhost()`,
+  mutating and returning the given `position` array in place so a
+  caller can thread it through repeated `mousemove` deltas.
+- `visualizeNewDragState(domRefs, previousTarget, state)` — mirrors
+  `visualizeDragState()`, but takes the previous *target item* directly
+  rather than mouse.js's own `current.previousDragState` bookkeeping
+  (again deferred to Stage 4.7.3, which owns the actual drag-session
+  state machine).
+
+None of these are wired to a real `mousedown`/`mousemove`/`mouseup`
+event yet, and none of them reference `elementFromPoint`-based item
+lookup (`getStableDropCollision`'s counterpart) — both are Stage 4.7.3's
+job. `newMouse.test.js` gained a matching set of DOM-free stub tests,
+reusing `mouse.test.js`'s own `contentNode()`-style stub pattern rather
+than a real DOM.
