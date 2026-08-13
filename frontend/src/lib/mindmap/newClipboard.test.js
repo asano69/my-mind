@@ -96,7 +96,11 @@ function documentTarget() {
       }
     }),
     dispatch(type, event, capture = true) {
-      listeners.get(key(type, capture))?.(event);
+      // newClipboard.js's onCopyCut() switches on e.type (mirroring a
+      // real browser Event's own .type field) to distinguish "copy"
+      // from "cut" -- without this, every dispatched event fell through
+      // to the switch's default case and silently no-op'd.
+      listeners.get(key(type, capture))?.({ ...event, type });
     },
   };
 }
@@ -218,9 +222,12 @@ describe("newClipboard.js copy/cut", () => {
   it("copy clones the selected item and writes plaintext to the clipboard", () => {
     const domRefs = new Map();
     newClipboard.init(domRefs);
+    const root = new ItemNode();
     const item = new ItemNode();
     item.text = "hello";
+    root.insertChild(item); // must be non-root for onCopyCut()'s isRoot filter to include it
     setCurrentItem(item);
+    formatRepo.get("plaintext").to.mockReturnValue("plaintext-output");
 
     const setData = vi.fn();
     doc.dispatch("copy", {
@@ -234,7 +241,9 @@ describe("newClipboard.js copy/cut", () => {
   });
 
   it("cut adds the .cut class via domRefs to every selected non-root item", () => {
+    const root = new ItemNode();
     const item = new ItemNode();
+    root.insertChild(item); // must be non-root for onCopyCut()'s isRoot filter to include it
     const el = domNode();
     const domRefs = new Map([[item.id, el]]);
     newClipboard.init(domRefs);
@@ -344,8 +353,10 @@ describe("newClipboard.js paste", () => {
 
   it("internal copy-paste dispatches an AppendItem with a fresh clone", () => {
     const target = new ItemNode();
+    const sourceRoot = new ItemNode();
     const source = new ItemNode();
     source.text = "copied";
+    sourceRoot.insertChild(source); // must be non-root for onCopyCut()'s isRoot filter to include it
     formatRepo.get("plaintext").to.mockReturnValue("copied-text");
 
     newClipboard.init();
