@@ -251,7 +251,7 @@ export function finishNewDragDrop(state, items) {
       subactions.push(new MoveItem(item, target));
     } else if (result === "sibling") {
       const parent = target.parent;
-      const index = parent.children.indexOf(target);
+      const index = parent.childItems.indexOf(target);
       const targetIndex =
         index + (direction === "right" || direction === "bottom" ? 1 : 0);
       subactions.push(new MoveItem(item, parent, targetIndex, target.side));
