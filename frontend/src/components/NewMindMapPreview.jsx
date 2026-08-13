@@ -13,6 +13,7 @@ import {
   handleItemDblClick,
 } from "../lib/mindmap/newMouse.js";
 import { registerDomRefs } from "../lib/mindmap/newEdit.js";
+import * as newMouse from "../lib/mindmap/newMouse.js";
 import { TOGGLE_SIZE } from "../lib/mindmap/item.js";
 import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
 import { repo as shapeRepo } from "../lib/mindmap/shape/shape.js";
@@ -370,8 +371,22 @@ export default function NewMindMapPreview(props) {
   registerDomRefs(domRefs);
   onCleanup(() => registerDomRefs(null));
 
+  // Wires mousedown/mousemove/mouseup/click drag-and-drop handling onto
+  // this component's own <svg> root (see newMouse.js's Stage 4.7.3).
+  // Previously this module only built newMouse.js's helpers/tests
+  // without ever calling init() from a real component -- drag-and-drop
+  // silently did nothing as a result. getRoot is passed as a function
+  // (not the resource's current value) since the tree can still be
+  // loading, or the user can switch maps, after this component mounts.
+  let svgRef;
+  onMount(() => {
+    newMouse.init(domRefs, svgRef, props.containerEl ?? svgRef, () => root());
+  });
+  onCleanup(() => newMouse.dispose());
+
   return (
     <svg
+      ref={svgRef}
       data-engine="solid-item-node-preview"
       width="640"
       height="240"

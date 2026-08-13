@@ -38,6 +38,7 @@ export default function MindMapCanvas(props) {
           <NewMindMapPreview
             uuid={props.uuid}
             title={new Date().toISOString().slice(0, 10)}
+            containerEl={containerRef}
           />
         ),
         mainRef,
