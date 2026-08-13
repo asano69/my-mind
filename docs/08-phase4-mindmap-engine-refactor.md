@@ -128,6 +128,45 @@ Phase 4は「mouse/keyboard/clipboard統合 + currentItemの一本化 + ドラ�
 
 リスク: 低〜中。新エンジン内部の整理であり、旧エンジンの本番経路には影響しない。
 
+### Phase 4.9 progress note
+
+Audited every new-engine module built in Phase 4.2–4.8
+(`itemSelection.js`, `newMouse.js`, `newKeyboard.js`, `newEdit.js`,
+`newClipboard.js`, `newAction.js`, `NewMindMapPreview.jsx`) for any
+read/write of `store.js`'s `currentItem`/`selectedItems`/`editing`
+signals — the old engine's selection mirror, written by `my-mind.js`'s
+`selectItem()`/`startEditing()`/`stopEditing()`/`unmount()`. None were
+found: every one of these modules already imports selection state
+exclusively from `itemSelection.js` (`currentItem`, `selectedItems`,
+`selectionCursor`, `editing`), which has been the single source for the
+new engine's own selection since Phase 4.2 by construction — each
+subsequent sub-phase (4.3 click wiring, 4.4 keyboard, 4.5 editing, 4.6
+action/history, 4.7 drag-and-drop, 4.8 clipboard) was built directly
+against `itemSelection.js` rather than `store.js`.
+
+The one `store.js` signal these modules do read is `activeMode` (via
+`scope.js`'s `isCanvasActive()`), but that is workspace-mode state
+(canvas vs. notes foreground/background), not selection — it is
+legitimately shared across both engines since they render into the same
+`Workspace.jsx` and must agree on which one is currently interactive.
+This is not the kind of duplication Phase 4.9 set out to remove.
+
+`store.js`'s own `currentItem`/`editing` signals were left untouched, as
+scoped: they still back the old engine's `RightPanelProperties.jsx`,
+`command/command.js`'s `Command.isValid`, and `ContextMenu.jsx` (which
+`MindMapCanvas.jsx` only wires up when `!newEngine`, see its
+`onContextMenu` guard) — none of these are reachable from the
+`?newEngine=1` path, so no cross-engine identity mismatch (`Item` vs.
+`ItemNode`) is possible.
+
+No code changes were required. Phase 4.9's scoped goal — no duplicate
+selection-state bookkeeping *within* the new engine — was already
+satisfied by how Phase 4.2's `itemSelection.js` was adopted from the
+start. The real old-engine/new-engine unification (making `store.js`'s
+`currentItem` a re-export of `itemSelection.js`'s) remains deferred to
+Phase 6, per this phase's own note, since that can only happen once the
+old engine (and its `Item`-typed `app.currentItem`) is deleted.
+
 ---
 
 ## Phase 4.10 — 大量ノードでの回帰・再計測
@@ -139,6 +178,53 @@ Phase 4.5〜4.8で実データ変更経路が増えたことで、`layoutResult`
 - ここで局所性が明確に悪化していれば、Phase 4.7以前のどこかに戻って設計を見直す（doc08本体の中断条件に従う）。
 
 リスク: なし（計測のみ）。ここがPhase 4の完了ゲート。
+
+### Phase 4.10 progress note
+
+Added `frontend/src/lib/mindmap/newEngine-large-tree-regression.test.js`,
+extending the isolated-mutation locality checks from Phase 3.5
+(`itemStore-layout-locality.test.js`) and Phase 4.7.4
+(`newMouse-drag-locality.test.js`) into a **chained** scenario: edit a
+leaf via `newAction.js`'s `SetText`, drag another leaf into a different
+branch via `MoveItem`, undo the drag, redo it, then undo everything back
+to the original state -- all through the real `action()`/`history.js`
+pipeline, on the same 121-node tree (depth 4, width 3, matching doc06.1/
+doc08 Phase 0's baseline tree shape).
+
+Results:
+
+- Across the full edit→drag→undo→redo→undo→undo sequence, a third,
+  untouched branch's `_computeLayout` is never called at any step —
+  confirming the per-item recursive memo chain (Phase 3.5) keeps its
+  locality guarantee across a realistic multi-step operation sequence,
+  not just a single isolated mutation.
+- A single leaf edit dispatched through `SetText`/`action()` still
+  recomputes exactly `depth + 1` = 5 nodes on the 121-node tree,
+  matching doc06.1 Phase 0's baseline (5/121) and confirming routing the
+  edit through `history.js`/`newAction.js` (rather than a direct signal
+  write, as the earlier Phase 3.5 test used) introduces no extra
+  recompute overhead.
+- On a larger 781-node tree (depth 4, width 5, matching doc08 Phase 0's
+  own benchmark tree), a full edit+drag+undo sequence recomputes well
+  under 10% of the tree — proportional to the handful of root-to-branch
+  paths actually touched, not tree size, consistent with
+  `newMouse-drag-locality.test.js`'s single-drag finding.
+
+No locality regression was found from chaining operations together.
+This closes the "実際のドラッグ&ドロップ・編集・undo/redo操作を経由する
+シナリオへの拡張" item this phase's plan called for.
+
+The manual 50-100+ node browser checklist (collapse/expand paint timing,
+drag-into-collapsed-node specifically) remains unexecuted, same
+limitation noted in Phase 3.6's own progress note (vitest has no browser
+paint timing to observe) — recorded as a checklist comment in the new
+test file rather than skipped silently, so it isn't lost track of before
+Phase 5.
+
+**Phase 4 completion gate**: with Phase 4.10's re-measurement showing no
+locality regression, Phase 4 (mouse/keyboard/clipboard integration,
+`ItemNode`-based selection, drag-and-drop via `domRefs`) is complete for
+its own stated goals. Phase 5 (bridge pattern dissolution) may proceed.
 
 ---
 

@@ -29,13 +29,26 @@ vi.mock("./newAction.js", () => ({
   },
 }));
 
+// The mock's `default` export matters here even though this test only
+// ever calls `formatRepo.get(...)` directly: format/format.js's own
+// module is unconditionally imported (for its `Format` base class) by
+// format/plaintext.js, which in turn is imported by my-mind.js as a
+// side-effect registration (`new Plaintext()`). If anything else in the
+// same test run pulls in the real (unmocked) my-mind.js/action.js chain
+// -- e.g. a sibling test file that exercises newAction.js without
+// mocking it -- that real plaintext.js resolves this file's mock of
+// "./format/format.js" and needs a usable `default` to extend, or the
+// module throws at evaluation time instead of at any assertion. A
+// trivial placeholder class keeps this mock self-contained regardless
+// of what else is loaded in the same run.
 vi.mock("./format/format.js", () => ({
+  default: class {},
   repo: new Map([
     [
       "plaintext",
       {
-        to: vi.fn(() => "plaintext-output"),
-        from: vi.fn(() => ({ root: { text: "", children: [{ text: "pasted" }] } })),
+        to: vi.fn(() => ""),
+        from: vi.fn(() => ({ root: { text: "", children: [] } })),
       },
     ],
   ]),
