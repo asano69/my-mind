@@ -2,7 +2,31 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const mockActiveMode = { value: "canvas" };
 vi.mock("./store.js", () => ({ activeMode: () => mockActiveMode.value }));
-vi.mock("./newEdit.js", () => ({ startEditing: vi.fn(() => ({})) }));
+vi.mock("./newEdit.js", () => ({
+  startEditing: vi.fn(() => ({})),
+  commitEditing: vi.fn(),
+}));
+
+// newAction.js is mocked the same way mouse.test.js mocks action.js:
+// MoveItem/Multi just record their constructor args, and action() is a
+// spy, so finishNewDragDrop()'s dispatch can be asserted without
+// exercising real tree mutation/history side effects.
+vi.mock("./newAction.js", () => ({
+  action: vi.fn(),
+  MoveItem: class MoveItem {
+    constructor(item, target, targetIndex, side) {
+      this.item = item;
+      this.target = target;
+      this.targetIndex = targetIndex;
+      this.side = side;
+    }
+  },
+  Multi: class Multi {
+    constructor(actions) {
+      this.actions = actions;
+    }
+  },
+}));
 
 const {
   handleItemClick,
@@ -11,6 +35,13 @@ const {
   buildDragGhost,
   moveDragGhost,
   visualizeNewDragState,
+  getItemForElement,
+  getClosestItemFor,
+  getStableDropCollisionFor,
+  computeNewDragState,
+  finishNewDragDrop,
+  init: initMouse,
+  dispose: disposeMouse,
 } = await import("./newMouse.js");
 const {
   currentItem,
@@ -20,8 +51,8 @@ const {
   editing,
   setEditing,
 } = await import("./itemSelection.js");
-const { startEditing } = await import("./newEdit.js");
-
+const { startEditing, commitEditing } = await import("./newEdit.js");
+const { action: actionFn, MoveItem, Multi } = await import("./newAction.js");
 function resetSelectionState() {
   setCurrentItem(null);
   setSelectedItems(new Set());
@@ -266,5 +297,261 @@ describe("visualizeNewDragState (Stage 4.7.2)", () => {
     expect(() =>
       visualizeNewDragState(new Map(), null, { result: "append", target: item }),
     ).not.toThrow();
+  });
+});
+
+// Stage 4.7.3 of docs/08-phase4.7-drag-and-drop-refactor.md: event
+// wiring, elementFromPoint reverse lookup, and newAction.js dispatch.
+function eventTarget() {
+  const listeners = new Map();
+  return {
+    style: {},
+    addEventListener: vi.fn((type, listener) => listeners.set(type, listener)),
+    removeEventListener: vi.fn((type) => listeners.delete(type)),
+    dispatch(type, event) {
+      listeners.get(type)?.(event);
+    },
+  };
+}
+
+// Builds a minimal 3-level ItemNode-shaped tree (root -> middle -> leaf)
+// with domRefs-registered content stubs, matching mouse.test.js's own
+// buildThreeLevelTree() pattern but using childItems/side/isRoot
+// (ItemNode's API) instead of item.js's Item.
+function buildTree() {
+  const root = { id: "root", isRoot: true, collapsed: false, contentSize: [80, 40] };
+  const target = {
+    id: "target",
+    isRoot: false,
+    parent: root,
+    side: "right",
+    collapsed: false,
+    contentSize: [100, 100],
+    resolvedLayout: { getChildDirection: () => "right" },
+  };
+  root.childItems = [target];
+  target.childItems = [];
+  const dragged = { id: "dragged", isRoot: false, parent: root, collapsed: false, contentSize: [60, 30] };
+  dragged.childItems = [];
+  root.childItems.push(dragged);
+
+  const domRefs = new Map([
+    ["root", contentNode({ getBoundingClientRect: () => ({ left: 0, top: 0, right: 80, bottom: 40, width: 80, height: 40 }) })],
+    ["target", contentNode({ getBoundingClientRect: () => ({ left: 100, top: 100, right: 200, bottom: 200, width: 100, height: 100 }) })],
+    ["dragged", contentNode({ getBoundingClientRect: () => ({ left: 0, top: 200, right: 60, bottom: 230, width: 60, height: 30 }) })],
+  ]);
+  for (const [id, el] of domRefs) {
+    el.closest = (sel) => (sel === ".content" ? el : null);
+  }
+  return { root, target, dragged, domRefs };
+}
+
+describe("getItemForElement (Stage 4.7.3)", () => {
+  it("resolves the item whose registered content element matches the event target", () => {
+    const { root, target, domRefs } = buildTree();
+    expect(getItemForElement(root, domRefs, domRefs.get("target"))).toBe(target);
+  });
+
+  it("returns null for an element with no matching registration", () => {
+    const { root, domRefs } = buildTree();
+    const el = { closest: () => null };
+    expect(getItemForElement(root, domRefs, el)).toBeNull();
+  });
+});
+
+describe("getStableDropCollisionFor (Stage 4.7.3)", () => {
+  beforeEach(() => {
+    globalThis.document = { elementFromPoint: vi.fn() };
+  });
+
+  it("prefers the element directly under the pointer", () => {
+    const { root, target, domRefs } = buildTree();
+    document.elementFromPoint.mockReturnValue(domRefs.get("target"));
+
+    const result = getStableDropCollisionFor(root, domRefs, [150, 150], null);
+
+    expect(result.item).toBe(target);
+  });
+
+  it("falls back to the closest item when nothing is directly hit", () => {
+    const { root, target, domRefs } = buildTree();
+    document.elementFromPoint.mockReturnValue(null);
+
+    const result = getStableDropCollisionFor(root, domRefs, [150, 150], null);
+
+    expect(result.item).toBe(target); // closest to point 150,150
+  });
+});
+
+describe("finishNewDragDrop (Stage 4.7.3)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("dispatches a single MoveItem action for an append result", () => {
+    const { target, dragged } = buildTree();
+
+    finishNewDragDrop({ result: "append", target }, [dragged]);
+
+    expect(actionFn).toHaveBeenCalledOnce();
+    expect(actionFn.mock.calls[0][0]).toBeInstanceOf(MoveItem);
+    expect(actionFn.mock.calls[0][0].target).toBe(target);
+  });
+
+  it("dispatches a MoveItem with a computed sibling index for a sibling result", () => {
+    const { root, target, dragged } = buildTree();
+
+    finishNewDragDrop({ result: "sibling", direction: "bottom", target }, [dragged]);
+
+    const dispatched = actionFn.mock.calls[0][0];
+    expect(dispatched.target).toBe(root);
+    expect(dispatched.targetIndex).toBe(root.childItems.indexOf(target) + 1);
+  });
+
+  it("wraps multiple dragged items in a Multi action", () => {
+    const { target, dragged } = buildTree();
+    const other = { id: "other", isRoot: false };
+
+    finishNewDragDrop({ result: "append", target }, [dragged, other]);
+
+    expect(actionFn.mock.calls[0][0]).toBeInstanceOf(Multi);
+    expect(actionFn.mock.calls[0][0].actions).toHaveLength(2);
+  });
+
+  it("does nothing when the target is inside the dragged item's own subtree", () => {
+    const { root, target } = buildTree();
+    // target is being dragged itself
+    finishNewDragDrop({ result: "append", target }, [target]);
+    expect(actionFn).not.toHaveBeenCalled();
+    void root;
+  });
+});
+
+describe("mousedown/mousemove/mouseup wiring (Stage 4.7.3)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockActiveMode.value = "canvas";
+    setCurrentItem(null);
+    setSelectedItems(new Set());
+    setEditing(false);
+    globalThis.document = {
+      elementFromPoint: vi.fn(() => null),
+      createElement: () => contentNode(),
+    };
+  });
+
+  it("registers mousedown/click on port and cleans up on dispose", () => {
+    const port = eventTarget();
+    const container = { focus: vi.fn() };
+    initMouse(new Map(), port, container, () => null);
+
+    expect(port.addEventListener).toHaveBeenCalledWith("mousedown", expect.any(Function));
+    expect(port.addEventListener).toHaveBeenCalledWith("click", expect.any(Function));
+
+    disposeMouse();
+
+    expect(port.removeEventListener).toHaveBeenCalledWith("mousedown", expect.any(Function));
+    expect(port.removeEventListener).toHaveBeenCalledWith("click", expect.any(Function));
+  });
+
+  it("ignores mousedown while the canvas is backgrounded", () => {
+    const { root, dragged, domRefs } = buildTree();
+    const port = eventTarget();
+    const container = { focus: vi.fn() };
+    initMouse(domRefs, port, container, () => root);
+    mockActiveMode.value = "notes";
+
+    port.dispatch("mousedown", {
+      target: domRefs.get("dragged"),
+      clientX: 10,
+      clientY: 210,
+      preventDefault: vi.fn(),
+    });
+
+    expect(container.focus).not.toHaveBeenCalled();
+    void dragged;
+    disposeMouse();
+  });
+
+  it("drags a node onto another and dispatches a MoveItem action on mouseup", () => {
+    const { root, target, dragged, domRefs } = buildTree();
+    const port = eventTarget();
+    port.append = vi.fn();
+    port.getBoundingClientRect = () => ({ left: 0, top: 0 });
+    const container = { focus: vi.fn() };
+    initMouse(domRefs, port, container, () => root);
+    document.elementFromPoint.mockImplementation((x, y) =>
+      x >= 100 && x <= 200 && y >= 100 && y <= 200 ? domRefs.get("target") : null,
+    );
+
+    port.dispatch("mousedown", {
+      target: domRefs.get("dragged"),
+      clientX: 10,
+      clientY: 210,
+      preventDefault: vi.fn(),
+    });
+    expect(container.focus).toHaveBeenCalledOnce();
+
+    port.dispatch("mousemove", {
+      target: domRefs.get("dragged"),
+      clientX: 150,
+      clientY: 150,
+      preventDefault: vi.fn(),
+    });
+    port.dispatch("mouseup", { target: domRefs.get("target") });
+
+    expect(actionFn).toHaveBeenCalledOnce();
+    expect(actionFn.mock.calls[0][0].item).toBe(dragged);
+    expect(actionFn.mock.calls[0][0].target).toBe(target);
+
+    disposeMouse();
+  });
+
+  it("suppresses the synthetic post-drag click", () => {
+    const { root, dragged, domRefs } = buildTree();
+    const port = eventTarget();
+    port.append = vi.fn();
+    port.getBoundingClientRect = () => ({ left: 0, top: 0 });
+    const container = { focus: vi.fn() };
+    initMouse(domRefs, port, container, () => root);
+
+    port.dispatch("mousedown", {
+      target: domRefs.get("dragged"),
+      clientX: 10,
+      clientY: 210,
+      preventDefault: vi.fn(),
+    });
+    port.dispatch("mousemove", {
+      target: domRefs.get("dragged"),
+      clientX: 30,
+      clientY: 220,
+      preventDefault: vi.fn(),
+    });
+    port.dispatch("mouseup", { target: domRefs.get("dragged") });
+
+    const preventDefault = vi.fn();
+    port.dispatch("click", { preventDefault });
+    expect(preventDefault).toHaveBeenCalledOnce();
+
+    disposeMouse();
+  });
+
+  it("finalizes an in-progress edit elsewhere before starting a drag", () => {
+    const { root, target, dragged, domRefs } = buildTree();
+    setCurrentItem(target);
+    setEditing(true);
+    const port = eventTarget();
+    port.append = vi.fn();
+    port.getBoundingClientRect = () => ({ left: 0, top: 0 });
+    const container = { focus: vi.fn() };
+    initMouse(domRefs, port, container, () => root);
+
+    port.dispatch("mousedown", {
+      target: domRefs.get("dragged"),
+      clientX: 10,
+      clientY: 210,
+      preventDefault: vi.fn(),
+    });
+
+    expect(commitEditing).toHaveBeenCalledWith(target);
+    disposeMouse();
   });
 });

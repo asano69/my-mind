@@ -12,8 +12,17 @@
 // click toggles multi-selection) and double-click (starts text editing,
 // added in Phase 4.5 -- see newEdit.js).
 import { isCanvasActive } from "./scope.js";
-import { selectItem, addToSelection, setEditing } from "./itemSelection.js";
-import { startEditing } from "./newEdit.js";
+import {
+  currentItem,
+  selectedItems,
+  selectItem,
+  addToSelection,
+  editing,
+  setEditing,
+} from "./itemSelection.js";
+import { startEditing, commitEditing } from "./newEdit.js";
+import { action, MoveItem, Multi } from "./newAction.js";
+import { decideDropPlacement, isDraggedAncestor } from "./dragPlacement.js";
 
 // --- Stage 4.7.2 (see docs/08-phase4.7-drag-and-drop-refactor.md) ---
 // domRefs-based rect resolution and ghost construction for drag-and-
@@ -119,6 +128,332 @@ export function visualizeNewDragState(domRefs, previousTarget, state) {
   }
   const spread = x || y ? -2 : 2;
   el.style.boxShadow = `${x * SHADOW_OFFSET}px ${y * SHADOW_OFFSET}px 2px ${spread}px #000`;
+}
+
+// --- Stage 4.7.3 (see docs/08-phase4.7-drag-and-drop-refactor.md) ---
+// Event wiring, elementFromPoint-based reverse lookup, and
+// newAction.js integration. Node drag-and-drop only -- panning and
+// touch are out of scope here (the new engine has no pan command yet,
+// and mouse.js's touch branches are intentionally not ported in this
+// pass; see docs/07-drop-target-detection-refactor.md's own Non-goals
+// for the same scoping choice).
+
+const DROP_TARGET_STICKY_PADDING = 24;
+
+function isPointInExpandedRect(rect, point, padding) {
+  return (
+    point[0] >= rect.left - padding &&
+    point[0] <= rect.right + padding &&
+    point[1] >= rect.top - padding &&
+    point[1] <= rect.bottom + padding
+  );
+}
+
+// Resolves the ItemNode whose registered content element (see
+// registerDomRef) matches `element` (or an ancestor of it), mirroring
+// mouse.js's getItemFor(). `root` is walked recursively rather than
+// relying on any tree-wide index, matching map.js's own getItemFor().
+export function getItemForElement(root, domRefs, element) {
+  const content = element?.closest?.(".content");
+  if (!content || !root) {
+    return null;
+  }
+  function scan(item) {
+    if (domRefs.get(item.id) === content) {
+      return item;
+    }
+    for (const child of item.childItems) {
+      const found = scan(child);
+      if (found) {
+        return found;
+      }
+    }
+    return null;
+  }
+  return scan(root);
+}
+
+// Distance-ranked fallback used when the pointer isn't directly over any
+// registered element, mirroring map.js's getClosestItem().
+export function getClosestItemFor(root, domRefs, point) {
+  const all = [];
+  function scan(item) {
+    const rect = getContentRectFor(domRefs, item);
+    const dx = rect.left + rect.width / 2 - point[0];
+    const dy = rect.top + rect.height / 2 - point[1];
+    all.push({ item, dx, dy, distance: dx * dx + dy * dy });
+    if (!item.collapsed) {
+      item.childItems.forEach(scan);
+    }
+  }
+  scan(root);
+  all.sort((a, b) => a.distance - b.distance);
+  return all[0];
+}
+
+function collisionForItem(domRefs, item, point) {
+  const rect = getContentRectFor(domRefs, item);
+  return {
+    item,
+    dx: rect.left + rect.width / 2 - point[0],
+    dy: rect.top + rect.height / 2 - point[1],
+  };
+}
+
+// Mirrors mouse.js's getStableDropCollision(): whatever the pointer is
+// directly over always wins; the previous target is only kept via
+// hysteresis when there is no direct hit, to avoid flicker in gaps
+// between nodes.
+export function getStableDropCollisionFor(root, domRefs, point, previousTarget) {
+  const element = globalThis.document?.elementFromPoint?.(point[0], point[1]);
+  const directTarget = getItemForElement(root, domRefs, element);
+  if (directTarget) {
+    return collisionForItem(domRefs, directTarget, point);
+  }
+  if (previousTarget) {
+    const rect = getContentRectFor(domRefs, previousTarget);
+    if (isPointInExpandedRect(rect, point, DROP_TARGET_STICKY_PADDING)) {
+      return collisionForItem(domRefs, previousTarget, point);
+    }
+  }
+  return getClosestItemFor(root, domRefs, point);
+}
+
+// Resolves the drop target via getStableDropCollisionFor(), then
+// delegates the append/sibling decision to dragPlacement.js's
+// decideDropPlacement() -- the same shared function mouse.js's own
+// computeDragState() now calls (see Stage 4.7.1).
+export function computeNewDragState(root, domRefs, cursor, draggedItems, previousTarget) {
+  const closest = getStableDropCollisionFor(root, domRefs, cursor, previousTarget);
+  const target = closest.item;
+  const targetRect = target.isRoot ? null : getContentRectFor(domRefs, target);
+  return decideDropPlacement({
+    point: cursor,
+    target,
+    targetRect,
+    dx: closest.dx,
+    dy: closest.dy,
+    draggedItems,
+  });
+}
+
+// Builds and dispatches the MoveItem/Multi action for a completed drag,
+// mirroring mouse.js's finishDragDrop(). Routed through newAction.js's
+// action() (Phase 4.6), so the move becomes a real undo/redo step.
+export function finishNewDragDrop(state, items) {
+  const { target, result, direction } = state;
+  if (isDraggedAncestor(target, items)) {
+    return;
+  }
+  const subactions = [];
+  for (const item of items) {
+    if (result === "append") {
+      subactions.push(new MoveItem(item, target));
+    } else if (result === "sibling") {
+      const parent = target.parent;
+      const index = parent.children.indexOf(target);
+      const targetIndex =
+        index + (direction === "right" || direction === "bottom" ? 1 : 0);
+      subactions.push(new MoveItem(item, parent, targetIndex, target.side));
+    } else {
+      return;
+    }
+  }
+  if (subactions.length === 0) {
+    return;
+  }
+  action(subactions.length === 1 ? subactions[0] : new Multi(subactions));
+}
+
+// All currently selected items (currentItem plus any multi-selection),
+// mirroring my-mind.js's getAllSelected().
+function getAllSelectedItems() {
+  const all = [currentItem()];
+  selectedItems().forEach((item) => all.push(item));
+  return all;
+}
+
+let current = {
+  mode: "",
+  cursor: [],
+  items: [],
+  ghost: null,
+  ghostPosition: [],
+  ctrlHeld: false,
+  previousDragState: null,
+  suppressNextClick: false,
+};
+let port = null;
+let container = null;
+let domRefsRef = null;
+let getRootFn = null;
+
+// Registers node-drag listeners on `port_` (the SVG root element).
+// `getRoot` is a function returning the currently loaded root ItemNode
+// (or null/undefined before it has loaded), since the tree can change
+// out from under a long-lived listener (e.g. switching maps).
+export function init(domRefs, port_, container_, getRoot) {
+  domRefsRef = domRefs;
+  port = port_;
+  container = container_;
+  getRootFn = getRoot;
+  port.addEventListener("mousedown", onDragStart);
+  port.addEventListener("click", onClick);
+}
+
+// Called on unmount. Removes every listener registered by init(),
+// force-ends any drag in progress, and resets module state -- mirrors
+// mouse.js's own dispose().
+export function dispose() {
+  if (port) {
+    port.removeEventListener("mousedown", onDragStart);
+    port.removeEventListener("mousemove", onDragMove);
+    port.removeEventListener("mouseup", onDragEnd);
+    port.removeEventListener("click", onClick);
+  }
+  if (current.ghost) {
+    current.ghost.remove();
+  }
+  current = {
+    mode: "",
+    cursor: [],
+    items: [],
+    ghost: null,
+    ghostPosition: [],
+    ctrlHeld: false,
+    previousDragState: null,
+    suppressNextClick: false,
+  };
+  port = null;
+  container = null;
+  domRefsRef = null;
+  getRootFn = null;
+}
+
+function onClick(e) {
+  if (current.suppressNextClick) {
+    current.suppressNextClick = false;
+    e.preventDefault?.();
+  }
+}
+
+function eventToPoint(e) {
+  return [e.clientX, e.clientY];
+}
+
+function onDragStart(e) {
+  if (!isCanvasActive()) {
+    return;
+  }
+  const root = getRootFn?.();
+  if (!root) {
+    return;
+  }
+  const item = getItemForElement(root, domRefsRef, e.target);
+  if (!item || item.isRoot) {
+    return;
+  }
+  if (editing()) {
+    const editedItem = currentItem();
+    if (item === editedItem) {
+      return; // ignore dnd on the item currently being edited
+    }
+    // Clicked elsewhere while editing: finalize the edit first, same as
+    // mouse.js's onDragStart calling commandRepo.get("finish").execute().
+    commitEditing(editedItem);
+    setEditing(false);
+  }
+  // Move focus back into the canvas so subsequent keyboard shortcuts
+  // reach newKeyboard.js's scoped listener, mirroring mouse.js's own
+  // container.focus() call here.
+  container?.focus();
+  current.cursor = eventToPoint(e);
+  current.mode = "drag";
+  const isSelected = item === currentItem() || selectedItems().has(item);
+  if (isSelected) {
+    current.items = getAllSelectedItems().filter((i) => i && !i.isRoot);
+  } else {
+    // Selection itself is deferred to the first real move (see
+    // onDragMove) so a plain click's Ctrl+click multi-selection isn't
+    // clobbered before the click event has a chance to run -- same
+    // reasoning as mouse.js's own onDragStart.
+    current.items = [item];
+    current.ctrlHeld = e.ctrlKey || e.metaKey;
+  }
+  e.preventDefault();
+  port.addEventListener("mousemove", onDragMove);
+  port.addEventListener("mouseup", onDragEnd);
+}
+
+function onDragMove(e) {
+  const point = eventToPoint(e);
+  const delta = [point[0] - current.cursor[0], point[1] - current.cursor[1]];
+  current.cursor = point;
+  if (current.mode !== "drag") {
+    return;
+  }
+  e.preventDefault();
+  if (!current.ghost) {
+    const draggedItem = current.items[0];
+    if (
+      !current.ctrlHeld &&
+      current.items.length === 1 &&
+      draggedItem !== currentItem() &&
+      !selectedItems().has(draggedItem)
+    ) {
+      selectItem(draggedItem);
+    }
+    const built = buildDragGhost(domRefsRef, port, current.items, current.cursor);
+    if (!built) {
+      return;
+    }
+    current.ghost = built.ghost;
+    current.ghostPosition = built.position;
+  } else {
+    moveDragGhost(current.ghost, current.ghostPosition, delta);
+  }
+  const root = getRootFn?.();
+  if (!root) {
+    return;
+  }
+  const previousTarget = current.previousDragState?.target ?? null;
+  const state = computeNewDragState(root, domRefsRef, current.cursor, current.items, previousTarget);
+  visualizeNewDragState(domRefsRef, previousTarget, state.result ? state : null);
+  current.previousDragState = state.result ? state : null;
+}
+
+function onDragEnd(_e) {
+  port.removeEventListener("mousemove", onDragMove);
+  port.removeEventListener("mouseup", onDragEnd);
+  const { mode, ghost, previousDragState } = current;
+  if (mode !== "drag") {
+    current.mode = "";
+    return;
+  }
+  if (ghost) {
+    const root = getRootFn?.();
+    if (root) {
+      const state = computeNewDragState(
+        root,
+        domRefsRef,
+        current.cursor,
+        current.items,
+        previousDragState?.target ?? null,
+      );
+      finishNewDragDrop(state, current.items);
+    }
+    visualizeNewDragState(domRefsRef, previousDragState?.target ?? null, null);
+    ghost.remove();
+    current.ghost = null;
+    // A browser-dispatched click after mouseup would otherwise move
+    // selection/focus to whatever node is under the pointer at the drop
+    // position -- suppress just that synthetic post-drag click, same as
+    // mouse.js's own current.suppressNextClick.
+    current.suppressNextClick = true;
+  }
+  current.items = [];
+  current.mode = "";
+  current.previousDragState = null;
 }
 
 export function handleItemClick(item, e) {

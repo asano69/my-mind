@@ -107,3 +107,53 @@ lookup (`getStableDropCollision`'s counterpart) — both are Stage 4.7.3's
 job. `newMouse.test.js` gained a matching set of DOM-free stub tests,
 reusing `mouse.test.js`'s own `contentNode()`-style stub pattern rather
 than a real DOM.
+
+
+`buildDragGhost()`/`visualizeDragState()` mirror mouse.js exactly, but
+source elements through the domRefs registry.
+
+### Stage 4.7.3 progress note
+
+Wired `mousedown`/`mousemove`/`mouseup`/`click` on the port element in
+`newMouse.js`, reusing every helper Stage 4.7.1/4.7.2 already produced:
+
+- `getItemForElement(root, domRefs, element)` — reverse lookup from a
+  DOM element to its `ItemNode`, mirroring `mouse.js`'s `getItemFor()`
+  but walking the `ItemNode` tree (`childItems`) instead of `Map`'s own
+  `getItemFor()`.
+- `getClosestItemFor()`/`getStableDropCollisionFor()` — mirror
+  `map.js`'s `getClosestItem()` and `mouse.js`'s
+  `getStableDropCollision()` (direct-hit-wins, sticky-padding fallback,
+  distance-ranked last resort), sourcing rects via
+  `getContentRectFor()` (Stage 4.7.2) instead of `item.dom`.
+- `computeNewDragState()` — resolves the target via the above, then
+  delegates to `dragPlacement.js`'s `decideDropPlacement()` (Stage
+  4.7.1), the exact same function `mouse.js`'s own `computeDragState()`
+  now calls — the decision logic itself is shared, not duplicated.
+- `finishNewDragDrop()` — builds `MoveItem`/`Multi` from `newAction.js`
+  (Phase 4.6) and dispatches via its `action()`, so a completed drag is
+  a real undo/redo step.
+
+Scoping decisions made explicit in code comments: panning and touch
+(pinch-zoom, long-press) are not ported in this pass -- the new engine
+has no pan command yet, and mouse.js's touch branches are out of scope
+here, matching docs/07-drop-target-detection-refactor.md's own
+Non-goals. Clicking elsewhere while an item is being edited commits
+that edit first (via `newEdit.js`'s `commitEditing()`), mirroring
+`mouse.js`'s `commandRepo.get("finish").execute()` call in the same
+spot.
+
+`newMouse.test.js` gained coverage for: element reverse lookup, sticky
+collision hit-testing (direct hit vs. distance fallback), `MoveItem`/
+`Multi` dispatch shape for append/sibling results, self-drop rejection,
+listener registration/cleanup, the backgrounded-canvas guard, a full
+mousedown→mousemove→mouseup drag ending in a dispatched action, post-
+drag click suppression, and the in-progress-edit handoff.
+
+Not yet covered by this stage (left for 4.7.4): the full
+`mouse.test.js` regression suite (particularly the axis-margin
+append/sibling boundary tests from `docs/07-drop-target-detection-
+refactor.md`, which already pass through the shared `decideDropPlacement`
+and so are expected to hold, but haven't been re-run against this
+wiring specifically) and large-tree locality/performance checks.
+
