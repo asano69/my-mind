@@ -14,6 +14,7 @@ import {
 } from "../lib/mindmap/newMouse.js";
 import { registerDomRefs } from "../lib/mindmap/newEdit.js";
 import * as newMouse from "../lib/mindmap/newMouse.js";
+import * as newClipboard from "../lib/mindmap/newClipboard.js";
 import { TOGGLE_SIZE } from "../lib/mindmap/item.js";
 import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
 import { repo as shapeRepo } from "../lib/mindmap/shape/shape.js";
@@ -381,8 +382,16 @@ export default function NewMindMapPreview(props) {
   let svgRef;
   onMount(() => {
     newMouse.init(domRefs, svgRef, props.containerEl ?? svgRef, () => root());
+    // Listens on `document`'s capture phase, not this component's own
+    // <svg> ref -- see newClipboard.js's header comment and
+    // docs/d01-clipboard-event-targeting.md for why cut/copy/paste can't
+    // be scoped to a container element the way mousedown/keydown can.
+    newClipboard.init(domRefs);
   });
-  onCleanup(() => newMouse.dispose());
+  onCleanup(() => {
+    newMouse.dispose();
+    newClipboard.dispose();
+  });
 
   return (
     <svg
