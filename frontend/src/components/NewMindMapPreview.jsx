@@ -161,16 +161,6 @@ function ItemNodeView(props) {
 
   const togglePosition = () => togglePositionFor(layout().connectorPaths);
 
-  // The ONLY signal write for this item: strictly after Solid has
-  // committed contentRef to the DOM, in an effect -- never inside
-  // layoutResult's own computation (see itemStore.js's _computeLayout()
-  // comment and this file's header note on Phase 3.4's post-mortem).
-  createEffect(() => {
-    const item = props.item;
-    const measured = measureContentSize(contentRef, item.defaultContentSize());
-    item.setMeasuredSize(measured);
-  });
-
   // Registers/unregisters this item's content element in the shared
   // domRefs Map (see registerDomRef/unregisterDomRef above), created
   // once by the top-level NewMindMapPreview and threaded down through
@@ -180,8 +170,37 @@ function ItemNodeView(props) {
   // Read by newEdit.js (Phase 4.5) to locate an item's text element for
   // live editing; mouse.js's drag math (Phase 4.7) and clipboard.js's
   // cut-visual toggling (Phase 4.8) are still pending consumers.
+  //
+  // Content-box remeasurement also happens here, via a ResizeObserver
+  // rather than a plain createEffect(). A createEffect() with no
+  // tracked signal reads inside it only ever runs once, at mount --
+  // which is exactly what was happening before this fix: the callback
+  // read `contentRef` (a plain variable, not a signal) and
+  // `item.defaultContentSize()` (a pure function of `item.isRoot`, no
+  // signal reads either), so Solid never re-ran it after the initial
+  // measurement. That silently broke remeasurement for every later
+  // change that can resize the content box -- a status/value/icon/
+  // notes indicator appearing or disappearing, a shape change altering
+  // CSS padding, a text edit, ... -- leaving stale contentSize/
+  // foreignObject dimensions and overlapping nodes. The old engine
+  // (item.js) doesn't have this problem: updateStatus()/updateValue()/
+  // _applyOwnStyle() write the DOM and _measureOwnContent() reads it
+  // back synchronously inside the very same reactive layout pass (see
+  // item.js's computeLayout()). Rather than re-deriving the full list
+  // of signals that can affect content size here (and relying on this
+  // effect running after the JSX's own reactive DOM bindings, which
+  // isn't guaranteed by declaration order), a ResizeObserver watches
+  // the actual rendered box directly and fires on any real size
+  // change, including the initial one.
   onMount(() => {
     registerDomRef(props.domRefs, props.item, contentRef);
+    const resizeObserver = new ResizeObserver(() => {
+      const item = props.item;
+      const measured = measureContentSize(contentRef, item.defaultContentSize());
+      item.setMeasuredSize(measured);
+    });
+    resizeObserver.observe(contentRef);
+    onCleanup(() => resizeObserver.disconnect());
   });
   onCleanup(() => {
     unregisterDomRef(props.domRefs, props.item);
