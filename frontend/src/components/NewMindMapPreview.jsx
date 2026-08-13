@@ -404,7 +404,21 @@ export default function NewMindMapPreview(props) {
     // (40px, 40px), so wiring pan/zoom in doesn't cause a visible jump
     // on mount.
     newViewport.init(svgRef, [40, 40]);
-    newMouse.init(domRefs, svgRef, props.containerEl ?? svgRef, () => root());
+    // Mouse/wheel listeners are registered on the full-viewport
+    // container, not on svgRef itself. svgRef is only sized to its own
+    // content (640x240, see below) -- wheel/mousedown events only
+    // bubble through it while the pointer happens to be over a
+    // descendant node (e.g. near the root), so hovering empty canvas
+    // space never reached newMouse.js, and dragging past that small
+    // box's edge silently stopped delivering mousemove ("catches").
+    // Using a full-size HTML container as the port also fixes
+    // buildDragGhost() appending an HTML <div> ghost directly into an
+    // <svg> (invalid outside a <foreignObject>, see
+    // docs/08-phase4.7-drag-and-drop-refactor.md's known follow-up) --
+    // containerEl is a plain HTML element, so the ghost now has a valid
+    // parent.
+    const port = props.containerEl ?? svgRef;
+    newMouse.init(domRefs, port, port, () => root());
     // Listens on `document`'s capture phase, not this component's own
     // <svg> ref -- see newClipboard.js's header comment and
     // docs/d01-clipboard-event-targeting.md for why cut/copy/paste can't
@@ -435,9 +449,18 @@ export default function NewMindMapPreview(props) {
         }
       >
         {(loadedRoot) => (
-          <g transform="translate(40,40)">
-            <ItemNodeView item={loadedRoot()} domRefs={domRefs} />
-          </g>
+          // No wrapping <g> here: map.css's `svg > .item > foreignObject
+          // > .content` rule (root-only bold/140% font-size) requires
+          // the root's own <g class="item"> to be a direct child of
+          // <svg>, matching the old engine's map.js (`this.node.append
+          // (root.dom.node, ...)`). Passing the initial offset as the
+          // root's own transform (instead of wrapping it in a <g>) keeps
+          // that direct-child relationship intact.
+          <ItemNodeView
+            item={loadedRoot()}
+            domRefs={domRefs}
+            transform={() => "translate(40,40)"}
+          />
         )}
       </Show>
     </svg>

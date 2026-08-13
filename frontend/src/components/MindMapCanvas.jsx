@@ -74,7 +74,7 @@ export default function MindMapCanvas(props) {
       ref={containerRef}
       id="mindmap-container"
       tabIndex="-1"
-      class="outline-none"
+      class="outline-none fixed inset-0"
     >
       {/* Kobalte's ContextMenu.Trigger owns opening/positioning the
           right-click menu (flip near screen edges, close on outside
