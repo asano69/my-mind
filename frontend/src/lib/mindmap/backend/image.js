@@ -62,9 +62,14 @@ export function serializeCurrentMap(rootSvgNode = app.currentMap.node) {
 }
 
 export default class ImageBackend {
-  async save(format) {
+  // svgNode is forwarded to serializeCurrentMap() unchanged: passing
+  // undefined keeps that function's own default (the old engine's live
+  // app.currentMap.node), while callers that know their own SVG root
+  // (e.g. the new engine, via newIo.js) can pass it explicitly instead
+  // of relying on that old-engine-only fallback.
+  async save(format, svgNode) {
     const encoder = new TextEncoder();
-    const { xml, width, height } = serializeCurrentMap();
+    const { xml, width, height } = serializeCurrentMap(svgNode);
     let encoded = encoder.encode(xml);
     let byteString = [...encoded]
       .map((byte) => String.fromCharCode(byte))
@@ -95,9 +100,13 @@ export default class ImageBackend {
       }
     }
   }
-  download(href) {
+  // name defaults to the old engine's live app.currentMap.name; callers
+  // that know their own map's name (e.g. the new engine, via
+  // newIo.js's getRoot()?.name) should pass it explicitly instead --
+  // app.currentMap is always null under the new engine.
+  download(href, name = app.currentMap?.name) {
     let link = document.createElement("a");
-    link.download = app.currentMap.name;
+    link.download = name;
     link.href = href;
     link.click();
   }

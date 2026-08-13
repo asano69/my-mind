@@ -10,6 +10,15 @@
 // the save machinery itself.
 import * as io from "./ui/io.js";
 
+// The most recently attached root/SVG node (see attach() below), kept
+// here as plain module state -- not just inside the closures passed to
+// io.js -- so callers outside the save/autosave path (e.g.
+// RightPanelExportActions.jsx's copy/download-image buttons) can read
+// the same SVG node/root without reaching into io.js's internal save
+// machinery.
+let currentRoot = null;
+let currentSvgNode = null;
+
 // Wraps an ItemNode root so it exposes the same toJSON()/name shape
 // ui/io.js's performSave() expects from the old engine's Map instance.
 function adapt(root) {
@@ -25,8 +34,22 @@ function adapt(root) {
 // autosave/SVG snapshotting. Called whenever the preview's root
 // ItemNode (re)loads -- see NewMindMapPreview.jsx.
 export function attach(root, svgNode) {
+  currentRoot = root;
+  currentSvgNode = svgNode;
   io.setTreeProvider(() => adapt(root));
   io.setSvgNodeProvider(() => svgNode);
+}
+
+// The currently attached root ItemNode / SVG node, or null before the
+// preview has loaded a map. Used by RightPanelExportActions.jsx's
+// copy/download-image buttons to source backend/image.js's explicit
+// svgNode/name parameters, instead of the old engine's app.currentMap
+// (which is always null under the new engine).
+export function getRoot() {
+  return currentRoot;
+}
+export function getSvgNode() {
+  return currentSvgNode;
 }
 
 // Restores the record bookkeeping (currentMapId/currentMapUuid/title)
@@ -45,6 +68,8 @@ export function applyLoadedRecord(record) {
 // Called on unmount so a stale provider can't outlive this preview
 // instance (e.g. leaking into the next mount before it re-attaches).
 export function detach() {
+  currentRoot = null;
+  currentSvgNode = null;
   io.setTreeProvider(null);
   io.setSvgNodeProvider(null);
 }
