@@ -431,6 +431,48 @@ export default function NewMindMapPreview(props) {
     newViewport.dispose();
   });
 
+  // Keeps the root node visually anchored across layout recomputes, and
+  // centers it in the viewport the first time it actually lays out --
+  // mirrors map.js's show()/center()/_anchorRootPosition() for the old
+  // engine (see newViewport.js's own comments for the ported logic).
+  // `centered`/`lastRootSeen` are plain (non-reactive) locals: a Solid
+  // component body runs once per mount, so both naturally reset
+  // whenever this component is recreated (e.g. switching maps, see
+  // Workspace.jsx's canvasKey), and lastRootSeen also lets a same-mount
+  // root swap (e.g. props.uuid changing without a remount) re-center
+  // instead of silently keeping the previous root's anchor baseline.
+  let centered = false;
+  let lastRootSeen = null;
+  createEffect(() => {
+    const loadedRoot = root();
+    if (!loadedRoot || !svgRef) {
+      return;
+    }
+    if (loadedRoot !== lastRootSeen) {
+      lastRootSeen = loadedRoot;
+      centered = false;
+      newViewport.resetAnchor();
+    }
+    // Reading layoutResult() here (rather than only contentPosition/size
+    // directly) is what subscribes this effect to every relevant layout
+    // change -- contentPosition/size are plain fields written as a side
+    // effect of the memo's own computation, so they must only be read
+    // after pulling the memo in the same tracked scope (see
+    // itemStore.js's header comment).
+    loadedRoot.layoutResult();
+    newViewport.anchorRootPosition(loadedRoot.contentPosition);
+    if (!centered) {
+      const containerRect = (
+        props.containerEl ?? svgRef.parentNode
+      )?.getBoundingClientRect();
+      const containerSize = containerRect
+        ? [containerRect.width, containerRect.height]
+        : [window.innerWidth, window.innerHeight];
+      newViewport.center(loadedRoot.size, containerSize);
+      centered = true;
+    }
+  });
+
   return (
     <svg
       ref={svgRef}

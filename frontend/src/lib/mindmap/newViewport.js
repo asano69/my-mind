@@ -13,18 +13,30 @@ const ZOOM_STEP = 2 / DEFAULT_FONT_SIZE;
 let node = null;
 let position = [0, 0];
 let zoomScale = 1;
+// Root's own on-screen anchor across layout passes, mirroring map.js's
+// `_lastRootContentPosition` -- see anchorRootPosition() below.
+let lastRootContentPosition = null;
 
 export function init(node_, initialPosition = [0, 0]) {
   node = node_;
   position = initialPosition;
   zoomScale = 1;
   node.style.transformOrigin = "0 0";
+  resetAnchor();
 }
 
 export function dispose() {
   node = null;
   position = [0, 0];
   zoomScale = 1;
+  resetAnchor();
+}
+
+// Clears the anchor baseline, so the next anchorRootPosition() call
+// treats its argument as a fresh starting point instead of comparing it
+// against a stale position left over from a previous map/root.
+export function resetAnchor() {
+  lastRootContentPosition = null;
 }
 
 function moveTo(point) {
@@ -38,6 +50,48 @@ export function moveBy(diff) {
     return;
   }
   moveTo(position.map((p, i) => p + diff[i]));
+}
+
+// Centers `contentSize` (typically the root item's own overall
+// [width, height], see ItemNode.size in itemStore.js) inside a viewport
+// of `containerSize`, mirroring map.js's Map.prototype.center().
+export function center(contentSize, containerSize) {
+  if (!node) {
+    return;
+  }
+  moveTo(
+    [
+      (containerSize[0] - contentSize[0]) / 2,
+      (containerSize[1] - contentSize[1]) / 2,
+    ].map(Math.round),
+  );
+}
+
+// Keeps the root node visually anchored to the same screen point across
+// layout recomputes, mirroring map.js's own _anchorRootPosition(). The
+// root's own contentPosition shifts whenever a branch's bounding box
+// changes size (e.g. after a collapse, a drag-and-drop move, or a text
+// edit), which would otherwise shift the *whole* map on screen even
+// though only the affected branch actually changed -- this compensates
+// by moving the viewport by the opposite delta, so only the branches
+// appear to move.
+export function anchorRootPosition(rootContentPosition) {
+  if (!node) {
+    return;
+  }
+  if (lastRootContentPosition) {
+    const dx = rootContentPosition[0] - lastRootContentPosition[0];
+    const dy = rootContentPosition[1] - lastRootContentPosition[1];
+    if (dx || dy) {
+      // contentPosition lives inside the node that carries the zoom
+      // `transform: scale()`, while moveBy()'s left/top offsets sit
+      // outside that transform (see adjustZoom()'s own anchor math), so
+      // the compensation must be scaled by zoomScale to line up on
+      // screen.
+      moveBy([-dx * zoomScale, -dy * zoomScale]);
+    }
+  }
+  lastRootContentPosition = rootContentPosition;
 }
 
 // anchorPoint defaults to the node's own center when omitted. Unlike
