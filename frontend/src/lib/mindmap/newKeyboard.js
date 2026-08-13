@@ -15,6 +15,7 @@
 import { isCanvasActive } from "./scope.js";
 import {
   currentItem,
+  selectedItems,
   selectionCursor,
   selectItem,
   extendSelection,
@@ -23,9 +24,34 @@ import {
 } from "./itemSelection.js";
 import { startEditing, commitEditing, discardEditing } from "./newEdit.js";
 import * as history from "./history.js";
+import { action, InsertNewItem, RemoveItem, Multi } from "./newAction.js";
 
 function isMac() {
   return !!(globalThis.navigator?.platform ?? "").match(/mac/i);
+}
+
+// All currently selected items (currentItem plus any multi-selection),
+// mirroring my-mind.js's getAllSelected() / newMouse.js's own copy of
+// the same helper -- itemSelection.js exposes the underlying signals
+// but no combined getter of its own.
+function getAllSelectedItems() {
+  const all = [currentItem()];
+  selectedItems().forEach((item) => all.push(item));
+  return all;
+}
+
+// Starts editing a just-inserted draft item once its content element has
+// actually mounted. insertAction.do() only bumps the parent's
+// _childrenVersion signal; the new child's ItemNodeView (and the domRefs
+// registration newEdit.js's startEditing() depends on) only exist after
+// Solid's own effect queue flushes, so this must wait a tick rather than
+// calling startEditing() synchronously right after do().
+function beginEditingNewItem(item) {
+  queueMicrotask(() => {
+    if (startEditing(item)) {
+      setEditing(true);
+    }
+  });
 }
 
 const DIRS = {
@@ -149,6 +175,63 @@ commands.push(
       }
       discardEditing(item);
       setEditing(false);
+    },
+  },
+);
+
+// Insert a sibling / child and immediately start editing it, mirroring
+// command/command.js's InsertSibling/InsertChild followed by the "edit"
+// command. The new item is inserted via insertAction.do() directly (not
+// routed through newAction.js's action()), so it is not yet an undoable
+// step -- see newEdit.js's commitEditing()/discardEditing() for how a
+// draft item either gets pushed to history (real content) or discarded
+// (left empty), matching command/edit.js's Finish/Cancel commands.
+commands.push(
+  {
+    mode: "normal",
+    keys: [{ code: "Enter" }],
+    execute() {
+      const item = currentItem();
+      if (!item) {
+        return;
+      }
+      let insertAction;
+      if (item.isRoot) {
+        insertAction = new InsertNewItem(item, item.children.length);
+      } else {
+        const parent = item.parent;
+        const index = parent.children.indexOf(item);
+        insertAction = new InsertNewItem(parent, index + 1);
+      }
+      insertAction.do();
+      beginEditingNewItem(insertAction.item);
+    },
+  },
+  {
+    mode: "normal",
+    keys: [{ code: "Tab", ctrlKey: false }, { code: "Insert" }],
+    execute() {
+      const item = currentItem();
+      if (!item) {
+        return;
+      }
+      const insertAction = new InsertNewItem(item, item.children.length);
+      insertAction.do();
+      beginEditingNewItem(insertAction.item);
+    },
+  },
+  {
+    mode: "normal",
+    keys: [{ code: isMac() ? "Backspace" : "Delete" }],
+    execute() {
+      const toDelete = getAllSelectedItems().filter((i) => i && !i.isRoot);
+      if (toDelete.length === 0) {
+        return;
+      }
+      const subactions = toDelete.map((item) => new RemoveItem(item));
+      action(
+        subactions.length === 1 ? subactions[0] : new Multi(subactions),
+      );
     },
   },
 );
