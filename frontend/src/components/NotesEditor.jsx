@@ -3,11 +3,14 @@ import "easymde/dist/easymde.min.css";
 import "./NotesEditor.css";
 import {
   activeMode,
-  currentItem,
   hoveredItem,
   currentMapId,
   bumpNotesHistoryVersion,
 } from "../lib/mindmap/store";
+// See currentSelection.js's own comment: the old and new engines keep
+// separate selection state, so this reads whichever one is active
+// instead of always reading store.js's old-engine-only mirror.
+import { currentItem } from "../lib/mindmap/currentSelection";
 import {
   createEffect,
   createMemo,

@@ -13,6 +13,7 @@ import { activeMode } from "../lib/mindmap/store";
 import { isNewEngineEnabled } from "../lib/mindmap/newEngineFlag.js";
 import NewMindMapPreview from "./NewMindMapPreview.jsx";
 import * as newKeyboard from "../lib/mindmap/newKeyboard.js";
+import * as newMouse from "../lib/mindmap/newMouse.js";
 
 export default function MindMapCanvas(props) {
   let mainRef;
@@ -99,7 +100,9 @@ export default function MindMapCanvas(props) {
           class="fixed inset-0"
           disabled={activeMode() !== "canvas"}
           onContextMenu={(e) => {
-            if (!newEngine) {
+            if (newEngine) {
+              newMouse.handleContextMenu(e);
+            } else {
               mouseModule?.handleContextMenu(e);
             }
           }}

@@ -431,6 +431,20 @@ export default function NewMindMapPreview(props) {
     // parent.
     const port = props.containerEl ?? svgRef;
     newMouse.init(domRefs, port, port, () => root());
+    // Registers this preview as the source the "center map" command
+    // (see newContextMenuCommands.js) reads from -- see newViewport.js's
+    // registerCenterSource() for why this indirection is needed.
+    newViewport.registerCenterSource(
+      () => root()?.size,
+      () => {
+        const containerRect = (
+          props.containerEl ?? svgRef.parentNode
+        )?.getBoundingClientRect();
+        return containerRect
+          ? [containerRect.width, containerRect.height]
+          : [window.innerWidth, window.innerHeight];
+      },
+    );
     // Listens on `document`'s capture phase, not this component's own
     // <svg> ref -- see newClipboard.js's header comment and
     // docs/d01-clipboard-event-targeting.md for why cut/copy/paste can't

@@ -1,5 +1,6 @@
 import { createSignal, For, onMount, Show } from "solid-js";
 import { ContextMenu } from "@kobalte/core/context-menu";
+import { isNewEngineEnabled } from "../lib/mindmap/newEngineFlag.js";
 
 // Explicit groups (and the separators between them) mirror the old static
 // markup's ordering exactly, rather than pulling every registered command
@@ -33,11 +34,19 @@ export default function ContextMenuContent() {
   // mid-evaluation, before its `export default class Command` had run,
   // throwing a TDZ ReferenceError. Deferring this import to onMount
   // avoids becoming that first entry point.
+  // The ?newEngine=1 preview tracks selection in itemSelection.js, not
+  // my-mind.js's app.currentItem -- calling the old command repo
+  // against a currentItem the new engine never sets is what caused
+  // edit/insert-child/insert-sibling/delete to throw (see
+  // newContextMenuCommands.js).
+  const newEngine = isNewEngineEnabled();
   let commandRepo;
   const [ready, setReady] = createSignal(false);
 
   onMount(async () => {
-    ({ repo: commandRepo } = await import("../lib/mindmap/command/command.js"));
+    ({ repo: commandRepo } = newEngine
+      ? await import("../lib/mindmap/newContextMenuCommands.js")
+      : await import("../lib/mindmap/command/command.js"));
     setReady(true);
   });
 

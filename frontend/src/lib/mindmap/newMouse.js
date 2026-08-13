@@ -540,3 +540,23 @@ export function handleItemLinkClick(item) {
     window.open(url, "_blank", "noopener,noreferrer");
   }
 }
+
+// Selects the right-clicked item and cancels any in-progress drag,
+// mirroring the old engine's mouse.js handleContextMenu(). Kobalte's
+// ContextMenu.Trigger (see MindMapCanvas.jsx) owns opening/positioning
+// the menu itself; this only handles the item-selection/drag-cancel
+// side effect the engine needs regardless of how the menu opens.
+export function handleContextMenu(e) {
+  if (!isCanvasActive()) {
+    return;
+  }
+  const root = getRootFn?.();
+  if (!root) {
+    return;
+  }
+  onDragEnd(e);
+  const item = getItemForElement(root, domRefsRef, e.target);
+  if (item) {
+    selectItem(item);
+  }
+}

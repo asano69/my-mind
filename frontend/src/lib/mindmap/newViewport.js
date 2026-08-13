@@ -17,6 +17,38 @@ let zoomScale = 1;
 // `_lastRootContentPosition` -- see anchorRootPosition() below.
 let lastRootContentPosition = null;
 
+// Bridge for the "center map" command (see command/command.js's Center
+// for the old engine, newContextMenuCommands.js for the new one).
+// NewMindMapPreview.jsx registers accessors for the current root's size
+// and the container's on-screen size at mount time -- same "owning
+// component registers, vanilla module reads" pattern as
+// navigation.js's registerNavigate()/notes.js's registerEditorAPI() --
+// since this module has no reference to the ItemNode tree or the
+// container element on its own.
+let getRootSize = null;
+let getContainerSize = null;
+
+export function registerCenterSource(getRootSizeFn, getContainerSizeFn) {
+  getRootSize = getRootSizeFn;
+  getContainerSize = getContainerSizeFn;
+}
+
+// Re-centers the currently registered root inside its container,
+// mirroring map.js's Map.prototype.center() for the old engine. A
+// no-op if nothing is registered yet (e.g. called before the preview
+// has mounted) or the root hasn't laid out yet.
+export function recenter() {
+  if (!getRootSize || !getContainerSize) {
+    return;
+  }
+  const rootSize = getRootSize();
+  const containerSize = getContainerSize();
+  if (!rootSize || !containerSize) {
+    return;
+  }
+  center(rootSize, containerSize);
+}
+
 export function init(node_, initialPosition = [0, 0]) {
   node = node_;
   position = initialPosition;
@@ -30,6 +62,8 @@ export function dispose() {
   position = [0, 0];
   zoomScale = 1;
   resetAnchor();
+  getRootSize = null;
+  getContainerSize = null;
 }
 
 // Clears the anchor baseline, so the next anchorRootPosition() call

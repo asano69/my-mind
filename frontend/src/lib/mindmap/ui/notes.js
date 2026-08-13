@@ -1,4 +1,4 @@
-import * as app from "../my-mind.js";
+import { currentItem } from "../currentSelection.js";
 import { activeMode, bumpDirty, setActiveMode } from "../store.js";
 
 // Set by NotesEditor's onMount (see components/NotesEditor.jsx) instead of
@@ -31,11 +31,12 @@ export function redo() {
 export function toggle() {
   const nextMode = activeMode() === "notes" ? "canvas" : "notes";
   setActiveMode(nextMode);
-  if (nextMode === "notes" && app.currentItem) {
+  const item = currentItem();
+  if (nextMode === "notes" && item) {
     // Pass the item itself, not its text -- NotesEditor.jsx needs
     // item.id to look up (or create) that item's own CodeMirror Doc, so
     // each item keeps an independent undo/redo history.
-    editorAPI?.setContent(app.currentItem);
+    editorAPI?.setContent(item);
   }
 }
 
@@ -53,16 +54,17 @@ export function onItemSelect(item) {
 
 // Called by NotesEditor whenever the user edits the text.
 export function onEditorChange(text) {
-  if (!app.currentItem) {
+  const item = currentItem();
+  if (!item) {
     return;
   }
-  app.currentItem.notes = text.trim();
+  item.notes = text.trim();
 
-  // Explicit call kept even though map.js's shared layout computed
-  // already reruns (and bumps dirtyVersion itself) whenever any item's
-  // notes signal changes — relying on that cross-module dependency
-  // alone would make this file's connection to auto-save invisible to
-  // someone reading only this file.
+  // Explicit call kept even though the layout pass may already bump
+  // dirtyVersion once this item's notes signal changes — relying on
+  // that cross-module dependency alone would make this file's
+  // connection to auto-save invisible to someone reading only this
+  // file.
   bumpDirty();
 }
 
