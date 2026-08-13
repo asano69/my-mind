@@ -86,9 +86,17 @@ export default function MindMapCanvas(props) {
           the previous non-modal behavior: the canvas stays interactive
           and scroll is never locked just because the menu is open. */}
       <ContextMenu modal={false}>
+        {/* Explicit full-viewport sizing so the right-click hit area covers
+            the whole canvas regardless of engine. The old engine's
+            my-mind.js still sets inline marginLeft/width/height via
+            handleResize() (which wins over these classes), but the new
+            engine (NewMindMapPreview.jsx) never sizes this element itself --
+            without this, <main> collapses to the height of its absolutely
+            positioned <svg> child and right-click only worked near the map. */}
         <ContextMenu.Trigger
           as="main"
           ref={mainRef}
+          class="fixed inset-0"
           disabled={activeMode() !== "canvas"}
           onContextMenu={(e) => {
             if (!newEngine) {
