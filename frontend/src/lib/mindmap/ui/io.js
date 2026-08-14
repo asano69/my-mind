@@ -1,6 +1,7 @@
 import { createRoot, createEffect, on } from "solid-js";
 import * as backend from "../backend/pocketbase.js";
 import { serializeCurrentMap } from "../backend/image.js";
+import ItemNode from "../itemStore.js";
 import {
   currentTitle,
   setCurrentTitle,
@@ -17,32 +18,49 @@ import {
   setThrobberVisible,
 } from "../store.js";
 
-// Pluggable source for "the tree currently being edited" and "the SVG
-// root to snapshot", so this module's save/autosave/delete bookkeeping
-// can be shared by both engines instead of duplicated (see newIo.js,
-// the ?newEngine=1 preview's adapter). Defaults to the old engine's
-// globals; the new engine registers its own while mounted and clears
-// them on unmount.
-let treeProvider = null;
-let svgNodeProvider = null;
-// Pluggable "restore this snapshot's data into the current tree" hook,
-// same shape as treeProvider/svgNodeProvider above. The old engine has
-// no registered provider and falls back to app.showMap(); the new
-// engine registers its own via newIo.js, since restoring a snapshot
-// there means loading JSON into an ItemNode tree, not constructing a
-// my-mind.js Map instance.
-let restoreProvider = null;
-export function setTreeProvider(provider) {
-  treeProvider = provider;
+// The tree/SVG root currently being edited, and the loader callback used
+// to swap in a freshly restored root. This used to live behind a
+// pluggable provider (setTreeProvider/setSvgNodeProvider/
+// setRestoreProvider, previously registered by a separate newIo.js
+// adapter module), so this file's save/autosave/delete bookkeeping could
+// be shared between two engine implementations. Only one engine
+// (ItemNode, see itemStore.js) exists now, so this module owns that
+// state directly instead of indirecting through a provider it only ever
+// has one implementation of.
+let currentRoot = null;
+let currentSvgNode = null;
+let rootLoader = null;
+
+// Registers `root`/`svgNode` as the source save/autosave/SVG-snapshot
+// logic reads from. Called whenever the preview's root ItemNode
+// (re)loads (see NewMindMapPreview.jsx).
+export function attach(root, svgNode) {
+  currentRoot = root;
+  currentSvgNode = svgNode;
 }
-export function setSvgNodeProvider(provider) {
-  svgNodeProvider = provider;
+
+// Called on unmount so a stale root/svg node can't outlive this preview
+// instance (e.g. leaking into the next mount before it re-attaches).
+export function detach() {
+  currentRoot = null;
+  currentSvgNode = null;
 }
-export function setRestoreProvider(provider) {
-  restoreProvider = provider;
+
+// Registered by NewMindMapPreview.jsx so restoreSnapshot() below can
+// swap in a freshly restored root without this module owning any
+// component state itself.
+export function registerRootLoader(fn) {
+  rootLoader = fn;
 }
-function getCurrentTree() {
-  return treeProvider ? treeProvider() : null;
+
+// The currently attached root ItemNode / SVG node, or null before a map
+// has loaded. Used by RightPanelExportActions.jsx's copy/download-image
+// buttons to source backend/image.js's explicit svgNode/name parameters.
+export function getRoot() {
+  return currentRoot;
+}
+export function getSvgNode() {
+  return currentSvgNode;
 }
 
 let currentMapId = null; // PocketBase record id, used for save/update calls
@@ -235,8 +253,7 @@ export async function setTitle(title) {
   const trimmed = title.trim();
   if (!trimmed) {
     setTitleAuto(true);
-    const tree = getCurrentTree();
-    const autoTitle = tree ? tree.name : "";
+    const autoTitle = currentRoot ? currentRoot.name : "";
     setCurrentTitle(autoTitle);
     if (currentMapId) {
       try {
@@ -337,21 +354,18 @@ export async function confirmLeave() {
 }
 
 async function performSave(includeSvg) {
-  const map = getCurrentTree();
-  const mymind = map.toJSON();
+  const mymind = { root: currentRoot.toJSON() };
   // While titleAuto is on, the title saved is always the root node's
   // current label; otherwise it's whatever the user explicitly set.
   const auto = titleAuto();
-  const title = auto ? map.name : currentTitle();
+  const title = auto ? currentRoot.name : currentTitle();
   // SVG snapshot generation is somewhat expensive and only needed for the
   // catalog page thumbnail, so it's skipped on auto-save (includeSvg=false)
   // and only computed when the user explicitly saves.
   let svg;
   if (includeSvg) {
     try {
-      svg = serializeCurrentMap(
-        svgNodeProvider ? svgNodeProvider() : undefined,
-      ).xml;
+      svg = serializeCurrentMap(currentSvgNode).xml;
     } catch (e) {
       console.warn("failed to generate SVG snapshot:", e);
     }
@@ -392,7 +406,7 @@ export function resetCurrentMap() {
 // the restored content instead of creating a new map. Does not save by
 // itself — the user must explicitly save afterwards.
 export function restoreSnapshot(snapshot) {
-  restoreProvider?.(snapshot.mymind);
+  rootLoader?.(ItemNode.fromJSON(snapshot.mymind.root));
 }
 
 // Deletes the currently open map (if it has been saved at least once)

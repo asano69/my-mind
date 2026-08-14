@@ -20,7 +20,6 @@ import * as newMouse from "../lib/mindmap/newMouse.js";
 import * as newClipboard from "../lib/mindmap/newClipboard.js";
 import * as newViewport from "../lib/mindmap/newViewport.js";
 import * as io from "../lib/mindmap/ui/io.js";
-import * as newIo from "../lib/mindmap/newIo.js";
 import { bumpDirty, titleAuto, setCurrentTitle } from "../lib/mindmap/store.js";
 import { TOGGLE_SIZE, D_MINUS, D_PLUS } from "../lib/mindmap/layout/constants.js";
 import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
@@ -546,15 +545,15 @@ export default function NewMindMapPreview(props) {
     // called it, which is why Save/Delete/auto-save silently did
     // nothing under ?newEngine=1 until this call was added.
     io.init();
-    newIo.registerRootLoader(setOverrideRoot);
+    io.registerRootLoader(setOverrideRoot);
   });
   onCleanup(() => {
     newMouse.dispose();
     newClipboard.dispose();
     newViewport.dispose();
     io.dispose();
-    newIo.detach();
-    newIo.registerRootLoader(null);
+    io.detach();
+    io.registerRootLoader(null);
   });
 
   // Keeps the root node visually anchored across layout recomputes, and
@@ -590,15 +589,15 @@ export default function NewMindMapPreview(props) {
       // under the new engine.
       selectItem(loadedRoot);
       // Registers this root/svg as the source ui/io.js's save/autosave
-      // logic reads from (see newIo.js). Only apply the loaded record's
-      // bookkeeping when a real saved map was actually loaded -- doing
-      // this unconditionally for a brand-new map would prematurely
-      // rewrite the URL to "/" before the user ever saves (mirrors the
-      // old engine's io.restore(), which only calls its own
-      // setCurrentMap() when a record was actually found).
-      newIo.attach(loadedRoot, svgRef);
+      // logic reads from. Only apply the loaded record's bookkeeping
+      // when a real saved map was actually loaded -- doing this
+      // unconditionally for a brand-new map would prematurely rewrite
+      // the URL to "/" before the user ever saves (mirrors the old
+      // engine's io.restore(), which only calls its own setCurrentMap()
+      // when a record was actually found).
+      io.attach(loadedRoot, svgRef);
       if (lastLoadedRecord) {
-        newIo.applyLoadedRecord(lastLoadedRecord);
+        io.setCurrentMap(lastLoadedRecord);
       }
     }
     // Reading layoutResult() here (rather than only contentPosition/size

@@ -11,25 +11,25 @@ import ImageDown from "lucide-solid/icons/image-down";
 // panel's only concern that operates on the whole map rather than the
 // selected item.
 //
-// The SVG node to render is registered with newIo.js whenever
-// NewMindMapPreview.jsx (re)loads a map (see that file's newIo.attach()
+// The SVG node to render is registered with ui/io.js whenever
+// NewMindMapPreview.jsx (re)loads a map (see that file's io.attach()
 // call). backend/image.js's save()/download() both take an explicit
 // svgNode/name (see that file), which this component sources from
-// newIo.js.
+// ui/io.js.
 export default function RightPanelExportActions() {
   // Cached after the first dynamic import, see onMount.
   let imageModule;
-  let newIoModule;
+  let ioModule;
 
   const [ready, setReady] = createSignal(false);
 
   onMount(async () => {
-    const [imageMod, newIoMod] = await Promise.all([
+    const [imageMod, ioMod] = await Promise.all([
       import("../lib/mindmap/backend/image.js"),
-      import("../lib/mindmap/newIo.js"),
+      import("../lib/mindmap/ui/io.js"),
     ]);
     imageModule = imageMod;
-    newIoModule = newIoMod;
+    ioModule = ioMod;
     setReady(true);
   });
 
@@ -37,7 +37,7 @@ export default function RightPanelExportActions() {
   // system clipboard, sourcing the SVG node from newIo.js.
   async function copyImage() {
     const backend = new imageModule.default();
-    const url = await backend.save("png", newIoModule.getSvgNode());
+    const url = await backend.save("png", ioModule.getSvgNode());
     if (navigator.clipboard?.write) {
       const res = await fetch(url);
       const blob = await res.blob();
@@ -57,8 +57,8 @@ export default function RightPanelExportActions() {
   // backend/image.js) instead of duplicating its PNG-rendering logic.
   async function downloadImage() {
     const backend = new imageModule.default();
-    const url = await backend.save("png", newIoModule.getSvgNode());
-    backend.download(url, newIoModule.getRoot()?.name);
+    const url = await backend.save("png", ioModule.getSvgNode());
+    backend.download(url, ioModule.getRoot()?.name);
     URL.revokeObjectURL(url);
   }
 
