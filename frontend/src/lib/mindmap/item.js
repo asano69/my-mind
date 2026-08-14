@@ -280,6 +280,7 @@ export default class Item {
       createEffect(() => this.updateNotes());
       createEffect(() => this.updateToggle());
       createEffect(() => this.updateLink());
+      createEffect(() => this.updateColorStyle());
     });
 
     createRoot((dispose) => {
@@ -873,6 +874,26 @@ export default class Item {
     // the kind of unnecessary work docs/06.1-recursive-memo-layout-
     // refactor.md's Phase 7 is meant to remove.
   }
+  // Applies color-dependent styling (text color, and box/ellipse
+  // background/border) as its own per-item effect, independent of the
+  // layout pass. resolvedColor/resolvedTextColor are memoized (see the
+  // constructor), so this effect only reruns when this item's OWN
+  // resolved value actually changes -- but unlike computeLayout(), it
+  // never touches DOM measurement or status/value, so a pure
+  // color/textColor change (e.g. changing the root's color, which
+  // previously forced every descendant to remeasure its content box)
+  // no longer needs to reach the layout memo at all.
+  //
+  // Underline is excluded here: its stroke is drawn as part of its own
+  // connector <path>, whose position depends on this item's
+  // just-measured contentSize/contentPosition, so it must stay inside
+  // _writeOwnLayout() below rather than move to this untimed effect.
+  updateColorStyle() {
+    this.dom.text.style.color = this.resolvedTextColor;
+    if (this.resolvedShape.id !== "underline") {
+      this.resolvedShape.update(this);
+    }
+  }
   // Bumps this item and every descendant's content version, forcing them
   // to remeasure on the next layout pull. Used when a collapsed ancestor
   // expands (see the `collapsed` setter above) -- see that comment for
@@ -918,7 +939,9 @@ export default class Item {
   // exist yet at this point.
   _applyOwnStyle() {
     const { resolvedShape, resolvedLayout, dom } = this;
-    dom.text.style.color = this.resolvedTextColor;
+    // Text color moved to updateColorStyle() (see the constructor) --
+    // it never affects the content box's measured size, so it no
+    // longer needs to be part of the layout memo's tracked scope.
     dom.node.dataset.shape = resolvedShape.id;
     dom.node.dataset.align = resolvedLayout.computeAlignment(this);
   }
@@ -942,7 +965,15 @@ export default class Item {
     const { resolvedLayout, resolvedShape, dom } = this;
     dom.connectors.innerHTML = "";
     resolvedLayout.update(this);
-    resolvedShape.update(this);
+    // Box/Ellipse styling has no geometry dependency (pure CSS) and is
+    // now applied independently by updateColorStyle() (see the
+    // constructor and _applyOwnStyle()'s comment), so it's skipped
+    // here. Underline draws an actual connector path whose position
+    // depends on this item's just-computed contentSize/contentPosition,
+    // so it must stay part of the layout pass.
+    if (resolvedShape.id === "underline") {
+      resolvedShape.update(this);
+    }
   }
 }
 // isUrlOnly() now lives in urlUtils.js (imported above), shared with

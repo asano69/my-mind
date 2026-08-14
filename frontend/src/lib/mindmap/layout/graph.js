@@ -91,16 +91,16 @@ export default class GraphLayout extends Layout {
     return bbox;
   }
   computeLinesHorizontal(item, side) {
-    const {
-      contentPosition,
-      contentSize,
-      resolvedShape,
-      resolvedColor,
-      children,
-    } = item;
+    const { contentPosition, contentSize, resolvedShape, children } = item;
     if (children.length == 0) {
       return [];
     }
+    // Read only once we know a connector will actually be drawn, so a
+    // leaf item's layout computation never depends on the color
+    // inheritance chain -- a color/textColor change on some ancestor
+    // no longer forces every leaf to recompute its (empty) connector
+    // result.
+    const { resolvedColor } = item;
     const dirModifier = side == "right" ? 1 : -1;
     // first part from this item
     let itemAnchor = [
@@ -165,10 +165,12 @@ export default class GraphLayout extends Layout {
     return [{ d: d.join(" "), stroke: resolvedColor, togglePosition }];
   }
   computeLinesVertical(item, side, totalHeight) {
-    const { contentSize, resolvedShape, resolvedColor, children } = item;
+    const { contentSize, resolvedShape, children } = item;
     if (children.length == 0) {
       return [];
     }
+    // See computeLinesHorizontal()'s comment above.
+    const { resolvedColor } = item;
     const dirModifier = side == "bottom" ? 1 : -1;
     let itemAnchor = [
       resolvedShape.getHorizontalAnchor(item),

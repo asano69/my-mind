@@ -58,7 +58,7 @@ export default class TreeLayout extends Layout {
     });
   }
   computeLines(item, direction, totalWidth) {
-    const { resolvedShape, resolvedColor, children } = item;
+    const { resolvedShape, children } = item;
     const dirModifier = direction == "right" ? 1 : -1;
     const lineX =
       (direction == "left" ? totalWidth - LINE_OFFSET : LINE_OFFSET) + 0.5;
@@ -68,6 +68,9 @@ export default class TreeLayout extends Layout {
     if (children.length == 0 || item.collapsed) {
       return [{ togglePosition }];
     }
+    // Read only once we know a connector line will actually be drawn --
+    // see graph.js's computeLinesHorizontal() for the same reasoning.
+    const { resolvedColor } = item;
     let lastChild = children[children.length - 1];
     let lineEnd = [
       lineX,

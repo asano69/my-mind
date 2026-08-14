@@ -230,6 +230,33 @@ export default class ItemNode {
     // never be disposed.
     createRoot((dispose) => {
       this._disposeLayoutMemo = dispose;
+      // Memoized the same way item.js's own resolvedColor/
+      // resolvedTextColor are (see that file's constructor): without
+      // this, resolvedColor/resolvedTextColor were plain getters that
+      // re-walked the whole ancestor chain on every read, so any
+      // computation reading them (including layoutResult itself)
+      // subscribed directly to every ancestor's raw color signal. A
+      // subtree with its own explicit color now stops that
+      // subscription at its own boundary instead of propagating all
+      // the way to the root.
+      this._resolvedColor = createMemo(() => {
+        const own = this._color();
+        if (own && own !== "#ffffff") {
+          return own;
+        }
+        const parent = this.parent;
+        return parent instanceof ItemNode
+          ? parent.resolvedColor
+          : DEFAULT_COLOR;
+      });
+      this._resolvedTextColor = createMemo(() => {
+        const own = this._textColor();
+        if (own && own !== "#ffffff") {
+          return own;
+        }
+        const parent = this.parent;
+        return parent instanceof ItemNode ? parent.resolvedTextColor : "";
+      });
       this.layoutResult = createMemo(() => this._computeLayout());
     });
   }
@@ -456,12 +483,7 @@ export default class ItemNode {
     this._setColor(color);
   }
   get resolvedColor() {
-    const own = this._color();
-    if (own && own !== "#ffffff") {
-      return own;
-    }
-    const parent = this.parent;
-    return parent instanceof ItemNode ? parent.resolvedColor : DEFAULT_COLOR;
+    return this._resolvedColor();
   }
 
   get textColor() {
@@ -471,12 +493,7 @@ export default class ItemNode {
     this._setTextColor(textColor);
   }
   get resolvedTextColor() {
-    const own = this._textColor();
-    if (own && own !== "#ffffff") {
-      return own;
-    }
-    const parent = this.parent;
-    return parent instanceof ItemNode ? parent.resolvedTextColor : "";
+    return this._resolvedTextColor();
   }
 
   get layout() {
