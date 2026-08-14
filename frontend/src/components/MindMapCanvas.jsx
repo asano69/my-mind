@@ -11,8 +11,8 @@ import { onMount, onCleanup } from "solid-js";
 import { render } from "solid-js/web";
 import { activeMode } from "../lib/mindmap/store";
 import NewMindMapPreview from "./NewMindMapPreview.jsx";
-import * as newKeyboard from "../lib/mindmap/newKeyboard.js";
-import * as newMouse from "../lib/mindmap/newMouse.js";
+import * as newKeyboard from "../lib/mindmap/core/newKeyboard.js";
+import * as newMouse from "../lib/mindmap/core/newMouse.js";
 import * as title from "../lib/mindmap/title.js";
 
 export default function MindMapCanvas(props) {

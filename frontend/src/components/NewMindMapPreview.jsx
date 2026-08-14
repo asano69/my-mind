@@ -6,21 +6,21 @@ import {
   onCleanup,
   onMount,
 } from "solid-js";
-import ItemNode, { measureContentSize } from "../lib/mindmap/itemStore.js";
+import ItemNode, { measureContentSize } from "../lib/mindmap/core/itemStore.js";
 import Spinner from "./Spinner.jsx";
 import {
   itemStateClassList,
   selectItem,
-} from "../lib/mindmap/itemSelection.js";
+} from "../lib/mindmap/core/itemSelection.js";
 import {
   handleItemClick,
   handleItemDblClick,
   handleItemLinkClick,
-} from "../lib/mindmap/newMouse.js";
-import { registerDomRefs } from "../lib/mindmap/newEdit.js";
-import * as newMouse from "../lib/mindmap/newMouse.js";
-import * as newClipboard from "../lib/mindmap/newClipboard.js";
-import * as newViewport from "../lib/mindmap/newViewport.js";
+} from "../lib/mindmap/core/newMouse.js";
+import { registerDomRefs } from "../lib/mindmap/core/newEdit.js";
+import * as newMouse from "../lib/mindmap/core/newMouse.js";
+import * as newClipboard from "../lib/mindmap/core/newClipboard.js";
+import * as newViewport from "../lib/mindmap/core/newViewport.js";
 import * as io from "../lib/mindmap/ui/io.js";
 import {
   bumpDirty,
@@ -33,21 +33,21 @@ import {
   TOGGLE_SIZE,
   D_MINUS,
   D_PLUS,
-} from "../lib/mindmap/layout/constants.js";
-import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
-import { repo as shapeRepo } from "../lib/mindmap/shape/shape.js";
+} from "../lib/mindmap/core/layout/constants.js";
+import { repo as layoutRepo } from "../lib/mindmap/core/layout/layout.js";
+import { repo as shapeRepo } from "../lib/mindmap/core/shape/shape.js";
 import { loadByUuid } from "../lib/mindmap/backend/pocketbase.js";
-import "../lib/mindmap/layout/map.js";
+import "../lib/mindmap/core/layout/map.js";
 // Named imports also run each module's own registration side effect
 // (new Box()/new Ellipse()/new Underline()), so the old blank
-// import "../lib/mindmap/shape/box.js" style imports are no longer
+// import "../lib/mindmap/core/shape/box.js" style imports are no longer
 // needed alongside these (see docs/08-mindmap-engine-refactor.md's
 // Phase 3.7: this preview now shares the same pure style/path
 // functions the real engine's shape/*.js update() methods use, instead
 // of duplicating that branching here).
-import { computeBoxStyle } from "../lib/mindmap/shape/box.js";
-import { computeEllipseStyle } from "../lib/mindmap/shape/ellipse.js";
-import { computeUnderlinePath } from "../lib/mindmap/shape/underline.js";
+import { computeBoxStyle } from "../lib/mindmap/core/shape/box.js";
+import { computeEllipseStyle } from "../lib/mindmap/core/shape/ellipse.js";
+import { computeUnderlinePath } from "../lib/mindmap/core/shape/underline.js";
 import mapCss from "../lib/mindmap/map.css?raw";
 
 // Phase 3.5 (see docs/08-mindmap-engine-refactor.md): layout computation

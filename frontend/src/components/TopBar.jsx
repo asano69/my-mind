@@ -101,7 +101,7 @@ export default function TopBar() {
 
   onMount(async () => {
     titleModule = await import("../lib/mindmap/title.js");
-    historyModule = await import("../lib/mindmap/history.js");
+    historyModule = await import("../lib/mindmap/core/history.js");
     setHistoryReady(true);
   });
 

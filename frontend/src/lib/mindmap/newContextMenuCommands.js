@@ -6,16 +6,16 @@
 // app.currentItem -- calling the old command repo against a
 // currentItem the new engine never sets is what caused
 // edit/insert-child/insert-sibling/delete to throw.
-import { currentItem, editing, setEditing } from "./itemSelection.js";
-import { startEditing } from "./newEdit.js";
+import { currentItem, editing, setEditing } from "./core/itemSelection.js";
+import { startEditing } from "./core/newEdit.js";
 import {
   action,
   InsertNewItem,
   RemoveItem,
   Swap,
   SetSide,
-} from "./newAction.js";
-import * as history from "./history.js";
+} from "./core/newAction.js";
+import * as history from "./core/history.js";
 import {
   openValueDialog,
   openHelp,
@@ -26,11 +26,11 @@ import {
   toggleRightPanel,
 } from "./store.js";
 import * as notes from "./ui/notes.js";
-import * as newViewport from "./newViewport.js";
+import * as newViewport from "./core/newViewport.js";
 import * as io from "./ui/io.js";
 import { showToast } from "./ui/toast.jsx";
 import { navigateTo } from "./navigation.js";
-import { isCanvasActive } from "./scope.js";
+import { isCanvasActive } from "./core/scope.js";
 
 // Pan (WASD, held down): mirrors command/command.js's Pan command
 // (state machine + setInterval + keyup listener), adapted to call

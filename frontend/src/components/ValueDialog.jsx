@@ -1,7 +1,7 @@
 import { createEffect, createSignal, Show } from "solid-js";
 import { Dialog } from "@kobalte/core/dialog";
 import { valueDialogOpen, closeValueDialog } from "../lib/mindmap/store";
-import { currentItem } from "../lib/mindmap/itemSelection";
+import { currentItem } from "../lib/mindmap/core/itemSelection";
 
 // Replaces command/edit.js's old prompt()-based "Set value" flow with a
 // Kobalte dialog, mirroring ConfirmDialog.jsx's structure. Always
@@ -56,7 +56,7 @@ export default function ValueDialog() {
       return;
     }
     if (!dispatchAction) {
-      const mod = await import("../lib/mindmap/newAction.js");
+      const mod = await import("../lib/mindmap/core/newAction.js");
       SetValueClass = mod.SetValue;
       dispatchAction = mod.action;
     }

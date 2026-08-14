@@ -1,7 +1,7 @@
 import { createRoot, createEffect, on } from "solid-js";
 import * as backend from "../backend/pocketbase.js";
 import { serializeCurrentMap } from "../backend/image.js";
-import ItemNode from "../itemStore.js";
+import ItemNode from "../core/itemStore.js";
 import {
   currentTitle,
   setCurrentTitle,
