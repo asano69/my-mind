@@ -275,7 +275,15 @@ function ItemNodeView(props) {
             pathInfo.d ? (
               <path
                 d={pathInfo.d}
-                stroke={pathInfo.stroke}
+                // pathInfo.stroke only exists for root's own connectors
+                // (each branch keeps its own child's color, see
+                // layout/map.js's computeRootConnectors). For every
+                // other (non-root) connector, color comes from reading
+                // props.item.resolvedColor directly in this JSX
+                // binding -- a fine-grained reactive read independent
+                // of the layout() memo above, so a color-only change
+                // never has to recompute this item's layout geometry.
+                stroke={pathInfo.stroke ?? props.item.resolvedColor}
                 fill={pathInfo.fill ?? "none"}
                 stroke-width="2"
               />

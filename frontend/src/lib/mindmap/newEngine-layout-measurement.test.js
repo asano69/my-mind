@@ -131,12 +131,14 @@ describe("new-engine layout-locality measurement (doc08 Phase 3.5, compare again
       "middle-node collapse toggle": (root) => {
         root.children[0].collapsed = true;
       },
-      // color is read (conditionally) by computeLinesHorizontal/Vertical
-      // (layout/graph.js) whenever a connector to a child is actually
-      // drawn -- see itemStore-layout-locality.test.js's own finding
-      // that this is strictly narrower than the old engine's 121/121,
-      // since shape/underline-path rendering is not part of
-      // _computeLayout() here at all (see this file's header comment).
+      // resolvedColor is no longer read inside computeLinesHorizontal/
+      // Vertical (layout/graph.js) or computeLines (layout/tree.js) at
+      // all -- connector stroke color is resolved by the caller
+      // (ItemNodeView's JSX) at render time instead, decoupled from
+      // this layout memo. Only the root's own layoutResult still
+      // depends on color, via layoutRoot()'s per-branch
+      // child.resolvedColor read (see itemStore-layout-locality.test.js's
+      // own finding).
       "root color change": (root) => {
         root.color = "#d33";
       },
@@ -187,12 +189,12 @@ describe("new-engine layout-locality measurement (doc08 Phase 3.5, compare again
       const calls = instrumentTree(root);
       root.color = "#d33";
       root.layoutResult();
-      // Every node with at least one child draws (or at least attempts)
-      // a connector and reads resolvedColor while doing so; leaves never
-      // draw an outgoing connector and so never read it. For a
-      // depth-4/width-3 tree, that's every non-leaf: 121 - 3^4 = 40.
-      const leafCount = WIDTH ** DEPTH;
-      expect(calls.computeLayout).toBe(totalNodes - leafCount);
+      // Connector stroke color is resolved at render time now (see
+      // graph.js/tree.js), not inside _computeLayout() -- only the
+      // root's own layoutResult still reads color (via layoutRoot()'s
+      // per-branch child.resolvedColor), so a root color change
+      // recomputes just the root itself.
+      expect(calls.computeLayout).toBe(1);
     }
     {
       const root = buildTree(DEPTH, WIDTH);

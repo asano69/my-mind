@@ -95,12 +95,14 @@ export default class GraphLayout extends Layout {
     if (children.length == 0) {
       return [];
     }
-    // Read only once we know a connector will actually be drawn, so a
-    // leaf item's layout computation never depends on the color
-    // inheritance chain -- a color/textColor change on some ancestor
-    // no longer forces every leaf to recompute its (empty) connector
-    // result.
-    const { resolvedColor } = item;
+    // resolvedColor is intentionally NOT read here. This function is
+    // pure geometry (anchor points, curve/arc paths); the connector's
+    // stroke color is resolved by the caller instead, at write/render
+    // time -- GraphLayout.writeConnectorPaths() for the old engine,
+    // ItemNodeView's JSX for the new engine (see
+    // docs/08-mindmap-engine-refactor.md). This keeps a color-only
+    // change from ever invalidating the geometry memo that wraps this
+    // computation (itemStore.js's layoutResult).
     const dirModifier = side == "right" ? 1 : -1;
     // first part from this item
     let itemAnchor = [
@@ -127,7 +129,7 @@ export default class GraphLayout extends Layout {
         `M ${itemAnchor}`,
         `C ${[midX, itemAnchor[1]]} ${[midX, childAnchor[1]]} ${childAnchor}`,
       );
-      return [{ d: d.join(" "), stroke: resolvedColor, togglePosition }];
+      return [{ d: d.join(" "), togglePosition }];
     }
     // short line from this item to crossroads
     d.push(`M ${itemAnchor}`, `L ${cross}`);
@@ -162,15 +164,15 @@ export default class GraphLayout extends Layout {
       let childAnchor = [this.getChildAnchor(c, side), y];
       d.push(`M ${lineStart}`, `L ${childAnchor}`);
     }
-    return [{ d: d.join(" "), stroke: resolvedColor, togglePosition }];
+    return [{ d: d.join(" "), togglePosition }];
   }
   computeLinesVertical(item, side, totalHeight) {
     const { contentSize, resolvedShape, children } = item;
     if (children.length == 0) {
       return [];
     }
-    // See computeLinesHorizontal()'s comment above.
-    const { resolvedColor } = item;
+    // See computeLinesHorizontal()'s comment above -- resolvedColor is
+    // intentionally not read here either.
     const dirModifier = side == "bottom" ? 1 : -1;
     let itemAnchor = [
       resolvedShape.getHorizontalAnchor(item),
@@ -193,7 +195,7 @@ export default class GraphLayout extends Layout {
       let child = children[0];
       let childAnchor = [cross[0], this.getChildAnchor(child, side)];
       d.push(`M ${cross}`, `L ${childAnchor}`);
-      return [{ d: d.join(" "), stroke: resolvedColor, togglePosition }];
+      return [{ d: d.join(" "), togglePosition }];
     }
     // rounded connectors for first/last child
     const firstChild = children[0];
@@ -225,7 +227,7 @@ export default class GraphLayout extends Layout {
       let childAnchor = [x, this.getChildAnchor(c, side)];
       d.push(`M ${lineStart}`, `L ${childAnchor}`);
     }
-    return [{ d: d.join(" "), stroke: resolvedColor, togglePosition }];
+    return [{ d: d.join(" "), togglePosition }];
   }
   writeConnectorPaths(item, connectorPaths) {
     for (const pathInfo of connectorPaths) {
@@ -235,9 +237,14 @@ export default class GraphLayout extends Layout {
       if (!pathInfo.d) {
         continue;
       }
+      // stroke is resolved here, not carried on pathInfo: the
+      // connector's color is this item's own resolvedColor, read at
+      // write time (still inside the same reactive layout pass this
+      // is called from) instead of being read inside the pure geometry
+      // functions above -- see computeLinesHorizontal()'s comment.
       const path = svg.node("path", {
         d: pathInfo.d,
-        stroke: pathInfo.stroke,
+        stroke: item.resolvedColor,
         fill: "none",
         "stroke-width": "2",
       });

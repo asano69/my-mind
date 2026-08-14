@@ -133,27 +133,30 @@ describe("ItemNode.layoutResult locality (Phase 3.5)", () => {
     expect(collapsedLayout.childLayouts).toEqual([]);
   });
 
-  it("propagates a root color change to every node that draws its own connectors (inheritance, not a locality bug)", () => {
+  it("propagates a root color change to only the root itself, not any other node", () => {
     const root = buildTree(DEPTH, WIDTH);
-    const totalNodes = countNodes(root);
     root.layoutResult(); // warm up
 
     const calls = instrumentTree(root);
     root.color = "#d33";
     root.layoutResult();
 
-    // Unlike doc08 Phase 0's finding for the OLD engine (121/121, which
-    // read resolvedColor unconditionally), layout/graph.js's
-    // computeLinesHorizontal()/computeLinesVertical() only read
-    // resolvedColor once a connector line will actually be drawn (see
-    // that file's own comment). A leaf item has no children, so it never
-    // draws its own outgoing connector and never reads resolvedColor at
-    // all -- its _computeLayout() is therefore never invalidated by an
-    // ancestor's color change. Every node WITH children still recomputes
-    // (real inheritance propagation, not a locality bug); only the leaf
-    // layer is correctly skipped. For this depth-4/width-3 tree, that's
-    // every node except the 81 leaves: 121 - 81 = 40.
-    const leafCount = WIDTH ** DEPTH;
-    expect(calls.size).toBe(totalNodes - leafCount);
+    // layout/graph.js's computeLinesHorizontal()/computeLinesVertical()
+    // (and tree.js's computeLines()) no longer read resolvedColor at
+    // all -- connector stroke color is resolved by the caller
+    // (ItemNodeView's JSX for this engine, GraphLayout/TreeLayout's
+    // writeConnectorPaths() for the old engine) at write/render time,
+    // not inside this geometry-only computation. So a non-root item's
+    // _computeLayout() never depends on resolvedColor anymore.
+    //
+    // The root is the one exception: layoutRoot() (see
+    // layout/map.js's computeRootConnectors) fills each branch's
+    // connector shape with that branch's own resolvedColor, since a map
+    // layout can show a different color per side -- that's a real,
+    // necessary dependency on each direct child's resolvedColor. So
+    // only the root recomputes when its own color changes (each direct
+    // child's resolvedColor falls back to the root's).
+    expect(calls.size).toBe(1);
+    expect(calls.has(root.id)).toBe(true);
   });
 });

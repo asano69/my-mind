@@ -68,9 +68,10 @@ export default class TreeLayout extends Layout {
     if (children.length == 0 || item.collapsed) {
       return [{ togglePosition }];
     }
-    // Read only once we know a connector line will actually be drawn --
-    // see graph.js's computeLinesHorizontal() for the same reasoning.
-    const { resolvedColor } = item;
+    // resolvedColor is intentionally NOT read here -- see graph.js's
+    // computeLinesHorizontal() for the full reasoning. This is pure
+    // geometry; the connector's stroke color is resolved by the caller
+    // at write/render time instead.
     let lastChild = children[children.length - 1];
     let lineEnd = [
       lineX,
@@ -89,7 +90,7 @@ export default class TreeLayout extends Layout {
         `L ${this.getChildAnchor(child, direction)} ${y}`,
       );
     });
-    return [{ d: d.join(" "), stroke: resolvedColor, togglePosition }];
+    return [{ d: d.join(" "), togglePosition }];
   }
   writeConnectorPaths(item, connectorPaths) {
     for (const pathInfo of connectorPaths) {
@@ -99,9 +100,11 @@ export default class TreeLayout extends Layout {
       if (!pathInfo.d) {
         continue;
       }
+      // See graph.js's GraphLayout.writeConnectorPaths() for why stroke
+      // is resolved here rather than carried on pathInfo.
       const path = svg.node("path", {
         d: pathInfo.d,
-        stroke: pathInfo.stroke,
+        stroke: item.resolvedColor,
         fill: "none",
         "stroke-width": "2",
       });

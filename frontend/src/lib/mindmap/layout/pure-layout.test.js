@@ -53,7 +53,10 @@ describe("pure layout computations", () => {
     expect(root.contentPosition).toEqual([0, 0]);
     expect(child.position).toEqual([66, 5]);
     expect(connectors).toHaveLength(1);
-    expect(connectors[0]).toMatchObject({ stroke: "#abc" });
+    // stroke is no longer part of this descriptor -- connector color is
+    // resolved by the caller at write/render time, not by this pure
+    // geometry computation (see graph.js's computeLinesHorizontal()).
+    expect(connectors[0].stroke).toBeUndefined();
     expect(connectors[0].togglePosition).toEqual([58.5, 10]);
     expect(connectors[0].d).toContain("C");
   });
