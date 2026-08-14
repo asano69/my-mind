@@ -25,6 +25,11 @@ import {
 import { startEditing, commitEditing, discardEditing } from "./newEdit.js";
 import * as history from "./history.js";
 import { action, InsertNewItem, RemoveItem, Multi } from "./newAction.js";
+import {
+  repo as sharedCommandRepo,
+  setPanKeyboardScope,
+  disposePan,
+} from "./newContextMenuCommands.js";
 
 function isMac() {
   return !!(globalThis.navigator?.platform ?? "").match(/mac/i);
@@ -291,6 +296,24 @@ function handleEvent(e) {
   if (command) {
     e.preventDefault();
     command.execute(e);
+    return;
+  }
+  // Fallback: commands shared with ContextMenu.jsx (see
+  // newContextMenuCommands.js), extended with `keys` for hotkey use.
+  // Only consulted while not editing -- none of these are meant to fire
+  // mid-edit, matching the old engine's Command.editMode semantics.
+  if (editingNow) {
+    return;
+  }
+  for (const sharedCommand of sharedCommandRepo.values()) {
+    if (!sharedCommand.keys?.length || !sharedCommand.isValid) {
+      continue;
+    }
+    if (sharedCommand.keys.find((key) => keyOK(key, e))) {
+      e.preventDefault();
+      sharedCommand.execute(e);
+      return;
+    }
   }
 }
 
@@ -300,6 +323,7 @@ export function init(containerEl) {
   if (hasDocument()) {
     document.addEventListener("focusin", handleFocusIn);
   }
+  setPanKeyboardScope(containerEl);
   containerEl.focus();
 }
 
@@ -312,6 +336,8 @@ export function dispose(containerEl) {
   if (hasDocument()) {
     document.removeEventListener("focusin", handleFocusIn);
   }
+  setPanKeyboardScope();
+  disposePan();
   cancelRestore();
 }
 
