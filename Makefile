@@ -73,4 +73,5 @@ migrate-collections:
 
 build: frontend
 	go build -o $(BINARY) ./cmd/$(BINARY)
-
+lint:
+	golangci-lint run; cd frontend && pnpm run lint
