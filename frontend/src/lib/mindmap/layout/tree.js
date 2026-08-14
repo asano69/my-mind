@@ -1,6 +1,6 @@
 // src/layout/tree.ts
 import Layout from "./layout.js";
-import { TOGGLE_SIZE } from "../item.js";
+import { TOGGLE_SIZE } from "./constants.js";
 import * as svg from "../svg.js";
 const SPACING_RANK = 32;
 const R = SPACING_RANK / 4;

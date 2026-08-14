@@ -16,8 +16,13 @@ import { repo as layoutRepo } from "./layout/layout.js";
 import Map from "./map.js";
 import { isSameOrigin, isUrlOnly } from "./urlUtils.js";
 import { navigateTo } from "./navigation.js";
+import { TOGGLE_SIZE, D_MINUS, D_PLUS } from "./layout/constants.js";
 
-export const TOGGLE_SIZE = 7;
+// Re-exported (not redefined) so any remaining importer of TOGGLE_SIZE
+// from item.js keeps working during the migration -- the single source
+// of truth is now layout/constants.js (see docs/09-final-migration-to-
+// new-engine.md, Phase 2).
+export { TOGGLE_SIZE };
 const LAYOUT_RESULT = Symbol("Item.layoutResult");
 
 export function readItemLayoutResult(item) {
@@ -994,8 +999,6 @@ function generateId() {
   }
   return str;
 }
-const D_MINUS = `M ${-(TOGGLE_SIZE - 2)} 0 L ${TOGGLE_SIZE - 2} 0`;
-const D_PLUS = `${D_MINUS} M 0 ${-(TOGGLE_SIZE - 2)} L 0 ${TOGGLE_SIZE - 2}`;
 function buildToggle() {
   const circleAttrs = { cx: "0", cy: "0", r: String(TOGGLE_SIZE) };
   let g = svg.group();

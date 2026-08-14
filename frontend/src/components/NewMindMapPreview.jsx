@@ -22,7 +22,7 @@ import * as newViewport from "../lib/mindmap/newViewport.js";
 import * as io from "../lib/mindmap/ui/io.js";
 import * as newIo from "../lib/mindmap/newIo.js";
 import { bumpDirty, titleAuto, setCurrentTitle } from "../lib/mindmap/store.js";
-import { TOGGLE_SIZE } from "../lib/mindmap/item.js";
+import { TOGGLE_SIZE, D_MINUS, D_PLUS } from "../lib/mindmap/layout/constants.js";
 import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
 import { repo as shapeRepo } from "../lib/mindmap/shape/shape.js";
 import { loadByUuid } from "../lib/mindmap/backend/pocketbase.js";
@@ -101,9 +101,6 @@ function hasNotes(item) {
 function alignmentFor(item) {
   return item.resolvedLayout.computeAlignment(item);
 }
-
-const D_MINUS = `M ${-(TOGGLE_SIZE - 2)} 0 L ${TOGGLE_SIZE - 2} 0`;
-const D_PLUS = `${D_MINUS} M 0 ${-(TOGGLE_SIZE - 2)} L 0 ${TOGGLE_SIZE - 2}`;
 
 // Minimal collapse/expand toggle, matching item.js's buildToggle() glyph
 // (a circle with a minus/plus path, same TOGGLE_SIZE imported directly
