@@ -59,6 +59,6 @@ describe("title.js", () => {
     title.init();
     setCurrentTitle("My Map");
     title.dispose();
-    expect(document.title).toBe("my-mind");
+    expect(document.title).toBe("solid-mind");
   });
 });

@@ -1,6 +1,6 @@
 import PocketBase from "pocketbase";
 
-// Single shared PocketBase client, used to call my-mind' custom API routes
+// Single shared PocketBase client, used to call solid-mind' custom API routes
 // (e.g. POST /api/rescan) from the frontend.
 const pb = new PocketBase("/");
 

@@ -69,7 +69,7 @@ format:
 
 
 migrate-collections:
-	yes | go run ./cmd/my-mind migrate collections
+	yes | go run ./cmd/solid-mind migrate collections
 
 build: frontend
 	go build -o $(BINARY) ./cmd/$(BINARY)

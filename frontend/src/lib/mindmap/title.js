@@ -38,5 +38,5 @@ export function init() {
 export function dispose() {
   disposeEffect?.();
   disposeEffect = null;
-  document.title = "my-mind";
+  document.title = "solid-mind";
 }

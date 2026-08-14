@@ -9,18 +9,18 @@ import (
 	pbcmd "github.com/pocketbase/pocketbase/cmd"
 	"github.com/spf13/cobra"
 
-	"github.com/asano69/my-mind/internal/cmd/serve"
+	"github.com/asano69/solid-mind/internal/cmd/serve"
 
-	"github.com/asano69/my-mind/internal/config"
-	_ "github.com/asano69/my-mind/migrations"
-	"github.com/asano69/my-mind/internal/version"
+	"github.com/asano69/solid-mind/internal/config"
+	_ "github.com/asano69/solid-mind/migrations"
+	"github.com/asano69/solid-mind/internal/version"
 	"github.com/pocketbase/pocketbase/plugins/migratecmd"
 )
 
 func main() {
 	app := pocketbase.NewWithConfig(pocketbase.Config{HideStartBanner: true})
 
-	// Registers "my-mind migrate up/down/create/collections/history-sync"
+	// Registers "solid-mind migrate up/down/create/collections/history-sync"
 	// for manual or CI-driven schema management. Automigrate is off because
 	// the schema is defined purely in Go migration files (internal/migrations),
 	// not edited through the PocketBase dashboard.
@@ -29,8 +29,8 @@ func main() {
 	})
 
 	root := app.RootCmd
-	root.Use = "my-mind"
-	root.Short = "my-mind"
+	root.Use = "solid-mind"
+	root.Short = "solid-mind"
 	root.SilenceUsage = true
 	root.Version = version.Version
 

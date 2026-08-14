@@ -2,7 +2,7 @@
 
 **An app for organizing concepts as simply as possible**
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/asano69/my-mind)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/asano69/solid-mind)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 <img src="frontend/public/favicon.svg" width="100" align="right" />
@@ -46,7 +46,7 @@ The demo takes about 50 seconds to start.
 
 >[!TIP]
 >1. Currently, a new mind map can be saved using **Ctrl + Shift + S.**
->2. To navigate to the Catalog page, click "My mind" in the left sidebar
+>2. To navigate to the Catalog page, click "Solid Mind" in the left sidebar
 >3. If the demo site is not displaying correctly or seems to be behaving unexpectedly, please try pressing **Ctrl + Shift + R** to perform a hard refresh.
 
 ## Ref

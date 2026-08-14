@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/asano69/my-mind/internal/assets"
-	"github.com/asano69/my-mind/internal/config"
-	"github.com/asano69/my-mind/internal/db"
-	"github.com/asano69/my-mind/internal/version"
+	"github.com/asano69/solid-mind/internal/assets"
+	"github.com/asano69/solid-mind/internal/config"
+	"github.com/asano69/solid-mind/internal/db"
+	"github.com/asano69/solid-mind/internal/version"
 
 	"github.com/google/uuid"
 	"github.com/pocketbase/dbx"

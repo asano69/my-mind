@@ -1,4 +1,4 @@
-// Package config loads the configuration for my-mind serve from
+// Package config loads the configuration for solid-mind serve from
 // environment variables.
 package config
 
@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/asano69/my-mind/internal/errs"
+	"github.com/asano69/solid-mind/internal/errs"
 )
 
 // ServerConfig holds HTTP server settings.

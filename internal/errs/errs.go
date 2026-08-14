@@ -1,4 +1,4 @@
-// Package errs provides the standard error type for my-mind.
+// Package errs provides the standard error type for solid-mind.
 package errs
 
 import "fmt"
