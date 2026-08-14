@@ -43,6 +43,8 @@ signal を直接読めば済まないか」を先に疑うこと。
 
 ## 2. レイアウト計算 — 再帰的 per-item メモチェーン（`layoutResult`）
 
+(詳細は`docs/layout-engine.md` を参照)
+
 この移行全体でもっとも重要な設計判断。`ItemNode` の各インスタンスは自分専用の
 レイアウト結果メモを持つ:
 
@@ -201,7 +203,101 @@ setter を呼ぶ」ようになっただけ（`item.status = x` のような公�
 値そのものには意味がない。`canBack()`/`canForward()` は引き続きプレーンな
 関数のまま。
 
-## 8. まとめ: 新しいコードを書くときのチェックリスト
+## 8. 見落とされがちな個別の教訓
+
+doc01〜08の各Phaseの過程で得られた、再発防止のために残す価値のある個別の知見。
+doc01〜08本体の削除後もここだけは参照できるよう、要点を自己完結的に記す。
+
+### `contentEditable` はSolidで宣言的にバインドしない
+
+ノードのテキスト編集（`newEdit.js`）は、`contentEditable`属性をJSXの
+プロパティとして宣言的に束縛せず、編集開始/終了のタイミングでDOM要素に対して
+命令的に`el.contentEditable = "true"/"false"`を切り替える設計を意図的に
+採用している。Solidの宣言的バインディングと「`contentEditable`+カーソル位置の
+維持」は相性が悪いことが広く知られているため、ここは無理にリアクティブ化しない
+という判断だった。将来ノート/ラベル編集まわりを触る際、この境界を宣言的に
+書き換えたくなっても、まずこの制約を思い出すこと。
+
+### `foreignObject`のペイントタイミング問題は、実機確認の結果、Solidの`createEffect`で解決していた
+
+旧エンジン（`item.js`/`map.js`）は「DOM挿入直後の同期的な`offsetWidth`計測が
+`foreignObject`とブラウザの相性で不安定になる」問題への対策として、二重
+`requestAnimationFrame`待ちのハックを複数箇所（`show()`、`insertChild()`、
+`collapsed`セッター）に持っていた。新エンジンでこの問題が再発するか実機
+（Chromeの開発サーバ）で確認したところ、**初回ペイントでも、collapse→expand
+の再マウント直後でも、ズレやゼロサイズの一瞬の表示は再現しなかった**。
+理由は、Solidの`createEffect`が「DOMが実際にコミットされた後」というタイミング
+保証を持っており、それだけで旧エンジンが手動で担保していた順序保証を代替
+できていたため。将来的に同種の症状（挿入直後だけサイズがおかしい等）が
+発生した場合のみ、二重rAFパターンを`createEffect`内に再導入することを検討
+すればよく、予防的に持ち込む必要はない。
+
+### `createEffect`は「追跡しているsignalを読まないと一度しか走らない」
+
+`NewMindMapPreview.jsx`のコンテンツサイズ再計測で実際に踏んだバグ: 当初、
+再計測用の`createEffect`本体が読んでいたのは`contentRef`（ただのローカル変数）
+と`item.defaultContentSize()`（`item.isRoot`だけに依存する純粋関数）のみで、
+どちらもSolidのsignalではなかった。結果、このeffectはマウント時に一度だけ
+走り、以降テキスト・アイコン・status/value/notesが変わっても一切再計測されない
+という静かなバグになっていた（コンテンツボックスが古いサイズのまま固まる）。
+修正は、effect本体の先頭で`item.text`/`item.icon`/`item.url`/`item.value`/
+`item.resolvedValue`/`item.resolvedStatus`/`item.notes`/`item.resolvedShape`
+を明示的に読み、依存関係をSolidに教えること。**「DOMを読み書きするeffectを
+書いたら、それが実際にどのsignalを追跡しているか」を必ず確認する**、という
+一般原則として持っておく価値がある。
+
+### キーボードのフォーカス自己修復ガード（rAFベース）は移植必須
+
+`keyboard.js`（旧）/`newKeyboard.js`（新）の両方が持つ、`focusout`/`focusin`
++ `requestAnimationFrame`によるフォーカス自己修復ガードは、CLAUDE.mdに記録
+されている「タイトル編集不可バグ」の対策であり、`item.dom`のような engine
+固有の依存を一切持たない、純粋にDOM/ブラウザレベルの修正。今後別のUI
+（新しいダイアログ、新しいパネル等）を追加してフォーカスが迷子になる不具合が
+再発した場合、このパターン（`focusout`で`requestAnimationFrame`を予約し、
+`document.activeElement === document.body`になっていたらコンテナへ`focus()`
+し直す。`focusin`が先に来たら予約をキャンセル）をまず検討すること。
+
+### `Pan`コマンドの`isCanvasActive()`ガードは`execute()`ではなく`step()`内に置く
+
+WASD押しっぱなしでのパン操作は、`setInterval`で駆動される`step()`が実際の
+移動を行う。モード切替のガード（`isCanvasActive()`）を`execute()`（キー押下
+時に一度だけ呼ばれる）に書くと、WASDを押したままNotesモードに切り替えても
+`setInterval`が生き続けて背景でパンし続けてしまう。ガードは必ず`step()`
+（毎回のintervalコールバック）側に置くこと。`pan-keyboard-scope.test.js`
+相当の回帰テストで明示的に保証されていた挙動なので、Pan相当の「押しっぱなし
+系」コマンドを新設する際は同じ構造を踏襲する。
+
+### ドラッグゴーストを`<svg>`へ直接appendしない
+
+`newMouse.js`の`buildDragGhost()`は、クローンしたHTML要素（`<div class="ghost">`）
+を`port.append(ghost)`で追加する。`port`が`<svg>`要素そのものだと、HTML要素を
+`<foreignObject>`なしで直接SVGの子にするのは無効なDOM構造になり、ゴーストの
+見た目が壊れる（ロジック自体は正しくてもレンダリングだけ壊れる）。実際に
+`NewMindMapPreview.jsx`の初期実装でこれを踏み、`port`を`<svg>`ref ではなく
+`containerEl`（HTMLの全画面コンテナ）に差し替えて解決した。同様にHTML要素を
+動的に挿入する処理を書くときは、挿入先が本当にHTMLコンテナかSVGコンテナか
+を必ず確認すること。
+
+### 継承色をレイアウトmemoから追い出したことの効果は実測でも裏付けられている
+
+`layout/graph.js`/`layout/tree.js`のconnector計算から`resolvedColor`の読み
+取りを外し、色の解決をJSX側（レンダー時）に移した設計判断（本文3節参照）は、
+`itemStore-layout-locality.test.js`の実測で効果が確認されている: ルートの
+`color`変更時、旧エンジンでは121ノード中121ノードが再計算されていたのに対し、
+新エンジンでは**ルート自身の1ノードだけ**が再計算される（ルートの
+`layoutRoot()`だけは各枝の色を読む必要があり例外）。「見た目だけに関わる値は
+ジオメトリ計算のmemoから追い出す」という設計方針は、単なる潔癖症ではなく、
+実際に局所性を1桁以上改善する効果があったことを覚えておく。
+
+### 手動の「変更検知キャッシュ」は基本的に不要
+
+`createSignal`/`createMemo`は、新しい値が古い値と等しければ購読者への通知を
+自動的にスキップする。doc06.1のPhase 7では当初「本当に変わったかどうかを
+手動チェックするキャッシュ」を検討したが、実装してみると不要だった。今後
+「無駄な再計算を防ぐための独自キャッシュ」を書きたくなったら、まず素の
+signal/memoの等価性チェックだけで足りないか確認すること。
+
+## 9. まとめ: 新しいコードを書くときのチェックリスト
 
 - ツリーの新しいプロパティを追加するなら、まず `createSignal` で素直に
   表現できないか考える。バージョンカウンタは最後の手段。
