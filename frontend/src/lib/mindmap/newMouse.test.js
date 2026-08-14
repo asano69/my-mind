@@ -223,7 +223,10 @@ describe("buildDragGhost / moveDragGhost (Stage 4.7.2)", () => {
     const itemB = { id: "b" };
     const el = contentNode({ offsetWidth: 60, offsetHeight: 30 });
     const domRefs = new Map([["a", el]]);
-    const port = { append: vi.fn(), getBoundingClientRect: () => ({ left: 0, top: 0 }) };
+    const port = {
+      append: vi.fn(),
+      getBoundingClientRect: () => ({ left: 0, top: 0 }),
+    };
 
     const result = buildDragGhost(domRefs, port, [itemA, itemB], [0, 0]);
 
@@ -232,7 +235,10 @@ describe("buildDragGhost / moveDragGhost (Stage 4.7.2)", () => {
 
   it("returns null when the dragged item has no registered DOM ref", () => {
     const item = { id: "missing" };
-    const port = { append: vi.fn(), getBoundingClientRect: () => ({ left: 0, top: 0 }) };
+    const port = {
+      append: vi.fn(),
+      getBoundingClientRect: () => ({ left: 0, top: 0 }),
+    };
 
     expect(buildDragGhost(new Map(), port, [item], [0, 0])).toBeNull();
     expect(port.append).not.toHaveBeenCalled();
@@ -300,7 +306,10 @@ describe("visualizeNewDragState (Stage 4.7.2)", () => {
   it("does nothing when the new target has no registered DOM ref", () => {
     const item = { id: "missing" };
     expect(() =>
-      visualizeNewDragState(new Map(), null, { result: "append", target: item }),
+      visualizeNewDragState(new Map(), null, {
+        result: "append",
+        target: item,
+      }),
     ).not.toThrow();
   });
 });
@@ -324,7 +333,12 @@ function eventTarget() {
 // buildThreeLevelTree() pattern but using childItems/side/isRoot
 // (ItemNode's API) instead of item.js's Item.
 function buildTree() {
-  const root = { id: "root", isRoot: true, collapsed: false, contentSize: [80, 40] };
+  const root = {
+    id: "root",
+    isRoot: true,
+    collapsed: false,
+    contentSize: [80, 40],
+  };
   const target = {
     id: "target",
     isRoot: false,
@@ -336,14 +350,56 @@ function buildTree() {
   };
   root.childItems = [target];
   target.childItems = [];
-  const dragged = { id: "dragged", isRoot: false, parent: root, collapsed: false, contentSize: [60, 30] };
+  const dragged = {
+    id: "dragged",
+    isRoot: false,
+    parent: root,
+    collapsed: false,
+    contentSize: [60, 30],
+  };
   dragged.childItems = [];
   root.childItems.push(dragged);
 
   const domRefs = new Map([
-    ["root", contentNode({ getBoundingClientRect: () => ({ left: 0, top: 0, right: 80, bottom: 40, width: 80, height: 40 }) })],
-    ["target", contentNode({ getBoundingClientRect: () => ({ left: 100, top: 100, right: 200, bottom: 200, width: 100, height: 100 }) })],
-    ["dragged", contentNode({ getBoundingClientRect: () => ({ left: 0, top: 200, right: 60, bottom: 230, width: 60, height: 30 }) })],
+    [
+      "root",
+      contentNode({
+        getBoundingClientRect: () => ({
+          left: 0,
+          top: 0,
+          right: 80,
+          bottom: 40,
+          width: 80,
+          height: 40,
+        }),
+      }),
+    ],
+    [
+      "target",
+      contentNode({
+        getBoundingClientRect: () => ({
+          left: 100,
+          top: 100,
+          right: 200,
+          bottom: 200,
+          width: 100,
+          height: 100,
+        }),
+      }),
+    ],
+    [
+      "dragged",
+      contentNode({
+        getBoundingClientRect: () => ({
+          left: 0,
+          top: 200,
+          right: 60,
+          bottom: 230,
+          width: 60,
+          height: 30,
+        }),
+      }),
+    ],
   ]);
   for (const [id, el] of domRefs) {
     el.closest = (sel) => (sel === ".content" ? el : null);
@@ -354,7 +410,9 @@ function buildTree() {
 describe("getItemForElement (Stage 4.7.3)", () => {
   it("resolves the item whose registered content element matches the event target", () => {
     const { root, target, domRefs } = buildTree();
-    expect(getItemForElement(root, domRefs, domRefs.get("target"))).toBe(target);
+    expect(getItemForElement(root, domRefs, domRefs.get("target"))).toBe(
+      target,
+    );
   });
 
   it("returns null for an element with no matching registration", () => {
@@ -431,11 +489,68 @@ describe("finishNewDragDrop (Stage 4.7.3)", () => {
   it("dispatches a MoveItem with a computed sibling index for a sibling result", () => {
     const { root, target, dragged } = buildTree();
 
-    finishNewDragDrop({ result: "sibling", direction: "bottom", target }, [dragged]);
+    finishNewDragDrop({ result: "sibling", direction: "bottom", target }, [
+      dragged,
+    ]);
 
     const dispatched = actionFn.mock.calls[0][0];
     expect(dispatched.target).toBe(root);
     expect(dispatched.targetIndex).toBe(root.childItems.indexOf(target) + 1);
+  });
+
+  // Regression test: dragging a same-parent sibling forward past its
+  // own original position used to compute a targetIndex that was
+  // stale by one, since it was derived from the array before the
+  // dragged item removed itself (see insertChild()'s self-removal).
+  it("adjusts the sibling index when the dragged item is being reordered forward within the same parent", () => {
+    const root = { id: "root", isRoot: true, collapsed: false };
+    const a = { id: "a", isRoot: false, parent: root, side: "right" };
+    const b = { id: "b", isRoot: false, parent: root, side: "right" };
+    const c = { id: "c", isRoot: false, parent: root, side: "right" };
+    root.childItems = [a, b, c];
+
+    // Drop `a` after `c` (direction "bottom" == insert after target).
+    finishNewDragDrop({ result: "sibling", direction: "bottom", target: c }, [
+      a,
+    ]);
+
+    const dispatched = actionFn.mock.calls[0][0];
+    // Pre-move index of c is 2; without adjustment targetIndex would be
+    // 3 (append), but since `a` sat before `c`, it must be 2 so that
+    // removing `a` first (shifting b,c down by one) and inserting at 2
+    // lands it right after c: [b, c, a].
+    expect(dispatched.targetIndex).toBe(2);
+  });
+
+  it("does not adjust the sibling index when the dragged item is already after the target", () => {
+    const root = { id: "root", isRoot: true, collapsed: false };
+    const a = { id: "a", isRoot: false, parent: root, side: "right" };
+    const b = { id: "b", isRoot: false, parent: root, side: "right" };
+    const d = { id: "d", isRoot: false, parent: root, side: "right" };
+    root.childItems = [a, b, d];
+
+    // Drop `d` before `b` (direction "top" == insert before target).
+    finishNewDragDrop({ result: "sibling", direction: "top", target: b }, [d]);
+
+    const dispatched = actionFn.mock.calls[0][0];
+    expect(dispatched.targetIndex).toBe(1);
+  });
+
+  it("does not adjust the sibling index for a move between different parents", () => {
+    const root = { id: "root", isRoot: true, collapsed: false };
+    const branchA = { id: "branchA", isRoot: false, parent: root };
+    const branchB = { id: "branchB", isRoot: false, parent: root };
+    const leaf = { id: "leaf", isRoot: false, parent: branchA };
+    const b = { id: "b", isRoot: false, parent: branchB, side: "right" };
+    const c = { id: "c", isRoot: false, parent: branchB, side: "right" };
+    branchB.childItems = [b, c];
+
+    finishNewDragDrop({ result: "sibling", direction: "bottom", target: c }, [
+      leaf,
+    ]);
+
+    const dispatched = actionFn.mock.calls[0][0];
+    expect(dispatched.targetIndex).toBe(2); // unadjusted: leaf.parent !== branchB
   });
 
   it("wraps multiple dragged items in a Multi action", () => {
@@ -475,13 +590,25 @@ describe("mousedown/mousemove/mouseup wiring (Stage 4.7.3)", () => {
     const container = { focus: vi.fn() };
     initMouse(new Map(), port, container, () => null);
 
-    expect(port.addEventListener).toHaveBeenCalledWith("mousedown", expect.any(Function));
-    expect(port.addEventListener).toHaveBeenCalledWith("click", expect.any(Function));
+    expect(port.addEventListener).toHaveBeenCalledWith(
+      "mousedown",
+      expect.any(Function),
+    );
+    expect(port.addEventListener).toHaveBeenCalledWith(
+      "click",
+      expect.any(Function),
+    );
 
     disposeMouse();
 
-    expect(port.removeEventListener).toHaveBeenCalledWith("mousedown", expect.any(Function));
-    expect(port.removeEventListener).toHaveBeenCalledWith("click", expect.any(Function));
+    expect(port.removeEventListener).toHaveBeenCalledWith(
+      "mousedown",
+      expect.any(Function),
+    );
+    expect(port.removeEventListener).toHaveBeenCalledWith(
+      "click",
+      expect.any(Function),
+    );
   });
 
   it("ignores mousedown while the canvas is backgrounded", () => {
@@ -511,7 +638,9 @@ describe("mousedown/mousemove/mouseup wiring (Stage 4.7.3)", () => {
     const container = { focus: vi.fn() };
     initMouse(domRefs, port, container, () => root);
     document.elementFromPoint.mockImplementation((x, y) =>
-      x >= 100 && x <= 200 && y >= 100 && y <= 200 ? domRefs.get("target") : null,
+      x >= 100 && x <= 200 && y >= 100 && y <= 200
+        ? domRefs.get("target")
+        : null,
     );
 
     port.dispatch("mousedown", {

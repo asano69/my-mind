@@ -254,7 +254,19 @@ export function finishNewDragDrop(state, items) {
       subactions.push(new MoveItem(item, target));
     } else if (result === "sibling") {
       const parent = target.parent;
-      const index = parent.childItems.indexOf(target);
+      let index = parent.childItems.indexOf(target);
+      // `index` above is computed against the *pre-move* children array
+      // (the dragged item is still sitting in it at this point). If the
+      // dragged item is a sibling of `target` and currently sits before
+      // it, insertChild()'s internal removeChild() will shift `target`
+      // (and everything after it) one slot earlier once the item is
+      // pulled out -- so this raw index must be adjusted here, or a
+      // forward reorder consistently lands one slot past where the user
+      // dropped it. Moves across different parents, or backward moves
+      // (item already after target), need no adjustment.
+      if (item.parent === parent && parent.childItems.indexOf(item) < index) {
+        index -= 1;
+      }
       const targetIndex =
         index + (direction === "right" || direction === "bottom" ? 1 : 0);
       subactions.push(new MoveItem(item, parent, targetIndex, target.side));
