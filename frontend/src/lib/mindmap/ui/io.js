@@ -16,6 +16,7 @@ import {
   setErrorDialogMessage,
   requestLeaveConfirm,
   setThrobberVisible,
+  setOverrideRoot,
 } from "../store.js";
 
 // The tree/SVG root currently being edited, and the loader callback used
@@ -29,7 +30,6 @@ import {
 // has one implementation of.
 let currentRoot = null;
 let currentSvgNode = null;
-let rootLoader = null;
 
 // Registers `root`/`svgNode` as the source save/autosave/SVG-snapshot
 // logic reads from. Called whenever the preview's root ItemNode
@@ -44,13 +44,6 @@ export function attach(root, svgNode) {
 export function detach() {
   currentRoot = null;
   currentSvgNode = null;
-}
-
-// Registered by NewMindMapPreview.jsx so restoreSnapshot() below can
-// swap in a freshly restored root without this module owning any
-// component state itself.
-export function registerRootLoader(fn) {
-  rootLoader = fn;
 }
 
 // The currently attached root ItemNode / SVG node, or null before a map
@@ -406,7 +399,7 @@ export function resetCurrentMap() {
 // the restored content instead of creating a new map. Does not save by
 // itself — the user must explicitly save afterwards.
 export function restoreSnapshot(snapshot) {
-  rootLoader?.(ItemNode.fromJSON(snapshot.mymind.root));
+  setOverrideRoot(ItemNode.fromJSON(snapshot.mymind.root));
 }
 
 // Deletes the currently open map (if it has been saved at least once)

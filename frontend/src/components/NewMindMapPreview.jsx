@@ -1,7 +1,6 @@
 import {
   createEffect,
   createResource,
-  createSignal,
   For,
   Show,
   onCleanup,
@@ -20,7 +19,13 @@ import * as newMouse from "../lib/mindmap/newMouse.js";
 import * as newClipboard from "../lib/mindmap/newClipboard.js";
 import * as newViewport from "../lib/mindmap/newViewport.js";
 import * as io from "../lib/mindmap/ui/io.js";
-import { bumpDirty, titleAuto, setCurrentTitle } from "../lib/mindmap/store.js";
+import {
+  bumpDirty,
+  titleAuto,
+  setCurrentTitle,
+  overrideRoot,
+  setOverrideRoot,
+} from "../lib/mindmap/store.js";
 import { TOGGLE_SIZE, D_MINUS, D_PLUS } from "../lib/mindmap/layout/constants.js";
 import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
 import { repo as shapeRepo } from "../lib/mindmap/shape/shape.js";
@@ -468,15 +473,18 @@ export default function NewMindMapPreview(props) {
     ({ uuid, title }) => loadPreviewRoot(uuid, title),
   );
 
-  // Set by newIo.js's restoreSnapshot() (see registerRootLoader() call
-  // in onMount below) when the user restores a past snapshot -- takes
-  // priority over the loaded resource's root, mirroring the old
+  // Set by ui/io.js's restoreSnapshot() -- a plain shared signal owned
+  // by store.js (see overrideRoot's own comment there), not a
+  // registered callback -- when the user restores a past snapshot. This
+  // takes priority over the loaded resource's root, mirroring the old
   // engine's restoreSnapshot() replacing app.currentMap's root without
   // touching the map's saved identity. Every other read of "the current
   // root" in this component goes through effectiveRoot() below instead
   // of root() directly, so a restored snapshot is picked up everywhere
-  // (viewport, mouse, the layout effect, and the render itself).
-  const [overrideRoot, setOverrideRoot] = createSignal(null);
+  // (viewport, mouse, the layout effect, and the render itself). Reset
+  // to null on mount/unmount below, since the signal is now shared
+  // across remounts (e.g. switching maps) instead of being recreated as
+  // local component state.
   const effectiveRoot = () => overrideRoot() ?? root();
 
   // Plain (non-reactive) Map, not a signal: this registry is an
@@ -501,6 +509,12 @@ export default function NewMindMapPreview(props) {
   // loading, or the user can switch maps, after this component mounts.
   let svgRef;
   onMount(() => {
+    // Reset any override left over from a previous mount (e.g. a
+    // restored snapshot from the map this component just remounted
+    // away from). overrideRoot is a shared signal now (see store.js),
+    // not local component state, so it no longer resets itself just by
+    // this component remounting.
+    setOverrideRoot(null);
     // Initial position matches this <svg>'s own static left/top below
     // (40px, 40px), so wiring pan/zoom in doesn't cause a visible jump
     // on mount.
@@ -545,7 +559,6 @@ export default function NewMindMapPreview(props) {
     // called it, which is why Save/Delete/auto-save silently did
     // nothing under ?newEngine=1 until this call was added.
     io.init();
-    io.registerRootLoader(setOverrideRoot);
   });
   onCleanup(() => {
     newMouse.dispose();
@@ -553,7 +566,7 @@ export default function NewMindMapPreview(props) {
     newViewport.dispose();
     io.dispose();
     io.detach();
-    io.registerRootLoader(null);
+    setOverrideRoot(null);
   });
 
   // Keeps the root node visually anchored across layout recomputes, and
