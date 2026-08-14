@@ -159,14 +159,14 @@ export default class ItemNode {
     this._status = status;
     this._setStatus = setStatus;
 
-    // Plain field, not signal-backed -- mirrors item.js's own `side`
-    // (see that file's Phase 6 note on MapLayout.getChildDirection's
-    // side-effect read). `_sideVersion` is the explicit change marker
-    // a future layout memo can depend on instead.
-    this._side = null;
-    const [sideVersion, setSideVersion] = createSignal(0);
-    this._sideVersion = sideVersion;
-    this._bumpSideVersion = () => setSideVersion((v) => v + 1);
+    // A real signal, like every other item-store property -- no
+    // dedicated version counter needed. Layout code (e.g.
+    // MapLayout.getChildDirection) reads `child.side` from inside a
+    // parent's _computeLayout(), so a side change is tracked as a
+    // normal dependency of that memo, the same way text/color/etc. are.
+    const [side, setSide] = createSignal(null);
+    this._side = side;
+    this._setSide = setSide;
 
     const [childrenVersion, setChildrenVersion] = createSignal(0);
     this._childrenVersion = childrenVersion;
@@ -461,19 +461,10 @@ export default class ItemNode {
   }
 
   get side() {
-    return this._side;
+    return this._side();
   }
   set side(side) {
     this._setSide(side);
-  }
-  _setSide(side, { bump = true } = {}) {
-    if (this._side === side) {
-      return;
-    }
-    this._side = side;
-    if (bump) {
-      this._bumpSideVersion();
-    }
   }
 
   get color() {
@@ -584,8 +575,8 @@ export default class ItemNode {
       text: this.text,
       notes: this.notes,
     };
-    if (this._side) {
-      data.side = this._side;
+    if (this._side()) {
+      data.side = this._side();
     }
     if (this._color()) {
       data.color = this._color();
@@ -632,7 +623,7 @@ export default class ItemNode {
       this.notes = data.notes;
     }
     if (data.side) {
-      this._setSide(data.side, { bump: false });
+      this._setSide(data.side);
     }
     if (data.color) {
       this._setColor(data.color);
@@ -682,7 +673,7 @@ export default class ItemNode {
     if (this.text != data.text) {
       this.text = data.text;
     }
-    if (this._side != data.side) {
+    if (this._side() != data.side) {
       this._setSide(data.side || null);
     }
     if (this._color() != data.color) {

@@ -217,21 +217,32 @@ describe("ItemNode.mergeWith", () => {
 });
 
 describe("ItemNode.side", () => {
-  it("only bumps its version signal on an actual change", () => {
+  it("is a real signal: get/set round-trips like other item-store properties", () => {
     const item = new ItemNode();
-    let bumpCount = 0;
-    const originalBump = item._bumpSideVersion;
-    item._bumpSideVersion = () => {
-      bumpCount++;
-      originalBump();
+    expect(item.side).toBe(null);
+    item.side = "left";
+    expect(item.side).toBe("left");
+  });
+
+  it("invalidates the parent's layoutResult when it changes, with no dedicated version counter needed", () => {
+    const root = new ItemNode();
+    root.layout = layoutRepo.get("map");
+    const child = new ItemNode();
+    child.side = "right";
+    root.insertChild(child);
+    root.layoutResult(); // warm up
+
+    const original = root._computeLayout.bind(root);
+    let calls = 0;
+    root._computeLayout = () => {
+      calls++;
+      return original();
     };
 
-    item.side = "left";
-    expect(bumpCount).toBe(1);
-    item.side = "left"; // no-op, same value
-    expect(bumpCount).toBe(1);
-    item.side = "right";
-    expect(bumpCount).toBe(2);
+    child.side = "left";
+    root.layoutResult();
+
+    expect(calls).toBe(1);
   });
 });
 
