@@ -547,7 +547,7 @@ export function handleItemClick(item, e) {
 // Double-click starts live text editing, mirroring the old engine's
 // mouse.js onDblClick -> commandRepo.get("edit").execute(). See
 // newEdit.js for the actual contentEditable toggle.
-export function handleItemDblClick(item, e) {
+export function handleItemDblClick(item, _e) {
   if (!isCanvasActive()) {
     return;
   }

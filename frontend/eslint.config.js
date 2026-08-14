@@ -15,5 +15,17 @@ export default [
         ecmaFeatures: { jsx: true },
       },
     },
+    rules: {
+      // The codebase's convention for an intentionally-unused parameter
+      // (e.g. a base-class method signature that a subclass overrides,
+      // or an event handler that ignores its event) is to prefix it
+      // with "_" -- see layout.js's getChildDirection(_child) and
+      // newMouse.js's onDragEnd(_e). Recognize that convention instead
+      // of flagging every one of these individually.
+      "no-unused-vars": [
+        "error",
+        { args: "after-used", argsIgnorePattern: "^_" },
+      ],
+    },
   },
 ];

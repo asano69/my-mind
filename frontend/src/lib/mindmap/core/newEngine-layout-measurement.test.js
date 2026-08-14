@@ -26,7 +26,7 @@
 //    own finding: only nodes that actually draw a connector to a child
 //    read resolvedColor). This is a real, already-documented locality
 //    improvement, not a discrepancy to "fix".
-import { describe, it, expect, vi, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
 // Registers shape/layout kinds into their repos, same side-effect-import
 // pattern every other itemStore.js test file uses.

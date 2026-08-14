@@ -39,9 +39,7 @@ const {
   moveDragGhost,
   visualizeNewDragState,
   getItemForElement,
-  getClosestItemFor,
   getStableDropCollisionFor,
-  computeNewDragState,
   finishNewDragDrop,
   init: initMouse,
   dispose: disposeMouse,
@@ -401,7 +399,7 @@ function buildTree() {
       }),
     ],
   ]);
-  for (const [id, el] of domRefs) {
+  for (const el of domRefs.values()) {
     el.closest = (sel) => (sel === ".content" ? el : null);
   }
   return { root, target, dragged, domRefs };
@@ -612,7 +610,7 @@ describe("mousedown/mousemove/mouseup wiring (Stage 4.7.3)", () => {
   });
 
   it("ignores mousedown while the canvas is backgrounded", () => {
-    const { root, dragged, domRefs } = buildTree();
+    const { root, domRefs } = buildTree();
     const port = eventTarget();
     const container = { focus: vi.fn() };
     initMouse(domRefs, port, container, () => root);
@@ -626,7 +624,6 @@ describe("mousedown/mousemove/mouseup wiring (Stage 4.7.3)", () => {
     });
 
     expect(container.focus).not.toHaveBeenCalled();
-    void dragged;
     disposeMouse();
   });
 
@@ -696,7 +693,7 @@ describe("mousedown/mousemove/mouseup wiring (Stage 4.7.3)", () => {
   });
 
   it("finalizes an in-progress edit elsewhere before starting a drag", () => {
-    const { root, target, dragged, domRefs } = buildTree();
+    const { root, target, domRefs } = buildTree();
     setCurrentItem(target);
     setEditing(true);
     const port = eventTarget();
