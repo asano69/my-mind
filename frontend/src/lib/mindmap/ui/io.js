@@ -26,11 +26,21 @@ import {
 // them on unmount.
 let treeProvider = null;
 let svgNodeProvider = null;
+// Pluggable "restore this snapshot's data into the current tree" hook,
+// same shape as treeProvider/svgNodeProvider above. The old engine has
+// no registered provider and falls back to app.showMap(); the new
+// engine registers its own via newIo.js, since restoring a snapshot
+// there means loading JSON into an ItemNode tree, not constructing a
+// my-mind.js Map instance.
+let restoreProvider = null;
 export function setTreeProvider(provider) {
   treeProvider = provider;
 }
 export function setSvgNodeProvider(provider) {
   svgNodeProvider = provider;
+}
+export function setRestoreProvider(provider) {
+  restoreProvider = provider;
 }
 function getCurrentTree() {
   return treeProvider ? treeProvider() : app.currentMap;
@@ -375,6 +385,10 @@ export function resetCurrentMap() {
 // the restored content instead of creating a new map. Does not save by
 // itself — the user must explicitly save afterwards.
 export function restoreSnapshot(snapshot) {
+  if (restoreProvider) {
+    restoreProvider(snapshot.mymind);
+    return;
+  }
   app.showMap(MindMap.fromJSON(snapshot.mymind));
 }
 

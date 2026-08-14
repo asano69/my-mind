@@ -1,6 +1,7 @@
 import {
   createEffect,
   createResource,
+  createSignal,
   For,
   Show,
   onCleanup,
@@ -462,6 +463,17 @@ export default function NewMindMapPreview(props) {
     ({ uuid, title }) => loadPreviewRoot(uuid, title),
   );
 
+  // Set by newIo.js's restoreSnapshot() (see registerRootLoader() call
+  // in onMount below) when the user restores a past snapshot -- takes
+  // priority over the loaded resource's root, mirroring the old
+  // engine's restoreSnapshot() replacing app.currentMap's root without
+  // touching the map's saved identity. Every other read of "the current
+  // root" in this component goes through effectiveRoot() below instead
+  // of root() directly, so a restored snapshot is picked up everywhere
+  // (viewport, mouse, the layout effect, and the render itself).
+  const [overrideRoot, setOverrideRoot] = createSignal(null);
+  const effectiveRoot = () => overrideRoot() ?? root();
+
   // Plain (non-reactive) Map, not a signal: this registry is an
   // imperative side-table for later phases (see registerDomRef's
   // comment above), not something any component reads reactively.
@@ -502,12 +514,12 @@ export default function NewMindMapPreview(props) {
     // containerEl is a plain HTML element, so the ghost now has a valid
     // parent.
     const port = props.containerEl ?? svgRef;
-    newMouse.init(domRefs, port, port, () => root());
+    newMouse.init(domRefs, port, port, () => effectiveRoot());
     // Registers this preview as the source the "center map" command
     // (see newContextMenuCommands.js) reads from -- see newViewport.js's
     // registerCenterSource() for why this indirection is needed.
     newViewport.registerCenterSource(
-      () => root()?.size,
+      () => effectiveRoot()?.size,
       () => {
         const containerRect = (
           props.containerEl ?? svgRef.parentNode
@@ -528,6 +540,7 @@ export default function NewMindMapPreview(props) {
     // called it, which is why Save/Delete/auto-save silently did
     // nothing under ?newEngine=1 until this call was added.
     io.init();
+    newIo.registerRootLoader(setOverrideRoot);
   });
   onCleanup(() => {
     newMouse.dispose();
@@ -535,6 +548,7 @@ export default function NewMindMapPreview(props) {
     newViewport.dispose();
     io.dispose();
     newIo.detach();
+    newIo.registerRootLoader(null);
   });
 
   // Keeps the root node visually anchored across layout recomputes, and
@@ -555,7 +569,7 @@ export default function NewMindMapPreview(props) {
   // (see ui/io.js's dirtyVersion effect).
   let dirtyArmed = false;
   createEffect(() => {
-    const loadedRoot = root();
+    const loadedRoot = effectiveRoot();
     if (!loadedRoot || !svgRef) {
       return;
     }
@@ -632,7 +646,7 @@ export default function NewMindMapPreview(props) {
     >
       <style>{mapCss}</style>
       <Show
-        when={root()}
+        when={effectiveRoot()}
         fallback={
           <text class="content" x="40" y="64">
             Loading map...

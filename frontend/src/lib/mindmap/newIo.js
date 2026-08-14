@@ -9,6 +9,7 @@
 // setTreeProvider()/setSvgNodeProvider() hooks instead of duplicating
 // the save machinery itself.
 import * as io from "./ui/io.js";
+import ItemNode from "./itemStore.js";
 
 // The most recently attached root/SVG node (see attach() below), kept
 // here as plain module state -- not just inside the closures passed to
@@ -38,6 +39,26 @@ export function attach(root, svgNode) {
   currentSvgNode = svgNode;
   io.setTreeProvider(() => adapt(root));
   io.setSvgNodeProvider(() => svgNode);
+  io.setRestoreProvider(restoreSnapshot);
+}
+
+// Registered by NewMindMapPreview.jsx (see registerCenterSource() for
+// the same "owning component registers, vanilla module reads" bridge
+// pattern) so this module can swap in a freshly restored root without
+// owning the preview's own state.
+let rootLoader = null;
+export function registerRootLoader(fn) {
+  rootLoader = fn;
+}
+
+// io.js's restoreProvider for the new engine: rebuilds an ItemNode tree
+// from a snapshot's saved JSON and hands it to whatever the preview
+// registered via registerRootLoader(). Mirrors the old engine's
+// restoreSnapshot() (app.showMap(MindMap.fromJSON(...))) -- map
+// identity (currentMapId/currentMapUuid) is intentionally left
+// untouched here, same as the old engine's version.
+function restoreSnapshot(mymind) {
+  rootLoader?.(ItemNode.fromJSON(mymind.root));
 }
 
 // The currently attached root ItemNode / SVG node, or null before the
@@ -72,4 +93,5 @@ export function detach() {
   currentSvgNode = null;
   io.setTreeProvider(null);
   io.setSvgNodeProvider(null);
+  io.setRestoreProvider(null);
 }
