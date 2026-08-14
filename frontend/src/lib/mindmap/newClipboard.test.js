@@ -74,9 +74,12 @@ const {
   editing,
   setEditing,
 } = await import("./itemSelection.js");
-const { action: actionFn, MoveItem, AppendItem, Multi } = await import(
-  "./newAction.js"
-);
+const {
+  action: actionFn,
+  MoveItem,
+  AppendItem,
+  Multi,
+} = await import("./newAction.js");
 const { repo: formatRepo } = await import("./format/format.js");
 
 // documentTarget: same capture/bubble-keyed listener stub as

@@ -285,9 +285,7 @@ export default class ItemNode {
   // read this directly to size a first-paint foreignObject before any
   // real measurement exists.
   defaultContentSize() {
-    return this.isRoot
-      ? DEFAULT_ROOT_CONTENT_SIZE
-      : DEFAULT_CHILD_CONTENT_SIZE;
+    return this.isRoot ? DEFAULT_ROOT_CONTENT_SIZE : DEFAULT_CHILD_CONTENT_SIZE;
   }
 
   // Pure computation: reads signals (this item's own, and -- via the

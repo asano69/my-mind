@@ -158,9 +158,7 @@ commands.push(
   },
   {
     mode: "editing",
-    keys: [
-      { code: "Enter", altKey: false, ctrlKey: false, shiftKey: false },
-    ],
+    keys: [{ code: "Enter", altKey: false, ctrlKey: false, shiftKey: false }],
     execute() {
       const item = currentItem();
       if (!item) {
@@ -234,9 +232,7 @@ commands.push(
         return;
       }
       const subactions = toDelete.map((item) => new RemoveItem(item));
-      action(
-        subactions.length === 1 ? subactions[0] : new Multi(subactions),
-      );
+      action(subactions.length === 1 ? subactions[0] : new Multi(subactions));
     },
   },
 );

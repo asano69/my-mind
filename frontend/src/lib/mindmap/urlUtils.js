@@ -19,9 +19,7 @@ export function isUrlOnly(str) {
 // throws.
 export function isSameOrigin(url) {
   try {
-    return (
-      new URL(url, window.location.href).origin === window.location.origin
-    );
+    return new URL(url, window.location.href).origin === window.location.origin;
   } catch {
     return false;
   }

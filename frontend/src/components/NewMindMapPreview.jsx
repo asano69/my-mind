@@ -8,7 +8,10 @@ import {
 } from "solid-js";
 import ItemNode, { measureContentSize } from "../lib/mindmap/itemStore.js";
 import Spinner from "./Spinner.jsx";
-import { itemStateClassList, selectItem } from "../lib/mindmap/itemSelection.js";
+import {
+  itemStateClassList,
+  selectItem,
+} from "../lib/mindmap/itemSelection.js";
 import {
   handleItemClick,
   handleItemDblClick,
@@ -26,7 +29,11 @@ import {
   overrideRoot,
   setOverrideRoot,
 } from "../lib/mindmap/store.js";
-import { TOGGLE_SIZE, D_MINUS, D_PLUS } from "../lib/mindmap/layout/constants.js";
+import {
+  TOGGLE_SIZE,
+  D_MINUS,
+  D_PLUS,
+} from "../lib/mindmap/layout/constants.js";
 import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
 import { repo as shapeRepo } from "../lib/mindmap/shape/shape.js";
 import { loadByUuid } from "../lib/mindmap/backend/pocketbase.js";
@@ -233,7 +240,9 @@ function ItemNodeView(props) {
     if (!contentRef) {
       return;
     }
-    item.setMeasuredSize(measureContentSize(contentRef, item.defaultContentSize()));
+    item.setMeasuredSize(
+      measureContentSize(contentRef, item.defaultContentSize()),
+    );
   });
   // Shape changes (ellipse -> underline, box -> ellipse, ...) swap which
   // map.css rule applies to ".content" (padding/border differ per
@@ -311,7 +320,12 @@ function ItemNodeView(props) {
           stroke-width="2"
         />
       </Show>
-      <foreignObject x={box()[0]} y={box()[1]} width={box()[2]} height={box()[3]}>
+      <foreignObject
+        x={box()[0]}
+        y={box()[1]}
+        width={box()[2]}
+        height={box()[3]}
+      >
         <div
           ref={contentRef}
           class="content"
@@ -341,7 +355,10 @@ function ItemNodeView(props) {
               (already injected via <style>{mapCss}</style> above), so no
               new CSS is needed here. */}
           <Show when={props.item.url}>
-            <span class="link-icon" onClick={() => handleItemLinkClick(props.item)}>
+            <span
+              class="link-icon"
+              onClick={() => handleItemLinkClick(props.item)}
+            >
               <svg viewBox="0 0 36 36" fill="none">
                 <path
                   d="M34,17H28.23A6.25,6.25,0,0,0,22,12H14.15a6.25,6.25,0,0,0-6.21,5H2v2H7.93a6.22,6.22,0,0,0,6.22,5H22a6.22,6.22,0,0,0,6.22-5H34ZM17.08,22H14.15a4.17,4.17,0,0,1-4.31-4,4.17,4.17,0,0,1,4.31-4h2.94ZM22,22H19V14h3a4.17,4.17,0,0,1,4.31,4A4.17,4.17,0,0,1,22,22Z"
@@ -669,35 +686,35 @@ export default function NewMindMapPreview(props) {
         />
       </Show>
       <svg
-      ref={svgRef}
-      data-engine="solid-item-node-preview"
-      width="640"
-      height="240"
-      style={{ "font-size": "15px", left: "40px", top: "40px" }}
-    >
-      <style>{mapCss}</style>
-      <Show when={effectiveRoot()}>
-        {(loadedRoot) => (
-          // No wrapping <g> here: map.css's `svg > .item > foreignObject
-          // > .content` rule (root-only bold/140% font-size) requires
-          // the root's own <g class="item"> to be a direct child of
-          // <svg>, matching the old engine's map.js (`this.node.append
-          // (root.dom.node, ...)`).
-          //
-          // No transform on the root itself either -- matching the old
-          // engine, where root.dom.node never gets a `position` (only
-          // its children do, via layoutChildren()) and on-screen
-          // placement is handled entirely by the <svg>'s own style.left/
-          // top (see newViewport.js's moveTo()). An earlier version
-          // passed a fixed "translate(40,40)" here as a stand-in initial
-          // screen offset, but that baked an offset into the exported
-          // SVG's own content coordinates (serializeCurrentMap() clones
-          // this tree as-is), throwing off saved-map thumbnails relative
-          // to the old engine's output, which always starts content at
-          // (0,0) local to the <svg>.
-          <ItemNodeView item={loadedRoot()} domRefs={domRefs} />
-        )}
-      </Show>
+        ref={svgRef}
+        data-engine="solid-item-node-preview"
+        width="640"
+        height="240"
+        style={{ "font-size": "15px", left: "40px", top: "40px" }}
+      >
+        <style>{mapCss}</style>
+        <Show when={effectiveRoot()}>
+          {(loadedRoot) => (
+            // No wrapping <g> here: map.css's `svg > .item > foreignObject
+            // > .content` rule (root-only bold/140% font-size) requires
+            // the root's own <g class="item"> to be a direct child of
+            // <svg>, matching the old engine's map.js (`this.node.append
+            // (root.dom.node, ...)`).
+            //
+            // No transform on the root itself either -- matching the old
+            // engine, where root.dom.node never gets a `position` (only
+            // its children do, via layoutChildren()) and on-screen
+            // placement is handled entirely by the <svg>'s own style.left/
+            // top (see newViewport.js's moveTo()). An earlier version
+            // passed a fixed "translate(40,40)" here as a stand-in initial
+            // screen offset, but that baked an offset into the exported
+            // SVG's own content coordinates (serializeCurrentMap() clones
+            // this tree as-is), throwing off saved-map thumbnails relative
+            // to the old engine's output, which always starts content at
+            // (0,0) local to the <svg>.
+            <ItemNodeView item={loadedRoot()} domRefs={domRefs} />
+          )}
+        </Show>
       </svg>
     </>
   );

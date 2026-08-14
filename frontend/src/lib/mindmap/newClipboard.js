@@ -81,9 +81,7 @@ function onCopyCut(e) {
       break;
     case "cut":
       storedItems = selected;
-      storedItems.forEach((i) =>
-        domRefsRef?.get(i.id)?.classList.add("cut"),
-      );
+      storedItems.forEach((i) => domRefsRef?.get(i.id)?.classList.add("cut"));
       break;
     default:
       return;
@@ -162,9 +160,7 @@ function pasteItems(items, targetItem) {
     default:
       return;
   }
-  action(
-    subactions.length === 1 ? subactions[0] : new Multi(subactions),
-  );
+  action(subactions.length === 1 ? subactions[0] : new Multi(subactions));
 }
 
 function pastePlaintext(plaintext, targetItem) {
@@ -184,9 +180,7 @@ function endCut() {
   if (mode != "cut") {
     return;
   }
-  storedItems.forEach((i) =>
-    domRefsRef?.get(i.id)?.classList.remove("cut"),
-  );
+  storedItems.forEach((i) => domRefsRef?.get(i.id)?.classList.remove("cut"));
   storedItems = [];
   mode = "";
 }

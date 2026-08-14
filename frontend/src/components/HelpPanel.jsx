@@ -111,9 +111,8 @@ export default function HelpPanel() {
   const [version, setVersion] = createSignal("");
 
   onMount(async () => {
-    const { repo: commandRepo } = await import(
-      "../lib/mindmap/newContextMenuCommands.js"
-    );
+    const { repo: commandRepo } =
+      await import("../lib/mindmap/newContextMenuCommands.js");
     setSections(
       SECTIONS.map((section) => ({
         title: section.title,

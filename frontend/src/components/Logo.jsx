@@ -142,4 +142,3 @@ export default function Logo(props) {
 
   return wrap(content);
 }
-

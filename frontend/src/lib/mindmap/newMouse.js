@@ -207,7 +207,12 @@ function collisionForItem(domRefs, item, point) {
 // directly over always wins; the previous target is only kept via
 // hysteresis when there is no direct hit, to avoid flicker in gaps
 // between nodes.
-export function getStableDropCollisionFor(root, domRefs, point, previousTarget) {
+export function getStableDropCollisionFor(
+  root,
+  domRefs,
+  point,
+  previousTarget,
+) {
   const element = globalThis.document?.elementFromPoint?.(point[0], point[1]);
   const directTarget = getItemForElement(root, domRefs, element);
   if (directTarget) {
@@ -226,8 +231,19 @@ export function getStableDropCollisionFor(root, domRefs, point, previousTarget) 
 // delegates the append/sibling decision to dragPlacement.js's
 // decideDropPlacement() -- the same shared function mouse.js's own
 // computeDragState() now calls (see Stage 4.7.1).
-export function computeNewDragState(root, domRefs, cursor, draggedItems, previousTarget) {
-  const closest = getStableDropCollisionFor(root, domRefs, cursor, previousTarget);
+export function computeNewDragState(
+  root,
+  domRefs,
+  cursor,
+  draggedItems,
+  previousTarget,
+) {
+  const closest = getStableDropCollisionFor(
+    root,
+    domRefs,
+    cursor,
+    previousTarget,
+  );
   const target = closest.item;
   const targetRect = target.isRoot ? null : getContentRectFor(domRefs, target);
   return decideDropPlacement({
@@ -444,7 +460,12 @@ function onDragMove(e) {
     ) {
       selectItem(draggedItem);
     }
-    const built = buildDragGhost(domRefsRef, port, current.items, current.cursor);
+    const built = buildDragGhost(
+      domRefsRef,
+      port,
+      current.items,
+      current.cursor,
+    );
     if (!built) {
       return;
     }
@@ -458,8 +479,18 @@ function onDragMove(e) {
     return;
   }
   const previousTarget = current.previousDragState?.target ?? null;
-  const state = computeNewDragState(root, domRefsRef, current.cursor, current.items, previousTarget);
-  visualizeNewDragState(domRefsRef, previousTarget, state.result ? state : null);
+  const state = computeNewDragState(
+    root,
+    domRefsRef,
+    current.cursor,
+    current.items,
+    previousTarget,
+  );
+  visualizeNewDragState(
+    domRefsRef,
+    previousTarget,
+    state.result ? state : null,
+  );
   current.previousDragState = state.result ? state : null;
 }
 

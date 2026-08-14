@@ -27,9 +27,8 @@ export default function ContextMenuContent() {
   const [ready, setReady] = createSignal(false);
 
   onMount(async () => {
-    ({ repo: commandRepo } = await import(
-      "../lib/mindmap/newContextMenuCommands.js"
-    ));
+    ({ repo: commandRepo } =
+      await import("../lib/mindmap/newContextMenuCommands.js"));
     setReady(true);
   });
 

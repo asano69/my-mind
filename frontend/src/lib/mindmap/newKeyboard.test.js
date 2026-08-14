@@ -19,9 +19,8 @@ const {
   editing,
   setEditing,
 } = await import("./itemSelection.js");
-const { startEditing, commitEditing, discardEditing } = await import(
-  "./newEdit.js"
-);
+const { startEditing, commitEditing, discardEditing } =
+  await import("./newEdit.js");
 const history = await import("./history.js");
 
 function eventTarget() {
