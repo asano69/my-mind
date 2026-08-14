@@ -29,7 +29,7 @@ import {
   repo as sharedCommandRepo,
   setPanKeyboardScope,
   disposePan,
-} from "./newContextMenuCommands.js";
+} from "../newContextMenuCommands.js";
 
 function isMac() {
   return !!(globalThis.navigator?.platform ?? "").match(/mac/i);

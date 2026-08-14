@@ -24,7 +24,7 @@ import { startEditing, commitEditing } from "./newEdit.js";
 import { action, MoveItem, Multi } from "./newAction.js";
 import { decideDropPlacement, isDraggedAncestor } from "./dragPlacement.js";
 import { isSameOrigin } from "./urlUtils.js";
-import { navigateTo } from "./navigation.js";
+import { navigateTo } from "../navigation.js";
 import * as viewport from "./newViewport.js";
 
 // --- Stage 4.7.2 (see docs/08-phase4.7-drag-and-drop-refactor.md) ---

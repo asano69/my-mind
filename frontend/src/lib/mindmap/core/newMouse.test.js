@@ -1,13 +1,13 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const mockActiveMode = { value: "canvas" };
-vi.mock("./store.js", () => ({ activeMode: () => mockActiveMode.value }));
+vi.mock("../store.js", () => ({ activeMode: () => mockActiveMode.value }));
 vi.mock("./newEdit.js", () => ({
   startEditing: vi.fn(() => ({})),
   commitEditing: vi.fn(),
 }));
 vi.mock("./urlUtils.js", () => ({ isSameOrigin: vi.fn(() => false) }));
-vi.mock("./navigation.js", () => ({ navigateTo: vi.fn(() => false) }));
+vi.mock("../navigation.js", () => ({ navigateTo: vi.fn(() => false) }));
 
 // newAction.js is mocked the same way mouse.test.js mocks action.js:
 // MoveItem/Multi just record their constructor args, and action() is a
@@ -47,7 +47,7 @@ const {
   dispose: disposeMouse,
 } = await import("./newMouse.js");
 const { isSameOrigin } = await import("./urlUtils.js");
-const { navigateTo } = await import("./navigation.js");
+const { navigateTo } = await import("../navigation.js");
 const {
   currentItem,
   setCurrentItem,

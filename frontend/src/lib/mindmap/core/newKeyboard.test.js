@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockActiveMode = { value: "canvas" };
-vi.mock("./store.js", () => ({ activeMode: () => mockActiveMode.value }));
+vi.mock("../store.js", () => ({ activeMode: () => mockActiveMode.value }));
 vi.mock("./newEdit.js", () => ({
   startEditing: vi.fn(() => ({})),
   commitEditing: vi.fn(),
