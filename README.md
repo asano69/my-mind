@@ -35,7 +35,7 @@ It has a catalog feature.
 ## Demo
 
 Demo URL:
-https://my-mind-31or.onrender.com/
+https://solid-mind.onrender.com/
 
 The demo takes about 50 seconds to start.
 
