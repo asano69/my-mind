@@ -43,7 +43,9 @@
 import { createSignal, createMemo, createRoot, batch } from "solid-js";
 import { repo as shapeRepo } from "./shape/shape.js";
 import { repo as layoutRepo } from "./layout/layout.js";
-import { computeMapLayout } from "./layout/map.js";
+import { computeGraphLayout } from "./layout/graph.js";
+import TreeLayout, { computeTreeLayout } from "./layout/tree.js";
+import MapLayout, { computeMapLayout } from "./layout/map.js";
 import { br2nl } from "./format/format.js";
 
 const DEFAULT_COLOR = "#999";
@@ -82,6 +84,26 @@ export function measureContentSize(element, fallbackSize) {
     Math.max(element.offsetHeight || 0, element.scrollHeight || 0),
   );
   return [width || fallbackSize[0], height || fallbackSize[1]];
+}
+
+// Dispatches to the correct pure layout computation for the item's
+// actual resolved layout kind, mirroring the polymorphism item.js's
+// resolvedLayout.update(item) relies on (MapLayout/GraphLayout/
+// TreeLayout each lay out children differently). Without this dispatch,
+// every item's layout was computed via computeMapLayout()'s non-root
+// branch regardless of what layout was actually selected -- harmless
+// for an explicit Graph layout (whose own getChildDirection happens to
+// resolve back to the same graph-{side} instance) but silently wrong
+// for an explicit Tree layout, which never ran TreeLayout's own
+// algorithm at all.
+function computeLayoutSnapshot(layout, item) {
+  if (layout instanceof MapLayout) {
+    return computeMapLayout(layout, item);
+  }
+  if (layout instanceof TreeLayout) {
+    return computeTreeLayout(layout, item, layout.childDirection);
+  }
+  return computeGraphLayout(layout, item, layout.childDirection);
 }
 
 export default class ItemNode {
@@ -260,7 +282,7 @@ export default class ItemNode {
       ? []
       : this.childItems.map((child) => child.layoutResult());
 
-    const result = computeMapLayout(this._layoutForCompute(), this);
+    const result = computeLayoutSnapshot(this._layoutForCompute(), this);
     // layoutRoot() reports {width, height} directly; the non-root graph
     // layout path only reports totalHeight (see layout/graph.js) and
     // leaves size to be derived from contentPosition/contentSize and

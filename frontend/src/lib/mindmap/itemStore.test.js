@@ -234,3 +234,28 @@ describe("ItemNode.side", () => {
     expect(bumpCount).toBe(2);
   });
 });
+
+// Regression test: before the fix, _computeLayout() always called
+// computeMapLayout()'s non-root branch regardless of the item's actual
+// explicit layout, so an item set to a Tree layout silently rendered
+// with Graph's algorithm instead. TreeLayout's connector uses a
+// quarter-circle arc ("A R R ..."); GraphLayout's single-child
+// connector uses a cubic Bezier ("C ..."), giving a simple, checkable
+// distinguishing signal (same pattern as layout/pure-layout.test.js).
+describe("ItemNode.layoutResult layout-kind dispatch (regression)", () => {
+  it("uses the tree algorithm, not graph's, when the item's own layout is explicitly a tree layout", () => {
+    const root = new ItemNode();
+    root.layout = layoutRepo.get("map");
+    const branch = new ItemNode();
+    branch.side = "right";
+    root.insertChild(branch);
+    branch.layout = layoutRepo.get("tree-right");
+    const child = new ItemNode();
+    branch.insertChild(child);
+
+    const result = branch.layoutResult();
+
+    expect(result.connectorPaths[0].d).toContain("A 8 8");
+    expect(result.connectorPaths[0].d).not.toContain("C ");
+  });
+});

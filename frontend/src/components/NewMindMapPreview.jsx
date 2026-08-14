@@ -7,7 +7,7 @@ import {
   onMount,
 } from "solid-js";
 import ItemNode, { measureContentSize } from "../lib/mindmap/itemStore.js";
-import { itemStateClassList } from "../lib/mindmap/itemSelection.js";
+import { itemStateClassList, selectItem } from "../lib/mindmap/itemSelection.js";
 import {
   handleItemClick,
   handleItemDblClick,
@@ -564,6 +564,11 @@ export default function NewMindMapPreview(props) {
       centered = false;
       dirtyArmed = false;
       newViewport.resetAnchor();
+      // Select the root on load, mirroring the old engine's map.js
+      // show() -> app.selectItem(this._root) call. Without this, a
+      // freshly opened/switched map has no current selection at all
+      // under the new engine.
+      selectItem(loadedRoot);
       // Registers this root/svg as the source ui/io.js's save/autosave
       // logic reads from (see newIo.js). Only apply the loaded record's
       // bookkeeping when a real saved map was actually loaded -- doing
