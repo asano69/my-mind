@@ -24,6 +24,9 @@ import {
   Swap,
   SetText,
   SetColor,
+  SetStatus,
+  SetValue,
+  SetUrl,
 } from "./newAction.js";
 
 function buildRoot() {
@@ -157,7 +160,13 @@ describe("Swap against ItemNode", () => {
   });
 });
 
-describe("property-mutator actions re-exported unchanged from action.js", () => {
+// Phase 1 of docs/08-phase6-mindmap-engine-refactor.md folded these
+// plain property-mutator actions directly into newAction.js (they used
+// to be re-exported from the now-deleted action.js) -- these round-trip
+// checks are the counterpart of the old action.item.test.js's coverage
+// for the same classes, now run against ItemNode instead of item.js's
+// Item.
+describe("plain property-mutator actions", () => {
   it("SetText/SetColor do()/undo() round-trip on ItemNode", () => {
     const item = new ItemNode();
 
@@ -172,5 +181,35 @@ describe("property-mutator actions re-exported unchanged from action.js", () => 
     expect(item.color).toBe("#d33");
     setColor.undo();
     expect(item.color).toBe("");
+  });
+
+  it("SetStatus do()/undo() round-trips the signal and its resolved memo", () => {
+    const item = new ItemNode();
+    const setStatus = new SetStatus(item, true);
+    setStatus.do();
+    expect(item.status).toBe(true);
+    expect(item.resolvedStatus).toBe(true);
+    setStatus.undo();
+    expect(item.status).toBe(null);
+    expect(item.resolvedStatus).toBe(null);
+  });
+
+  it("SetValue do()/undo() round-trips the signal and its resolved memo", () => {
+    const item = new ItemNode();
+    const setValue = new SetValue(item, 5);
+    setValue.do();
+    expect(item.value).toBe(5);
+    expect(item.resolvedValue).toBe(5);
+    setValue.undo();
+    expect(item.value).toBe(null);
+  });
+
+  it("SetUrl do()/undo() round-trips the signal", () => {
+    const item = new ItemNode();
+    const setUrl = new SetUrl(item, "https://example.com");
+    setUrl.do();
+    expect(item.url).toBe("https://example.com");
+    setUrl.undo();
+    expect(item.url).toBe("");
   });
 });

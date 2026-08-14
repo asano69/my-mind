@@ -1,6 +1,5 @@
 // src/layout/graph.ts
 import Layout from "./layout.js";
-import * as svg from "../svg.js";
 export const SPACING_RANK = 16;
 const R = SPACING_RANK / 2;
 export function computeGraphLayout(
@@ -17,14 +16,6 @@ export function computeGraphLayout(
 }
 
 export default class GraphLayout extends Layout {
-  update(item) {
-    const { connectorPaths } = computeGraphLayout(
-      this,
-      item,
-      this.childDirection,
-    );
-    this.writeConnectorPaths(item, connectorPaths);
-  }
   /**
    * Generic graph child layout routine. Updates item's orthogonal size according to the sum of its children.
    */
@@ -228,28 +219,6 @@ export default class GraphLayout extends Layout {
       d.push(`M ${lineStart}`, `L ${childAnchor}`);
     }
     return [{ d: d.join(" "), togglePosition }];
-  }
-  writeConnectorPaths(item, connectorPaths) {
-    for (const pathInfo of connectorPaths) {
-      if (pathInfo.togglePosition) {
-        this.positionToggle(item, pathInfo.togglePosition);
-      }
-      if (!pathInfo.d) {
-        continue;
-      }
-      // stroke is resolved here, not carried on pathInfo: the
-      // connector's color is this item's own resolvedColor, read at
-      // write time (still inside the same reactive layout pass this
-      // is called from) instead of being read inside the pure geometry
-      // functions above -- see computeLinesHorizontal()'s comment.
-      const path = svg.node("path", {
-        d: pathInfo.d,
-        stroke: item.resolvedColor,
-        fill: "none",
-        "stroke-width": "2",
-      });
-      item.dom.connectors.append(path);
-    }
   }
 }
 new GraphLayout("graph-bottom", "Bottom", "bottom");

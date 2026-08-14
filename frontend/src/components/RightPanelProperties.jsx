@@ -1,7 +1,6 @@
 import { createEffect, createMemo, createSignal, onMount } from "solid-js";
-import { currentItem as oldCurrentItem, openValueDialog } from "../lib/mindmap/store";
-import { currentItem as newCurrentItem } from "../lib/mindmap/itemSelection";
-import { isNewEngineEnabled } from "../lib/mindmap/newEngineFlag";
+import { openValueDialog } from "../lib/mindmap/store";
+import { currentItem } from "../lib/mindmap/itemSelection";
 import SelectField from "./SelectField";
 import ColorPicker from "./ColorPicker";
 import UrlField from "./UrlField";
@@ -51,22 +50,14 @@ function isInvalidUrl(text) {
 // currently selected item" concern, independent of the panel's export
 // actions or footer.
 export default function RightPanelProperties() {
-  // Picks the right engine's selection signal once, at component setup
-  // (the flag never changes mid-session, see newEngineFlag.js), so every
-  // handler below can just call currentItem()/dispatchAction(...) without
-  // knowing which engine is active.
-  const newEngine = isNewEngineEnabled();
-  const currentItem = newEngine ? newCurrentItem : oldCurrentItem;
-
   // Cached after the first dynamic import, see onMount -- loaded lazily
   // so the engine bundle isn't pulled in before the canvas actually
   // mounts. actionsModule exposes the Set* action classes; dispatchAction
-  // is the function that pushes an action onto history and runs it --
-  // newAction.js bundles both into one module for the new engine, while
-  // the old engine splits them across action.js and my-mind.js. There is
-  // no "value" command repo dependency anymore (see setValue() below):
-  // that command only ever opened store.js's shared valueDialogOpen
-  // signal, which this component now does directly.
+  // is the function that pushes an action onto history and runs it (both
+  // live in newAction.js). There is no "value" command repo dependency
+  // (see setValue() below): that command only ever opened store.js's
+  // shared valueDialogOpen signal, which this component now does
+  // directly.
   let actionsModule;
   let dispatchAction;
   let layoutRepo;
@@ -75,18 +66,13 @@ export default function RightPanelProperties() {
   const [ready, setReady] = createSignal(false);
 
   onMount(async () => {
-    const [[actionsMod, dispatch], layoutMod, shapeMod] = await Promise.all([
-      newEngine
-        ? import("../lib/mindmap/newAction.js").then((mod) => [mod, mod.action])
-        : Promise.all([
-            import("../lib/mindmap/action.js"),
-            import("../lib/mindmap/my-mind.js"),
-          ]).then(([actionsMod, appMod]) => [actionsMod, appMod.action]),
+    const [actionsMod, layoutMod, shapeMod] = await Promise.all([
+      import("../lib/mindmap/newAction.js"),
       import("../lib/mindmap/layout/layout.js"),
       import("../lib/mindmap/shape/shape.js"),
     ]);
     actionsModule = actionsMod;
-    dispatchAction = dispatch;
+    dispatchAction = actionsMod.action;
     layoutRepo = layoutMod.repo;
     shapeRepo = shapeMod.repo;
     setReady(true);

@@ -114,14 +114,13 @@ export default function LeftPanel() {
     navigate("/catalog");
   }
 
-  // Runs a command directly, the same way ui/ui.js's data-command click
-  // delegation would. Used instead of that delegation because this panel
-  // is moving out of MindMapCanvas.jsx's container (see CLAUDE.md,
+  // Runs a command directly against the shared command repo. This panel
+  // lives outside MindMapCanvas.jsx's container (see CLAUDE.md,
   // Workspace shared-chrome refactor), so its buttons need to work
   // whether or not the canvas is the active workspace mode.
   async function runCommand(name) {
-    const { execute } = await import("../lib/mindmap/command/command.js");
-    execute(name);
+    const { repo } = await import("../lib/mindmap/newContextMenuCommands.js");
+    repo.get(name).execute();
   }
 
   return (

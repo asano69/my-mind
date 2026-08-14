@@ -1,7 +1,6 @@
 // src/layout/map.ts
 import GraphLayout, { computeGraphLayout, SPACING_RANK } from "./graph.js";
 import { repo } from "./layout.js";
-import * as svg from "../svg.js";
 export function computeMapLayout(layout, item) {
   if (item.isRoot) {
     return layout.layoutRoot(item);
@@ -15,14 +14,6 @@ export default class MapLayout extends GraphLayout {
   constructor() {
     super(...arguments);
     this.LINE_THICKNESS = 8;
-  }
-  update(item) {
-    const { connectorPaths } = computeMapLayout(this, item);
-    if (item.isRoot) {
-      this.writeRootConnectorPaths(item, connectorPaths);
-    } else {
-      this.writeConnectorPaths(item, connectorPaths);
-    }
   }
   getChildDirection(child) {
     while (child.parent && !child.parent.isRoot) {
@@ -137,17 +128,6 @@ export default class MapLayout extends GraphLayout {
       };
     });
     return paths;
-  }
-  writeRootConnectorPaths(item, connectorPaths) {
-    const paths = connectorPaths.map((pathInfo) =>
-      svg.node("path", {
-        d: pathInfo.d,
-        fill: pathInfo.fill,
-        stroke: pathInfo.stroke,
-        "stroke-width": "2",
-      }),
-    );
-    item.dom.connectors.append(...paths);
   }
 }
 new MapLayout("map", "Map");

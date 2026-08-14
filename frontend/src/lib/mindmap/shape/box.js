@@ -26,16 +26,5 @@ export default class Box extends Shape {
   constructor() {
     super("box", "Box");
   }
-  update(item) {
-    const { itemColor, borderColor } = computeBoxStyle(item);
-    const style = item.dom.content.style;
-    if (itemColor) {
-      style.setProperty("--item-color", itemColor);
-      style.borderColor = "";
-    } else {
-      style.removeProperty("--item-color");
-      style.borderColor = borderColor;
-    }
-  }
 }
 new Box();

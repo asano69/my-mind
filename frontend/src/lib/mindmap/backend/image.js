@@ -1,20 +1,16 @@
-import * as app from "../my-mind.js";
 const EXPORT_PADDING = 24;
 
 /**
- * Serialize the current map to a padded SVG string (root CSS custom
- * properties embedded so the snapshot renders correctly outside the app,
- * e.g. on the catalog page), along with its final width/height.
+ * Serialize a mind-map's SVG root to a padded SVG string (root CSS
+ * custom properties embedded so the snapshot renders correctly outside
+ * the app, e.g. on the catalog page), along with its final width/height.
+ * Callers always pass their own SVG root explicitly (see newIo.js).
  */
-export function serializeCurrentMap(rootSvgNode = app.currentMap.node) {
+export function serializeCurrentMap(rootSvgNode) {
   const serializer = new XMLSerializer();
   // Clone so we can mutate freely without affecting the live map. The live
   // canvas may be browser-zoomed with CSS transform; exports intentionally use
   // the underlying 100% layout because zoom is only viewport state.
-  // rootSvgNode defaults to the old engine's live map node, but callers
-  // (e.g. newIo.js, for the ?newEngine=1 preview) can pass any other SVG
-  // root instead -- this function only clones/reads it, never assumes
-  // which engine produced it.
   const svgNode = rootSvgNode.cloneNode(true);
   svgNode.style.transform = "";
   svgNode.style.transformOrigin = "";
@@ -62,11 +58,6 @@ export function serializeCurrentMap(rootSvgNode = app.currentMap.node) {
 }
 
 export default class ImageBackend {
-  // svgNode is forwarded to serializeCurrentMap() unchanged: passing
-  // undefined keeps that function's own default (the old engine's live
-  // app.currentMap.node), while callers that know their own SVG root
-  // (e.g. the new engine, via newIo.js) can pass it explicitly instead
-  // of relying on that old-engine-only fallback.
   async save(format, svgNode) {
     const encoder = new TextEncoder();
     const { xml, width, height } = serializeCurrentMap(svgNode);
@@ -100,11 +91,7 @@ export default class ImageBackend {
       }
     }
   }
-  // name defaults to the old engine's live app.currentMap.name; callers
-  // that know their own map's name (e.g. the new engine, via
-  // newIo.js's getRoot()?.name) should pass it explicitly instead --
-  // app.currentMap is always null under the new engine.
-  download(href, name = app.currentMap?.name) {
+  download(href, name) {
     let link = document.createElement("a");
     link.download = name;
     link.href = href;

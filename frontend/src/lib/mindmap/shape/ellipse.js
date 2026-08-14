@@ -16,16 +16,5 @@ export default class Ellipse extends Shape {
   constructor() {
     super("ellipse", "Ellipse");
   }
-  update(item) {
-    const { itemColor, borderColor } = computeEllipseStyle(item);
-    const style = item.dom.content.style;
-    if (itemColor) {
-      style.setProperty("--item-color", itemColor);
-      style.borderColor = "";
-    } else {
-      style.removeProperty("--item-color");
-      style.borderColor = borderColor;
-    }
-  }
 }
 new Ellipse();

@@ -4,18 +4,16 @@ import { getVersion } from "../lib/mindmap/backend/pocketbase";
 // Static shape of the help table: section title + which commands make up
 // each row. commandRepo is only resolved at mount time (see onMount below),
 // but this layout itself never changes, so it lives outside the component.
+// select/select-root/select-parent (arrow-key/Home/Backspace movement)
+// and the Style commands (bold/italic/underline/strikethrough/newline)
+// and yes/no/computed status shortcuts have keybindings in
+// newKeyboard.js but aren't exposed as labeled, keyed entries in a
+// shared command repo the way the rest of these are -- left out of this
+// table rather than fabricated, until they're given real repo entries.
 const SECTIONS = [
   {
     title: "Navigation",
-    rows: [
-      ["pan"],
-      ["select"],
-      ["select-root"],
-      ["select-parent"],
-      ["center"],
-      ["zoom-in", "zoom-out"],
-      ["fold"],
-    ],
+    rows: [["pan"], ["center"], ["zoom-in", "zoom-out"], ["fold"]],
   },
   {
     title: "Manipulation",
@@ -29,23 +27,13 @@ const SECTIONS = [
   },
   {
     title: "Editing",
-    rows: [
-      ["value"],
-      ["yes", "no", "computed"],
-      ["edit"],
-      ["newline"],
-      ["bold"],
-      ["italic"],
-      ["underline"],
-      ["strikethrough"],
-    ],
+    rows: [["value"], ["edit"]],
   },
   {
     title: "Other",
     rows: [
       ["undo", "redo"],
       ["save"],
-      ["copy-image"],
       ["recover"],
       ["new"],
       ["help"],
@@ -91,7 +79,10 @@ function formatKey(key) {
 
 // Builds one row's { labels, keys } strings from the command repo. A
 // missing command name is logged and skipped, matching the old
-// ui/help.js's buildRow() behavior.
+// ui/help.js's buildRow() behavior. Not every repo entry carries a
+// `keys` array (some commands are keyboard-only via newKeyboard.js's
+// own bindings, not the shared repo), so a missing one is treated as
+// "no shortcut" rather than a crash.
 function buildRow(commandRepo, commandNames) {
   const labels = [];
   let keys = [];
@@ -102,7 +93,7 @@ function buildRow(commandRepo, commandNames) {
       return;
     }
     labels.push(command.label);
-    keys = keys.concat(command.keys.map(formatKey));
+    keys = keys.concat((command.keys || []).map(formatKey));
   });
   return { labels: labels.join("/"), keys: keys.join("/") };
 }
@@ -120,14 +111,9 @@ export default function HelpPanel() {
   const [version, setVersion] = createSignal("");
 
   onMount(async () => {
-    // Import the same three command modules my-mind.js imports for their
-    // side effects (populating commandRepo), so the table is complete
-    // regardless of import order relative to the engine's own mount.
-    const [{ repo: commandRepo }] = await Promise.all([
-      import("../lib/mindmap/command/command.js"),
-      import("../lib/mindmap/command/edit.js"),
-      import("../lib/mindmap/command/select.js"),
-    ]);
+    const { repo: commandRepo } = await import(
+      "../lib/mindmap/newContextMenuCommands.js"
+    );
     setSections(
       SECTIONS.map((section) => ({
         title: section.title,

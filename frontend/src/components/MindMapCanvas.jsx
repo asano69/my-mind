@@ -10,10 +10,10 @@ import { ContextMenu } from "@kobalte/core/context-menu";
 import { onMount, onCleanup } from "solid-js";
 import { render } from "solid-js/web";
 import { activeMode } from "../lib/mindmap/store";
-import { isNewEngineEnabled } from "../lib/mindmap/newEngineFlag.js";
 import NewMindMapPreview from "./NewMindMapPreview.jsx";
 import * as newKeyboard from "../lib/mindmap/newKeyboard.js";
 import * as newMouse from "../lib/mindmap/newMouse.js";
+import * as title from "../lib/mindmap/title.js";
 
 export default function MindMapCanvas(props) {
   let mainRef;
@@ -24,50 +24,36 @@ export default function MindMapCanvas(props) {
   // has focus, so this container must be able to hold focus itself
   // for shortcuts to work when nothing else is focused.
   let containerRef;
-  let engine;
-  let disposeNewEngine;
-  const newEngine = isNewEngineEnabled();
-  let mouseModule; // cached after the first dynamic import, see onMount
+  let disposeEngine;
 
-  onMount(async () => {
+  onMount(() => {
     console.log("[MindMapCanvas] onMount, uuid =", props.uuid);
     containerRef.focus();
 
-    if (newEngine) {
-      disposeNewEngine = render(
-        () => (
-          <NewMindMapPreview
-            uuid={props.uuid}
-            title={new Date().toISOString().slice(0, 10)}
-            containerEl={containerRef}
-          />
-        ),
-        mainRef,
-      );
-      newKeyboard.init(containerRef);
-      console.log(
-        "[MindMapCanvas] new engine preview mounted, uuid =",
-        props.uuid,
-      );
-      return;
-    }
-
-    engine = await import("../lib/mindmap/my-mind.js");
-    engine.mount(mainRef, containerRef, props.uuid);
-    console.log("[MindMapCanvas] mount() finished, uuid =", props.uuid);
-    // Loaded separately from the engine module above so this component can
-    // call mouse.js's handleContextMenu() directly from the Trigger below.
-    mouseModule = await import("../lib/mindmap/mouse.js");
+    disposeEngine = render(
+      () => (
+        <NewMindMapPreview
+          uuid={props.uuid}
+          title={new Date().toISOString().slice(0, 10)}
+          containerEl={containerRef}
+        />
+      ),
+      mainRef,
+    );
+    newKeyboard.init(containerRef);
+    // Was previously started by the old engine's my-mind.js mount() --
+    // that's gone, so this is now the sole engine-lifecycle owner of
+    // document.title syncing.
+    title.init();
+    console.log("[MindMapCanvas] engine mounted, uuid =", props.uuid);
   });
 
   onCleanup(() => {
     console.log("[MindMapCanvas] onCleanup, uuid =", props.uuid);
-    if (newEngine) {
-      newKeyboard.dispose(containerRef);
-    }
-    disposeNewEngine?.();
-    disposeNewEngine = null;
-    engine?.unmount();
+    newKeyboard.dispose(containerRef);
+    title.dispose();
+    disposeEngine?.();
+    disposeEngine = null;
   });
 
   return (
@@ -80,7 +66,7 @@ export default function MindMapCanvas(props) {
       {/* Kobalte's ContextMenu.Trigger owns opening/positioning the
           right-click menu (flip near screen edges, close on outside
           interaction/Escape, long-press support on touch) -- see
-          ContextMenu.jsx for the rendered item list. mouse.js's
+          ContextMenu.jsx for the rendered item list. newMouse.js's
           handleContextMenu() still runs alongside it, for the
           item-selection/drag-cancel side effects the engine needs
           regardless of how the menu itself opens. modal={false} keeps
@@ -88,24 +74,16 @@ export default function MindMapCanvas(props) {
           and scroll is never locked just because the menu is open. */}
       <ContextMenu modal={false}>
         {/* Explicit full-viewport sizing so the right-click hit area covers
-            the whole canvas regardless of engine. The old engine's
-            my-mind.js still sets inline marginLeft/width/height via
-            handleResize() (which wins over these classes), but the new
-            engine (NewMindMapPreview.jsx) never sizes this element itself --
-            without this, <main> collapses to the height of its absolutely
-            positioned <svg> child and right-click only worked near the map. */}
+            the whole canvas. NewMindMapPreview.jsx never sizes this
+            element itself -- without this, <main> collapses to the
+            height of its absolutely positioned <svg> child and
+            right-click only worked near the map. */}
         <ContextMenu.Trigger
           as="main"
           ref={mainRef}
           class="fixed inset-0"
           disabled={activeMode() !== "canvas"}
-          onContextMenu={(e) => {
-            if (newEngine) {
-              newMouse.handleContextMenu(e);
-            } else {
-              mouseModule?.handleContextMenu(e);
-            }
-          }}
+          onContextMenu={(e) => newMouse.handleContextMenu(e)}
         />
         <ContextMenuContent />
       </ContextMenu>

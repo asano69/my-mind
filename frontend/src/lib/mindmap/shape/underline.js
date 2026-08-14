@@ -1,6 +1,5 @@
 // src/shape/underline.ts
 import Shape from "./shape.js";
-import * as svg from "../svg.js";
 const VERTICAL_OFFSET = -4;
 
 // Pure: computes the underline's own vertical anchor and path descriptor
@@ -29,16 +28,6 @@ export function computeUnderlinePath(item) {
 export default class Underline extends Shape {
   constructor() {
     super("underline", "Underline");
-  }
-  update(item) {
-    const { d, stroke } = computeUnderlinePath(item);
-    let path = svg.node("path", {
-      d,
-      stroke,
-      fill: "none",
-      "stroke-width": "2",
-    });
-    item.dom.connectors.append(path);
   }
   getVerticalAnchor(item) {
     return getUnderlineVerticalAnchor(item);

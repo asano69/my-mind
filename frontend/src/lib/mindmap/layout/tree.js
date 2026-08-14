@@ -1,7 +1,6 @@
 // src/layout/tree.ts
 import Layout from "./layout.js";
 import { TOGGLE_SIZE } from "./constants.js";
-import * as svg from "../svg.js";
 const SPACING_RANK = 32;
 const R = SPACING_RANK / 4;
 const LINE_OFFSET = SPACING_RANK / 2;
@@ -16,14 +15,6 @@ export function computeTreeLayout(
 }
 
 export default class TreeLayout extends Layout {
-  update(item) {
-    const { connectorPaths } = computeTreeLayout(
-      this,
-      item,
-      this.childDirection,
-    );
-    this.writeConnectorPaths(item, connectorPaths);
-  }
   layoutItem(item, rankDirection) {
     const { contentSize, children } = item;
     let rankSize = contentSize[0];
@@ -91,25 +82,6 @@ export default class TreeLayout extends Layout {
       );
     });
     return [{ d: d.join(" "), togglePosition }];
-  }
-  writeConnectorPaths(item, connectorPaths) {
-    for (const pathInfo of connectorPaths) {
-      if (pathInfo.togglePosition) {
-        this.positionToggle(item, pathInfo.togglePosition);
-      }
-      if (!pathInfo.d) {
-        continue;
-      }
-      // See graph.js's GraphLayout.writeConnectorPaths() for why stroke
-      // is resolved here rather than carried on pathInfo.
-      const path = svg.node("path", {
-        d: pathInfo.d,
-        stroke: item.resolvedColor,
-        fill: "none",
-        "stroke-width": "2",
-      });
-      item.dom.connectors.append(path);
-    }
   }
 }
 new TreeLayout("tree-left", "Left", "left");

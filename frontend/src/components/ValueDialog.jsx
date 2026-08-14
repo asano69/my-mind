@@ -1,8 +1,7 @@
 import { createEffect, createSignal, Show } from "solid-js";
 import { Dialog } from "@kobalte/core/dialog";
-import { currentItem as oldCurrentItem, valueDialogOpen, closeValueDialog } from "../lib/mindmap/store";
-import { currentItem as newCurrentItem } from "../lib/mindmap/itemSelection";
-import { isNewEngineEnabled } from "../lib/mindmap/newEngineFlag";
+import { valueDialogOpen, closeValueDialog } from "../lib/mindmap/store";
+import { currentItem } from "../lib/mindmap/itemSelection";
 
 // Replaces command/edit.js's old prompt()-based "Set value" flow with a
 // Kobalte dialog, mirroring ConfirmDialog.jsx's structure. Always
@@ -21,12 +20,6 @@ function isInvalidInput(text) {
 export default function ValueDialog() {
   let inputRef;
   const [value, setValue] = createSignal("");
-
-  // Same engine-selection pattern as RightPanelProperties.jsx: pick the
-  // right selection signal once, up front, so the rest of this component
-  // stays engine-agnostic.
-  const newEngine = isNewEngineEnabled();
-  const currentItem = newEngine ? newCurrentItem : oldCurrentItem;
 
   // Dynamically imported on first confirm, like RightPanelProperties.jsx
   // does for the same modules -- avoids pulling the engine bundle in
@@ -63,18 +56,9 @@ export default function ValueDialog() {
       return;
     }
     if (!dispatchAction) {
-      if (newEngine) {
-        const mod = await import("../lib/mindmap/newAction.js");
-        SetValueClass = mod.SetValue;
-        dispatchAction = mod.action;
-      } else {
-        const [actionsMod, appMod] = await Promise.all([
-          import("../lib/mindmap/action.js"),
-          import("../lib/mindmap/my-mind.js"),
-        ]);
-        SetValueClass = actionsMod.SetValue;
-        dispatchAction = appMod.action;
-      }
+      const mod = await import("../lib/mindmap/newAction.js");
+      SetValueClass = mod.SetValue;
+      dispatchAction = mod.action;
     }
     // Empty input clears the value; otherwise it's always a real
     // number now that isInvalidInput() rejects anything else.

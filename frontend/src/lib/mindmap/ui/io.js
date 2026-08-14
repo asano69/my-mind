@@ -1,7 +1,5 @@
 import { createRoot, createEffect, on } from "solid-js";
-import * as app from "../my-mind.js";
 import * as backend from "../backend/pocketbase.js";
-import MindMap from "../map.js";
 import { serializeCurrentMap } from "../backend/image.js";
 import {
   currentTitle,
@@ -16,6 +14,7 @@ import {
   setAutoSaveEnabled,
   setErrorDialogMessage,
   requestLeaveConfirm,
+  setThrobberVisible,
 } from "../store.js";
 
 // Pluggable source for "the tree currently being edited" and "the SVG
@@ -43,7 +42,7 @@ export function setRestoreProvider(provider) {
   restoreProvider = provider;
 }
 function getCurrentTree() {
-  return treeProvider ? treeProvider() : app.currentMap;
+  return treeProvider ? treeProvider() : null;
 }
 
 let currentMapId = null; // PocketBase record id, used for save/update calls
@@ -185,13 +184,21 @@ export function dispose() {
 // instead of being re-parsed from location.pathname here — the router
 // already knows the current uuid reactively, so re-deriving it from the
 // URL string was redundant and could read a stale path during navigation.
+//
+// No longer called by anything: the engine loads its own tree directly
+// (see NewMindMapPreview.jsx's loadPreviewRoot(), which calls
+// newIo.applyLoadedRecord() to apply this same setCurrentMap()
+// bookkeeping) instead of going through this uuid-based restore path.
+// Kept as a small, self-contained helper in case a future caller wants
+// "just fetch and register a map record" without owning its own tree
+// loading.
 export async function restore(uuid) {
   console.log("[io.restore] called with uuid =", uuid);
   if (!uuid) {
-    app.setThrobber(false);
+    setThrobberVisible(false);
     return false;
   }
-  app.setThrobber(true);
+  setThrobberVisible(true);
   try {
     const record = await backend.loadByUuid(uuid);
     console.log(
@@ -203,8 +210,7 @@ export async function restore(uuid) {
       record.title,
     );
     setCurrentMap(record);
-    app.setThrobber(false);
-    app.showMap(MindMap.fromJSON(record.mymind));
+    setThrobberVisible(false);
     return true;
   } catch (e) {
     console.log("[io.restore] error", e);
@@ -229,7 +235,8 @@ export async function setTitle(title) {
   const trimmed = title.trim();
   if (!trimmed) {
     setTitleAuto(true);
-    const autoTitle = app.currentMap ? app.currentMap.name : "";
+    const tree = getCurrentTree();
+    const autoTitle = tree ? tree.name : "";
     setCurrentTitle(autoTitle);
     if (currentMapId) {
       try {
@@ -385,11 +392,7 @@ export function resetCurrentMap() {
 // the restored content instead of creating a new map. Does not save by
 // itself — the user must explicitly save afterwards.
 export function restoreSnapshot(snapshot) {
-  if (restoreProvider) {
-    restoreProvider(snapshot.mymind);
-    return;
-  }
-  app.showMap(MindMap.fromJSON(snapshot.mymind));
+  restoreProvider?.(snapshot.mymind);
 }
 
 // Deletes the currently open map (if it has been saved at least once)
@@ -433,7 +436,7 @@ function updateURL() {
 // Field-level validation errors (e.g. wrong type, required, too long)
 // live in e.response.data — surface them so the message stays actionable.
 function error(e) {
-  app.setThrobber(false);
+  setThrobberVisible(false);
   let message = e instanceof Error ? e.message : JSON.stringify(e);
   const fieldErrors = e?.response?.data;
   if (fieldErrors && Object.keys(fieldErrors).length) {

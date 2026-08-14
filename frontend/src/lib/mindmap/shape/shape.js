@@ -8,9 +8,6 @@ export default class Shape {
   get option() {
     return new Option(this.label, this.id);
   }
-  update(item) {
-    item.dom.content.style.borderColor = item.resolvedColor;
-  }
   getHorizontalAnchor(item) {
     const { contentPosition, contentSize } = item;
     return Math.round(contentPosition[0] + contentSize[0] / 2) + 0.5;
