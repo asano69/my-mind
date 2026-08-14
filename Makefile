@@ -1,5 +1,5 @@
-BINARY := $(notdir $(CURDIR))
-APP := $(notdir $(CURDIR))
+BINARY := solid-mind
+APP := solid-mind
 # Ports used by the dev servers (frontend, backend, and PocketBase-style API)
 PORTS := 3000 3001
 
