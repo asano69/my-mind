@@ -146,4 +146,10 @@
 
 Phase 1〜6は依存関係がほぼ独立しているため、並行して進めても構いません（順不同で着手可）。ただしPhase 7のゲートは必ず全部完了後に通してから削除に入ってください。
 
-この計画で進めてよいか、あるいはPhase 1（action.js分割）から着手してよいか教えてください。
+---
+
+What's left unhandled
+- store.js's currentItem/setCurrentItem/editing/setEditing signals look dead now too (their only writer, my-mind.js, is gone, and their remaining readers were the branches just deleted), but I didn't touch them without being able to grep — worth a follow-up pass.
+- Phase 9's manual click-through of HelpPanel/TopBar/LeftPanel/RightPanelProperties/ValueDialog/RightPanelExportActions/ContextMenu is still up to you.
+- Phase 10 (deleting newEngineFlag.js is done above, but CLAUDE.md's Work-in-progress note and README.md's "Pub/Sub→Solid移行中" banner still reference the old architecture) — happy to update those next if you want.
+
