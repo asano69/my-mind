@@ -58,7 +58,9 @@ vi.mock("./svg.js", () => ({ group: node, foreignObject: node, node }));
 vi.mock("./pubsub.js", () => ({ publish: vi.fn() }));
 vi.mock("./my-mind.js", () => ({ selectItem: vi.fn() }));
 vi.mock("./command/command.js", () => ({ repo: { get: vi.fn() } }));
-vi.mock("./shape/shape.js", () => ({ repo: { get: (id) => ({ id }) } }));
+vi.mock("./shape/shape.js", () => ({
+  repo: { get: (id) => ({ id, update: vi.fn() }) },
+}));
 vi.mock("./layout/layout.js", () => ({ repo: { get: (id) => ({ id }) } }));
 vi.mock("./map.js", () => ({ default: class Map {} }));
 
@@ -112,7 +114,7 @@ describe("action do()/undo() against signal-backed Item properties", () => {
 describe("InsertNewItem shape inheritance", () => {
   it("gives a new sibling the same explicit shape when every existing sibling agrees", () => {
     const parent = new Item();
-    const boxShape = { id: "box" };
+    const boxShape = { id: "box", update: vi.fn() };
     const child1 = new Item();
     child1.shape = boxShape;
     const child2 = new Item();
@@ -128,9 +130,9 @@ describe("InsertNewItem shape inheritance", () => {
   it("leaves shape unset when siblings disagree", () => {
     const parent = new Item();
     const child1 = new Item();
-    child1.shape = { id: "box" };
+    child1.shape = { id: "box", update: vi.fn() };
     const child2 = new Item();
-    child2.shape = { id: "ellipse" };
+    child2.shape = { id: "ellipse", update: vi.fn() };
     parent.insertChild(child1);
     parent.insertChild(child2);
 
@@ -142,7 +144,7 @@ describe("InsertNewItem shape inheritance", () => {
   it("leaves shape unset when a sibling has no explicit shape at all", () => {
     const parent = new Item();
     const child1 = new Item();
-    child1.shape = { id: "box" };
+    child1.shape = { id: "box", update: vi.fn() };
     const child2 = new Item(); // no explicit shape
     parent.insertChild(child1);
     parent.insertChild(child2);
@@ -155,7 +157,7 @@ describe("InsertNewItem shape inheritance", () => {
   it("inherits the single existing sibling's explicit shape", () => {
     const parent = new Item();
     const child1 = new Item();
-    child1.shape = { id: "box" };
+    child1.shape = { id: "box", update: vi.fn() };
     parent.insertChild(child1);
 
     const action = new InsertNewItem(parent, parent.children.length);

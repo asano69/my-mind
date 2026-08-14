@@ -216,18 +216,33 @@ describe("doc06.1 Phase 0 locality measurement (programmatic, no browser console
       "middle-node collapse toggle": (root) => {
         root.children[0].collapsed = true;
       },
-      // Expected (per doc05.1/06.1's own design notes) to touch the whole
-      // subtree via the resolvedColor inheritance chain -- kept here as a
-      // baseline reading, not as a locality regression check.
+      // Expected to touch every node, but not because of a single
+      // unconditional resolvedColor read: it's the union of two
+      // independent paths within the layout memo. (1) Any node with
+      // children reads resolvedColor via resolvedLayout.update(), but
+      // only once it actually draws a connector line to a child (see
+      // layout/graph.js's own comment) -- that's every node at depth
+      // 0-3 (40 nodes for this DEPTH/WIDTH tree). (2) Any node whose
+      // resolvedShape is "underline" (the default from depth 2 onward)
+      // reads resolvedColor via _writeOwnLayout()'s
+      // resolvedShape.update() call, regardless of whether it has
+      // children -- that's every node at depth 2-4 (117 nodes). The
+      // union of these two sets covers depth 0-4, i.e. all 121 nodes,
+      // even though neither path alone does.
       "root color change": (root) => {
         root.color = "#d33";
       },
-      // Comparison case: _applyOwnStyle() (called unconditionally inside
-      // computeLayout(), not gated behind the shape mock) always reads
-      // this.resolvedTextColor, so this scenario exercises the same
-      // inheritance-chain propagation without depending on the shape
-      // mock's behavior at all -- a cross-check against the color case
-      // above.
+      // Unlike root color change above, this is expected to touch NO
+      // nodes (update=0). resolvedTextColor is applied by
+      // updateColorStyle() (see item.js's constructor), a separate
+      // per-item effect that runs independently of the layout memo
+      // instrumented here (docs/06.1-recursive-memo-layout-refactor.md,
+      // Phase 7, moved textColor out of _applyOwnStyle() for exactly
+      // this reason: it never affects the measured content box, so it
+      // has no reason to be part of the layout memo's tracked scope).
+      // Kept as a scenario so this stays documented rather than
+      // silently dropped -- update=0 here is a true negative, not a
+      // measurement gap.
       "root textColor change": (root) => {
         root.textColor = "#d33";
       },
