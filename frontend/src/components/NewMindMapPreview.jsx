@@ -8,6 +8,7 @@ import {
   onMount,
 } from "solid-js";
 import ItemNode, { measureContentSize } from "../lib/mindmap/itemStore.js";
+import Spinner from "./Spinner.jsx";
 import { itemStateClassList, selectItem } from "../lib/mindmap/itemSelection.js";
 import {
   handleItemClick,
@@ -637,7 +638,20 @@ export default function NewMindMapPreview(props) {
   });
 
   return (
-    <svg
+    <>
+      {/* Fallback while the map is still loading (or before a real root
+          exists). A CSS spinner instead of an SVG <text> label, matching
+          the loading indicator used elsewhere in the app (see
+          Catalog.jsx/CatalogList.jsx). Rendered as a sibling of the
+          <svg>, not inside it -- Spinner renders a plain HTML <div>,
+          which isn't valid as a direct child of an SVG element. */}
+      <Show when={!effectiveRoot()}>
+        <Spinner
+          visible={true}
+          class="fixed top-1/2 left-1/2 z-[9999] h-10 w-10 -translate-x-1/2 -translate-y-1/2"
+        />
+      </Show>
+      <svg
       ref={svgRef}
       data-engine="solid-item-node-preview"
       width="640"
@@ -645,14 +659,7 @@ export default function NewMindMapPreview(props) {
       style={{ "font-size": "15px", left: "40px", top: "40px" }}
     >
       <style>{mapCss}</style>
-      <Show
-        when={effectiveRoot()}
-        fallback={
-          <text class="content" x="40" y="64">
-            Loading map...
-          </text>
-        }
-      >
+      <Show when={effectiveRoot()}>
         {(loadedRoot) => (
           // No wrapping <g> here: map.css's `svg > .item > foreignObject
           // > .content` rule (root-only bold/140% font-size) requires
@@ -674,6 +681,7 @@ export default function NewMindMapPreview(props) {
           <ItemNodeView item={loadedRoot()} domRefs={domRefs} />
         )}
       </Show>
-    </svg>
+      </svg>
+    </>
   );
 }
