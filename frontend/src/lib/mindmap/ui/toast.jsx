@@ -22,9 +22,12 @@ export function showToast(label, subject, options = {}) {
     <Toast
       toastId={props.toastId}
       duration={options.linger ?? 2500}
-      class={`flex flex-col gap-2 rounded-xl border border-black/[0.06]
-        border-l-4 ${isError ? "border-l-[#cc0000]" : "border-l-[#2ca02c]"} bg-white px-4 py-3 text-base text-text
-        shadow-[0_8px_24px_rgba(0,0,0,0.16),0_2px_6px_rgba(0,0,0,0.08)]
+      // bg-pane/border-pane-hover/shadow-card are theme tokens defined
+      // with light-dark() in style.css, so the toast now follows the
+      // user's color scheme instead of always rendering a light card.
+      class={`flex flex-col gap-2 rounded-xl border border-pane-hover
+        border-l-4 ${isError ? "border-l-[#cc0000]" : "border-l-[#2ca02c]"} bg-pane px-4 py-3 text-base text-text
+        shadow-card
         transition-[opacity,transform] duration-200 data-[closed]:opacity-0
         data-[opened]:opacity-100 data-[closed]:translate-x-4
         data-[closed]:scale-95 data-[opened]:translate-x-0 data-[opened]:scale-100`}

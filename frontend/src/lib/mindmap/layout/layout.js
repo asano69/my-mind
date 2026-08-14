@@ -68,12 +68,6 @@ export default class Layout {
     index = (index + children.length) % children.length;
     return children[index];
   }
-  positionToggle(item, point) {
-    item.dom.toggle.setAttribute(
-      "transform",
-      `translate(${point.map(Math.round)})`,
-    );
-  }
   getChildAnchor(item, side) {
     let { position, contentPosition, contentSize } = item;
     if (side == "left" || side == "right") {

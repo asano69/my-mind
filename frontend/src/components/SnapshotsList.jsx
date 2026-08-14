@@ -81,7 +81,7 @@ export default function SnapshotsList() {
                         listSnapshots() comment) instead of innerHTML, so
                         this SVG's embedded <style> can't leak into the
                         page. */}
-                    <div class="flex h-20 items-center justify-center overflow-hidden bg-white/50 p-1">
+                    <div class="flex h-20 items-center justify-center overflow-hidden bg-bg p-1">
                       <img
                         src={`/snapshots/${snapshot.id}/svg`}
                         alt=""

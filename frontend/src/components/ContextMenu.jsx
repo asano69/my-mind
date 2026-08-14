@@ -19,25 +19,16 @@ const GROUPS = [
 // module anymore (see ui/context-menu.js's removal and mouse.js's
 // handleContextMenu()).
 export default function ContextMenuContent() {
-  // command/command.js is imported dynamically (like TopBar.jsx/
-  // LeftPanel.jsx/RightPanel.jsx already do), not statically at the top
-  // of this file. ContextMenu.jsx sits on the static import chain
-  // main.jsx -> Workspace.jsx -> MindMapCanvas.jsx, which now runs before
-  // my-mind.js ever gets a chance to be the first module to import
-  // command.js. command.js and my-mind.js import each other (a command's
-  // execute() calls into app.*, and my-mind.js imports command modules
-  // for their registration side effects) -- whichever module starts
-  // loading first "wins" that circular pair. A static import here made
-  // command.js load first, which meant my-mind.js's own
-  // `import "./command/edit.js"` line ran while command.js was still
-  // mid-evaluation, before its `export default class Command` had run,
-  // throwing a TDZ ReferenceError. Deferring this import to onMount
-  // avoids becoming that first entry point.
+  // Deferred to onMount (rather than a static top-of-file import) so
+  // this component's command repo is only pulled in once the canvas
+  // actually mounts, matching TopBar.jsx/LeftPanel.jsx/RightPanel.jsx's
+  // own lazy-import pattern for the same modules.
   let commandRepo;
   const [ready, setReady] = createSignal(false);
 
   onMount(async () => {
-    ({ repo: commandRepo } = await import("../lib/mindmap/command/command.js"));
+    ({ repo: commandRepo } =
+      await import("../lib/mindmap/newContextMenuCommands.js"));
     setReady(true);
   });
 

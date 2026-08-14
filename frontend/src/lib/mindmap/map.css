@@ -12,29 +12,77 @@
   --node-border-width: 2px;
 
   /* Node shadow (default) */
-  --node-shadow: 3px 5px 14px rgba(0, 0, 0, 0.2);
+  --node-shadow: 3px 5px 14px
+    light-dark(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.55));
 
   /* Node shadow (hover) */
-  --node-shadow-hover: 4px 7px 18px rgba(0, 0, 0, 0.45);
+  --node-shadow-hover: 4px 7px 18px
+    light-dark(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.7));
 
   /* Underline hover: outline ring */
-  --underline-hover-outline: 0 0 0 1px rgba(200, 180, 0, 0.5);
+  --underline-hover-outline: 0 0 0 1px
+    light-dark(rgba(200, 180, 0, 0.5), rgba(230, 200, 60, 0.55));
 
   /* Underline hover: yellow tint background */
-  --underline-hover-bg: rgba(255, 255, 200, 0.4);
+  --underline-hover-bg: light-dark(
+    rgba(255, 255, 200, 0.4),
+    rgba(120, 105, 20, 0.35)
+  );
 
-  /* Selected node (current) background */
-  --node-bg-current: rgba(255, 255, 187, 0.5);
+  /* Selected node (current) background -- currently unreferenced in
+     this file, kept for parity with --node-shadow-current. */
+  --node-bg-current: light-dark(
+    rgba(255, 255, 187, 0.5),
+    rgba(110, 95, 15, 0.45)
+  );
 
   /* Selected node shadow */
-  --node-shadow-current: 3px 5px 14px rgba(0, 0, 0, 0.2);
+  --node-shadow-current: 3px 5px 14px
+    light-dark(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.55));
 
   /* Toggle button color */
-  --toggle-color: #999999;
+  --toggle-color: light-dark(#999999, #8a8378);
 
   /* Status icon colors */
-  --status-yes-color: #2ca02c;
-  --status-no-color: #cc0000;
+  --status-yes-color: light-dark(#2ca02c, #4fd15a);
+  --status-no-color: light-dark(#cc0000, #ff6b6b);
+
+  /* Base fill colors a node falls back to when it has no explicit
+     --item-color (see the color-mix() calls below). */
+  --node-fill-base: light-dark(#ffffff, #2a251e);
+  --node-fill-default: light-dark(#f0f0f0, #3a332a);
+  --node-border-default: light-dark(#999999, #7a7264);
+  --node-border-shade: light-dark(#555555, #12100d);
+
+  /* Top gloss highlight overlaid on every box/ellipse node's background */
+  --node-gloss: light-dark(
+    rgba(255, 255, 255, 0.72),
+    rgba(255, 255, 255, 0.12)
+  );
+
+  /* Shared secondary shadow layers stacked under --node-shadow(-hover/-current)
+     on box/ellipse nodes (lift, contact, and bottom-shade shadows). */
+  --node-lift-shadow: 0 3px 8px
+    light-dark(rgba(0, 0, 0, 0.14), rgba(0, 0, 0, 0.4));
+  --node-contact-shadow: 0 1px 2px
+    light-dark(rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.3));
+  --node-bottom-shade: inset 0 -2px 6px
+    light-dark(rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.25));
+
+  /* Yellow selection tint blended into a box/ellipse node's own fill */
+  --node-selected-tint: light-dark(rgb(255, 255, 187), rgb(110, 95, 15));
+
+  /* Selected underline-shape node's flat background/outline */
+  --node-underline-selected-bg: light-dark(
+    rgba(255, 255, 187, 0.75),
+    rgba(110, 95, 15, 0.55)
+  );
+  --node-underline-selected-outline: 0 0 0 1px
+    light-dark(rgba(180, 160, 0, 0.55), rgba(220, 195, 60, 0.6));
+
+  /* Node label link color */
+  --link-color: light-dark(#1a73e8, #6ea8fe);
+  --link-color-hover: light-dark(#1558b0, #9dc2ff);
 }
 
 /* -------------------------------------------------------------
@@ -130,12 +178,12 @@ svg > .item > .item > foreignObject > .content {
 }
 
 .item .text a {
-  color: #1a73e8;
+  color: var(--link-color);
   text-decoration: underline;
 }
 
 .item .text a:hover {
-  color: #1558b0;
+  color: var(--link-color-hover);
 }
 
 .item .value {
@@ -223,10 +271,14 @@ svg > .item > .item > foreignObject > .content {
     /* Top gloss highlight — bright specular spot, offset slightly left */
     radial-gradient(
       ellipse 55% 35% at 40% 18%,
-      rgba(255, 255, 255, 0.72) 0%,
+      var(--node-gloss) 0%,
       rgba(255, 255, 255, 0) 100%
     ),
-    color-mix(in srgb, var(--item-color, #f0f0f0) 18%, #ffffff);
+    color-mix(
+      in srgb,
+      var(--item-color, var(--node-fill-default)) 18%,
+      var(--node-fill-base)
+    );
   /* Clip the background to just inside the border (padding-box), not the
      border-box edge. On an ellipse (border-radius: 50%), the border's
      outer stroke and the background's border-box clip are rasterized as
@@ -236,12 +288,14 @@ svg > .item > .item > foreignObject > .content {
      the border always fully covers the shape's outer edge. */
   background-clip: padding-box;
   border: var(--node-border-width) solid
-    color-mix(in srgb, var(--item-color, #999999) 60%, #555555);
+    color-mix(
+      in srgb,
+      var(--item-color, var(--node-border-default)) 60%,
+      var(--node-border-shade)
+    );
   box-shadow:
-    var(--node-shadow),
-    0 3px 8px rgba(0, 0, 0, 0.14),
-    /* outer lift shadow */ 0 1px 2px rgba(0, 0, 0, 0.08),
-    /* outer contact shadow */ inset 0 -2px 6px rgba(0, 0, 0, 0.06); /* bottom shade, very subtle */
+    var(--node-shadow), var(--node-lift-shadow), var(--node-contact-shadow),
+    var(--node-bottom-shade);
   transition:
     box-shadow 120ms ease,
     transform 120ms ease;
@@ -283,28 +337,31 @@ svg > .item > .item > foreignObject > .content {
     /* Top gloss highlight — preserved from base style */
     radial-gradient(
       ellipse 55% 35% at 40% 18%,
-      rgba(255, 255, 255, 0.72) 0%,
+      var(--node-gloss) 0%,
       rgba(255, 255, 255, 0) 100%
     ),
-    /* Selection tint — yellow blended with item color.
-       Adjust the second percentage to control yellow intensity:
-       0% = item color only, 100% = solid yellow (#ffffbb) */
+    /* Selection tint — theme's selection color blended with item color.
+       Adjust the second percentage to control selection-tint intensity:
+       0% = item color only, 100% = solid --node-selected-tint */
     color-mix(
         in srgb,
-        color-mix(in srgb, var(--item-color, #f0f0f0) 18%, #ffffff) 25%,
-        rgb(255, 255, 187) 55%
+        color-mix(
+            in srgb,
+            var(--item-color, var(--node-fill-default)) 18%,
+            var(--node-fill-base)
+          )
+          25%,
+        var(--node-selected-tint) 55%
       );
   box-shadow:
-    var(--node-shadow-current),
-    0 3px 8px rgba(0, 0, 0, 0.14),
-    /* outer lift shadow */ 0 1px 2px rgba(0, 0, 0, 0.08),
-    /* outer contact shadow */ inset 0 -2px 6px rgba(0, 0, 0, 0.06); /* bottom shade, very subtle */
+    var(--node-shadow-current), var(--node-lift-shadow),
+    var(--node-contact-shadow), var(--node-bottom-shade);
   /* mix-blend-mode removed — it was flattening out the gloss */
 }
 
 [data-shape="underline"].item.current > foreignObject > .content {
-  background: rgba(255, 255, 187, 0.75);
-  box-shadow: 0 0 0 1px rgba(180, 160, 0, 0.55);
+  background: var(--node-underline-selected-bg);
+  box-shadow: var(--node-underline-selected-outline);
   border-radius: 3px;
 }
 
@@ -312,11 +369,9 @@ svg > .item > .item > foreignObject > .content {
 [data-shape="box"].item.current > foreignObject > .content:hover,
 [data-shape="ellipse"].item.current > foreignObject > .content:hover {
   box-shadow:
-    var(--node-shadow-current),
-    var(--node-shadow-hover),
-    0 3px 8px rgba(0, 0, 0, 0.14),
-    0 1px 2px rgba(0, 0, 0, 0.08),
-    inset 0 -2px 6px rgba(0, 0, 0, 0.06);
+    var(--node-shadow-current), var(--node-shadow-hover),
+    var(--node-lift-shadow), var(--node-contact-shadow),
+    var(--node-bottom-shade);
   transform: translateY(-2px);
 }
 
@@ -329,19 +384,24 @@ svg > .item > .item > foreignObject > .content {
   background:
     radial-gradient(
       ellipse 55% 35% at 40% 18%,
-      rgba(255, 255, 255, 0.72) 0%,
+      var(--node-gloss) 0%,
       rgba(255, 255, 255, 0) 100%
     ),
     color-mix(
       in srgb,
-      color-mix(in srgb, var(--item-color, #f0f0f0) 18%, #ffffff) 25%,
-      rgb(255, 255, 187) 55%
+      color-mix(
+          in srgb,
+          var(--item-color, var(--node-fill-default)) 18%,
+          var(--node-fill-base)
+        )
+        25%,
+      var(--node-selected-tint) 55%
     );
 }
 
 [data-shape="underline"].item.selected > foreignObject > .content {
-  background: rgba(255, 255, 187, 0.75);
-  box-shadow: 0 0 0 1px rgba(180, 160, 0, 0.55);
+  background: var(--node-underline-selected-bg);
+  box-shadow: var(--node-underline-selected-outline);
   border-radius: 3px;
 }
 

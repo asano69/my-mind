@@ -1,8 +1,7 @@
 import { createRoot, createEffect, on } from "solid-js";
-import * as app from "../my-mind.js";
 import * as backend from "../backend/pocketbase.js";
-import MindMap from "../map.js";
 import { serializeCurrentMap } from "../backend/image.js";
+import ItemNode from "../itemStore.js";
 import {
   currentTitle,
   setCurrentTitle,
@@ -16,7 +15,46 @@ import {
   setAutoSaveEnabled,
   setErrorDialogMessage,
   requestLeaveConfirm,
+  setThrobberVisible,
+  setOverrideRoot,
 } from "../store.js";
+
+// The tree/SVG root currently being edited, and the loader callback used
+// to swap in a freshly restored root. This used to live behind a
+// pluggable provider (setTreeProvider/setSvgNodeProvider/
+// setRestoreProvider, previously registered by a separate newIo.js
+// adapter module), so this file's save/autosave/delete bookkeeping could
+// be shared between two engine implementations. Only one engine
+// (ItemNode, see itemStore.js) exists now, so this module owns that
+// state directly instead of indirecting through a provider it only ever
+// has one implementation of.
+let currentRoot = null;
+let currentSvgNode = null;
+
+// Registers `root`/`svgNode` as the source save/autosave/SVG-snapshot
+// logic reads from. Called whenever the preview's root ItemNode
+// (re)loads (see NewMindMapPreview.jsx).
+export function attach(root, svgNode) {
+  currentRoot = root;
+  currentSvgNode = svgNode;
+}
+
+// Called on unmount so a stale root/svg node can't outlive this preview
+// instance (e.g. leaking into the next mount before it re-attaches).
+export function detach() {
+  currentRoot = null;
+  currentSvgNode = null;
+}
+
+// The currently attached root ItemNode / SVG node, or null before a map
+// has loaded. Used by RightPanelExportActions.jsx's copy/download-image
+// buttons to source backend/image.js's explicit svgNode/name parameters.
+export function getRoot() {
+  return currentRoot;
+}
+export function getSvgNode() {
+  return currentSvgNode;
+}
 
 let currentMapId = null; // PocketBase record id, used for save/update calls
 let currentMapUuid = null; // public uuid, used in the URL
@@ -157,13 +195,21 @@ export function dispose() {
 // instead of being re-parsed from location.pathname here — the router
 // already knows the current uuid reactively, so re-deriving it from the
 // URL string was redundant and could read a stale path during navigation.
+//
+// No longer called by anything: the engine loads its own tree directly
+// (see NewMindMapPreview.jsx's loadPreviewRoot(), which calls
+// newIo.applyLoadedRecord() to apply this same setCurrentMap()
+// bookkeeping) instead of going through this uuid-based restore path.
+// Kept as a small, self-contained helper in case a future caller wants
+// "just fetch and register a map record" without owning its own tree
+// loading.
 export async function restore(uuid) {
   console.log("[io.restore] called with uuid =", uuid);
   if (!uuid) {
-    app.setThrobber(false);
+    setThrobberVisible(false);
     return false;
   }
-  app.setThrobber(true);
+  setThrobberVisible(true);
   try {
     const record = await backend.loadByUuid(uuid);
     console.log(
@@ -175,8 +221,7 @@ export async function restore(uuid) {
       record.title,
     );
     setCurrentMap(record);
-    app.setThrobber(false);
-    app.showMap(MindMap.fromJSON(record.mymind));
+    setThrobberVisible(false);
     return true;
   } catch (e) {
     console.log("[io.restore] error", e);
@@ -201,7 +246,7 @@ export async function setTitle(title) {
   const trimmed = title.trim();
   if (!trimmed) {
     setTitleAuto(true);
-    const autoTitle = app.currentMap ? app.currentMap.name : "";
+    const autoTitle = currentRoot ? currentRoot.name : "";
     setCurrentTitle(autoTitle);
     if (currentMapId) {
       try {
@@ -302,19 +347,18 @@ export async function confirmLeave() {
 }
 
 async function performSave(includeSvg) {
-  const map = app.currentMap;
-  const mymind = map.toJSON();
+  const mymind = { root: currentRoot.toJSON() };
   // While titleAuto is on, the title saved is always the root node's
   // current label; otherwise it's whatever the user explicitly set.
   const auto = titleAuto();
-  const title = auto ? map.name : currentTitle();
+  const title = auto ? currentRoot.name : currentTitle();
   // SVG snapshot generation is somewhat expensive and only needed for the
   // catalog page thumbnail, so it's skipped on auto-save (includeSvg=false)
   // and only computed when the user explicitly saves.
   let svg;
   if (includeSvg) {
     try {
-      svg = serializeCurrentMap().xml;
+      svg = serializeCurrentMap(currentSvgNode).xml;
     } catch (e) {
       console.warn("failed to generate SVG snapshot:", e);
     }
@@ -329,7 +373,7 @@ async function performSave(includeSvg) {
     return false;
   }
 }
-function setCurrentMap(record) {
+export function setCurrentMap(record) {
   currentMapId = record ? record.id : null;
   currentMapUuid = record ? record.uuid : null;
   setCurrentTitle(record ? record.title || "" : "");
@@ -355,7 +399,7 @@ export function resetCurrentMap() {
 // the restored content instead of creating a new map. Does not save by
 // itself — the user must explicitly save afterwards.
 export function restoreSnapshot(snapshot) {
-  app.showMap(MindMap.fromJSON(snapshot.mymind));
+  setOverrideRoot(ItemNode.fromJSON(snapshot.mymind.root));
 }
 
 // Deletes the currently open map (if it has been saved at least once)
@@ -375,13 +419,20 @@ export async function deleteCurrentMap() {
 }
 
 function updateURL() {
+  // Preserves the current query string (e.g. "?newEngine=1") -- this
+  // used to always drop it, which was harmless for the old engine (it
+  // has no query-string-driven behavior) but silently kicked the new
+  // engine's preview back to the default path every time a map was
+  // loaded or saved, since this now also runs from the new engine's
+  // newIo.js adapter.
+  const search = globalThis.location?.search ?? "";
   if (!currentMapUuid) {
-    history.replaceState(null, "", "/");
+    history.replaceState(null, "", `/${search}`);
   } else {
     history.replaceState(
       null,
       "",
-      `/maps/${encodeURIComponent(currentMapUuid)}`,
+      `/maps/${encodeURIComponent(currentMapUuid)}${search}`,
     );
   }
 }
@@ -392,7 +443,7 @@ function updateURL() {
 // Field-level validation errors (e.g. wrong type, required, too long)
 // live in e.response.data — surface them so the message stays actionable.
 function error(e) {
-  app.setThrobber(false);
+  setThrobberVisible(false);
   let message = e instanceof Error ? e.message : JSON.stringify(e);
   const fieldErrors = e?.response?.data;
   if (fieldErrors && Object.keys(fieldErrors).length) {

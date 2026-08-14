@@ -1,17 +1,21 @@
 // src/layout/graph.ts
 import Layout from "./layout.js";
-import * as svg from "../svg.js";
 export const SPACING_RANK = 16;
 const R = SPACING_RANK / 2;
+export function computeGraphLayout(
+  layout,
+  item,
+  rankDirection = layout.childDirection,
+) {
+  const totalHeight = layout.layoutItem(item, rankDirection);
+  const connectorPaths =
+    rankDirection == "left" || rankDirection == "right"
+      ? layout.computeLinesHorizontal(item, rankDirection)
+      : layout.computeLinesVertical(item, rankDirection, totalHeight);
+  return { connectorPaths, totalHeight };
+}
+
 export default class GraphLayout extends Layout {
-  update(item) {
-    let totalHeight = this.layoutItem(item, this.childDirection);
-    if (this.childDirection == "left" || this.childDirection == "right") {
-      this.drawLinesHorizontal(item, this.childDirection);
-    } else {
-      this.drawLinesVertical(item, this.childDirection, totalHeight);
-    }
-  }
   /**
    * Generic graph child layout routine. Updates item's orthogonal size according to the sum of its children.
    */
@@ -66,24 +70,30 @@ export default class GraphLayout extends Layout {
       if (rankDirection == "top") {
         offset[1] = bbox[1] - size[1];
       }
-      child.position = offset;
+      // Copy the current cursor rather than storing the mutable `offset`
+      // array itself. The class-based Item setter stringified this value
+      // immediately, but the new DOM-free item store keeps `position` as a
+      // plain array; sharing `offset` made every sibling observe the final
+      // cursor value and render on top of each other in the Solid preview.
+      child.position = [...offset];
       offset[childIndex] +=
         size[childIndex] + this.SPACING_CHILD; /* offset for next child */
     });
     return bbox;
   }
-  drawLinesHorizontal(item, side) {
-    const {
-      contentPosition,
-      contentSize,
-      resolvedShape,
-      resolvedColor,
-      children,
-      dom,
-    } = item;
+  computeLinesHorizontal(item, side) {
+    const { contentPosition, contentSize, resolvedShape, children } = item;
     if (children.length == 0) {
-      return;
+      return [];
     }
+    // resolvedColor is intentionally NOT read here. This function is
+    // pure geometry (anchor points, curve/arc paths); the connector's
+    // stroke color is resolved by the caller instead, at write/render
+    // time -- GraphLayout.writeConnectorPaths() for the old engine,
+    // ItemNodeView's JSX for the new engine (see
+    // docs/08-mindmap-engine-refactor.md). This keeps a color-only
+    // change from ever invalidating the geometry memo that wraps this
+    // computation (itemStore.js's layoutResult).
     const dirModifier = side == "right" ? 1 : -1;
     // first part from this item
     let itemAnchor = [
@@ -93,9 +103,9 @@ export default class GraphLayout extends Layout {
       resolvedShape.getVerticalAnchor(item),
     ];
     let cross = [itemAnchor[0] + dirModifier * R, itemAnchor[1]];
-    this.positionToggle(item, cross);
+    const togglePosition = cross;
     if (item.collapsed) {
-      return;
+      return [{ togglePosition }];
     }
     let d = [];
     if (children.length == 1) {
@@ -110,14 +120,7 @@ export default class GraphLayout extends Layout {
         `M ${itemAnchor}`,
         `C ${[midX, itemAnchor[1]]} ${[midX, childAnchor[1]]} ${childAnchor}`,
       );
-      let path = svg.node("path", {
-        d: d.join(" "),
-        stroke: resolvedColor,
-        fill: "none",
-        "stroke-width": "2",
-      });
-      dom.connectors.append(path);
-      return;
+      return [{ d: d.join(" "), togglePosition }];
     }
     // short line from this item to crossroads
     d.push(`M ${itemAnchor}`, `L ${cross}`);
@@ -152,19 +155,15 @@ export default class GraphLayout extends Layout {
       let childAnchor = [this.getChildAnchor(c, side), y];
       d.push(`M ${lineStart}`, `L ${childAnchor}`);
     }
-    let path = svg.node("path", {
-      d: d.join(" "),
-      stroke: resolvedColor,
-      fill: "none",
-      "stroke-width": "2",
-    });
-    dom.connectors.append(path);
+    return [{ d: d.join(" "), togglePosition }];
   }
-  drawLinesVertical(item, side, totalHeight) {
-    const { contentSize, resolvedShape, resolvedColor, children, dom } = item;
+  computeLinesVertical(item, side, totalHeight) {
+    const { contentSize, resolvedShape, children } = item;
     if (children.length == 0) {
-      return;
+      return [];
     }
+    // See computeLinesHorizontal()'s comment above -- resolvedColor is
+    // intentionally not read here either.
     const dirModifier = side == "bottom" ? 1 : -1;
     let itemAnchor = [
       resolvedShape.getHorizontalAnchor(item),
@@ -177,9 +176,9 @@ export default class GraphLayout extends Layout {
       (side == "bottom" ? contentSize[1] : itemAnchor[1]) +
         (R * dirModifier + 0.5),
     ];
-    this.positionToggle(item, cross);
+    const togglePosition = cross;
     if (item.collapsed) {
-      return;
+      return [{ togglePosition }];
     }
     let d = [];
     d.push(`M ${itemAnchor}`, `L ${cross}`);
@@ -187,14 +186,7 @@ export default class GraphLayout extends Layout {
       let child = children[0];
       let childAnchor = [cross[0], this.getChildAnchor(child, side)];
       d.push(`M ${cross}`, `L ${childAnchor}`);
-      let path = svg.node("path", {
-        d: d.join(" "),
-        stroke: resolvedColor,
-        fill: "none",
-        "stroke-width": "2",
-      });
-      dom.connectors.append(path);
-      return;
+      return [{ d: d.join(" "), togglePosition }];
     }
     // rounded connectors for first/last child
     const firstChild = children[0];
@@ -226,13 +218,7 @@ export default class GraphLayout extends Layout {
       let childAnchor = [x, this.getChildAnchor(c, side)];
       d.push(`M ${lineStart}`, `L ${childAnchor}`);
     }
-    let path = svg.node("path", {
-      d: d.join(" "),
-      stroke: resolvedColor,
-      fill: "none",
-      "stroke-width": "2",
-    });
-    dom.connectors.append(path);
+    return [{ d: d.join(" "), togglePosition }];
   }
 }
 new GraphLayout("graph-bottom", "Bottom", "bottom");

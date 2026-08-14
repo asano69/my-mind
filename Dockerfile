@@ -32,13 +32,13 @@ COPY internal/ ./internal/
 COPY migrations/ ./migrations/
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
-    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o my-mind ./cmd/my-mind
+    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o solid-mind ./cmd/solid-mind
 
 # ==========================================
 # Stage 2: Runtime
 # ==========================================
 FROM alpine:3.23
-WORKDIR /my-mind
+WORKDIR /solid-mind
 
 RUN apk add --no-cache \
     ca-certificates \
@@ -49,13 +49,13 @@ RUN apk add --no-cache \
     curl \
     sqlite
  
-RUN addgroup -g 1000 my-mind && \
-    adduser -D -u 1000 -G my-mind my-mind
+RUN addgroup -g 1000 solid-mind && \
+    adduser -D -u 1000 -G solid-mind solid-mind
 
-COPY --from=go-builder /build/my-mind /usr/local/bin/my-mind
+COPY --from=go-builder /build/solid-mind /usr/local/bin/solid-mind
 
-RUN mkdir -p /certs /my-mind/data
-RUN chown -R my-mind:my-mind /my-mind
+RUN mkdir -p /certs /solid-mind/data
+RUN chown -R solid-mind:solid-mind /solid-mind
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
@@ -63,5 +63,5 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 EXPOSE 3000
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["my-mind", "serve", "--dir=data"]
+CMD ["solid-mind", "serve", "--dir=data"]
 

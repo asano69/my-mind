@@ -1,17 +1,17 @@
-import * as app from "../my-mind.js";
 const EXPORT_PADDING = 24;
 
 /**
- * Serialize the current map to a padded SVG string (root CSS custom
- * properties embedded so the snapshot renders correctly outside the app,
- * e.g. on the catalog page), along with its final width/height.
+ * Serialize a mind-map's SVG root to a padded SVG string (root CSS
+ * custom properties embedded so the snapshot renders correctly outside
+ * the app, e.g. on the catalog page), along with its final width/height.
+ * Callers always pass their own SVG root explicitly (see newIo.js).
  */
-export function serializeCurrentMap() {
+export function serializeCurrentMap(rootSvgNode) {
   const serializer = new XMLSerializer();
   // Clone so we can mutate freely without affecting the live map. The live
   // canvas may be browser-zoomed with CSS transform; exports intentionally use
   // the underlying 100% layout because zoom is only viewport state.
-  const svgNode = app.currentMap.node.cloneNode(true);
+  const svgNode = rootSvgNode.cloneNode(true);
   svgNode.style.transform = "";
   svgNode.style.transformOrigin = "";
   // Notes indicator badges (the paperclip icon, see item.js's dom.notes)
@@ -58,9 +58,9 @@ export function serializeCurrentMap() {
 }
 
 export default class ImageBackend {
-  async save(format) {
+  async save(format, svgNode) {
     const encoder = new TextEncoder();
-    const { xml, width, height } = serializeCurrentMap();
+    const { xml, width, height } = serializeCurrentMap(svgNode);
     let encoded = encoder.encode(xml);
     let byteString = [...encoded]
       .map((byte) => String.fromCharCode(byte))
@@ -91,9 +91,9 @@ export default class ImageBackend {
       }
     }
   }
-  download(href) {
+  download(href, name) {
     let link = document.createElement("a");
-    link.download = app.currentMap.name;
+    link.download = name;
     link.href = href;
     link.click();
   }
@@ -106,32 +106,36 @@ export default class ImageBackend {
 function injectRootVariables(svgNode) {
   var _a;
   const rootStyle = getComputedStyle(document.documentElement);
-  const varNames = [
-    "--node-shadow",
-    "--node-shadow-hover",
-    "--node-shadow-current",
-    "--node-bg-current",
-    "--node-border-width",
-    "--underline-hover-outline",
-    "--underline-hover-bg",
-    "--toggle-color",
-    "--status-yes-color",
-    "--status-no-color",
-    "--shadow-card",
-    "--color-bg",
-    "--color-pane",
-    "--color-pane-hover",
-    "--color-accent",
-    "--color-text",
-    "--color-hover",
-    "--font-sans",
-    "--font-serif",
-    "--font-mono",
-  ];
-  const declarations = varNames
+  // Font tokens are not color-scheme dependent, so it's safe (and keeps
+  // this in sync automatically) to read their computed values.
+  const fontVarNames = ["--font-sans", "--font-serif", "--font-mono"];
+  const fontDeclarations = fontVarNames
     .map((name) => `${name}: ${rootStyle.getPropertyValue(name).trim()}`)
-    .filter((decl) => !decl.endsWith(": ")) // exclude unset variables
-    .join("; ");
+    .filter((decl) => !decl.endsWith(": ")); // exclude unset variables
+
+  // Color tokens must NOT be read via getComputedStyle(): style.css
+  // defines them with light-dark(...), and getComputedStyle() returns
+  // the value already resolved to whichever branch was active in the
+  // exporting browser at save time. Baking a single resolved color here
+  // would permanently freeze this standalone SVG (served at
+  // /maps/{uuid}/svg, e.g. for catalog thumbnails) to that one scheme,
+  // even after the viewer's own light/dark preference changes.
+  // Duplicated from style.css's :root -- keep these two in sync.
+  // color-scheme must also be declared here: a standalone SVG document
+  // (e.g. rendered via <img>) has no page-level <meta name="color-scheme">
+  // to inherit from, and light-dark() only switches branches once its
+  // containing document declares support for both.
+  const colorDeclarations = [
+    "color-scheme: light dark",
+    "--color-bg: light-dark(#f5ede4, #1c1a17)",
+    "--color-pane: light-dark(#ede0d4, #26221d)",
+    "--color-pane-hover: light-dark(#d9c9bb, #37302a)",
+    "--color-accent: light-dark(#5a4a3a, #c9b79c)",
+    "--color-text: light-dark(#2c2015, #e8dfd2)",
+    "--color-hover: light-dark(rgba(90, 74, 58, 0.3), rgba(201, 183, 156, 0.2))",
+  ];
+
+  const declarations = [...colorDeclarations, ...fontDeclarations].join("; ");
   const rootBlock = `:root { ${declarations} }\n`;
   const style = svgNode.querySelector("style");
   if (style) {

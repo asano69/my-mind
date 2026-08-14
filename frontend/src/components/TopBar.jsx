@@ -39,13 +39,12 @@ export default function TopBar() {
   // title.js's init() for why the old push-based mirror was removed.
   const [editValue, setEditValue] = createSignal("");
 
-  // Undo/Redo button enablement mirrors ContextMenu.jsx's disabled logic
-  // (commandRepo.get(id).isValid), which itself reads history.js's
-  // historyVersion signal — see command/command.js's Undo/Redo commands.
-  // Loaded lazily (dynamic import) like title.js above, since these
-  // touch the engine bundle.
+  // Undo/Redo button enablement reads history.js directly -- it's
+  // item-agnostic (a plain do()/undo() stack), so there's no need to go
+  // through a command repo's isValid getter just to ask "is there
+  // anything to undo/redo". Loaded lazily (dynamic import) like
+  // title.js above, since it touches the engine bundle.
   let historyModule;
-  let commandRepoRef;
   const [historyReady, setHistoryReady] = createSignal(false);
 
   // Whether the title shows as plain text (click to edit) or as an
@@ -102,10 +101,7 @@ export default function TopBar() {
 
   onMount(async () => {
     titleModule = await import("../lib/mindmap/title.js");
-    [historyModule, { repo: commandRepoRef }] = await Promise.all([
-      import("../lib/mindmap/history.js"),
-      import("../lib/mindmap/command/command.js"),
-    ]);
+    historyModule = await import("../lib/mindmap/history.js");
     setHistoryReady(true);
   });
 
@@ -114,14 +110,14 @@ export default function TopBar() {
       return false;
     }
     historyModule.historyVersion();
-    return commandRepoRef.get("undo").isValid;
+    return historyModule.canBack();
   });
   const canRedo = createMemo(() => {
     if (!historyReady()) {
       return false;
     }
     historyModule.historyVersion();
-    return commandRepoRef.get("redo").isValid;
+    return historyModule.canForward();
   });
 
   const [confirmDeleteOpen, setConfirmDeleteOpen] = createSignal(false);
@@ -136,13 +132,13 @@ export default function TopBar() {
     navigate("/catalog");
   }
 
-  // Runs a command directly instead of relying on ui/ui.js's data-command
-  // click delegation, since TopBar moves out of MindMapCanvas.jsx's
-  // container and must keep working while Notes mode is active (see
-  // CLAUDE.md, Workspace shared-chrome refactor).
+  // Runs a command directly against the shared command repo, since
+  // TopBar lives outside the canvas container and must keep working
+  // while Notes mode is active (see CLAUDE.md, Workspace shared-chrome
+  // refactor).
   async function runCommand(name) {
-    const { execute } = await import("../lib/mindmap/command/command.js");
-    execute(name);
+    const { repo } = await import("../lib/mindmap/newContextMenuCommands.js");
+    repo.get(name).execute();
   }
 
   return (

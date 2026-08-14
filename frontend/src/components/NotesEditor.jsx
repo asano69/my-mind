@@ -3,11 +3,11 @@ import "easymde/dist/easymde.min.css";
 import "./NotesEditor.css";
 import {
   activeMode,
-  currentItem,
   hoveredItem,
   currentMapId,
   bumpNotesHistoryVersion,
 } from "../lib/mindmap/store";
+import { currentItem } from "../lib/mindmap/itemSelection";
 import {
   createEffect,
   createMemo,

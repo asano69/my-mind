@@ -1,4 +1,4 @@
-module github.com/asano69/my-mind
+module github.com/asano69/solid-mind
 
 go 1.25.9
 

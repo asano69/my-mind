@@ -1,27 +1,12 @@
 import { createSignal } from "solid-js";
 
-// Mirrors my-mind.js's `currentItem` module state as a Solid signal, so
-// Solid components (see RightPanel.jsx) can react to selection changes
-// without going through pubsub. Written by my-mind.js's selectItem() and
-// unmount(); treat as read-only everywhere else.
-export const [currentItem, setCurrentItem] = createSignal(null);
-
 // The mindmap item currently under the mouse cursor while the canvas is
 // the active workspace mode, or null/undefined when the cursor isn't over
 // any item (or the canvas is backgrounded). Written by mouse.js's hover
 // tracking; read by NotesEditor.jsx to decide which item's notes to
-// preview in the background (falls back to currentItem when nothing is
-// hovered).
+// preview in the background (falls back to the selected item, see
+// itemSelection.js's currentItem, when nothing is hovered).
 export const [hoveredItem, setHoveredItem] = createSignal(null);
-
-// Mirrors my-mind.js's `editing` module state as a Solid signal, the same
-// way currentItem is mirrored above. Written by my-mind.js's
-// startEditing()/stopEditing()/unmount(); lets command/command.js's
-// Command.isValid react to edit-mode changes (e.g. so ContextMenu.jsx's
-// disabled state stays correct while the menu is open), instead of
-// reading the plain `app.editing` field once at render time and never
-// again.
-export const [editing, setEditing] = createSignal(false);
 
 // The map's title (PocketBase's "title" field), owned by ui/io.js. Replaces
 // the old "title-change" pubsub message (see CLAUDE.md, Solid migration
@@ -129,6 +114,18 @@ export const [currentMapId, setCurrentMapId] = createSignal(null);
 // thumbnail route, see RightPanel.jsx's "copy markdown link" button)
 // without importing ui/io.js's private currentMapUuid variable.
 export const [currentMapUuid, setCurrentMapUuid] = createSignal(null);
+
+// The root ItemNode currently overriding the loaded map's root, set by
+// ui/io.js's restoreSnapshot() when the user restores a past snapshot
+// (see SnapshotsList.jsx) and read by NewMindMapPreview.jsx's
+// effectiveRoot(). This used to be a registerRootLoader()/rootLoader
+// callback bridge -- io.js pushing into a Solid component's own local
+// signal via a registered function -- but the pushed value here is
+// ordinary reactive data, not a DOM node Solid doesn't render (unlike
+// ui/notes.js's registerEditorAPI, which genuinely needs the bridge
+// because EasyMDE owns its own textarea). A plain shared signal removes
+// the indirection entirely.
+export const [overrideRoot, setOverrideRoot] = createSignal(null);
 
 // Bumped when the user wants to force the mind-map canvas to remount --
 // a lightweight equivalent of a full page reload, without leaving the

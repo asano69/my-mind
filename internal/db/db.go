@@ -4,8 +4,8 @@
 package db
 
 import (
-	"github.com/asano69/my-mind/internal/errs"
-	_ "github.com/asano69/my-mind/migrations"
+	"github.com/asano69/solid-mind/internal/errs"
+	_ "github.com/asano69/solid-mind/migrations"
 
 	"github.com/pocketbase/pocketbase"
 
@@ -20,7 +20,7 @@ type Database struct{ app *pocketbase.PocketBase }
 // PocketBase always needs a directory on disk, so this is my-mind'
 // equivalent of SQLite's ":memory:" mode.
 func OpenScratch() (*Database, error) {
-	dir, err := os.MkdirTemp("", "my-mind-pocketbase-*")
+	dir, err := os.MkdirTemp("", "solid-mind-pocketbase-*")
 	if err != nil {
 		return nil, errs.Newf("create temporary PocketBase data directory: %v", err)
 	}
@@ -33,8 +33,8 @@ func OpenScratch() (*Database, error) {
 
 // New wraps an already-bootstrapped PocketBase app and ensures the
 // my-mind schema exists in it. app is expected to be the single instance
-// shared by the whole CLI (see cmd/my-mind/main.go); its data directory is
-// controlled by PocketBase's standard "--dir" flag, not by my-mind itself.
+// shared by the whole CLI (see cmd/solid-mind/main.go); its data directory is
+// controlled by PocketBase's standard "--dir" flag, not by solid-mind itself.
 func New(app *pocketbase.PocketBase) (*Database, error) {
 	return newDatabase(app)
 }

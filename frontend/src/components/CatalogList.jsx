@@ -50,7 +50,7 @@ export default function CatalogList() {
                   border-pane-hover bg-pane text-left shadow-card
                   transition hover:bg-pane-hover"
               >
-                <div class="relative flex h-20 items-center justify-center overflow-hidden bg-white/50">
+                <div class="relative flex h-20 items-center justify-center overflow-hidden bg-bg">
                   {/* Server-rendered image (see backend/pocketbase.js's
                       listMaps() comment) instead of innerHTML, so this
                       SVG's embedded <style> can't leak into the page.

@@ -1,14 +1,14 @@
 services:
-  my-mind:
+  solid-mind:
     build: .
-    container_name: my-mind
+    container_name: solid-mind
     #ports:
     #  - "3001:3000"
     expose:
       - 3000
     volumes:
       #- data:/app/maps
-      - ./data:/my-mind/data
+      - ./data:/solid-mind/data
     restart: unless-stopped
     environment:
       TZ: Europe/London
@@ -16,7 +16,7 @@ services:
       - traefik_net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.my-mind.rule=Host(`my-mind.app.internal`)"
+      - "traefik.http.routers.solid-mind.rule=Host(`solid-mind.app.internal`)"
 
 networks:
   traefik_net:

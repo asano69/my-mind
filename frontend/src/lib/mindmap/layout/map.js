@@ -1,19 +1,19 @@
 // src/layout/map.ts
-import GraphLayout, { SPACING_RANK } from "./graph.js";
+import GraphLayout, { computeGraphLayout, SPACING_RANK } from "./graph.js";
 import { repo } from "./layout.js";
-import * as svg from "../svg.js";
+export function computeMapLayout(layout, item) {
+  if (item.isRoot) {
+    return layout.layoutRoot(item);
+  }
+  const side = layout.getChildDirection(item);
+  const graphLayout = repo.get(`graph-${side}`);
+  return computeGraphLayout(graphLayout, item, side);
+}
+
 export default class MapLayout extends GraphLayout {
   constructor() {
     super(...arguments);
     this.LINE_THICKNESS = 8;
-  }
-  update(item) {
-    if (item.isRoot) {
-      this.layoutRoot(item);
-    } else {
-      var side = this.getChildDirection(item);
-      repo.get(`graph-${side}`).update(item);
-    }
   }
   getChildDirection(child) {
     while (child.parent && !child.parent.isRoot) {
@@ -91,14 +91,20 @@ export default class MapLayout extends GraphLayout {
     left += bboxRight[0];
     contentPosition[1] = Math.round((height - contentSize[1]) / 2);
     item.contentPosition = contentPosition;
-    this.drawRootConnectors(item, "left", childrenLeft);
-    this.drawRootConnectors(item, "right", childrenRight);
+    return {
+      connectorPaths: [
+        ...this.computeRootConnectors(item, "left", childrenLeft),
+        ...this.computeRootConnectors(item, "right", childrenRight),
+      ],
+      height,
+      width: left,
+    };
   }
-  drawRootConnectors(item, direction, children) {
+  computeRootConnectors(item, direction, children) {
     if (children.length == 0 || item.collapsed) {
-      return;
+      return [];
     }
-    const { contentSize, contentPosition, resolvedShape, dom } = item;
+    const { contentSize, contentPosition, resolvedShape } = item;
     let x1 = contentPosition[0] + contentSize[0] / 2;
     let y1 = resolvedShape.getVerticalAnchor(item);
     const half = this.LINE_THICKNESS / 2;
@@ -115,15 +121,13 @@ export default class MapLayout extends GraphLayout {
         `Q ${(x2 + x1) / 2} ${y2} ${x1 + dx} ${y1 + dy}`,
         `Z`,
       ];
-      let attrs = {
+      return {
         d: d.join(" "),
         fill: resolvedColor,
         stroke: resolvedColor,
-        "stroke-width": "2",
       };
-      return svg.node("path", attrs);
     });
-    dom.connectors.append(...paths);
+    return paths;
   }
 }
 new MapLayout("map", "Map");

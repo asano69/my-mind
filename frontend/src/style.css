@@ -10,6 +10,16 @@
    style.css.
    ------------------------------------------------------------- */
 :root {
+  /* Opts this document into the browser's built-in light/dark form
+     controls, scrollbars, etc., and enables the light-dark() function
+     used by every color token below. index.html's
+     `<meta name="color-scheme">` sets the same thing for the initial
+     paint; declaring it here too keeps the CSS self-contained and gives
+     a single place to override later (e.g. a manual toggle could add
+     `:root[data-theme="dark"] { color-scheme: dark; }` without touching
+     any token value below). */
+  color-scheme: light dark;
+
   /* Sans: readable and neutral for node labels */
   --font-sans: sans-serif;
   /* Serif: literary — for notes/descriptions if used */
@@ -18,17 +28,27 @@
   /* Mono: unchanged */
   --font-mono: "Consolas", "Courier New", monospace;
 
-  /* Palette — warm parchment family */
-  --color-bg: #f5ede4; /* page / canvas background   */
-  --color-pane: #ede0d4; /* panel / surface background */
-  --color-pane-hover: #d9c9bb; /* hovered item inside panel  */
-  --color-accent: #5a4a3a; /* primary interactive/active */
-  --color-text: #2c2015; /* body text                  */
-  --color-brand: #5563a2; /* app brand color, e.g. Logo.jsx's icon fill */
+  /* Palette — warm parchment (light) / warm charcoal (dark).
+     Every color token is light-dark(light, dark) so the rest of the
+     app never branches on theme itself -- it just reads var(--color-x). */
+  --color-bg: light-dark(#f5ede4, #1c1a17); /* page / canvas background   */
+  --color-pane: light-dark(#ede0d4, #26221d); /* panel / surface background */
+  --color-pane-hover: light-dark(
+    #d9c9bb,
+    #37302a
+  ); /* hovered item inside panel  */
+  --color-accent: light-dark(#5a4a3a, #c9b79c); /* primary interactive/active */
+  --color-text: light-dark(#2c2015, #e8dfd2); /* body text                  */
+  --color-brand: light-dark(
+    #5563a2,
+    #8b98d9
+  ); /* app brand color, e.g. Logo.jsx's icon fill */
   /* Shadows */
-  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.18), 0 1px 4px rgba(0, 0, 0, 0.1);
+  --shadow-card:
+    0 4px 12px light-dark(rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.55)),
+    0 1px 4px light-dark(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.35));
   /* soft hover highlight, shared across pages */
-  --color-hover: rgba(90, 74, 58, 0.3);
+  --color-hover: light-dark(rgba(90, 74, 58, 0.3), rgba(201, 183, 156, 0.2));
 
   /* Layout */
   --ribbon-width: 45px; /* collapsed width of #left-panel; matches IconButton.jsx's own rendered size (1rem padding + 28px icon) */
@@ -36,10 +56,16 @@
   --right-panel-width: 200px; /* expanded width of the right side panel */
 
   /* Note-preview watermark, see NotesEditor.css */
-  --color-preview-ink: rgba(45, 30, 15, 0.95);
+  --color-preview-ink: light-dark(
+    rgba(45, 30, 15, 0.95),
+    rgba(232, 223, 210, 0.9)
+  );
 
   /* #context-menu's separator line, see ContextMenu.jsx */
-  --color-border-menu: rgba(0, 0, 0, 0.12);
+  --color-border-menu: light-dark(
+    rgba(0, 0, 0, 0.12),
+    rgba(255, 255, 255, 0.15)
+  );
 }
 
 /* -------------------------------------------------------------
