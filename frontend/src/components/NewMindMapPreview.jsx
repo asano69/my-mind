@@ -436,24 +436,15 @@ export function togglePositionFor(connectorPaths) {
 // commitEditing() also needs it (Phase 4.5).
 export { measureContentSize };
 
+// Creates a fresh, empty map: just a root node labeled with `title`
+// (today's date, see Workspace.jsx's uuid-less case). No demo children --
+// those were only ever meant for local development and were leaking into
+// every real new map.
 export function createPreviewRoot(title) {
   const root = new ItemNode();
   root.text = title;
   root.layout = layoutRepo.get("map");
   root.shape = shapeRepo.get("ellipse");
-  root.color = "#f6d365";
-
-  const left = new ItemNode();
-  left.text = "Left branch";
-  left.side = "left";
-  const right = new ItemNode();
-  right.text = "Right branch";
-  right.side = "right";
-  const detail = new ItemNode();
-  detail.text = "Nested detail";
-  right.insertChild(detail);
-  root.insertChild(left);
-  root.insertChild(right);
   return root;
 }
 
