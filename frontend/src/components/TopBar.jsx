@@ -6,6 +6,7 @@ import {
   leftPanelHidden,
   currentTitle,
 } from "../lib/mindmap/store";
+import { useScopeWhen } from "../lib/mindmap/core/scope.js";
 
 // icons
 import Trash2 from "lucide-solid/icons/trash-2";
@@ -52,6 +53,10 @@ export default function TopBar() {
   // elsewhere in the app, instead of always rendering a styled-like-an-
   // input field.
   const [isEditingTitle, setIsEditingTitle] = createSignal(false);
+  // See ConfirmDialog.jsx's own comment on why this is needed --
+  // without it, pasting into this title input could be hijacked by
+  // newClipboard.js's document-level paste handler.
+  useScopeWhen(isEditingTitle, "title-edit");
   let titleInputRef;
   let titleBeforeEdit = "";
 
