@@ -6,14 +6,22 @@
 // app.currentItem -- calling the old command repo against a
 // currentItem the new engine never sets is what caused
 // edit/insert-child/insert-sibling/delete to throw.
-import { currentItem, editing, setEditing } from "./core/itemSelection.js";
-import { startEditing } from "./core/newEdit.js";
+import {
+  currentItem,
+  editing,
+  setEditing,
+  selectedItems,
+} from "./core/itemSelection.js";
+import { startEditing, commitEditing } from "./core/newEdit.js";
 import {
   action,
   InsertNewItem,
   RemoveItem,
   Swap,
   SetSide,
+  SetText,
+  SetStatus,
+  Multi,
 } from "./core/newAction.js";
 import * as history from "./core/history.js";
 import {
@@ -116,6 +124,95 @@ function insertAndEdit(insertAction) {
   }
 }
 
+// All currently selected items (currentItem plus any multi-selection),
+// mirroring my-mind.js's getAllSelected() / newMouse.js's own copy of
+// the same helper -- itemSelection.js exposes the underlying signals
+// but no combined getter of its own.
+function getAllSelectedItems() {
+  const all = [currentItem()];
+  selectedItems().forEach((item) => all.push(item));
+  return all.filter(Boolean);
+}
+
+// Toggles a style tag ("bold" -> <b>, etc.) across an HTML string,
+// ported unchanged from the old engine's command/edit.js. Accepts
+// multiple browser-variant tag aliases (e.g. strikeThrough -> <s> or
+// <strike>) -- if ANY alias appears anywhere in the HTML, every
+// occurrence of every alias is stripped; otherwise the whole string is
+// wrapped in the canonical (primary) tag.
+const STYLE_TAGS = {
+  bold: ["b", "strong"],
+  italic: ["i", "em"],
+  underline: ["u"],
+  strikeThrough: ["s", "strike"],
+};
+const STYLE_TAG_PRIMARY = {
+  bold: "b",
+  italic: "i",
+  underline: "u",
+  strikeThrough: "s",
+};
+
+function toggleStyleTag(html, tags, primaryTag) {
+  const tagPattern = tags.join("|");
+  const anyTagRe = new RegExp(`</?(?:${tagPattern})>`, "gi");
+  const stripped = html.replace(anyTagRe, "");
+  if (stripped !== html) {
+    return stripped;
+  }
+  return `<${primaryTag}>${html}</${primaryTag}>`;
+}
+
+function applyStyleToItem(item, command) {
+  const newText = toggleStyleTag(
+    item.text,
+    STYLE_TAGS[command],
+    STYLE_TAG_PRIMARY[command],
+  );
+  return new SetText(item, newText);
+}
+
+// Runs a Bold/Italic/Underline/Strikethrough command, mirroring the old
+// engine's command/edit.js Style class:
+// - while actively editing a node's text, format the current cursor
+//   selection via execCommand (cursor-aware; also reachable while
+//   editing through newKeyboard.js's own mode:"editing" fast path);
+// - with several items multi-selected, toggle the style across every
+//   selected item's whole text as a single undo step;
+// - with a single item selected but not currently editing, select its
+//   entire text, run execCommand, then commit -- so the whole node's
+//   content gets styled without the user having to enter edit mode
+//   first.
+function runStyleCommand(command) {
+  if (editing()) {
+    document.execCommand(command, false);
+    return;
+  }
+  const selected = getAllSelectedItems();
+  if (selected.length > 1) {
+    const subactions = selected.map((item) => applyStyleToItem(item, command));
+    action(new Multi(subactions));
+    return;
+  }
+  const item = currentItem();
+  if (!item) {
+    return;
+  }
+  const textEl = startEditing(item);
+  if (!textEl) {
+    return;
+  }
+  setEditing(true);
+  const selection = getSelection();
+  const range = document.createRange();
+  range.selectNodeContents(textEl);
+  selection.removeAllRanges();
+  selection.addRange(range);
+  document.execCommand(command, false);
+  commitEditing(item);
+  setEditing(false);
+}
+
 export const repo = new Map([
   [
     "notes",
@@ -197,11 +294,114 @@ export const repo = new Map([
     },
   ],
   [
+    "bold",
+    {
+      label: "Bold",
+      get isValid() {
+        return !!currentItem();
+      },
+      keys: [{ code: "KeyB", ctrlKey: true, shiftKey: false }],
+      execute: () => runStyleCommand("bold"),
+    },
+  ],
+  [
+    "italic",
+    {
+      label: "Italic",
+      get isValid() {
+        return !!currentItem();
+      },
+      keys: [{ code: "KeyI", ctrlKey: true, shiftKey: false }],
+      execute: () => runStyleCommand("italic"),
+    },
+  ],
+  [
+    "underline",
+    {
+      label: "Underline",
+      get isValid() {
+        return !!currentItem();
+      },
+      keys: [{ code: "KeyU", ctrlKey: true, shiftKey: false }],
+      execute: () => runStyleCommand("underline"),
+    },
+  ],
+  [
+    "strikethrough",
+    {
+      label: "Strike-through",
+      get isValid() {
+        return !!currentItem();
+      },
+      keys: [{ code: "KeyS", ctrlKey: true, shiftKey: false }],
+      execute: () => runStyleCommand("strikeThrough"),
+    },
+  ],
+  [
     "value",
     {
       label: "Set value",
       isValid: true,
+      keys: [{ key: "v", ctrlKey: false, metaKey: false }],
       execute: () => openValueDialog(),
+    },
+  ],
+  [
+    "yes",
+    {
+      label: "Yes",
+      get isValid() {
+        return !editing() && !!currentItem();
+      },
+      keys: [{ key: "y", ctrlKey: false }],
+      execute() {
+        const current = currentItem();
+        if (!current) return;
+        const newStatus = current.status === true ? null : true;
+        const subactions = getAllSelectedItems().map(
+          (item) => new SetStatus(item, newStatus),
+        );
+        action(
+          subactions.length === 1 ? subactions[0] : new Multi(subactions),
+        );
+      },
+    },
+  ],
+  [
+    "no",
+    {
+      label: "No",
+      get isValid() {
+        return !editing() && !!currentItem();
+      },
+      keys: [{ key: "n", ctrlKey: false }],
+      execute() {
+        const current = currentItem();
+        if (!current) return;
+        const newStatus = current.status === false ? null : false;
+        const subactions = getAllSelectedItems().map(
+          (item) => new SetStatus(item, newStatus),
+        );
+        action(
+          subactions.length === 1 ? subactions[0] : new Multi(subactions),
+        );
+      },
+    },
+  ],
+  [
+    "computed",
+    {
+      label: "Computed",
+      get isValid() {
+        return !editing() && !!currentItem();
+      },
+      keys: [{ key: "c", ctrlKey: false, metaKey: false }],
+      execute() {
+        const item = currentItem();
+        if (!item) return;
+        const status = item.status == "computed" ? null : "computed";
+        action(new SetStatus(item, status));
+      },
     },
   ],
   [

@@ -5,8 +5,7 @@ import { getVersion } from "../lib/mindmap/backend/pocketbase";
 // each row. commandRepo is only resolved at mount time (see onMount below),
 // but this layout itself never changes, so it lives outside the component.
 // select/select-root/select-parent (arrow-key/Home/Backspace movement)
-// and the Style commands (bold/italic/underline/strikethrough/newline)
-// and yes/no/computed status shortcuts have keybindings in
+// and the Newline command (Shift+Enter/Ctrl+Enter) have keybindings in
 // newKeyboard.js but aren't exposed as labeled, keyed entries in a
 // shared command repo the way the rest of these are -- left out of this
 // table rather than fabricated, until they're given real repo entries.
@@ -18,8 +17,8 @@ const SECTIONS = [
   {
     title: "Manipulation",
     rows: [
-      ["insert-sibling"],
       ["insert-child"],
+      ["insert-sibling"],
       ["swap"],
       ["side"],
       ["delete"],
@@ -27,7 +26,12 @@ const SECTIONS = [
   },
   {
     title: "Editing",
-    rows: [["value"], ["edit"]],
+    rows: [
+      ["value"],
+      ["edit"],
+      ["bold", "italic", "underline", "strikethrough"],
+      ["yes", "no", "computed"],
+    ],
   },
   {
     title: "Other",

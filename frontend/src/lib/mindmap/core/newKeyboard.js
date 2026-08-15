@@ -182,6 +182,51 @@ commands.push(
   },
 );
 
+// Style/format shortcuts (Bold/Italic/Underline/Strikethrough) must
+// keep working while actively editing a node's text -- unlike every
+// other sharedCommandRepo entry (see handleEvent() below), which is
+// only consulted while NOT editing. Dispatching to the shared repo's
+// own command keeps the actual formatting logic (see
+// newContextMenuCommands.js's runStyleCommand()) in one place instead
+// of duplicating it here.
+commands.push(
+  {
+    mode: "editing",
+    keys: [{ code: "KeyB", ctrlKey: true, shiftKey: false }],
+    execute: () => sharedCommandRepo.get("bold")?.execute(),
+  },
+  {
+    mode: "editing",
+    keys: [{ code: "KeyI", ctrlKey: true, shiftKey: false }],
+    execute: () => sharedCommandRepo.get("italic")?.execute(),
+  },
+  {
+    mode: "editing",
+    keys: [{ code: "KeyU", ctrlKey: true, shiftKey: false }],
+    execute: () => sharedCommandRepo.get("underline")?.execute(),
+  },
+  {
+    mode: "editing",
+    keys: [{ code: "KeyS", ctrlKey: true, shiftKey: false }],
+    execute: () => sharedCommandRepo.get("strikethrough")?.execute(),
+  },
+  {
+    mode: "editing",
+    keys: [
+      { code: "Enter", shiftKey: true },
+      { code: "Enter", ctrlKey: true },
+    ],
+    execute() {
+      // Inserts a line break at the cursor without finishing the edit,
+      // mirroring the old engine's command/edit.js Newline command.
+      const range = getSelection().getRangeAt(0);
+      const br = document.createElement("br");
+      range.insertNode(br);
+      range.setStartAfter(br);
+    },
+  },
+);
+
 // Insert a sibling / child and immediately start editing it, mirroring
 // command/command.js's InsertSibling/InsertChild followed by the "edit"
 // command. The new item is inserted via insertAction.do() directly (not
