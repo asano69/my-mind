@@ -93,7 +93,26 @@ const FORM_FIELD_TAGS = new Set(["INPUT", "TEXTAREA", "SELECT"]);
 let popFormFieldScope = null;
 
 function handleFormFieldFocusIn(e) {
-  if (FORM_FIELD_TAGS.has(e.target?.tagName) && !popFormFieldScope) {
+  const isFormField = FORM_FIELD_TAGS.has(e.target?.tagName);
+  // Self-heal against a missed focusout: if code calls another
+  // element's .focus() synchronously from inside a form field's own
+  // "blur" handler (e.g. TopBar.jsx's commitTitle -> returnFocusToCanvas),
+  // the browser can skip dispatching "focusout" for that field entirely
+  // -- observed directly via a focus/blur event trace: "blur" fires on
+  // the field, but the expected "focusout" never does, followed
+  // immediately by "focus"/"focusin" on the new target. Without this,
+  // handleFormFieldFocusOut() (below) never runs, "form-field" stays
+  // pushed forever, and isCanvasActive() (and thus every canvas
+  // shortcut) is permanently false until a full reload resets this
+  // module's state. Whatever just gained focus and *isn't itself* a
+  // form field is sufficient proof the old field lost it, regardless of
+  // whether its own focusout fired -- so pop the stale scope here too,
+  // not only in handleFormFieldFocusOut.
+  if (!isFormField && popFormFieldScope) {
+    popFormFieldScope();
+    popFormFieldScope = null;
+  }
+  if (isFormField && !popFormFieldScope) {
     popFormFieldScope = pushScope("form-field");
   }
 }

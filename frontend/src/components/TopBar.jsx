@@ -84,7 +84,19 @@ export default function TopBar() {
     document.getElementById("mindmap-container")?.focus();
   }
 
+// Guarded against re-entrancy: without this, cancelEditingTitle()
+  // below could call this a second time from inside the title
+  // <input>'s own onBlur, while the first call is still unwinding.
+  // Calling container.focus() synchronously here (from inside the
+  // input's own blur handler) is safe: scope.js's handleFormFieldFocusIn
+  // self-heals the "form-field" scope the moment focus lands on a
+  // non-field element, even if this transition causes the browser to
+  // skip dispatching "focusout" on the input (see scope.js's own
+  // comment for how that was diagnosed).
   function commitTitle() {
+    if (!isEditingTitle()) {
+      return;
+    }
     setIsEditingTitle(false);
     titleModule?.rename(editValue());
     returnFocusToCanvas();
@@ -93,10 +105,10 @@ export default function TopBar() {
   function cancelEditingTitle() {
     setEditValue(titleBeforeEdit);
     setIsEditingTitle(false);
+    titleInputRef?.blur();
     returnFocusToCanvas();
   }
-
-  function handleTitleKeyDown(e) {
+   function handleTitleKeyDown(e) {
     if (e.key === "Enter") {
       e.currentTarget.blur(); // triggers commitTitle via onBlur
     } else if (e.key === "Escape") {
