@@ -7,7 +7,7 @@ import {
   currentMapId,
   bumpNotesHistoryVersion,
 } from "../lib/mindmap/store";
-import { currentItem } from "../lib/mindmap/itemSelection";
+import { currentItem } from "../lib/mindmap/core/itemSelection";
 import {
   createEffect,
   createMemo,

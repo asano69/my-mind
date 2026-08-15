@@ -1,11 +1,20 @@
 import { Show } from "solid-js";
 import { Dialog } from "@kobalte/core/dialog";
+import { useScopeWhen } from "../lib/mindmap/core/scope.js";
 
 // Reusable destructive-action confirmation dialog, replacing the
 // browser-native confirm() popup (see TopBar.jsx/Catalog.jsx's delete
 // buttons). Fully controlled: the caller owns `open` and decides what
 // happens on confirm/cancel, mirroring SelectField.jsx's use of Kobalte.
 export default function ConfirmDialog(props) {
+  // Pushes a "dialog" scope while open, so canvas-level clipboard
+  // handling (newClipboard.js listens on document's capture phase and
+  // can't tell from DOM focus alone whether a dialog is open -- see
+  // core/scope.js's own comment) never hijacks a cut/copy/paste meant
+  // for this dialog. Covers every caller of ConfirmDialog, including
+  // LeaveConfirmDialog.jsx.
+  useScopeWhen(() => props.open, "dialog");
+
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <Dialog.Portal>

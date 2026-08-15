@@ -28,6 +28,14 @@ import { isCanvasActive } from "./scope.js";
 import { currentItem, selectedItems, editing } from "./itemSelection.js";
 import { action, MoveItem, AppendItem, Multi } from "./newAction.js";
 import { repo as formatRepo } from "./format/format.js";
+// Side-effect import: registers the "plaintext" format into
+// format.js's repo (see format/plaintext.js's `new Plaintext()` call at
+// the bottom of that file). Nothing else in the new engine imports
+// plaintext.js -- the old engine's my-mind.js used to be the thing that
+// pulled it in as a side effect -- so without this import,
+// formatRepo.get("plaintext") below is undefined and every cut/copy/
+// paste throws a TypeError.
+import "./format/plaintext.js";
 
 let storedItems = [];
 let mode = "";

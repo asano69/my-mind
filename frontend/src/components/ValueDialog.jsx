@@ -1,7 +1,8 @@
 import { createEffect, createSignal, Show } from "solid-js";
 import { Dialog } from "@kobalte/core/dialog";
 import { valueDialogOpen, closeValueDialog } from "../lib/mindmap/store";
-import { currentItem } from "../lib/mindmap/itemSelection";
+import { currentItem } from "../lib/mindmap/core/itemSelection";
+import { useScopeWhen } from "../lib/mindmap/core/scope.js";
 
 // Replaces command/edit.js's old prompt()-based "Set value" flow with a
 // Kobalte dialog, mirroring ConfirmDialog.jsx's structure. Always
@@ -20,6 +21,9 @@ function isInvalidInput(text) {
 export default function ValueDialog() {
   let inputRef;
   const [value, setValue] = createSignal("");
+
+  // See ConfirmDialog.jsx's own comment on why this is needed.
+  useScopeWhen(valueDialogOpen, "dialog");
 
   // Dynamically imported on first confirm, like RightPanelProperties.jsx
   // does for the same modules -- avoids pulling the engine bundle in
@@ -56,7 +60,7 @@ export default function ValueDialog() {
       return;
     }
     if (!dispatchAction) {
-      const mod = await import("../lib/mindmap/newAction.js");
+      const mod = await import("../lib/mindmap/core/newAction.js");
       SetValueClass = mod.SetValue;
       dispatchAction = mod.action;
     }

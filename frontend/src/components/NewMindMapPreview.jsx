@@ -6,21 +6,22 @@ import {
   onCleanup,
   onMount,
 } from "solid-js";
-import ItemNode, { measureContentSize } from "../lib/mindmap/itemStore.js";
+import ItemNode, { measureContentSize } from "../lib/mindmap/core/itemStore.js";
 import Spinner from "./Spinner.jsx";
+import Paperclip from "lucide-solid/icons/paperclip";
 import {
   itemStateClassList,
   selectItem,
-} from "../lib/mindmap/itemSelection.js";
+} from "../lib/mindmap/core/itemSelection.js";
 import {
   handleItemClick,
   handleItemDblClick,
   handleItemLinkClick,
-} from "../lib/mindmap/newMouse.js";
-import { registerDomRefs } from "../lib/mindmap/newEdit.js";
-import * as newMouse from "../lib/mindmap/newMouse.js";
-import * as newClipboard from "../lib/mindmap/newClipboard.js";
-import * as newViewport from "../lib/mindmap/newViewport.js";
+} from "../lib/mindmap/core/newMouse.js";
+import { registerDomRefs } from "../lib/mindmap/core/newEdit.js";
+import * as newMouse from "../lib/mindmap/core/newMouse.js";
+import * as newClipboard from "../lib/mindmap/core/newClipboard.js";
+import * as newViewport from "../lib/mindmap/core/newViewport.js";
 import * as io from "../lib/mindmap/ui/io.js";
 import {
   bumpDirty,
@@ -33,21 +34,21 @@ import {
   TOGGLE_SIZE,
   D_MINUS,
   D_PLUS,
-} from "../lib/mindmap/layout/constants.js";
-import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
-import { repo as shapeRepo } from "../lib/mindmap/shape/shape.js";
+} from "../lib/mindmap/core/layout/constants.js";
+import { repo as layoutRepo } from "../lib/mindmap/core/layout/layout.js";
+import { repo as shapeRepo } from "../lib/mindmap/core/shape/shape.js";
 import { loadByUuid } from "../lib/mindmap/backend/pocketbase.js";
-import "../lib/mindmap/layout/map.js";
+import "../lib/mindmap/core/layout/map.js";
 // Named imports also run each module's own registration side effect
 // (new Box()/new Ellipse()/new Underline()), so the old blank
-// import "../lib/mindmap/shape/box.js" style imports are no longer
+// import "../lib/mindmap/core/shape/box.js" style imports are no longer
 // needed alongside these (see docs/08-mindmap-engine-refactor.md's
 // Phase 3.7: this preview now shares the same pure style/path
 // functions the real engine's shape/*.js update() methods use, instead
 // of duplicating that branching here).
-import { computeBoxStyle } from "../lib/mindmap/shape/box.js";
-import { computeEllipseStyle } from "../lib/mindmap/shape/ellipse.js";
-import { computeUnderlinePath } from "../lib/mindmap/shape/underline.js";
+import { computeBoxStyle } from "../lib/mindmap/core/shape/box.js";
+import { computeEllipseStyle } from "../lib/mindmap/core/shape/ellipse.js";
+import { computeUnderlinePath } from "../lib/mindmap/core/shape/underline.js";
 import mapCss from "../lib/mindmap/map.css?raw";
 
 // Phase 3.5 (see docs/08-mindmap-engine-refactor.md): layout computation
@@ -347,29 +348,26 @@ function ItemNodeView(props) {
             style={textStyleFor(props.item)}
             innerHTML={props.item.text}
           />
-          {/* Link icon: same lucide "link-2" path as item.js's
-              buildLinkIcon(), rendered as a plain JSX element instead of
-              an imperatively built SVG node -- see newMouse.js's
-              handleItemLinkClick for the click behavior it shares with
-              the old engine. Reuses map.css's ".item .link-icon" rule
-              (already injected via <style>{mapCss}</style> above), so no
-              new CSS is needed here. */}
+          {/* Link indicator: a plain emoji instead of a custom SVG
+              glyph, appended as its own sibling span (same placement as
+              .value/.status/.icon above) rather than embedded in the
+              text itself. See newMouse.js's handleItemLinkClick for the
+              click behavior it shares with the old engine. */}
           <Show when={props.item.url}>
             <span
               class="link-icon"
               onClick={() => handleItemLinkClick(props.item)}
             >
-              <svg viewBox="0 0 36 36" fill="none">
-                <path
-                  d="M34,17H28.23A6.25,6.25,0,0,0,22,12H14.15a6.25,6.25,0,0,0-6.21,5H2v2H7.93a6.22,6.22,0,0,0,6.22,5H22a6.22,6.22,0,0,0,6.22-5H34ZM17.08,22H14.15a4.17,4.17,0,0,1-4.31-4,4.17,4.17,0,0,1,4.31-4h2.94ZM22,22H19V14h3a4.17,4.17,0,0,1,4.31,4A4.17,4.17,0,0,1,22,22Z"
-                  fill="currentColor"
-                />
-              </svg>
+              🔗
             </span>
           </Show>
           <Show when={hasNotes(props.item)}>
             <div class="notes" aria-label="Has notes">
-              📎
+              {/* style.css's global `svg { position: absolute }` rule
+                  (see Logo.jsx/CatalogList.jsx's Pin icon for the same
+                  fix) would otherwise pull this icon out of the
+                  ".notes" flex container's normal flow. */}
+              <Paperclip style={{ position: "static" }} />
             </div>
           </Show>
         </div>

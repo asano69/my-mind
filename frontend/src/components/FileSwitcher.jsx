@@ -10,6 +10,7 @@ import { useNavigate } from "@solidjs/router";
 import { Dialog } from "@kobalte/core/dialog";
 import { fileSwitcherOpen, closeFileSwitcher } from "../lib/mindmap/store";
 import { listMaps } from "../lib/mindmap/backend/pocketbase";
+import { useScopeWhen } from "../lib/mindmap/core/scope.js";
 import Search from "./Search";
 import Pin from "lucide-solid/icons/pin";
 
@@ -135,6 +136,12 @@ function FileSwitcherPanel(props) {
 // focusable descendant on open, so the search input gets focus without
 // any extra wiring here.
 export default function FileSwitcher() {
+  // See ConfirmDialog.jsx's own comment on why this is needed -- the
+  // search box here is exactly the kind of input document-level
+  // clipboard listeners can't otherwise tell apart from the canvas by
+  // DOM focus alone.
+  useScopeWhen(fileSwitcherOpen, "file-switcher");
+
   function handleOpenChange(open) {
     if (!open) {
       closeFileSwitcher();

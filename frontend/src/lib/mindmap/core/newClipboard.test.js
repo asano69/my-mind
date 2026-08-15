@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // newClipboard.js's `editing()` guard, which replaces the old engine's
 // `ui.isActive() || app.editing` combination).
 const mockActiveMode = { value: "canvas" };
-vi.mock("./store.js", () => ({ activeMode: () => mockActiveMode.value }));
+vi.mock("../store.js", () => ({ activeMode: () => mockActiveMode.value }));
 
 vi.mock("./newAction.js", () => ({
   action: vi.fn(),
@@ -66,14 +66,9 @@ import "./layout/map.js";
 import ItemNode from "./itemStore.js";
 
 const newClipboard = await import("./newClipboard.js");
-const {
-  currentItem,
-  setCurrentItem,
-  selectedItems,
-  setSelectedItems,
-  editing,
-  setEditing,
-} = await import("./itemSelection.js");
+const { setCurrentItem, setSelectedItems, setEditing } = await import(
+  "./itemSelection.js"
+);
 const {
   action: actionFn,
   MoveItem,

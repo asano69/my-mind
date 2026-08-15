@@ -70,13 +70,14 @@ export default class Layout {
   }
   getChildAnchor(item, side) {
     let { position, contentPosition, contentSize } = item;
+    let pos;
     if (side == "left" || side == "right") {
-      var pos = position[0] + contentPosition[0];
+      pos = position[0] + contentPosition[0];
       if (side == "left") {
         pos += contentSize[0];
       }
     } else {
-      var pos = position[1] + contentPosition[1];
+      pos = position[1] + contentPosition[1];
       if (side == "top") {
         pos += contentSize[1];
       }

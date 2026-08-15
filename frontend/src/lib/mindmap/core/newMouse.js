@@ -24,7 +24,7 @@ import { startEditing, commitEditing } from "./newEdit.js";
 import { action, MoveItem, Multi } from "./newAction.js";
 import { decideDropPlacement, isDraggedAncestor } from "./dragPlacement.js";
 import { isSameOrigin } from "./urlUtils.js";
-import { navigateTo } from "./navigation.js";
+import { navigateTo } from "../navigation.js";
 import * as viewport from "./newViewport.js";
 
 // --- Stage 4.7.2 (see docs/08-phase4.7-drag-and-drop-refactor.md) ---
@@ -392,6 +392,22 @@ function onDragStart(e) {
   if (!isCanvasActive()) {
     return;
   }
+  // Ignore mousedown events that originate inside the side panels
+  // (#ui / #left-panel). Both panels are DOM descendants of
+  // #mindmap-container (see MindMapCanvas.jsx's containerRef, which is
+  // also the "port" this listener is registered on -- see
+  // NewMindMapPreview.jsx's onMount), so a click on an ordinary form
+  // field there (e.g. RightPanelProperties.jsx's UrlField) still
+  // bubbles up to this listener. Without this guard, getItemForElement()
+  // finds no matching item for that click, falls into the "pan" branch
+  // below, and steals focus onto the container via container.focus() +
+  // e.preventDefault() -- before scope.js's own focusin-based
+  // "form-field" scope guard even has a chance to push (mousedown fires
+  // before focusin), leaving the field visually a text input but never
+  // actually focusable by click.
+  if (e.target.closest?.("#ui, #left-panel")) {
+    return;
+  }
   const root = getRootFn?.();
   if (!root) {
     return;
@@ -547,7 +563,7 @@ export function handleItemClick(item, e) {
 // Double-click starts live text editing, mirroring the old engine's
 // mouse.js onDblClick -> commandRepo.get("edit").execute(). See
 // newEdit.js for the actual contentEditable toggle.
-export function handleItemDblClick(item, e) {
+export function handleItemDblClick(item, _e) {
   if (!isCanvasActive()) {
     return;
   }

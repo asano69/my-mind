@@ -125,7 +125,7 @@ svg > .item > .item > foreignObject > .content {
   /* Matches the notes badge's resting opacity (see ".content .notes"
      below) so both indicator icons read as the same "secondary info"
      tier at a glance. */
-  opacity: 0.4;
+  opacity: 0.6;
   display: inline-flex;
   align-items: center;
   vertical-align: -0.2em;
@@ -134,11 +134,6 @@ svg > .item > .item > foreignObject > .content {
 
 .item .link-icon:hover {
   opacity: 1;
-}
-
-.item .link-icon svg {
-  width: 1.3em;
-  height: 1.3em;
 }
 
 .item foreignObject {
@@ -247,20 +242,21 @@ svg > .item > .item > foreignObject > .content {
    size (hugely oversized) while dragging. ".content" is present on both
    the real node and the ghost clone, so this fixes both. */
 .content .notes {
-  width: 30px;
-  height: 30px;
+  width: 20px;
+  height: 20px;
   position: absolute;
   top: -10px;
-  right: -10px;
-  opacity: 0.4;
+  right: 0px;
+  opacity: 0.35;
   display: flex;
   align-items: center;
   justify-content: flex-end;
 }
 
 .content .notes svg {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
+  transform: rotate(-45deg);
 }
 
 /* -------------------------------------------------------------

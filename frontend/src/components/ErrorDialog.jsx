@@ -1,5 +1,6 @@
 import { Dialog } from "@kobalte/core/dialog";
 import { errorDialogMessage, closeErrorDialog } from "../lib/mindmap/store";
+import { useScopeWhen } from "../lib/mindmap/core/scope.js";
 
 // Replaces the native window.alert() previously used by io.js's error()
 // handler with a Kobalte dialog matching the rest of the app's UI (see
@@ -8,6 +9,9 @@ import { errorDialogMessage, closeErrorDialog } from "../lib/mindmap/store";
 // renders whenever that signal is set). Always mounted (see
 // MindMapCanvas.jsx); visibility is store.js's errorDialogMessage signal.
 export default function ErrorDialog() {
+  // See ConfirmDialog.jsx's own comment on why this is needed.
+  useScopeWhen(() => !!errorDialogMessage(), "dialog");
+
   return (
     <Dialog
       open={!!errorDialogMessage()}

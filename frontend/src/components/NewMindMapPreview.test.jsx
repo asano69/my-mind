@@ -9,13 +9,13 @@ import { describe, expect, it, vi } from "vitest";
 // this file's synchronous assertions can't observe.
 vi.mock("solid-js", async () => await import("solid-js/dist/solid.js"));
 
-import ItemNode from "../lib/mindmap/itemStore.js";
-import { repo as layoutRepo } from "../lib/mindmap/layout/layout.js";
-import { repo as shapeRepo } from "../lib/mindmap/shape/shape.js";
-import "../lib/mindmap/layout/map.js";
-import "../lib/mindmap/shape/box.js";
-import "../lib/mindmap/shape/ellipse.js";
-import "../lib/mindmap/shape/underline.js";
+import ItemNode from "../lib/mindmap/core/itemStore.js";
+import { repo as layoutRepo } from "../lib/mindmap/core/layout/layout.js";
+import { repo as shapeRepo } from "../lib/mindmap/core/shape/shape.js";
+import "../lib/mindmap/core/layout/map.js";
+import "../lib/mindmap/core/shape/box.js";
+import "../lib/mindmap/core/shape/ellipse.js";
+import "../lib/mindmap/core/shape/underline.js";
 import {
   measureContentSize,
   registerDomRef,
