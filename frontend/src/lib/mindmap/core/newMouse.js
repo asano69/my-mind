@@ -392,6 +392,22 @@ function onDragStart(e) {
   if (!isCanvasActive()) {
     return;
   }
+  // Ignore mousedown events that originate inside the side panels
+  // (#ui / #left-panel). Both panels are DOM descendants of
+  // #mindmap-container (see MindMapCanvas.jsx's containerRef, which is
+  // also the "port" this listener is registered on -- see
+  // NewMindMapPreview.jsx's onMount), so a click on an ordinary form
+  // field there (e.g. RightPanelProperties.jsx's UrlField) still
+  // bubbles up to this listener. Without this guard, getItemForElement()
+  // finds no matching item for that click, falls into the "pan" branch
+  // below, and steals focus onto the container via container.focus() +
+  // e.preventDefault() -- before scope.js's own focusin-based
+  // "form-field" scope guard even has a chance to push (mousedown fires
+  // before focusin), leaving the field visually a text input but never
+  // actually focusable by click.
+  if (e.target.closest?.("#ui, #left-panel")) {
+    return;
+  }
   const root = getRootFn?.();
   if (!root) {
     return;
