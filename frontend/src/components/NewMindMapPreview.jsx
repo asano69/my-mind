@@ -8,7 +8,7 @@ import {
 } from "solid-js";
 import ItemNode, { measureContentSize } from "../lib/mindmap/core/itemStore.js";
 import Spinner from "./Spinner.jsx";
-import Paperclip from "lucide-solid/icons/bookmark";
+import Paperclip from "lucide-solid/icons/paperclip";
 import {
   itemStateClassList,
   selectItem,

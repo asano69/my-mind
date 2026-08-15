@@ -242,8 +242,8 @@ svg > .item > .item > foreignObject > .content {
    size (hugely oversized) while dragging. ".content" is present on both
    the real node and the ghost clone, so this fixes both. */
 .content .notes {
-  width: 30px;
-  height: 30px;
+  width: 20px;
+  height: 20px;
   position: absolute;
   top: -10px;
   right: 0px;
@@ -254,8 +254,8 @@ svg > .item > .item > foreignObject > .content {
 }
 
 .content .notes svg {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   transform: rotate(-45deg);
 }
 
