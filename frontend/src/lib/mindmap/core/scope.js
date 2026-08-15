@@ -70,3 +70,44 @@ export function isScopeActive(name) {
 export function isCanvasActive() {
   return isScopeActive("canvas");
 }
+
+// Auto-detected scope: focusing any plain form control (<input>/
+// <textarea>/<select>) pushes this scope for as long as it stays
+// focused, so canvas-level hotkeys (newKeyboard.js) and clipboard
+// handling (newClipboard.js, which listens on document's capture phase
+// and can't otherwise tell a panel field apart from the canvas) never
+// leak into ordinary fields like RightPanelProperties.jsx's UrlField or
+// Search.jsx -- both of those currently render *inside*
+// MindMapCanvas.jsx's containerRef, so their keydown events bubble
+// straight into the canvas's own keydown listener. This mirrors the old
+// engine's ui.isActive() check (see NotesEditor.jsx's own comment on
+// it), but as a normal scope every consumer already knows how to ask
+// about, instead of a bespoke boolean each one had to remember to add.
+//
+// A node's own contentEditable text element (see newEdit.js) is
+// deliberately NOT covered here -- that case is already tracked by
+// itemSelection.js's `editing` signal and checked explicitly by both
+// newKeyboard.js and newClipboard.js, and it isn't a plain form control
+// anyway (no matching tagName below).
+const FORM_FIELD_TAGS = new Set(["INPUT", "TEXTAREA", "SELECT"]);
+let popFormFieldScope = null;
+
+function handleFormFieldFocusIn(e) {
+  if (FORM_FIELD_TAGS.has(e.target?.tagName) && !popFormFieldScope) {
+    popFormFieldScope = pushScope("form-field");
+  }
+}
+function handleFormFieldFocusOut(e) {
+  if (FORM_FIELD_TAGS.has(e.target?.tagName) && popFormFieldScope) {
+    popFormFieldScope();
+    popFormFieldScope = null;
+  }
+}
+// Guarded for test environments (vitest's default "node" environment has
+// no `document` global until a test stubs one) -- see this project's
+// other document-dependent modules (e.g. newClipboard.js) for the same
+// pattern of checking availability before touching browser globals.
+if (typeof document !== "undefined") {
+  document.addEventListener("focusin", handleFormFieldFocusIn);
+  document.addEventListener("focusout", handleFormFieldFocusOut);
+}
