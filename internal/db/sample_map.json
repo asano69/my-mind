@@ -1,0 +1,286 @@
+{
+  "collectionId": "pbc_1612934933",
+  "collectionName": "maps",
+  "created": "2026-08-15 11:58:49.535Z",
+  "id": "vrqp0gn5ujxtsz1",
+  "mymind": {
+    "root": {
+      "children": [
+        {
+          "children": [
+            {
+              "id": "oufzmqvy",
+              "notes": "",
+              "text": "Node selection &amp; multi-selection"
+            },
+            {
+              "id": "hsthllrc",
+              "notes": "",
+              "text": "<b>Rich</b> <i>text</i> <strike>editing</strike>"
+            },
+            {
+              "id": "spnaifjx",
+              "notes": "",
+              "text": "Auto-linking"
+            },
+            {
+              "id": "meeftorp",
+              "notes": "",
+              "text": "Colors"
+            },
+            {
+              "id": "pphsgpvu",
+              "notes": "",
+              "text": "Zooming"
+            },
+            {
+              "id": "avzourxv",
+              "notes": "",
+              "text": "Shapes"
+            },
+            {
+              "id": "bhszysqp",
+              "notes": "",
+              "text": "Full keyboard control"
+            },
+            {
+              "children": [
+                {
+                  "id": "znuvtncs",
+                  "notes": "",
+                  "text": "Collapsing"
+                },
+                {
+                  "id": "dbbxxzzs",
+                  "notes": "",
+                  "text": "Expanding"
+                }
+              ],
+              "collapsed": true,
+              "id": "zcrefcfz",
+              "notes": "",
+              "text": "Folding"
+            },
+            {
+              "id": "pkbumzof",
+              "notes": "",
+              "text": "Notes per node"
+            }
+          ],
+          "color": "#d33",
+          "id": "cmetfpcz",
+          "notes": "",
+          "side": "right",
+          "text": "Basic features"
+        },
+        {
+          "children": [
+            {
+              "id": "yqbfslkm",
+              "notes": "",
+              "text": "Snapshot recovery"
+            },
+            {
+              "id": "gxwntrpc",
+              "notes": "",
+              "text": "UUID-based permalinks"
+            },
+            {
+              "children": [
+                {
+                  "id": "ezwvmtko",
+                  "notes": "",
+                  "text": "Native mymind JSON"
+                },
+                {
+                  "id": "sczzbjgf",
+                  "notes": "",
+                  "text": "Plaintext copy/paste"
+                }
+              ],
+              "id": "fpbtygky",
+              "notes": "",
+              "text": "Backend: Go + PocketBase"
+            },
+            {
+              "children": [
+                {
+                  "id": "lyzyawpn",
+                  "notes": "",
+                  "text": "Debounced client-side auto-save"
+                },
+                {
+                  "id": "chfwbjrp",
+                  "notes": "",
+                  "text": "Server-side snapshot backups"
+                }
+              ],
+              "id": "bmatbsiz",
+              "notes": "",
+              "text": "Auto-save"
+            },
+            {
+              "children": [
+                {
+                  "id": "wvvxdgzr",
+                  "notes": "",
+                  "text": "Search &amp; browse maps"
+                },
+                {
+                  "id": "qxrpltbm",
+                  "notes": "",
+                  "text": "Pin favorite maps"
+                },
+                {
+                  "id": "kzpmvyfs",
+                  "notes": "",
+                  "text": "Rename / delete maps"
+                },
+                {
+                  "id": "dnfhcqrt",
+                  "notes": "",
+                  "text": "SVG thumbnail previews"
+                }
+              ],
+              "id": "hjialeal",
+              "notes": "",
+              "text": "Catalog"
+            }
+          ],
+          "color": "#3d3",
+          "id": "nkrfhzwg",
+          "notes": "",
+          "side": "left",
+          "text": "Storage &amp; Data",
+          "textColor": "#000"
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "id": "fppldjcr",
+                  "notes": "",
+                  "text": "Constant values",
+                  "value": 3.14
+                },
+                {
+                  "id": "lhqwyqwq",
+                  "notes": "",
+                  "text": "Formulas (sum / avg / min / max)",
+                  "value": 42
+                }
+              ],
+              "id": "bvfjpmrm",
+              "notes": "",
+              "text": "Numerical node values",
+              "value": "sum"
+            },
+            {
+              "children": [
+                {
+                  "id": "jsrxnhgy",
+                  "notes": "",
+                  "status": false,
+                  "text": "Yes/No"
+                },
+                {
+                  "id": "oqzwbzvf",
+                  "notes": "",
+                  "status": "computed",
+                  "text": "Auto-propagation to parent"
+                }
+              ],
+              "id": "pjqwdjad",
+              "notes": "",
+              "status": "computed",
+              "text": "Bool node statuses"
+            },
+            {
+              "children": [
+                {
+                  "id": "uglsvbbi",
+                  "notes": "",
+                  "text": "Map"
+                },
+                {
+                  "id": "mvqxmutu",
+                  "notes": "",
+                  "text": "Graph"
+                },
+                {
+                  "id": "uonrboqe",
+                  "notes": "",
+                  "text": "Tree"
+                }
+              ],
+              "id": "adqojbln",
+              "layout": "tree-right",
+              "notes": "",
+              "text": "Variable layouts"
+            },
+            {
+              "id": "rsruxymh",
+              "notes": "",
+              "text": "Infinite undo/redo"
+            },
+            {
+              "id": "jaalsyvs",
+              "notes": "",
+              "text": "Export to image"
+            },
+            {
+              "id": "tmvbkslz",
+              "notes": "",
+              "text": "Multi-item actions"
+            }
+          ],
+          "color": "#33d",
+          "id": "scoyihcg",
+          "notes": "",
+          "side": "right",
+          "text": "Advanced features"
+        },
+        {
+          "children": [
+            {
+              "id": "hfwzxpqy",
+              "notes": "",
+              "text": "Frontend: Solid.js + Tailwind v4"
+            },
+            {
+              "id": "ncqxlzva",
+              "notes": "",
+              "text": "Backend: Go + PocketBase"
+            },
+            {
+              "id": "sgvpmhbl",
+              "notes": "",
+              "text": "Single-user app"
+            },
+            {
+              "id": "dpxkwtrl",
+              "notes": "",
+              "text": "Dockerized deployment"
+            }
+          ],
+          "color": "#d3d",
+          "id": "arqzvtnd",
+          "notes": "",
+          "side": "left",
+          "text": "Architecture"
+        }
+      ],
+      "id": "ujfdpxoz",
+      "layout": "map",
+      "notes": "# Solid Mind\n\nSolid Mind is a web application for creating and managing Mind maps. \nIt is free and open-source (MIT license), forked from ondras/my-mind and rebuilt with a Go + PocketBase backend and a Solid.js + Tailwind frontend.\n\n⚠️ Still under active development — the mymind schema may change, so backward compatibility is not guaranteed.\n\nNew to Mind maps? They are useful, aesthetic and cool! Read more about these special diagrams in [the Wikipedia article](https://en.wikipedia.org/wiki/Mind_map).\n\n* [Source repository](https://github.com/asano69/solid-mind)\n* [Original project (ondras/my-mind)](https://github.com/ondras/my-mind)",
+      "text": "Solid Mind<br>Features"
+    }
+  },
+  "pin": true,
+  "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" data-engine=\"solid-item-node-preview\" width=\"1369\" height=\"672\" style=\"font-size: 15px; left: 65px; top: 171px;\" viewBox=\"-24 -24 1369 672\"><style>:root { color-scheme: light dark; --color-bg: light-dark(#f5ede4, #1c1a17); --color-pane: light-dark(#ede0d4, #26221d); --color-pane-hover: light-dark(#d9c9bb, #37302a); --color-accent: light-dark(#5a4a3a, #c9b79c); --color-text: light-dark(#2c2015, #e8dfd2); --color-hover: light-dark(rgba(90, 74, 58, 0.3), rgba(201, 183, 156, 0.2)); --font-sans: sans-serif; --font-serif: \"TeX Gyre Termes\", \"Nimbus Roman No9 L\", \"Georgia\", serif; --font-mono: \"Consolas\", \"Courier New\", monospace }\n/* =============================================================\n   map.css — SVG mind-map node styles\n   Requires: style.css loaded first (provides font token)\n   ============================================================= */\n\n/* -------------------------------------------------------------\n   Node-specific design tokens\n   (shared palette tokens live in theme.css)\n   ------------------------------------------------------------- */\n:root {\n  /* Node border */\n  --node-border-width: 2px;\n\n  /* Node shadow (default) */\n  --node-shadow: 3px 5px 14px\n    light-dark(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.55));\n\n  /* Node shadow (hover) */\n  --node-shadow-hover: 4px 7px 18px\n    light-dark(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.7));\n\n  /* Underline hover: outline ring */\n  --underline-hover-outline: 0 0 0 1px\n    light-dark(rgba(200, 180, 0, 0.5), rgba(230, 200, 60, 0.55));\n\n  /* Underline hover: yellow tint background */\n  --underline-hover-bg: light-dark(\n    rgba(255, 255, 200, 0.4),\n    rgba(120, 105, 20, 0.35)\n  );\n\n  /* Selected node (current) background -- currently unreferenced in\n     this file, kept for parity with --node-shadow-current. */\n  --node-bg-current: light-dark(\n    rgba(255, 255, 187, 0.5),\n    rgba(110, 95, 15, 0.45)\n  );\n\n  /* Selected node shadow */\n  --node-shadow-current: 3px 5px 14px\n    light-dark(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.55));\n\n  /* Toggle button color */\n  --toggle-color: light-dark(#999999, #8a8378);\n\n  /* Status icon colors */\n  --status-yes-color: light-dark(#2ca02c, #4fd15a);\n  --status-no-color: light-dark(#cc0000, #ff6b6b);\n\n  /* Base fill colors a node falls back to when it has no explicit\n     --item-color (see the color-mix() calls below). */\n  --node-fill-base: light-dark(#ffffff, #2a251e);\n  --node-fill-default: light-dark(#f0f0f0, #3a332a);\n  --node-border-default: light-dark(#999999, #7a7264);\n  --node-border-shade: light-dark(#555555, #12100d);\n\n  /* Top gloss highlight overlaid on every box/ellipse node's background */\n  --node-gloss: light-dark(\n    rgba(255, 255, 255, 0.72),\n    rgba(255, 255, 255, 0.12)\n  );\n\n  /* Shared secondary shadow layers stacked under --node-shadow(-hover/-current)\n     on box/ellipse nodes (lift, contact, and bottom-shade shadows). */\n  --node-lift-shadow: 0 3px 8px\n    light-dark(rgba(0, 0, 0, 0.14), rgba(0, 0, 0, 0.4));\n  --node-contact-shadow: 0 1px 2px\n    light-dark(rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.3));\n  --node-bottom-shade: inset 0 -2px 6px\n    light-dark(rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.25));\n\n  /* Yellow selection tint blended into a box/ellipse node's own fill */\n  --node-selected-tint: light-dark(rgb(255, 255, 187), rgb(110, 95, 15));\n\n  /* Selected underline-shape node's flat background/outline */\n  --node-underline-selected-bg: light-dark(\n    rgba(255, 255, 187, 0.75),\n    rgba(110, 95, 15, 0.55)\n  );\n  --node-underline-selected-outline: 0 0 0 1px\n    light-dark(rgba(180, 160, 0, 0.55), rgba(220, 195, 60, 0.6));\n\n  /* Node label link color */\n  --link-color: light-dark(#1a73e8, #6ea8fe);\n  --link-color-hover: light-dark(#1558b0, #9dc2ff);\n}\n\n/* -------------------------------------------------------------\n   Base\n   ------------------------------------------------------------- */\n* {\n  font-family: var(--font-sans);\n}\n\n/* -------------------------------------------------------------\n   Root node (top level, direct child of SVG)\n   ------------------------------------------------------------- */\nsvg &gt; .item &gt; foreignObject &gt; .content {\n  font-weight: bold;\n  font-size: 140%;\n}\n\nsvg &gt; .item &gt; .toggle {\n  display: none;\n}\n\n/* Second-level node */\nsvg &gt; .item &gt; .item &gt; foreignObject &gt; .content {\n  font-size: 120%;\n}\n\n/* -------------------------------------------------------------\n   General .item styles\n   ------------------------------------------------------------- */\n.item .cut {\n  opacity: 0.5;\n}\n\n.item .icon {\n  font-size: x-large;\n}\n\n.item .link-icon {\n  cursor: pointer;\n  /* Matches the notes badge's resting opacity (see \".content .notes\"\n     below) so both indicator icons read as the same \"secondary info\"\n     tier at a glance. */\n  opacity: 0.6;\n  display: inline-flex;\n  align-items: center;\n  vertical-align: -0.2em;\n  margin-left: 0.35em;\n}\n\n.item .link-icon:hover {\n  opacity: 1;\n}\n\n.item foreignObject {\n  overflow: visible;\n}\n\n.item .content {\n  position: relative;\n  display: inline-flex;\n  align-items: center;\n  white-space: nowrap;\n  cursor: pointer;\n}\n\n.item .content &gt; * {\n  flex: none;\n}\n\n.item.collapsed .item {\n  display: none;\n}\n\n.item .text {\n  text-align: center;\n  min-width: 0.5em;\n  min-height: 1.8em;\n  line-height: 1.8em;\n  outline: none;\n  /* Without an explicit color, dark-mode browsers (see index.html's\n     `color-scheme: dark light`) fall back to a UA default text color\n     (near-white), making node labels unreadable on the app's light\n     background. This app has no real dark-mode support yet, so just pin\n     the text color to the light-theme value; resolvedTextColor's inline\n     style (see item.js's _applyOwnStyle()) still overrides this when a\n     node has an explicit text color set. */\n  color: var(--color-text);\n}\n\n.item .text a {\n  color: var(--link-color);\n  text-decoration: underline;\n}\n\n.item .text a:hover {\n  color: var(--link-color-hover);\n}\n\n.item .value {\n  opacity: 0.7;\n}\n\n.item .value:not(:empty)::before {\n  content: \"(\";\n}\n.item .value:not(:empty)::after {\n  content: \")\";\n}\n\n/* Status icons */\n.item .status {\n  font-size: 150%;\n  line-height: 1;\n}\n\n.item .status.yes::after {\n  content: \"✔\";\n  color: var(--status-yes-color);\n}\n\n.item .status.no::after {\n  content: \"✘\";\n  color: var(--status-no-color);\n}\n\n/* Toggle button */\n.item .toggle {\n  cursor: pointer;\n}\n\n.item .toggle:not(:hover) {\n  opacity: 0.7;\n}\n\n.item .toggle circle {\n  stroke: var(--toggle-color);\n  fill: var(--toggle-color);\n}\n\n.item .toggle path {\n  stroke: #fff;\n  stroke-width: 2;\n}\n\n.item:not(.current):not(.collapsed) &gt; .toggle {\n  display: none;\n}\n\n/* Notes indicator. The icon itself is an inline SVG built by item.js's\n   buildNotesIcon() (lucide \"paperclip\"), not a CSS background-image, so\n   this rule only handles the badge's box and positioning.\n   Scoped to \".content .notes\", not \".item .notes\": mouse.js's\n   buildGhost() clones only the \".content\" div (without its \".item\"\n   ancestor) for the drag ghost, so an \".item\"-scoped selector silently\n   stopped matching inside the ghost -- leaving the notes SVG with no\n   explicit width/height and rendering it at its unconstrained intrinsic\n   size (hugely oversized) while dragging. \".content\" is present on both\n   the real node and the ghost clone, so this fixes both. */\n.content .notes {\n  width: 20px;\n  height: 20px;\n  position: absolute;\n  top: -10px;\n  right: 0px;\n  opacity: 0.35;\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n}\n\n.content .notes svg {\n  width: 20px;\n  height: 20px;\n  transform: rotate(-45deg);\n}\n\n/* -------------------------------------------------------------\n   Shape styles — shared (box + ellipse)\n   ------------------------------------------------------------- */\n:is([data-shape=\"box\"], [data-shape=\"ellipse\"]) &gt; foreignObject &gt; .content {\n  background:\n    /* Top gloss highlight — bright specular spot, offset slightly left */\n    radial-gradient(\n      ellipse 55% 35% at 40% 18%,\n      var(--node-gloss) 0%,\n      rgba(255, 255, 255, 0) 100%\n    ),\n    color-mix(\n      in srgb,\n      var(--item-color, var(--node-fill-default)) 18%,\n      var(--node-fill-base)\n    );\n  /* Clip the background to just inside the border (padding-box), not the\n     border-box edge. On an ellipse (border-radius: 50%), the border's\n     outer stroke and the background's border-box clip are rasterized as\n     separate elliptical curves; at high zoom their rounding can diverge\n     by ~1px, letting the background peek past the border line. Clipping\n     to padding-box keeps the background strictly inside the border, so\n     the border always fully covers the shape's outer edge. */\n  background-clip: padding-box;\n  border: var(--node-border-width) solid\n    color-mix(\n      in srgb,\n      var(--item-color, var(--node-border-default)) 60%,\n      var(--node-border-shade)\n    );\n  box-shadow:\n    var(--node-shadow), var(--node-lift-shadow), var(--node-contact-shadow),\n    var(--node-bottom-shade);\n  transition:\n    box-shadow 120ms ease,\n    transform 120ms ease;\n}\n\n[data-shape=\"box\"] &gt; foreignObject &gt; .content {\n  padding: 0.2em 0.55em;\n  border-radius: 4px;\n}\n\n[data-shape=\"ellipse\"] &gt; foreignObject &gt; .content {\n  padding: 0.4em 1.1em;\n  border-radius: 50%;\n}\n\n/* -------------------------------------------------------------\n   Hover — lift effect\n   ------------------------------------------------------------- */\n:is([data-shape=\"box\"], [data-shape=\"ellipse\"])\n  &gt; foreignObject\n  &gt; .content:hover {\n  box-shadow: var(--node-shadow-hover);\n  transform: translateY(-2px);\n}\n\n[data-shape=\"underline\"] &gt; foreignObject &gt; .content:hover {\n  background: var(--underline-hover-bg);\n  box-shadow: var(--underline-hover-outline);\n  transform: translateY(-2px);\n  border-radius: 3px;\n}\n\n/* -------------------------------------------------------------\n   Selected node (current) highlight\n   ------------------------------------------------------------- */\n[data-shape=\"box\"].item.current &gt; foreignObject &gt; .content,\n[data-shape=\"ellipse\"].item.current &gt; foreignObject &gt; .content {\n  background:\n    /* Top gloss highlight — preserved from base style */\n    radial-gradient(\n      ellipse 55% 35% at 40% 18%,\n      var(--node-gloss) 0%,\n      rgba(255, 255, 255, 0) 100%\n    ),\n    /* Selection tint — theme's selection color blended with item color.\n       Adjust the second percentage to control selection-tint intensity:\n       0% = item color only, 100% = solid --node-selected-tint */\n    color-mix(\n        in srgb,\n        color-mix(\n            in srgb,\n            var(--item-color, var(--node-fill-default)) 18%,\n            var(--node-fill-base)\n          )\n          25%,\n        var(--node-selected-tint) 55%\n      );\n  box-shadow:\n    var(--node-shadow-current), var(--node-lift-shadow),\n    var(--node-contact-shadow), var(--node-bottom-shade);\n  /* mix-blend-mode removed — it was flattening out the gloss */\n}\n\n[data-shape=\"underline\"].item.current &gt; foreignObject &gt; .content {\n  background: var(--node-underline-selected-bg);\n  box-shadow: var(--node-underline-selected-outline);\n  border-radius: 3px;\n}\n\n/* Hover lift is preserved for selected nodes */\n[data-shape=\"box\"].item.current &gt; foreignObject &gt; .content:hover,\n[data-shape=\"ellipse\"].item.current &gt; foreignObject &gt; .content:hover {\n  box-shadow:\n    var(--node-shadow-current), var(--node-shadow-hover),\n    var(--node-lift-shadow), var(--node-contact-shadow),\n    var(--node-bottom-shade);\n  transform: translateY(-2px);\n}\n\n/* -------------------------------------------------------------\n   Multi-selected items (.selected) — Ctrl/Cmd+click additions.\n   Same yellow tint as .current, with gloss gradient preserved.\n   ------------------------------------------------------------- */\n[data-shape=\"box\"].item.selected &gt; foreignObject &gt; .content,\n[data-shape=\"ellipse\"].item.selected &gt; foreignObject &gt; .content {\n  background:\n    radial-gradient(\n      ellipse 55% 35% at 40% 18%,\n      var(--node-gloss) 0%,\n      rgba(255, 255, 255, 0) 100%\n    ),\n    color-mix(\n      in srgb,\n      color-mix(\n          in srgb,\n          var(--item-color, var(--node-fill-default)) 18%,\n          var(--node-fill-base)\n        )\n        25%,\n      var(--node-selected-tint) 55%\n    );\n}\n\n[data-shape=\"underline\"].item.selected &gt; foreignObject &gt; .content {\n  background: var(--node-underline-selected-bg);\n  box-shadow: var(--node-underline-selected-outline);\n  border-radius: 3px;\n}\n\n/* -------------------------------------------------------------\n   Drag ghost badge — shown when multiple items are dragged\n   ------------------------------------------------------------- */\n.ghost {\n  position: relative;\n}\n\n.ghost-count {\n  position: absolute;\n  top: -8px;\n  right: -8px;\n  min-width: 18px;\n  height: 18px;\n  padding: 0 4px;\n  border-radius: 9px;\n  background: #4682e6;\n  color: #fff;\n  font-size: 11px;\n  font-weight: bold;\n  line-height: 18px;\n  text-align: center;\n  pointer-events: none;\n  z-index: 10;\n}\n\n/* -------------------------------------------------------------\n   Text alignment (left / right)\n   ------------------------------------------------------------- */\n[data-align=\"left\"] &gt; foreignObject &gt; .content &gt; :not(.text):not(.notes) {\n  margin-right: 0.3em;\n}\n\n[data-align=\"right\"] &gt; foreignObject &gt; .content {\n  flex-direction: row-reverse;\n}\n\n[data-align=\"right\"] &gt; foreignObject &gt; .content &gt; :not(.text):not(.notes) {\n  margin-left: 0.3em;\n}\n</style><g class=\"item current\" data-shape=\"ellipse\" data-align=\"left\" transform=\"\"><g class=\"connectors\"><path stroke-width=\"2\" d=\"M 574.7307790549941 315.79403040404094 Q 532 250.5 487 250.5 Q 532 250.5 579.2692209450059 309.20596959595906 Z\" stroke=\"#3d3\" fill=\"#3d3\"/><path stroke-width=\"2\" d=\"M 580.4591557864403 314.508542069546 Q 532 467.5 487 467.5 Q 532 467.5 573.5408442135597 310.491457930454 Z\" stroke=\"#d3d\" fill=\"#d3d\"/><path stroke-width=\"2\" d=\"M 573.4471294273762 310.6623083245049 Q 622 138.5 667 138.5 Q 622 138.5 580.5528705726238 314.3376916754951 Z\" stroke=\"#d33\" fill=\"#d33\"/><path stroke-width=\"2\" d=\"M 580.3647139015062 310.336969634746 Q 622 452.5 667 452.5 Q 622 452.5 573.6352860984938 314.663030365254 Z\" stroke=\"#33d\" fill=\"#33d\"/></g><foreignObject x=\"503\" y=\"264\" width=\"148\" height=\"96\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(153, 153, 153);\"><div class=\"text\" contenteditable=\"false\">Solid Mind<br />Features</div><div class=\"notes\" aria-label=\"Has notes\" style=\"display: none;\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\" width=\"24\" height=\"24\" stroke=\"currentColor\" stroke-width=\"2\" class=\"lucide lucide-icon lucide-paperclip\" aria-hidden=\"true\" style=\"position: static;\"><path d=\"m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551\" key=\"1miecu\"/></svg></div></div></foreignObject><g class=\"item\" data-shape=\"box\" data-align=\"left\" transform=\"translate(667,0)\"><g class=\"connectors\"><path stroke-width=\"2\" d=\"M 133.5,138.5 L 141.5,138.5 M 149,23.5 L 149.5 23.5 A 8 8 0 0 0 141.5 31.5 L 141.5 263.5 A 8 8 0 0 0 149.5 271.5 L 149,271.5 M 141.5,54.5 L 149,54.5 M 141.5,85.5 L 149,85.5 M 141.5,116.5 L 149,116.5 M 141.5,147.5 L 149,147.5 M 141.5,178.5 L 149,178.5 M 141.5,209.5 L 149,209.5 M 141.5,240.5 L 149,240.5\" stroke=\"#d33\" fill=\"none\"/></g><g class=\"toggle\" transform=\"translate(141.5,138.5)\"><circle cx=\"0\" cy=\"0\" r=\"7\"/><path d=\"M -5 0 L 5 0\"/></g><foreignObject x=\"0\" y=\"116\" width=\"133\" height=\"44\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"--item-color: #d33;\"><div class=\"text\">Basic features</div></div></foreignObject><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(149,0)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 214 23.5\" stroke=\"#d33\"/><foreignObject x=\"0\" y=\"0\" width=\"214\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(221, 51, 51);\"><div class=\"text\">Node selection &amp; multi-selection</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(149,31)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 105 23.5\" stroke=\"#d33\"/><foreignObject x=\"0\" y=\"0\" width=\"105\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(221, 51, 51);\"><div class=\"text\"><b>Rich</b> <i>text</i> <strike>editing</strike></div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(149,62)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 80 23.5\" stroke=\"#d33\"/><foreignObject x=\"0\" y=\"0\" width=\"80\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(221, 51, 51);\"><div class=\"text\">Auto-linking</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(149,93)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 42 23.5\" stroke=\"#d33\"/><foreignObject x=\"0\" y=\"0\" width=\"42\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(221, 51, 51);\"><div class=\"text\">Colors</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(149,124)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 60 23.5\" stroke=\"#d33\"/><foreignObject x=\"0\" y=\"0\" width=\"60\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(221, 51, 51);\"><div class=\"text\">Zooming</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(149,155)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 49 23.5\" stroke=\"#d33\"/><foreignObject x=\"0\" y=\"0\" width=\"49\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(221, 51, 51);\"><div class=\"text\">Shapes</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(149,186)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 139 23.5\" stroke=\"#d33\"/><foreignObject x=\"0\" y=\"0\" width=\"139\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(221, 51, 51);\"><div class=\"text\">Full keyboard control</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(149,217)\"><g class=\"connectors\"/><g class=\"toggle\" transform=\"translate(57.5,23.5)\"><circle cx=\"0\" cy=\"0\" r=\"7\"/><path d=\"M -5 0 L 5 0 M 0 -5 L 0 5\"/></g><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 49 23.5\" stroke=\"#d33\"/><foreignObject x=\"0\" y=\"0\" width=\"49\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(221, 51, 51);\"><div class=\"text\">Folding</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(149,248)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 101 23.5\" stroke=\"#d33\"/><foreignObject x=\"0\" y=\"0\" width=\"101\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(221, 51, 51);\"><div class=\"text\">Notes per node</div></div></foreignObject></g></g><g class=\"item\" data-shape=\"box\" data-align=\"right\" transform=\"translate(0,97)\"><g class=\"connectors\"><path stroke-width=\"2\" d=\"M 346.5,153.5 L 338.5,153.5 M 331,23.5 L 330.5 23.5 A 8 8 0 0 1 338.5 31.5 L 338.5 248.5 A 8 8 0 0 1 330.5 256.5 L 331,256.5 M 338.5,54.5 L 331,54.5 M 338.5,101.5 L 331,101.5 M 338.5,163.5 L 331,163.5\" stroke=\"#3d3\" fill=\"none\"/></g><g class=\"toggle\" transform=\"translate(338.5,153.5)\"><circle cx=\"0\" cy=\"0\" r=\"7\"/><path d=\"M -5 0 L 5 0\"/></g><foreignObject x=\"347\" y=\"131\" width=\"140\" height=\"44\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"--item-color: #3d3;\"><div class=\"text\" style=\"color: rgb(0, 0, 0);\">Storage &amp; Data</div></div></foreignObject><g class=\"item\" data-shape=\"underline\" data-align=\"right\" transform=\"translate(208,0)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 123 23.5\" stroke=\"#3d3\"/><foreignObject x=\"0\" y=\"0\" width=\"123\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 221, 51);\"><div class=\"text\" style=\"color: rgb(0, 0, 0);\">Snapshot recovery</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"right\" transform=\"translate(175,31)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 156 23.5\" stroke=\"#3d3\"/><foreignObject x=\"0\" y=\"0\" width=\"156\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 221, 51);\"><div class=\"text\" style=\"color: rgb(0, 0, 0);\">UUID-based permalinks</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"right\" transform=\"translate(0,62)\"><g class=\"connectors\"><path stroke-width=\"2\" d=\"M 156.5,39.5 L 148.5,39.5 M 141,23.5 L 140.5 23.5 A 8 8 0 0 1 148.5 31.5 L 148.5 46.5 A 8 8 0 0 1 140.5 54.5 L 141,54.5\" stroke=\"#3d3\" fill=\"none\"/></g><g class=\"toggle\" transform=\"translate(148.5,39.5)\"><circle cx=\"0\" cy=\"0\" r=\"7\"/><path d=\"M -5 0 L 5 0\"/></g><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 157 39.5 L 331 39.5\" stroke=\"#3d3\"/><foreignObject x=\"157\" y=\"16\" width=\"174\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 221, 51);\"><div class=\"text\" style=\"color: rgb(0, 0, 0);\">Backend: Go + PocketBase</div></div></foreignObject><g class=\"item\" data-shape=\"underline\" data-align=\"right\" transform=\"translate(0,0)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 141 23.5\" stroke=\"#3d3\"/><foreignObject x=\"0\" y=\"0\" width=\"141\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 221, 51);\"><div class=\"text\" style=\"color: rgb(0, 0, 0);\">Native mymind JSON</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"right\" transform=\"translate(7,31)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 134 23.5\" stroke=\"#3d3\"/><foreignObject x=\"0\" y=\"0\" width=\"134\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 221, 51);\"><div class=\"text\" style=\"color: rgb(0, 0, 0);\">Plaintext copy/paste</div></div></foreignObject></g></g><g class=\"item\" data-shape=\"underline\" data-align=\"right\" transform=\"translate(34,124)\"><g class=\"connectors\"><path stroke-width=\"2\" d=\"M 231.5,39.5 L 223.5,39.5 M 216,23.5 L 215.5 23.5 A 8 8 0 0 1 223.5 31.5 L 223.5 46.5 A 8 8 0 0 1 215.5 54.5 L 216,54.5\" stroke=\"#3d3\" fill=\"none\"/></g><g class=\"toggle\" transform=\"translate(223.5,39.5)\"><circle cx=\"0\" cy=\"0\" r=\"7\"/><path d=\"M -5 0 L 5 0\"/></g><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 232 39.5 L 297 39.5\" stroke=\"#3d3\"/><foreignObject x=\"232\" y=\"16\" width=\"65\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 221, 51);\"><div class=\"text\" style=\"color: rgb(0, 0, 0);\">Auto-save</div></div></foreignObject><g class=\"item\" data-shape=\"underline\" data-align=\"right\" transform=\"translate(0,0)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 216 23.5\" stroke=\"#3d3\"/><foreignObject x=\"0\" y=\"0\" width=\"216\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 221, 51);\"><div class=\"text\" style=\"color: rgb(0, 0, 0);\">Debounced client-side auto-save</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"right\" transform=\"translate(19,31)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 197 23.5\" stroke=\"#3d3\"/><foreignObject x=\"0\" y=\"0\" width=\"197\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 221, 51);\"><div class=\"text\" style=\"color: rgb(0, 0, 0);\">Server-side snapshot backups</div></div></foreignObject></g></g><g class=\"item\" data-shape=\"underline\" data-align=\"right\" transform=\"translate(105,186)\"><g class=\"connectors\"><path stroke-width=\"2\" d=\"M 175.5,70.5 L 167.5,70.5 M 160,23.5 L 159.5 23.5 A 8 8 0 0 1 167.5 31.5 L 167.5 108.5 A 8 8 0 0 1 159.5 116.5 L 160,116.5 M 167.5,54.5 L 160,54.5 M 167.5,85.5 L 160,85.5\" stroke=\"#3d3\" fill=\"none\"/></g><g class=\"toggle\" transform=\"translate(167.5,70.5)\"><circle cx=\"0\" cy=\"0\" r=\"7\"/><path d=\"M -5 0 L 5 0\"/></g><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 176 70.5 L 226 70.5\" stroke=\"#3d3\"/><foreignObject x=\"176\" y=\"47\" width=\"50\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 221, 51);\"><div class=\"text\" style=\"color: rgb(0, 0, 0);\">Catalog</div></div></foreignObject><g class=\"item\" data-shape=\"underline\" data-align=\"right\" transform=\"translate(10,0)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 150 23.5\" stroke=\"#3d3\"/><foreignObject x=\"0\" y=\"0\" width=\"150\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 221, 51);\"><div class=\"text\" style=\"color: rgb(0, 0, 0);\">Search &amp; browse maps</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"right\" transform=\"translate(46,31)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 114 23.5\" stroke=\"#3d3\"/><foreignObject x=\"0\" y=\"0\" width=\"114\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 221, 51);\"><div class=\"text\" style=\"color: rgb(0, 0, 0);\">Pin favorite maps</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"right\" transform=\"translate(12,62)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 148 23.5\" stroke=\"#3d3\"/><foreignObject x=\"0\" y=\"0\" width=\"148\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 221, 51);\"><div class=\"text\" style=\"color: rgb(0, 0, 0);\">Rename / delete maps</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"right\" transform=\"translate(0,93)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 160 23.5\" stroke=\"#3d3\"/><foreignObject x=\"0\" y=\"0\" width=\"160\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 221, 51);\"><div class=\"text\" style=\"color: rgb(0, 0, 0);\">SVG thumbnail previews</div></div></foreignObject></g></g></g><g class=\"item\" data-shape=\"box\" data-align=\"left\" transform=\"translate(667,279)\"><g class=\"connectors\"><path stroke-width=\"2\" d=\"M 169.5,173.5 L 177.5,173.5 M 185,39.5 L 185.5 39.5 A 8 8 0 0 0 177.5 47.5 L 177.5 333.5 A 8 8 0 0 0 185.5 341.5 L 185,341.5 M 177.5,107.5 L 185,107.5 M 177.5,155.5 L 185,155.5 M 177.5,279.5 L 185,279.5 M 177.5,310.5 L 185,310.5\" stroke=\"#33d\" fill=\"none\"/></g><g class=\"toggle\" transform=\"translate(177.5,173.5)\"><circle cx=\"0\" cy=\"0\" r=\"7\"/><path d=\"M -5 0 L 5 0\"/></g><foreignObject x=\"0\" y=\"151\" width=\"169\" height=\"44\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"--item-color: #33d;\"><div class=\"text\">Advanced features</div></div></foreignObject><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(185,0)\"><g class=\"connectors\"><path stroke-width=\"2\" d=\"M 207.5,39.5 L 215.5,39.5 M 223,23.5 L 223.5 23.5 A 8 8 0 0 0 215.5 31.5 L 215.5 46.5 A 8 8 0 0 0 223.5 54.5 L 223,54.5\" stroke=\"#33d\" fill=\"none\"/></g><g class=\"toggle\" transform=\"translate(215.5,39.5)\"><circle cx=\"0\" cy=\"0\" r=\"7\"/><path d=\"M -5 0 L 5 0\"/></g><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 39.5 L 207 39.5\" stroke=\"#33d\"/><foreignObject x=\"0\" y=\"16\" width=\"207\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 51, 221);\"><span class=\"value\">45.140</span><div class=\"text\">Numerical node values</div></div></foreignObject><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(223,0)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 145 23.5\" stroke=\"#33d\"/><foreignObject x=\"0\" y=\"0\" width=\"145\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 51, 221);\"><span class=\"value\">3.14</span><div class=\"text\">Constant values</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(223,31)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 246 23.5\" stroke=\"#33d\"/><foreignObject x=\"0\" y=\"0\" width=\"246\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 51, 221);\"><span class=\"value\">42</span><div class=\"text\">Formulas (sum / avg / min / max)</div></div></foreignObject></g></g><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(185,62)\"><g class=\"connectors\"><path stroke-width=\"2\" d=\"M 151.5,45.5 L 159.5,45.5 M 167,27.5 L 167.5 27.5 A 8 8 0 0 0 159.5 35.5 L 159.5 54.5 A 8 8 0 0 0 167.5 62.5 L 167,62.5\" stroke=\"#33d\" fill=\"none\"/></g><g class=\"toggle\" transform=\"translate(159.5,45.5)\"><circle cx=\"0\" cy=\"0\" r=\"7\"/><path d=\"M -5 0 L 5 0\"/></g><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 45.5 L 151 45.5\" stroke=\"#33d\"/><foreignObject x=\"0\" y=\"18\" width=\"151\" height=\"31\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 51, 221);\"><span class=\"status no\"></span><div class=\"text\">Bool node statuses</div></div></foreignObject><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(167,0)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 27.5 L 72 27.5\" stroke=\"#33d\"/><foreignObject x=\"0\" y=\"0\" width=\"72\" height=\"31\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 51, 221);\"><span class=\"status no\"></span><div class=\"text\">Yes/No</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(167,35)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 27.5 L 206 27.5\" stroke=\"#33d\"/><foreignObject x=\"0\" y=\"0\" width=\"206\" height=\"31\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 51, 221);\"><span class=\"status yes\"></span><div class=\"text\">Auto-propagation to parent</div></div></foreignObject></g></g><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(185,132)\"><g class=\"connectors\"><path stroke-width=\"2\" d=\"M 16.5,23.5 L 16.5,108.5 M 16.5 46.5 A 8 8 0 0 0 24.5 54.5 L 32 54.5 M 16.5 77.5 A 8 8 0 0 0 24.5 85.5 L 32 85.5 M 16.5 108.5 A 8 8 0 0 0 24.5 116.5 L 32 116.5\" stroke=\"#33d\" fill=\"none\"/></g><g class=\"toggle\" transform=\"translate(16.5,32.5)\"><circle cx=\"0\" cy=\"0\" r=\"7\"/><path d=\"M -5 0 L 5 0\"/></g><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 104 23.5\" stroke=\"#33d\"/><foreignObject x=\"0\" y=\"0\" width=\"104\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 51, 221);\"><div class=\"text\">Variable layouts</div></div></foreignObject><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(32,31)\"><g class=\"connectors\"/><g class=\"toggle\" transform=\"translate(16.5,32.5)\"><circle cx=\"0\" cy=\"0\" r=\"7\"/><path d=\"M -5 0 L 5 0\"/></g><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 29 23.5\" stroke=\"#33d\"/><foreignObject x=\"0\" y=\"0\" width=\"29\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 51, 221);\"><div class=\"text\">Map</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(32,62)\"><g class=\"connectors\"/><g class=\"toggle\" transform=\"translate(16.5,32.5)\"><circle cx=\"0\" cy=\"0\" r=\"7\"/><path d=\"M -5 0 L 5 0\"/></g><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 40 23.5\" stroke=\"#33d\"/><foreignObject x=\"0\" y=\"0\" width=\"40\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 51, 221);\"><div class=\"text\">Graph</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(32,93)\"><g class=\"connectors\"/><g class=\"toggle\" transform=\"translate(16.5,32.5)\"><circle cx=\"0\" cy=\"0\" r=\"7\"/><path d=\"M -5 0 L 5 0\"/></g><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 28 23.5\" stroke=\"#33d\"/><foreignObject x=\"0\" y=\"0\" width=\"28\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 51, 221);\"><div class=\"text\">Tree</div></div></foreignObject></g></g><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(185,256)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 120 23.5\" stroke=\"#33d\"/><foreignObject x=\"0\" y=\"0\" width=\"120\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 51, 221);\"><div class=\"text\">Infinite undo/redo</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(185,287)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 103 23.5\" stroke=\"#33d\"/><foreignObject x=\"0\" y=\"0\" width=\"103\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 51, 221);\"><div class=\"text\">Export to image</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"left\" transform=\"translate(185,318)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 119 23.5\" stroke=\"#33d\"/><foreignObject x=\"0\" y=\"0\" width=\"119\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(51, 51, 221);\"><div class=\"text\">Multi-item actions</div></div></foreignObject></g></g><g class=\"item\" data-shape=\"box\" data-align=\"right\" transform=\"translate(149,407)\"><g class=\"connectors\"><path stroke-width=\"2\" d=\"M 218.5,60.5 L 210.5,60.5 M 203,23.5 L 202.5 23.5 A 8 8 0 0 1 210.5 31.5 L 210.5 108.5 A 8 8 0 0 1 202.5 116.5 L 203,116.5 M 210.5,54.5 L 203,54.5 M 210.5,85.5 L 203,85.5\" stroke=\"#d3d\" fill=\"none\"/></g><g class=\"toggle\" transform=\"translate(210.5,60.5)\"><circle cx=\"0\" cy=\"0\" r=\"7\"/><path d=\"M -5 0 L 5 0\"/></g><foreignObject x=\"219\" y=\"38\" width=\"119\" height=\"44\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"--item-color: #d3d;\"><div class=\"text\">Architecture</div></div></foreignObject><g class=\"item\" data-shape=\"underline\" data-align=\"right\" transform=\"translate(0,0)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 203 23.5\" stroke=\"#d3d\"/><foreignObject x=\"0\" y=\"0\" width=\"203\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(221, 51, 221);\"><div class=\"text\">Frontend: Solid.js + Tailwind v4</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"right\" transform=\"translate(29,31)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 174 23.5\" stroke=\"#d3d\"/><foreignObject x=\"0\" y=\"0\" width=\"174\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(221, 51, 221);\"><div class=\"text\">Backend: Go + PocketBase</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"right\" transform=\"translate(100,62)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 103 23.5\" stroke=\"#d3d\"/><foreignObject x=\"0\" y=\"0\" width=\"103\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(221, 51, 221);\"><div class=\"text\">Single-user app</div></div></foreignObject></g><g class=\"item\" data-shape=\"underline\" data-align=\"right\" transform=\"translate(46,93)\"><g class=\"connectors\"/><path class=\"shape-underline\" fill=\"none\" stroke-width=\"2\" d=\"M 0 23.5 L 157 23.5\" stroke=\"#d3d\"/><foreignObject x=\"0\" y=\"0\" width=\"157\" height=\"27\"><div xmlns=\"http://www.w3.org/1999/xhtml\" class=\"content\" style=\"border-color: rgb(221, 51, 221);\"><div class=\"text\">Dockerized deployment</div></div></foreignObject></g></g></g></svg>",
+  "title": "Solid Mind Features",
+  "titleAuto": true,
+  "updated": "2026-08-15 12:01:08.339Z",
+  "uuid": "ad347c16-e054-40f9-972c-0352f126c15b"
+}
