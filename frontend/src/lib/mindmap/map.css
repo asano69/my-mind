@@ -136,11 +136,6 @@ svg > .item > .item > foreignObject > .content {
   opacity: 1;
 }
 
-.item .link-icon svg {
-  width: 1.3em;
-  height: 1.3em;
-}
-
 .item foreignObject {
   overflow: visible;
 }
