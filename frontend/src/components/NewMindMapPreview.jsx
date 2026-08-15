@@ -8,6 +8,7 @@ import {
 } from "solid-js";
 import ItemNode, { measureContentSize } from "../lib/mindmap/core/itemStore.js";
 import Spinner from "./Spinner.jsx";
+import Paperclip from "lucide-solid/icons/paperclip";
 import {
   itemStateClassList,
   selectItem,
@@ -369,7 +370,11 @@ function ItemNodeView(props) {
           </Show>
           <Show when={hasNotes(props.item)}>
             <div class="notes" aria-label="Has notes">
-              📎
+              {/* style.css's global `svg { position: absolute }` rule
+                  (see Logo.jsx/CatalogList.jsx's Pin icon for the same
+                  fix) would otherwise pull this icon out of the
+                  ".notes" flex container's normal flow. */}
+              <Paperclip style={{ position: "static" }} />
             </div>
           </Show>
         </div>
