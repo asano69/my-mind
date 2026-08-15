@@ -84,7 +84,14 @@ export default function TopBar() {
     document.getElementById("mindmap-container")?.focus();
   }
 
+  // Guarded against re-entrancy: without this, cancelEditingTitle()
+  // below could call this a second time from inside the title
+  // <input>'s own onBlur, while the first call is still unwinding (see
+  // that function's comment). Idempotent once editing has ended.
   function commitTitle() {
+    if (!isEditingTitle()) {
+      return;
+    }
     setIsEditingTitle(false);
     titleModule?.rename(editValue());
     returnFocusToCanvas();
@@ -93,6 +100,25 @@ export default function TopBar() {
   function cancelEditingTitle() {
     setEditValue(titleBeforeEdit);
     setIsEditingTitle(false);
+    // Blur the input first, mirroring handleTitleKeyDown's Enter path
+    // (e.currentTarget.blur()) -- never call container.focus() while
+    // the input still holds focus. Calling .focus() on a different
+    // element mid-transition (i.e. before the input has actually lost
+    // focus) is a recursive focus() call: the browser's blur/focusout
+    // handling for the input runs *inside* that still-unwinding
+    // container.focus() call, which can leave document.activeElement
+    // somewhere unexpected (often document.body) once it settles.
+    // Since newKeyboard.js's shortcut listener is attached to the
+    // container itself (not document, unlike newClipboard.js -- see
+    // docs/d01-clipboard-event-targeting.md), keydown events then have
+    // nowhere to bubble from, and its own focusout-based self-heal
+    // guard never fires either, since the container never actually
+    // had focus to lose here. Blurring first keeps this a plain,
+    // single "A loses focus, then B gains it" transition -- the same
+    // shape core/scope.js's own DOM-driven "form-field" scope (and
+    // containerEl's real focus requirement) already assume -- instead
+    // of two overlapping focus() calls racing each other.
+    titleInputRef?.blur();
     returnFocusToCanvas();
   }
 
