@@ -32,6 +32,9 @@ func Run(app *pocketbase.PocketBase, cfg *config.Config) error {
 	if err != nil {
 		return err
 	}
+	if err := database.SeedSampleMap(); err != nil {
+		return err
+	}
 
 	// Every map gets a public uuid the moment it's first saved, so the
 	// frontend can address it as /maps/<uuid> instead of depending on
