@@ -275,7 +275,14 @@ function ItemNodeView(props) {
   return (
     <g
       class="item"
-      classList={itemStateClassList(props.item)}
+      classList={{
+        ...itemStateClassList(props.item),
+        // Mirrors map.css's `.item:not(.current):not(.collapsed) > .toggle`
+        // rule, which expects a "collapsed" class on the item itself so the
+        // +/- toggle stays visible permanently while collapsed, not just
+        // while the node happens to also be selected (current).
+        collapsed: props.item.collapsed,
+      }}
       data-shape={props.item.resolvedShape.id}
       data-align={alignmentFor(props.item)}
       transform={props.transform ? props.transform() : ""}
