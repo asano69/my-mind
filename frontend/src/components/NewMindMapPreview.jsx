@@ -1,6 +1,6 @@
 import {
   createEffect,
-  createResource,
+  createMemo,
   For,
   Show,
   onCleanup,
@@ -37,7 +37,6 @@ import {
 } from "../lib/mindmap/core/layout/constants.js";
 import { repo as layoutRepo } from "../lib/mindmap/core/layout/layout.js";
 import { repo as shapeRepo } from "../lib/mindmap/core/shape/shape.js";
-import { loadByUuid } from "../lib/mindmap/backend/pocketbase.js";
 import "../lib/mindmap/core/layout/map.js";
 // Named imports also run each module's own registration side effect
 // (new Box()/new Ellipse()/new Underline()), so the old blank
@@ -469,27 +468,22 @@ export function rootFromMapData(data) {
 }
 
 export default function NewMindMapPreview(props) {
-  // Set by loadPreviewRoot() below whenever a real saved map was loaded
-  // (stays null for a brand-new, unsaved map) -- read by the
-  // root-loaded effect further down to restore io.js's currentMapId/
-  // currentMapUuid/title bookkeeping via newIo.applyLoadedRecord(), the
-  // same bookkeeping the old engine's io.restore() applies internally.
-  let lastLoadedRecord = null;
-
-  async function loadPreviewRoot(uuid, fallbackTitle) {
-    if (!uuid) {
-      lastLoadedRecord = null;
-      return createPreviewRoot(fallbackTitle);
+  // The map record for props.uuid is loaded by the host (see
+  // MindMapCanvas.jsx's mapRecord resource) rather than by this
+  // component itself -- see docs/mind-map-core-engine-library/
+  // 01-plan.md's Step 4a. This memo only derives the engine's tree from
+  // whatever the host has loaded so far, keeping backend/pocketbase.js
+  // out of the renderer entirely.
+  const root = createMemo(() => {
+    if (!props.uuid) {
+      return createPreviewRoot(props.title);
     }
-    const record = await loadByUuid(uuid);
-    lastLoadedRecord = record;
-    return rootFromMapData(record.mymind) ?? createPreviewRoot(fallbackTitle);
-  }
-
-  const [root] = createResource(
-    () => ({ uuid: props.uuid ?? null, title: props.title }),
-    ({ uuid, title }) => loadPreviewRoot(uuid, title),
-  );
+    const record = props.mapRecord?.();
+    if (!record) {
+      return null; // still loading
+    }
+    return rootFromMapData(record.mymind) ?? createPreviewRoot(props.title);
+  });
 
   // Set by ui/io.js's restoreSnapshot() -- a plain shared signal owned
   // by store.js (see overrideRoot's own comment there), not a
@@ -627,8 +621,9 @@ export default function NewMindMapPreview(props) {
       // engine's io.restore(), which only calls its own setCurrentMap()
       // when a record was actually found).
       io.attach(loadedRoot, svgRef);
-      if (lastLoadedRecord) {
-        io.setCurrentMap(lastLoadedRecord);
+      const loadedRecord = props.uuid ? props.mapRecord?.() : null;
+      if (loadedRecord) {
+        io.setCurrentMap(loadedRecord);
       }
     }
     // Reading layoutResult() here (rather than only contentPosition/size

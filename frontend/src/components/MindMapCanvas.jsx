@@ -7,17 +7,24 @@ import LeaveConfirmDialog from "./LeaveConfirmDialog";
 
 import ContextMenuContent from "./ContextMenu";
 import { ContextMenu } from "@kobalte/core/context-menu";
-import { createEffect, onMount, onCleanup } from "solid-js";
+import {
+  createResource,
+  createEffect,
+  onMount,
+  onCleanup,
+} from "solid-js";
 import { render } from "solid-js/web";
 import { activeMode } from "../lib/mindmap/store";
 import NewMindMapPreview from "./NewMindMapPreview.jsx";
 import * as newKeyboard from "../lib/mindmap/core/newKeyboard.js";
 import * as newMouse from "../lib/mindmap/core/newMouse.js";
 import * as title from "../lib/mindmap/title.js";
+import { loadByUuid } from "../lib/mindmap/backend/pocketbase.js";
 import * as scope from "../lib/mindmap/core/scope.js";
 
 export default function MindMapCanvas(props) {
   let mainRef;
+
   // Wraps every element this route renders (main canvas + all fixed
   // panels), so future phases can scope keyboard/clipboard/click
   // listeners here instead of window/document. tabIndex makes it
@@ -39,32 +46,51 @@ export default function MindMapCanvas(props) {
     scope.setBaseScope(activeMode());
   });
 
+  // Loads the map record for props.uuid up front, so NewMindMapPreview
+  // (the engine's renderer) no longer needs to import backend/
+  // pocketbase.js itself -- see docs/mind-map-core-engine-library/
+  // 01-plan.md's Step 4a. The fetcher is skipped entirely while its
+  // source is falsy (a brand-new, uuid-less map), leaving mapRecord()
+  // undefined -- NewMindMapPreview treats that case as "no saved
+  // record to load" via its own props.uuid check, not "still loading".
+  const [mapRecord] = createResource(
+    () => props.uuid ?? null,
+    (uuid) => loadByUuid(uuid),
+  );
+
   onMount(() => {
     console.log("[MindMapCanvas] onMount, uuid =", props.uuid);
+
     containerRef.focus();
 
     disposeEngine = render(
       () => (
         <NewMindMapPreview
           uuid={props.uuid}
+          mapRecord={mapRecord}
           title={new Date().toISOString().slice(0, 10)}
           containerEl={containerRef}
         />
       ),
       mainRef,
     );
+
     newKeyboard.init(containerRef);
+
     // Was previously started by the old engine's my-mind.js mount() --
     // that's gone, so this is now the sole engine-lifecycle owner of
     // document.title syncing.
     title.init();
+
     console.log("[MindMapCanvas] engine mounted, uuid =", props.uuid);
   });
 
   onCleanup(() => {
     console.log("[MindMapCanvas] onCleanup, uuid =", props.uuid);
+
     newKeyboard.dispose(containerRef);
     title.dispose();
+
     disposeEngine?.();
     disposeEngine = null;
   });
@@ -98,6 +124,7 @@ export default function MindMapCanvas(props) {
           disabled={activeMode() !== "canvas"}
           onContextMenu={(e) => newMouse.handleContextMenu(e)}
         />
+
         <ContextMenuContent />
       </ContextMenu>
 
@@ -109,3 +136,4 @@ export default function MindMapCanvas(props) {
     </div>
   );
 }
+
