@@ -1,0 +1,12 @@
+{
+  "name": "mindmap-engine",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "dependencies": {
+    "solid-js": "^1.9.12"
+  }
+}

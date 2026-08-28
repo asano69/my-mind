@@ -6,7 +6,7 @@ import {
   leftPanelHidden,
   currentTitle,
 } from "../lib/mindmap/store";
-import { useScopeWhen } from "../lib/mindmap/core/scope.js";
+import { useScopeWhen } from "mindmap-engine/scope.js";
 
 // icons
 import Trash2 from "lucide-solid/icons/trash-2";
@@ -118,7 +118,7 @@ export default function TopBar() {
 
   onMount(async () => {
     titleModule = await import("../lib/mindmap/title.js");
-    historyModule = await import("../lib/mindmap/core/history.js");
+    historyModule = await import("mindmap-engine/history.js");
     setHistoryReady(true);
   });
 

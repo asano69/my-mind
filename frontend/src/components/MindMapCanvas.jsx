@@ -17,10 +17,10 @@ import {
   setErrorDialogMessage,
 } from "../lib/mindmap/store";
 import NewMindMapPreview from "./NewMindMapPreview.jsx";
-import * as newKeyboard from "../lib/mindmap/core/newKeyboard.js";
-import * as newMouse from "../lib/mindmap/core/newMouse.js";
+import * as newKeyboard from "mindmap-engine/newKeyboard.js";
+import * as newMouse from "mindmap-engine/newMouse.js";
 import * as title from "../lib/mindmap/title.js";
-import * as scope from "../lib/mindmap/core/scope.js";
+import * as scope from "mindmap-engine/scope.js";
 import * as io from "../lib/mindmap/ui/io.js";
 import { loadByUuid } from "../lib/mindmap/backend/pocketbase.js";
 
