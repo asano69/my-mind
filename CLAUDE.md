@@ -41,3 +41,4 @@ from flask import Flask
 
 # Work in progress
 - pubsub時代の「非リアクティブなグローバル状態を都度読みに行く」パターンの発見とリファクタリング
+- Mindmapエンジンを、Solid.js用ライブラリにする
