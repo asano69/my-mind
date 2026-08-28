@@ -10,7 +10,7 @@ import { useNavigate } from "@solidjs/router";
 import { Dialog } from "@kobalte/core/dialog";
 import { fileSwitcherOpen, closeFileSwitcher } from "../lib/mindmap/store";
 import { listMaps } from "../lib/mindmap/backend/pocketbase";
-import { useScopeWhen } from "mindmap-engine/scope.js";
+import { useScopeWhen } from "mindmap-engine";
 import Search from "./Search";
 import Pin from "lucide-solid/icons/pin";
 

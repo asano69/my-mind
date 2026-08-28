@@ -1,6 +1,6 @@
 import { Show } from "solid-js";
 import { Dialog } from "@kobalte/core/dialog";
-import { useScopeWhen } from "mindmap-engine/scope.js";
+import { useScopeWhen } from "mindmap-engine";
 
 // Reusable destructive-action confirmation dialog, replacing the
 // browser-native confirm() popup (see TopBar.jsx/Catalog.jsx's delete

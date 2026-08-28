@@ -1,4 +1,4 @@
-import { currentItem } from "mindmap-engine/itemSelection.js";
+import { currentItem } from "mindmap-engine";
 import { activeMode, bumpDirty, setActiveMode } from "../store.js";
 
 // Set by NotesEditor's onMount (see components/NotesEditor.jsx) instead of

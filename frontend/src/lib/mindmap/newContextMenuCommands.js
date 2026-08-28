@@ -12,10 +12,10 @@
 // engineCommands.js directly, to keep appCommands.js's store.js/ui/*
 // dependencies out of core/**).
 import {
-  repo as engineRepo,
+  engineCommandRepo as engineRepo,
   setPanKeyboardScope,
   disposePan,
-} from "mindmap-engine/engineCommands.js";
+} from "mindmap-engine";
 import { repo as appRepo } from "./appCommands.js";
 
 export const repo = new Map([...engineRepo, ...appRepo]);

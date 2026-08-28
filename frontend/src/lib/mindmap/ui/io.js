@@ -1,7 +1,7 @@
 import { createRoot, createEffect, on } from "solid-js";
 import * as backend from "../backend/pocketbase.js";
 import { serializeCurrentMap } from "../backend/image.js";
-import ItemNode from "mindmap-engine/itemStore.js";
+import { ItemNode } from "mindmap-engine";
 import {
   currentTitle,
   setCurrentTitle,

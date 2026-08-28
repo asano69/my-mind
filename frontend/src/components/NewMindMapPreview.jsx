@@ -6,39 +6,39 @@ import {
   onCleanup,
   onMount,
 } from "solid-js";
-import ItemNode, { measureContentSize } from "mindmap-engine/itemStore.js";
 import Paperclip from "lucide-solid/icons/paperclip";
+// A single barrel import (mindmap-engine/index.js, see
+// docs/mind-map-core-engine-library/01-plan.md's Phase 4) replaces the
+// old per-file deep imports below. Importing the barrel also runs
+// shape/box.js's, shape/ellipse.js's, shape/underline.js's, and
+// layout/map.js's own registration side effects (new Box()/
+// new Ellipse()/new Underline()/new MapLayout()), matching what those
+// old deep imports used to do -- computeBoxStyle/computeEllipseStyle/
+// computeUnderlinePath are the same pure style/path functions the real
+// engine's shape/*.js update() methods use (see
+// docs/08-mindmap-engine-refactor.md's Phase 3.7), so this preview
+// doesn't duplicate that branching here.
 import {
+  ItemNode,
+  measureContentSize,
   itemStateClassList,
   selectItem,
-} from "mindmap-engine/itemSelection.js";
-import {
   handleItemClick,
   handleItemDblClick,
   handleItemLinkClick,
-} from "mindmap-engine/newMouse.js";
-import { registerDomRefs } from "mindmap-engine/newEdit.js";
-import * as newMouse from "mindmap-engine/newMouse.js";
-import * as newClipboard from "mindmap-engine/newClipboard.js";
-import * as newViewport from "mindmap-engine/newViewport.js";
-import {
+  registerDomRefs,
+  newMouse,
+  newClipboard,
+  newViewport,
   TOGGLE_SIZE,
   D_MINUS,
   D_PLUS,
-} from "mindmap-engine/layout/constants.js";
-import { repo as layoutRepo } from "mindmap-engine/layout/layout.js";
-import { repo as shapeRepo } from "mindmap-engine/shape/shape.js";
-import "mindmap-engine/layout/map.js";
-// Named imports also run each module's own registration side effect
-// (new Box()/new Ellipse()/new Underline()), so the old blank
-// import "mindmap-engine/shape/box.js" style imports are no longer
-// needed alongside these (see docs/08-mindmap-engine-refactor.md's
-// Phase 3.7: this preview now shares the same pure style/path
-// functions the real engine's shape/*.js update() methods use, instead
-// of duplicating that branching here).
-import { computeBoxStyle } from "mindmap-engine/shape/box.js";
-import { computeEllipseStyle } from "mindmap-engine/shape/ellipse.js";
-import { computeUnderlinePath } from "mindmap-engine/shape/underline.js";
+  layoutRepo,
+  shapeRepo,
+  computeBoxStyle,
+  computeEllipseStyle,
+  computeUnderlinePath,
+} from "mindmap-engine";
 import mapCss from "../lib/mindmap/map.css?raw";
 
 // Phase 3.5 (see docs/08-mindmap-engine-refactor.md): layout computation

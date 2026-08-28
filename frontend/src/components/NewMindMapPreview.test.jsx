@@ -8,13 +8,7 @@ import { describe, expect, it, vi } from "vitest";
 // of the default "solid-js" export's microtask-scheduled update, which
 // this file's synchronous assertions can't observe.
 vi.mock("solid-js", async () => await import("solid-js/dist/solid.js"));
-
-import ItemNode from "mindmap-engine/itemStore.js";
-import { repo as layoutRepo } from "mindmap-engine/layout/layout.js";
-import { repo as shapeRepo } from "mindmap-engine/shape/shape.js";
-import "mindmap-engine/layout/map.js";
-import "mindmap-engine/shape/box.js";
-import "mindmap-engine/shape/ellipse.js";
+import { ItemNode, layoutRepo, shapeRepo } from "mindmap-engine";
 import "mindmap-engine/shape/underline.js";
 import {
   measureContentSize,

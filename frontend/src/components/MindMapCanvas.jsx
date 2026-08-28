@@ -17,10 +17,8 @@ import {
   setErrorDialogMessage,
 } from "../lib/mindmap/store";
 import NewMindMapPreview from "./NewMindMapPreview.jsx";
-import * as newKeyboard from "mindmap-engine/newKeyboard.js";
-import * as newMouse from "mindmap-engine/newMouse.js";
 import * as title from "../lib/mindmap/title.js";
-import * as scope from "mindmap-engine/scope.js";
+import { newKeyboard, newMouse, setBaseScope } from "mindmap-engine";
 import * as io from "../lib/mindmap/ui/io.js";
 import { loadByUuid } from "../lib/mindmap/backend/pocketbase.js";
 
@@ -51,7 +49,7 @@ export default function MindMapCanvas(props) {
   // keep reacting to canvas shortcuts and clipboard events while Notes
   // mode is in front.
   createEffect(() => {
-    scope.setBaseScope(activeMode());
+    setBaseScope(activeMode());
   });
 
   onMount(async () => {

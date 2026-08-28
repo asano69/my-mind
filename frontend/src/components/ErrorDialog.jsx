@@ -1,6 +1,6 @@
 import { Dialog } from "@kobalte/core/dialog";
 import { errorDialogMessage, closeErrorDialog } from "../lib/mindmap/store";
-import { useScopeWhen } from "mindmap-engine/scope.js";
+import { useScopeWhen } from "mindmap-engine";
 
 // Replaces the native window.alert() previously used by io.js's error()
 // handler with a Kobalte dialog matching the rest of the app's UI (see
