@@ -22,7 +22,6 @@ import { registerDomRefs } from "../lib/mindmap/core/newEdit.js";
 import * as newMouse from "../lib/mindmap/core/newMouse.js";
 import * as newClipboard from "../lib/mindmap/core/newClipboard.js";
 import * as newViewport from "../lib/mindmap/core/newViewport.js";
-import * as io from "../lib/mindmap/ui/io.js";
 import {
   bumpDirty,
   titleAuto,
@@ -562,18 +561,21 @@ export default function NewMindMapPreview(props) {
     // be scoped to a container element the way mousedown/keydown can.
     newClipboard.init(domRefs);
     // Registers the debounced auto-save effect and loads the persisted
-    // auto-save preference (see ui/io.js's init()). The old engine's
-    // my-mind.js mount() does this via ui.init(); the new engine never
-    // called it, which is why Save/Delete/auto-save silently did
-    // nothing under ?newEngine=1 until this call was added.
-    io.init();
+    // auto-save preference. Routed through a host callback instead of
+    // importing ui/io.js directly -- see docs/mind-map-core-engine-library/
+    // 01-plan.md's Step 4b -- so this renderer stays free of any
+    // persistence-layer dependency. MindMapCanvas.jsx supplies the
+    // actual io.init() call.
+    props.onMount?.();
   });
   onCleanup(() => {
     newMouse.dispose();
     newClipboard.dispose();
     newViewport.dispose();
-    io.dispose();
-    io.detach();
+    // See onMount's own comment above: routed through a host callback
+    // (MindMapCanvas.jsx calls io.dispose()/io.detach()) instead of
+    // importing ui/io.js directly.
+    props.onUnmount?.();
     setOverrideRoot(null);
   });
 
@@ -610,17 +612,15 @@ export default function NewMindMapPreview(props) {
       // under the new engine.
       selectItem(loadedRoot);
       // Registers this root/svg as the source ui/io.js's save/autosave
-      // logic reads from. Only apply the loaded record's bookkeeping
-      // when a real saved map was actually loaded -- doing this
-      // unconditionally for a brand-new map would prematurely rewrite
-      // the URL to "/" before the user ever saves (mirrors the old
-      // engine's io.restore(), which only calls its own setCurrentMap()
-      // when a record was actually found).
-      io.attach(loadedRoot, svgRef);
+      // logic reads from, via a host callback rather than importing
+      // ui/io.js directly (see docs/mind-map-core-engine-library/
+      // 01-plan.md's Step 4b). loadedRecord is only non-null when a
+      // real saved map was actually loaded -- MindMapCanvas.jsx only
+      // runs its own io.setCurrentMap() bookkeeping (which rewrites the
+      // URL) in that case, matching the old engine's io.restore(),
+      // which only did the same when a record was actually found.
       const loadedRecord = props.uuid ? props.mapRecord?.() : null;
-      if (loadedRecord) {
-        io.setCurrentMap(loadedRecord);
-      }
+      props.onRootReady?.(loadedRoot, svgRef, loadedRecord);
     }
     // Reading layoutResult() here (rather than only contentPosition/size
     // directly) is what subscribes this effect to every relevant layout

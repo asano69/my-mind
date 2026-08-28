@@ -21,6 +21,7 @@ import * as newMouse from "../lib/mindmap/core/newMouse.js";
 import * as title from "../lib/mindmap/title.js";
 import { loadByUuid } from "../lib/mindmap/backend/pocketbase.js";
 import * as scope from "../lib/mindmap/core/scope.js";
+import * as io from "../lib/mindmap/ui/io.js";
 
 export default function MindMapCanvas(props) {
   let mainRef;
@@ -70,6 +71,22 @@ export default function MindMapCanvas(props) {
           mapRecord={mapRecord}
           title={new Date().toISOString().slice(0, 10)}
           containerEl={containerRef}
+          // Owns the actual ui/io.js calls on the renderer's behalf --
+          // see docs/mind-map-core-engine-library/01-plan.md's Step 4b.
+          // The renderer itself only calls these callbacks at the same
+          // points it used to call io.init()/dispose()/detach()/
+          // attach()/setCurrentMap() directly.
+          onMount={() => io.init()}
+          onUnmount={() => {
+            io.dispose();
+            io.detach();
+          }}
+          onRootReady={(root, svgNode, record) => {
+            io.attach(root, svgNode);
+            if (record) {
+              io.setCurrentMap(record);
+            }
+          }}
         />
       ),
       mainRef,
