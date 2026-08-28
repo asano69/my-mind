@@ -21,7 +21,16 @@
 // the stack is ever "active": this is a modal stack (like a z-index for
 // input ownership), not a set of independently toggleable flags.
 import { createSignal, createEffect, onCleanup } from "solid-js";
-import { activeMode } from "../store.js";
+
+// The base scope, normally the host app's "canvas vs notes" mode. core/**
+// must not import store.js directly (see docs/mind-map-core-engine-library.md,
+// Step 2) -- the host is responsible for keeping this in sync via
+// setBaseScope(), e.g. `createEffect(() => scope.setBaseScope(activeMode()))`
+// in MindMapCanvas.jsx. Defaults to "canvas" to match store.js's own
+// activeMode default, so behavior is unchanged before the host's first
+// effect run.
+const [baseScope, setBaseScope] = createSignal("canvas");
+export { setBaseScope };
 
 const [pushedScopes, setPushedScopes] = createSignal([]);
 let seq = 0;
@@ -57,7 +66,7 @@ export function useScopeWhen(active, name) {
 // pushed.
 export function topScope() {
   const pushed = pushedScopes();
-  return pushed.length ? pushed[pushed.length - 1].name : activeMode();
+  return pushed.length ? pushed[pushed.length - 1].name : baseScope();
 }
 
 export function isScopeActive(name) {

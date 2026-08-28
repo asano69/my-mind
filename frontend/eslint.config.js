@@ -28,4 +28,46 @@ export default [
       ],
     },
   },
+  {
+    // Enforces the engine/app boundary from docs/mind-map-core-engine-library.md
+    // (Step 1): core/** is meant to become a standalone library with no
+    // knowledge of this host app, so it must never import store.js (app
+    // state), ui/* (PocketBase persistence, notes editor), backend/*
+    // (PocketBase client), or title.js (browser tab title). Catching this
+    // as a lint error, rather than a convention someone has to remember to
+    // uphold, is the whole point of this step -- see that doc for the full
+    // rationale and the phased plan this kicks off. Only core/scope.js is
+    // expected to violate this today (its `activeMode` import from
+    // store.js); Step 2 fixes that by inverting the dependency.
+    files: ["src/lib/mindmap/core/**/*.{js,jsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/store.js"],
+              message:
+                "core/** must not import store.js (app state) -- accept it as a parameter or callback instead. See docs/mind-map-core-engine-library.md.",
+            },
+            {
+              group: ["**/ui/*", "**/ui/**"],
+              message:
+                "core/** must not import ui/* (app-specific persistence/notes UI). See docs/mind-map-core-engine-library.md.",
+            },
+            {
+              group: ["**/backend/*", "**/backend/**"],
+              message:
+                "core/** must not import backend/* (PocketBase client) directly. See docs/mind-map-core-engine-library.md.",
+            },
+            {
+              group: ["**/title.js"],
+              message:
+                "core/** must not import title.js (document.title is a browser-tab concern, not the engine's). See docs/mind-map-core-engine-library.md.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ];

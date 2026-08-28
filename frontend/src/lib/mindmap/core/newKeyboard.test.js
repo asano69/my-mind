@@ -1,7 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mockActiveMode = { value: "canvas" };
-vi.mock("../store.js", () => ({ activeMode: () => mockActiveMode.value }));
+// scope.js no longer imports store.js (see docs/mind-map-core-engine-library.md,
+// Step 2) -- isCanvasActive() now reads scope.js's own baseScope signal
+// directly, so mockActiveMode.value is a thin proxy over setBaseScope()
+// instead of a store.js mock. Every existing `mockActiveMode.value = ...`
+// line below is unchanged; only what it plumbs into differs.
+import * as scope from "./scope.js";
+const mockActiveMode = {
+  set value(v) {
+    scope.setBaseScope(v);
+  },
+};
 vi.mock("./newEdit.js", () => ({
   startEditing: vi.fn(() => ({})),
   commitEditing: vi.fn(),
