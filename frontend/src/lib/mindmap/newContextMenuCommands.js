@@ -15,7 +15,7 @@ import {
   engineCommandRepo as engineRepo,
   setPanKeyboardScope,
   disposePan,
-} from "mindmap-engine";
+} from "./engineInstance.js";
 import { repo as appRepo } from "./appCommands.js";
 
 export const repo = new Map([...engineRepo, ...appRepo]);

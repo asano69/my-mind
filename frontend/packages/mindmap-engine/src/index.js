@@ -6,18 +6,16 @@
 // layoutRepo, shapeRepo, the shape/*.js style helpers) or genuinely
 // page-global infrastructure (scope.js: the browser only ever has one
 // document to attach a capture-phase clipboard listener to). A host
-// that wants selection/history/viewport/actions/etc. must call
-// createMindMap() itself and hold onto the returned instance -- see
-// docs/mind-map-core-engine-library/01-plan.md's Step 5/Phase 4.
+// that wants selection/history/viewport/actions/keyboard/commands/etc.
+// must call createMindMap() itself and hold onto the returned instance
+// -- see docs/mind-map-core-engine-library/01-plan.md's Step 5/Phase 4.
 //
-// Known exception: newKeyboard.js and engineCommandRepo (engineCommands.js)
-// are NOT yet parameterized the way newMouse.js/newClipboard.js/newEdit.js
-// are (see instance.js's own header comment) -- they still read
-// itemSelection.js/newAction.js/history.js's own internal default
-// singletons directly. They are kept as flat/namespace exports below
-// until that parameterization work happens; a host embedding more than
-// one mindmap will not get working keyboard shortcuts for more than one
-// of them yet.
+// newKeyboard.js and engineCommands.js are now factory-based too (see
+// createKeyboardController()/createEngineCommands()), and
+// createMindMap() bundles a `keyboard`/`commands` pair built from each
+// instance's own selection/edit/actions/history/viewport -- so a host
+// embedding more than one mindmap gets working, independent keyboard
+// shortcuts for each one, closing the gap this file used to note here.
 
 // -- itemStore.js --
 export { default as ItemNode, measureContentSize } from "./itemStore.js";
@@ -71,11 +69,7 @@ export { TOGGLE_SIZE, D_MINUS, D_PLUS } from "./layout/constants.js";
 // from "mindmap-engine/layout/layout.js"`). --
 export { repo as layoutRepo } from "./layout/layout.js";
 export { repo as shapeRepo } from "./shape/shape.js";
-export {
-  repo as engineCommandRepo,
-  setPanKeyboardScope,
-  disposePan,
-} from "./engineCommands.js";
+export { createEngineCommands } from "./engineCommands.js";
 
 // -- shape/box.js, shape/ellipse.js, shape/underline.js: named
 // pure-style helpers. Importing them here also runs each module's own
@@ -85,10 +79,7 @@ export { computeBoxStyle } from "./shape/box.js";
 export { computeEllipseStyle } from "./shape/ellipse.js";
 export { computeUnderlinePath } from "./shape/underline.js";
 
-// -- newKeyboard.js: see this file's header comment -- not yet
-// instance-parameterized, so this is still the module's own internal
-// default singleton, exported here as a stopgap. --
-export * as newKeyboard from "./newKeyboard.js";
+export { createKeyboardController } from "./newKeyboard.js";
 
 // -- layout/map.js: side-effect import only. Registers MapLayout (and,
 // via its own import of graph.js, GraphLayout) into layout/layout.js's

@@ -18,8 +18,8 @@ import {
 } from "../lib/mindmap/store";
 import NewMindMapPreview from "./NewMindMapPreview.jsx";
 import * as title from "../lib/mindmap/title.js";
-import { newKeyboard, setBaseScope } from "mindmap-engine";
-import { newMouse } from "../lib/mindmap/engineInstance.js";
+import { setBaseScope } from "mindmap-engine";
+import { newMouse, newKeyboard } from "../lib/mindmap/engineInstance.js";
 import * as io from "../lib/mindmap/ui/io.js";
 import { loadByUuid } from "../lib/mindmap/backend/pocketbase.js";
 

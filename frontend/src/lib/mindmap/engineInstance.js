@@ -37,6 +37,8 @@ export const {
   edit,
   clipboard,
   mouse,
+  commands,
+  keyboard,
 } = instance;
 
 export const {
@@ -98,14 +100,22 @@ export {
 export const { registerDomRefs, startEditing, commitEditing, discardEditing } =
   edit;
 
-// newMouse.js/newClipboard.js/newViewport.js's init()/dispose() collide
-// with each other and with newKeyboard.js's, so these stay namespaced
-// -- mirrors index.js's old namespace-export rationale, just sourced
-// from this instance's own controllers instead of the library's
-// removed default singletons.
+// newMouse.js/newClipboard.js/newViewport.js/newKeyboard.js's
+// init()/dispose() collide with each other, so these stay namespaced --
+// mirrors index.js's old namespace-export rationale, just sourced from
+// this instance's own controllers instead of the library's removed
+// default singletons.
 export const newMouse = mouse;
 export const newClipboard = clipboard;
 export const newViewport = viewport;
+export const newKeyboard = keyboard;
+
+// engineCommands.js's repo, plus Pan's keyboard-scope helpers, sourced
+// from this instance's own `commands` controller instead of the
+// library's removed default singleton -- newContextMenuCommands.js
+// merges this repo with appCommands.js's app-only repo.
+export const engineCommandRepo = commands.repo;
+export const { setPanKeyboardScope, disposePan } = commands;
 
 // Flattened out of newMouse for callers (NewMindMapPreview.jsx) that
 // used to import these directly off mindmap-engine's old default

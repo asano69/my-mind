@@ -24,11 +24,20 @@
 import { createHistory } from "./history.js";
 import { createItemSelection } from "./itemSelection.js";
 import { createViewport } from "./newViewport.js";
-import { createActions, SetText, Multi } from "./newAction.js";
+import {
+  createActions,
+  SetText,
+  SetSide,
+  SetStatus,
+  Swap,
+  Multi,
+} from "./newAction.js";
 import { createEdit } from "./newEdit.js";
 import { createNavigation } from "./navigation.js";
 import { createClipboardController } from "./newClipboard.js";
 import { createMouseController } from "./newMouse.js";
+import { createEngineCommands } from "./engineCommands.js";
+import { createKeyboardController } from "./newKeyboard.js";
 
 export function createMindMap() {
   const history = createHistory();
@@ -81,6 +90,57 @@ export function createMindMap() {
     viewport,
   });
 
+  // engine-only command repo (formatting, tree edits, undo/redo,
+  // viewport, per-item metadata) -- see engineCommands.js's own header
+  // comment. Built from this instance's own selection/edit/actions/
+  // history/viewport rather than any module-level default singleton.
+  const commands = createEngineCommands({
+    currentItem: selection.currentItem,
+    editing: selection.editing,
+    setEditing: selection.setEditing,
+    selectedItems: selection.selectedItems,
+    startEditing: edit.startEditing,
+    commitEditing: edit.commitEditing,
+    action: actions.action,
+    InsertNewItem: actions.InsertNewItem,
+    RemoveItem: actions.RemoveItem,
+    Swap,
+    SetSide,
+    SetText,
+    SetStatus,
+    Multi,
+    history,
+    viewport,
+  });
+
+  // Keyboard shortcuts, wired to this instance's own selection/edit/
+  // actions/history and to this instance's own engine command repo
+  // (`commands.repo`) rather than the module-level default singletons
+  // -- see newKeyboard.js's own header comment. This closes the last
+  // gap noted in docs/mind-map-core-engine-library/01-plan.md's Step 5:
+  // keyboard shortcuts now work correctly for any createMindMap()
+  // instance, not only the first one created on the page.
+  const keyboard = createKeyboardController({
+    currentItem: selection.currentItem,
+    selectedItems: selection.selectedItems,
+    selectionCursor: selection.selectionCursor,
+    selectItem: selection.selectItem,
+    extendSelection: selection.extendSelection,
+    editing: selection.editing,
+    setEditing: selection.setEditing,
+    startEditing: edit.startEditing,
+    commitEditing: edit.commitEditing,
+    discardEditing: edit.discardEditing,
+    history,
+    action: actions.action,
+    InsertNewItem: actions.InsertNewItem,
+    RemoveItem: actions.RemoveItem,
+    Multi,
+    sharedCommandRepo: commands.repo,
+    setPanKeyboardScope: commands.setPanKeyboardScope,
+    disposePan: commands.disposePan,
+  });
+
   return {
     history,
     selection,
@@ -90,5 +150,7 @@ export function createMindMap() {
     edit,
     clipboard,
     mouse,
+    commands,
+    keyboard,
   };
 }
