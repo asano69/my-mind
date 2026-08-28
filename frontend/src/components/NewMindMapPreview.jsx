@@ -349,11 +349,7 @@ function ItemNodeView(props) {
           <Show when={props.item.icon}>
             <span class={`icon fa ${props.item.icon}`} />
           </Show>
-          {/* eslint-disable-next-line solid/no-innerhtml -- item.text
-              deliberately contains HTML (bold/italic/underline/strike
-              tags applied by engineCommands.js's runStyleCommand), not
-              arbitrary external input, so this is not a sanitization
-              gap. */}
+          { }
           <div
             class="text"
             style={textStyleFor(props.item)}
@@ -691,7 +687,7 @@ export default function NewMindMapPreview(props) {
         <style>{mapCss}</style>
         <Show when={effectiveRoot()}>
           {
-            // eslint-disable-next-line solid/reactivity -- Show's
+             
             // children-as-function is the standard idiomatic Solid API
             // for narrowing a signal to a non-null value inside this
             // block; it is a render prop, not a signal read escaping its

@@ -200,7 +200,7 @@ export default class ItemNode {
     // reference every time -- a plain createSignal setter would
     // otherwise invalidate layoutResult (and every ancestor's) on every
     // resize-observer-style tick even when nothing actually changed.
-    // eslint-disable-next-line solid/reactivity -- this is a plain
+     
     // imperative setter on a data-model class, not a Solid component;
     // the signal read below is a one-off equality check against the
     // value at call time, not something that needs to re-run when
