@@ -8,7 +8,15 @@ export default [
   js.configs.recommended,
   solid,
   {
-    files: ["src/**/*.{js,jsx}"],
+    // packages/mindmap-engine/src is included here too: since Phase 4's
+    // physical package split (docs/mind-map-core-engine-library/01-plan.md),
+    // it's a separate directory outside src/ and was previously falling
+    // through to js.configs.recommended alone (no browser globals, no
+    // "_"-prefixed unused-arg exemption).
+    files: [
+      "src/**/*.{js,jsx}",
+      "packages/mindmap-engine/src/**/*.{js,jsx}",
+    ],
     languageOptions: {
       globals: globals.browser,
       parserOptions: {
