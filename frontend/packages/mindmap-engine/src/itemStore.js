@@ -615,7 +615,7 @@ export default class ItemNode {
   }
 
   /**
-   * Only when creating a new item. To merge existing items, use .mergeWith().
+   * Only when creating a new item.
    */
   fromJSON(data) {
     this.text = data.text;
@@ -666,65 +666,6 @@ export default class ItemNode {
       this.insertChild(ItemNode.fromJSON(child));
     });
     return this;
-  }
-
-  // Unlike item.js's mergeWith(), there is no live-editing DOM state to
-  // guard against here (no contentEditable), so text is always
-  // overwritten directly -- that guard belongs to whatever later phase
-  // wires a live-edit signal into this store.
-  mergeWith(data) {
-    if (this.text != data.text) {
-      this.text = data.text;
-    }
-    if (this._side() != data.side) {
-      this._setSide(data.side || null);
-    }
-    if (this._color() != data.color) {
-      this._setColor(data.color || "");
-    }
-    if (this._textColor() != data.textColor) {
-      this._setTextColor(data.textColor || "");
-    }
-    if (this._icon() != data.icon) {
-      this._setIcon(data.icon || "");
-    }
-    if (this._url() != data.url) {
-      this._setUrl(data.url || "");
-    }
-    if (this._value() != data.value) {
-      this._setValue(data.value || null);
-    }
-    if (this._status() != data.status) {
-      this._setStatus(data.status);
-    }
-    if (this._collapsed() != !!data.collapsed) {
-      this.collapsed = !!data.collapsed;
-    }
-    const ourShapeId = this._shape() ? this._shape().id : null;
-    if (ourShapeId != data.shape) {
-      this._setShape(data.shape ? shapeRepo.get(data.shape) : null);
-    }
-    const ourLayoutId = this._layout() ? this._layout().id : null;
-    if (ourLayoutId != data.layout) {
-      this._setLayout(data.layout ? layoutRepo.get(data.layout) : null);
-    }
-    (data.children || []).forEach((child, index) => {
-      if (index >= this.children.length) {
-        this.insertChild(ItemNode.fromJSON(child));
-      } else {
-        const myChild = this.children[index];
-        if (myChild.id == child.id) {
-          myChild.mergeWith(child);
-        } else {
-          this.removeChild(this.children[index]);
-          this.insertChild(ItemNode.fromJSON(child), index);
-        }
-      }
-    });
-    const newLength = (data.children || []).length;
-    while (this.children.length > newLength) {
-      this.removeChild(this.children[this.children.length - 1]);
-    }
   }
 
   clone() {

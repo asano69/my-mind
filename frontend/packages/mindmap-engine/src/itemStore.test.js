@@ -12,10 +12,10 @@ vi.mock("solid-js", async () => await import("solid-js/dist/solid.js"));
 // Registers shape/layout kinds into their repos (see shape/shape.js's
 // and layout/layout.js's `repo` Maps), the same side-effect-import
 // pattern my-mind.js uses to wire the engine together -- needed here so
-// fromJSON()/mergeWith() round trips below can resolve "box"/"map" ids
-// back to real instances. None of these modules touch the DOM at import
-// time (only inside their update() methods, which this test never
-// calls), so no DOM stubbing is needed, unlike item.test.js.
+// fromJSON() round trips below can resolve "box"/"map" ids back to real
+// instances. None of these modules touch the DOM at import time (only
+// inside their update() methods, which this test never calls), so no
+// DOM stubbing is needed, unlike item.test.js.
 import "./shape/box.js";
 import "./shape/ellipse.js";
 import "./shape/underline.js";
@@ -189,30 +189,6 @@ describe("ItemNode JSON round-trip", () => {
 
     clone.text = "Changed";
     expect(root.text).toBe("Original");
-  });
-});
-
-describe("ItemNode.mergeWith", () => {
-  it("updates matching children in place and adds/removes to match the incoming data", () => {
-    const root = new ItemNode();
-    const a = new ItemNode();
-    a.text = "A";
-    const b = new ItemNode();
-    b.text = "B";
-    root.insertChild(a);
-    root.insertChild(b);
-
-    const incoming = {
-      text: "Root",
-      children: [{ id: a.id, text: "A changed" }, { text: "C (new)" }],
-    };
-    root.mergeWith(incoming);
-
-    expect(root.text).toBe("Root");
-    expect(root.children).toHaveLength(2);
-    expect(root.children[0]).toBe(a); // same instance, updated in place
-    expect(root.children[0].text).toBe("A changed");
-    expect(root.children[1].text).toBe("C (new)");
   });
 });
 
