@@ -7,13 +7,14 @@ import LeaveConfirmDialog from "./LeaveConfirmDialog";
 
 import ContextMenuContent from "./ContextMenu";
 import { ContextMenu } from "@kobalte/core/context-menu";
-import { onMount, onCleanup } from "solid-js";
+import { createEffect, onMount, onCleanup } from "solid-js";
 import { render } from "solid-js/web";
 import { activeMode } from "../lib/mindmap/store";
 import NewMindMapPreview from "./NewMindMapPreview.jsx";
 import * as newKeyboard from "../lib/mindmap/core/newKeyboard.js";
 import * as newMouse from "../lib/mindmap/core/newMouse.js";
 import * as title from "../lib/mindmap/title.js";
+import * as scope from "../lib/mindmap/core/scope.js";
 
 export default function MindMapCanvas(props) {
   let mainRef;
@@ -25,6 +26,18 @@ export default function MindMapCanvas(props) {
   // for shortcuts to work when nothing else is focused.
   let containerRef;
   let disposeEngine;
+
+  // Syncs core/scope.js's base input scope with the host's canvas/notes
+  // mode. Required per docs/mind-map-core-engine-library.md's Step 2:
+  // scope.js no longer reads store.js's activeMode itself, so without
+  // this the engine's own isCanvasActive() stays stuck at "canvas"
+  // forever, and newKeyboard.js/newClipboard.js (neither of which is
+  // blocked by Workspace.jsx's pointer-events-none, unlike newMouse.js)
+  // keep reacting to canvas shortcuts and clipboard events while Notes
+  // mode is in front.
+  createEffect(() => {
+    scope.setBaseScope(activeMode());
+  });
 
   onMount(() => {
     console.log("[MindMapCanvas] onMount, uuid =", props.uuid);
