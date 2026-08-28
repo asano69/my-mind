@@ -8,7 +8,6 @@ import LeaveConfirmDialog from "./LeaveConfirmDialog";
 import ContextMenuContent from "./ContextMenu";
 import { ContextMenu } from "@kobalte/core/context-menu";
 import {
-  createResource,
   createEffect,
   onMount,
   onCleanup,
@@ -24,7 +23,6 @@ import NewMindMapPreview from "./NewMindMapPreview.jsx";
 import * as newKeyboard from "../lib/mindmap/core/newKeyboard.js";
 import * as newMouse from "../lib/mindmap/core/newMouse.js";
 import * as title from "../lib/mindmap/title.js";
-import { loadByUuid } from "../lib/mindmap/backend/pocketbase.js";
 import * as scope from "../lib/mindmap/core/scope.js";
 import * as io from "../lib/mindmap/ui/io.js";
 
@@ -52,18 +50,6 @@ export default function MindMapCanvas(props) {
     scope.setBaseScope(activeMode());
   });
 
-  // Loads the map record for props.uuid up front, so NewMindMapPreview
-  // (the engine's renderer) no longer needs to import backend/
-  // pocketbase.js itself -- see docs/mind-map-core-engine-library/
-  // 01-plan.md's Step 4a. The fetcher is skipped entirely while its
-  // source is falsy (a brand-new, uuid-less map), leaving mapRecord()
-  // undefined -- NewMindMapPreview treats that case as "no saved
-  // record to load" via its own props.uuid check, not "still loading".
-  const [mapRecord] = createResource(
-    () => props.uuid ?? null,
-    (uuid) => loadByUuid(uuid),
-  );
-
   onMount(() => {
     console.log("[MindMapCanvas] onMount, uuid =", props.uuid);
 
@@ -73,7 +59,6 @@ export default function MindMapCanvas(props) {
       () => (
         <NewMindMapPreview
           uuid={props.uuid}
-          mapRecord={mapRecord}
           title={new Date().toISOString().slice(0, 10)}
           containerEl={containerRef}
           // Owns the actual ui/io.js calls on the renderer's behalf --
