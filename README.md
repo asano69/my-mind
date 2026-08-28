@@ -17,8 +17,8 @@ It is based on a customized and lightweight version of the My Mind JavaScript li
 
 <img src=".github/assets/sample-01.png" width="800">
 
-## Usage
-
+## Uses
+* Outline processor
 * Research notes
 * Lecture notes
 * Document drafting
