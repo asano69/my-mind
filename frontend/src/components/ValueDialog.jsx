@@ -1,7 +1,8 @@
 import { createEffect, createSignal, Show } from "solid-js";
 import { Dialog } from "@kobalte/core/dialog";
 import { valueDialogOpen, closeValueDialog } from "../lib/mindmap/store";
-import { currentItem, useScopeWhen } from "mindmap-engine";
+import { useScopeWhen } from "mindmap-engine";
+import { currentItem } from "../lib/mindmap/engineInstance.js";
 
 // Replaces command/edit.js's old prompt()-based "Set value" flow with a
 // Kobalte dialog, mirroring ConfirmDialog.jsx's structure. Always
@@ -59,9 +60,12 @@ export default function ValueDialog() {
       return;
     }
     if (!dispatchAction) {
-      const mod = await import("mindmap-engine");
-      SetValueClass = mod.SetValue;
-      dispatchAction = mod.action;
+      const [{ SetValue }, { action }] = await Promise.all([
+        import("mindmap-engine"),
+        import("../lib/mindmap/engineInstance.js"),
+      ]);
+      SetValueClass = SetValue;
+      dispatchAction = action;
     }
     // Empty input clears the value; otherwise it's always a real
     // number now that isInvalidInput() rejects anything else.

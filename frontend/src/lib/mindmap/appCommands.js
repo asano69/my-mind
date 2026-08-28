@@ -27,7 +27,7 @@ import {
 import * as notes from "./ui/notes.js";
 import * as io from "./ui/io.js";
 import { showToast } from "./ui/toast.jsx";
-import { navigateTo } from "mindmap-engine";
+import { navigateTo } from "./engineInstance.js";
 
 export const repo = new Map([
   [

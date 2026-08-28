@@ -18,18 +18,11 @@ import Paperclip from "lucide-solid/icons/paperclip";
 // engine's shape/*.js update() methods use (see
 // docs/08-mindmap-engine-refactor.md's Phase 3.7), so this preview
 // doesn't duplicate that branching here.
+// Stateless engine exports (pure functions/classes, no instance
+// dependency) still come straight from the library.
 import {
   ItemNode,
   measureContentSize,
-  itemStateClassList,
-  selectItem,
-  handleItemClick,
-  handleItemDblClick,
-  handleItemLinkClick,
-  registerDomRefs,
-  newMouse,
-  newClipboard,
-  newViewport,
   TOGGLE_SIZE,
   D_MINUS,
   D_PLUS,
@@ -39,6 +32,21 @@ import {
   computeEllipseStyle,
   computeUnderlinePath,
 } from "mindmap-engine";
+// mindmap-engine no longer exports a module-level default singleton
+// (see docs/mind-map-core-engine-library/01-plan.md) -- everything
+// below is bound to this app's one createMindMap() instance, held by
+// engineInstance.js.
+import {
+  itemStateClassList,
+  selectItem,
+  handleItemClick,
+  handleItemDblClick,
+  handleItemLinkClick,
+  registerDomRefs,
+  newMouse,
+  newClipboard,
+  newViewport,
+} from "../lib/mindmap/engineInstance.js";
 import mapCss from "../lib/mindmap/map.css?raw";
 
 // Phase 3.5 (see docs/08-mindmap-engine-refactor.md): layout computation

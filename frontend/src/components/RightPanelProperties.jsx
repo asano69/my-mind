@@ -1,6 +1,6 @@
 import { createEffect, createMemo, createSignal, onMount } from "solid-js";
 import { openValueDialog } from "../lib/mindmap/store";
-import { currentItem } from "mindmap-engine";
+import { currentItem } from "../lib/mindmap/engineInstance.js";
 import SelectField from "./SelectField";
 import ColorPicker from "./ColorPicker";
 import UrlField from "./UrlField";
@@ -66,9 +66,12 @@ export default function RightPanelProperties() {
   const [ready, setReady] = createSignal(false);
 
   onMount(async () => {
-    const mod = await import("mindmap-engine");
+    const [mod, { action }] = await Promise.all([
+      import("mindmap-engine"),
+      import("../lib/mindmap/engineInstance.js"),
+    ]);
     actionsModule = mod;
-    dispatchAction = mod.action;
+    dispatchAction = action;
     layoutRepo = mod.layoutRepo;
     shapeRepo = mod.shapeRepo;
     setReady(true);

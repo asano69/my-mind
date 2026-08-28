@@ -7,7 +7,7 @@ import {
   currentMapId,
   bumpNotesHistoryVersion,
 } from "../lib/mindmap/store";
-import { currentItem } from "mindmap-engine";
+import { currentItem } from "../lib/mindmap/engineInstance.js";
 import {
   createEffect,
   createMemo,

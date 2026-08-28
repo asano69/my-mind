@@ -37,7 +37,9 @@ export default function Workspace() {
   // -- can use Solid Router's client-side navigation instead of a full
   // page reload.
   onMount(async () => {
-    const { registerNavigate } = await import("mindmap-engine");
+    const { registerNavigate } = await import(
+      "../lib/mindmap/engineInstance.js"
+    );
     registerNavigate(navigate);
   });
 
