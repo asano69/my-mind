@@ -230,3 +230,76 @@ collapse・value/status変更・color/layout継承）はすでに再帰memoチ�
 
 **教訓**: 「自分のDOMだけを触るか、子孫の集約値を読むか」でeffect化の
 可否が分かれる。後者はpost-orderパスの外に出すと順序保証が崩れる。
+
+---
+
+# なぜマインドマップエンジンは Solid Store を使わないのか
+
+## 結論
+
+本質的な理由は1つだけ:
+
+> **`layoutResult` が「ノードごとに独立した再帰 pull-based memo」であることを要求しており、これは store の有無と直交する制約だから。**
+
+循環参照の話は誤りだったので撤回する（`mymind.json` 自体は id 参照で正規化すれば循環しない）。store を避けているのは「木構造だから」ではなく、「木の上で動くレイアウト計算アルゴリズムの形」が理由。
+
+
+## 1. `layoutResult` はノード単位の memo が本質
+
+`docs/layout-engine.md` の設計:
+
+```js
+// itemStore.js の constructor 内
+this.layoutResult = createMemo(() => this._computeLayout());
+```
+
+`_computeLayout()` は自分のレイアウトを計算する過程で、可視な子それぞれの `child.layoutResult()` を**直接呼ぶ**。これにより:
+
+- post-order 評価順序が、Solid のスケジューラではなく**素の JS 関数呼び出し順序**で保証される
+- 変更経路（葉 → 祖先）だけが再計算され、無関係な兄弟は一切触れられない
+  （`itemStore-layout-locality.test.js` で実測: 深さ4×分岐3の木で葉の編集は5ノードのみ再計算）
+
+これを正規化 store（`{ byId: { [id]: {...} } }`）にしても、結局「id ごとに `createMemo(() => computeLayout(id))` を作り、その中で子 id の memo を呼ぶ」という**全く同じ形**が必要になる。store は「フィールド宣言のボイラープレート」は減らせても、この設計の核心（ノードごとの独立した再帰 memo 境界）には一切答えない。
+
+## 2. 「計算」と「副作用（書き込み）」の分離が事故防止の要
+
+`docs/architecture.md` 4.3節の実例: JSX コンポーネント側でサブツリーごと `createMemo` しようとして無限再帰でクラッシュした。原因は「計算（memo 本体）」と「副作用（signal の書き込み）」を同一 computation スコープに混在させたこと。
+
+この教訓から `itemStore.js` は明示的な境界を敷いている:
+
+- `_computeLayout()` 内では **signal を読むだけ**
+- `setMeasuredSize()` のような書き込みは、必ず DOM コミット後の `createEffect` 側からのみ
+- 読み取り用 getter と書き込み用の private セッター（`_setText` 等）を命名で分離
+
+store の `setState(path, value)` は「どこからでも気軽に書き込める」ことが利点だが、それはこの文脈では**事故を誘発する側**に働く。Proxy 越しのプロパティ読み取りが暗黙に依存追跡されるため、「memo 計算中にうっかり書き込んでしまう」パスがむしろ増える。
+
+## 3. 「JSON を操作して effect で反映」というメンタルモデルはすでに実現済み
+
+circular reference の議論とは別に、「宣言的な JSON 構造を操作し、effect で表示が変わる」という直感自体は正しい。ただしこれは**すでに達成されている**:
+
+- `ItemNode.fromJSON(mymind.root)` — JSON からツリーを一度構築
+- `item.collapsed = true` — setter の見た目は素の JSON mutation と区別がつかない
+- `NewMindMapPreview.jsx` の JSX 自体が「signal tree を見る effect」そのもの
+
+違いは「JSON をそのまま store でラップするか」ではなく、「各ノードのフィールドを signal per instance で持つか、shared store の path 経由で持つか」という**実装の入れ物**の違いでしかない。
+
+## 4. 過去に検討されて却下された関連論点
+
+`docs/architecture.md` 7節（History / Undo・Redo 設計）:
+
+> Solid の `createStore` によるスナップショット差分方式へ書き換えず、**そのまま維持する**という判断がされた。既存のメンタルモデル（Command パターン）と一致していること、スコープを超える大きな挙動変更になることが理由。
+
+store 化の議論自体は初出ではなく、一度別の切り口（undo/redo）で検討・却下されている。
+
+
+## まとめ
+
+| 論点 | 結論 |
+|---|---|
+| 循環参照 | 誤り。`mymind.json` は正規化すれば循環しない |
+| ノード単位の再帰 memo | **これが本質的な理由**。store の有無と直交する制約 |
+| 計算と副作用の分離 | store の「気軽な書き込み」は doc08 の無限再帰事故と相性が悪い |
+| JSON 操作 → effect のメンタルモデル | すでに setter 経由で実現されている |
+| undo/redo への store 適用 | 過去に検討・却下済み（Command パターンを維持） |
+
+store を使わないのは「store が劣っているから」ではなく、**このエンジンの計算モデル（ノードごとの再帰 pull-based memo）が store の得意分野と根本的に異なる軸の問題を解いているから**、というのが最終的な結論。
