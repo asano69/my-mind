@@ -22,7 +22,6 @@ import { registerDomRefs } from "../lib/mindmap/core/newEdit.js";
 import * as newMouse from "../lib/mindmap/core/newMouse.js";
 import * as newClipboard from "../lib/mindmap/core/newClipboard.js";
 import * as newViewport from "../lib/mindmap/core/newViewport.js";
-import { overrideRoot, setOverrideRoot } from "../lib/mindmap/store.js";
 import {
   TOGGLE_SIZE,
   D_MINUS,
@@ -474,18 +473,31 @@ export default function NewMindMapPreview(props) {
     return rootFromMapData(record.mymind) ?? createPreviewRoot(props.title);
   });
 
-  // Set by ui/io.js's restoreSnapshot() -- a plain shared signal owned
-  // by store.js (see overrideRoot's own comment there), not a
-  // registered callback -- when the user restores a past snapshot. This
-  // takes priority over the loaded resource's root, mirroring the old
-  // engine's restoreSnapshot() replacing app.currentMap's root without
-  // touching the map's saved identity. Every other read of "the current
-  // root" in this component goes through effectiveRoot() below instead
-  // of root() directly, so a restored snapshot is picked up everywhere
-  // (viewport, mouse, the layout effect, and the render itself). Reset
-  // to null on mount/unmount below, since the signal is now shared
-  // across remounts (e.g. switching maps) instead of being recreated as
-  // local component state.
+  // Local, per-instance state (not a shared store.js signal, see
+  // docs/mind-map-core-engine-library/01-plan.md's Step 4e) holding a
+  // root that should override the loaded resource's root -- set via
+  // restoreRoot() below, exposed to the host as part of this engine
+  // instance's own public API instead of a bridge signal the host
+  // writes to directly. Takes priority over the loaded resource's root,
+  // mirroring the old engine's restoreSnapshot() replacing
+  // app.currentMap's root without touching the map's saved identity.
+  // Every other read of "the current root" in this component goes
+  // through effectiveRoot() below instead of root() directly, so a
+  // restored root is picked up everywhere (viewport, mouse, the layout
+  // effect, and the render itself).
+  const [overrideRoot, setOverrideRoot] = createSignal(null);
+
+  // Public engine API for this mounted instance -- currently just
+  // restoreRoot(), the explicit method
+  // docs/mind-map-core-engine-library/01-plan.md's own table calls for
+  // in place of the old overrideRoot/setOverrideRoot store.js signal.
+  // Handed to the host once on mount (see onMount below) so callers
+  // like ui/io.js's restoreSnapshot() can invoke it without this
+  // component importing store.js at all.
+  function restoreRoot(newRoot) {
+    setOverrideRoot(newRoot);
+  }
+
   const effectiveRoot = () => overrideRoot() ?? root();
 
   // Plain (non-reactive) Map, not a signal: this registry is an
@@ -510,12 +522,14 @@ export default function NewMindMapPreview(props) {
   // loading, or the user can switch maps, after this component mounts.
   let svgRef;
   onMount(() => {
-    // Reset any override left over from a previous mount (e.g. a
-    // restored snapshot from the map this component just remounted
-    // away from). overrideRoot is a shared signal now (see store.js),
-    // not local component state, so it no longer resets itself just by
-    // this component remounting.
+    // overrideRoot is now local component state (see its own comment
+    // above), so it already resets itself just by this component
+    // remounting -- this call only guards against a same-mount reset
+    // being relied upon elsewhere.
     setOverrideRoot(null);
+    // Hands this instance's public engine API to the host -- see
+    // restoreRoot()'s own comment above.
+    props.onEngineReady?.({ restoreRoot });
     // Initial position matches this <svg>'s own static left/top below
     // (40px, 40px), so wiring pan/zoom in doesn't cause a visible jump
     // on mount.

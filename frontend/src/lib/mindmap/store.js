@@ -115,18 +115,6 @@ export const [currentMapId, setCurrentMapId] = createSignal(null);
 // without importing ui/io.js's private currentMapUuid variable.
 export const [currentMapUuid, setCurrentMapUuid] = createSignal(null);
 
-// The root ItemNode currently overriding the loaded map's root, set by
-// ui/io.js's restoreSnapshot() when the user restores a past snapshot
-// (see SnapshotsList.jsx) and read by NewMindMapPreview.jsx's
-// effectiveRoot(). This used to be a registerRootLoader()/rootLoader
-// callback bridge -- io.js pushing into a Solid component's own local
-// signal via a registered function -- but the pushed value here is
-// ordinary reactive data, not a DOM node Solid doesn't render (unlike
-// ui/notes.js's registerEditorAPI, which genuinely needs the bridge
-// because EasyMDE owns its own textarea). A plain shared signal removes
-// the indirection entirely.
-export const [overrideRoot, setOverrideRoot] = createSignal(null);
-
 // Bumped when the user wants to force the mind-map canvas to remount --
 // a lightweight equivalent of a full page reload, without leaving the
 // route. Used by the RightPanel logo's "reload" action (see

@@ -16,7 +16,6 @@ import {
   setErrorDialogMessage,
   requestLeaveConfirm,
   setThrobberVisible,
-  setOverrideRoot,
 } from "../store.js";
 
 // The tree/SVG root currently being edited, and the loader callback used
@@ -30,6 +29,18 @@ import {
 // has one implementation of.
 let currentRoot = null;
 let currentSvgNode = null;
+
+// The currently mounted engine instance's restoreRoot() method (see
+// NewMindMapPreview.jsx's onEngineReady prop), registered by
+// MindMapCanvas.jsx once the engine is mounted -- see
+// docs/mind-map-core-engine-library/01-plan.md's Step 4e. Replaces the
+// old shared store.js overrideRoot/setOverrideRoot signal with an
+// explicit engine API call, so this module no longer needs to import
+// store.js just to swap in a restored snapshot's root.
+let restoreRootFn = null;
+export function registerRestoreRoot(fn) {
+  restoreRootFn = fn;
+}
 
 // Registers `root`/`svgNode` as the source save/autosave/SVG-snapshot
 // logic reads from. Called whenever the preview's root ItemNode
@@ -399,7 +410,7 @@ export function resetCurrentMap() {
 // the restored content instead of creating a new map. Does not save by
 // itself — the user must explicitly save afterwards.
 export function restoreSnapshot(snapshot) {
-  setOverrideRoot(ItemNode.fromJSON(snapshot.mymind.root));
+  restoreRootFn?.(ItemNode.fromJSON(snapshot.mymind.root));
 }
 
 // Deletes the currently open map (if it has been saved at least once)
