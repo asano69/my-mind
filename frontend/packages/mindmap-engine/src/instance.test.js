@@ -53,4 +53,14 @@ describe("createMindMap", () => {
     // module-level default singleton's.
     expect(defaultHistory.canBack()).toBe(false);
   });
+
+  it("gives each instance its own clipboard and mouse controllers", () => {
+    const a = createMindMap();
+    const b = createMindMap();
+
+    expect(a.clipboard).not.toBe(b.clipboard);
+    expect(a.mouse).not.toBe(b.mouse);
+    expect(typeof a.clipboard.init).toBe("function");
+    expect(typeof a.mouse.init).toBe("function");
+  });
 });

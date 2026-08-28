@@ -13,19 +13,26 @@
 // added in Phase 4.5 -- see newEdit.js).
 import { isCanvasActive } from "./scope.js";
 import {
-  currentItem,
-  selectedItems,
-  selectItem,
-  addToSelection,
-  editing,
-  setEditing,
+  currentItem as defaultCurrentItem,
+  selectedItems as defaultSelectedItems,
+  selectItem as defaultSelectItem,
+  addToSelection as defaultAddToSelection,
+  editing as defaultEditing,
+  setEditing as defaultSetEditing,
 } from "./itemSelection.js";
-import { startEditing, commitEditing } from "./newEdit.js";
-import { action, MoveItem, Multi } from "./newAction.js";
+import {
+  startEditing as defaultStartEditing,
+  commitEditing as defaultCommitEditing,
+} from "./newEdit.js";
+import {
+  action as defaultAction,
+  MoveItem as DefaultMoveItem,
+  Multi as DefaultMulti,
+} from "./newAction.js";
 import { decideDropPlacement, isDraggedAncestor } from "./dragPlacement.js";
 import { isSameOrigin } from "./urlUtils.js";
-import { navigateTo } from "./navigation.js";
-import * as viewport from "./newViewport.js";
+import { navigateTo as defaultNavigateTo } from "./navigation.js";
+import * as defaultViewport from "./newViewport.js";
 
 // --- Stage 4.7.2 (see docs/08-phase4.7-drag-and-drop-refactor.md) ---
 // domRefs-based rect resolution and ghost construction for drag-and-
@@ -259,7 +266,11 @@ export function computeNewDragState(
 // Builds and dispatches the MoveItem/Multi action for a completed drag,
 // mirroring mouse.js's finishDragDrop(). Routed through newAction.js's
 // action() (Phase 4.6), so the move becomes a real undo/redo step.
-export function finishNewDragDrop(state, items) {
+export function finishNewDragDrop(
+  state,
+  items,
+  { action = defaultAction, MoveItem = DefaultMoveItem, Multi = DefaultMulti } = {},
+) {
   const { target, result, direction } = state;
   if (isDraggedAncestor(target, items)) {
     return;
@@ -296,25 +307,51 @@ export function finishNewDragDrop(state, items) {
   action(subactions.length === 1 ? subactions[0] : new Multi(subactions));
 }
 
-// All currently selected items (currentItem plus any multi-selection),
-// mirroring my-mind.js's getAllSelected().
-function getAllSelectedItems() {
-  const all = [currentItem()];
-  selectedItems().forEach((item) => all.push(item));
-  return all;
-}
-
 // --- Stateful controller (Step 5, docs/mind-map-core-engine-library/01-plan.md) ---
 // createMouseController() closes the per-instance mutable state (drag
 // state, and the registered port/container/domRefs/getRoot) that used
 // to live as bare module-level `let`s, so a future multi-instance host
-// can create N independent controllers. Every function above this
-// point is already stateless (it only ever reads its own arguments),
-// so it stays a plain top-level export, unchanged -- only the
-// event-driven drag/pan controller needs an owner. The default
-// singleton instance below preserves every existing
+// can create N independent controllers. Every pure function above this
+// point is already stateless (it only ever reads its own arguments), so
+// it stays a plain top-level export, unchanged -- only the event-driven
+// drag/pan controller needs an owner. This factory now also accepts the
+// selection/edit/action/navigation/viewport dependencies it dispatches
+// against, the same way newAction.js's createActions()/newEdit.js's
+// createEdit() already do, so a mindmap instance built by instance.js's
+// createMindMap() gets a mouse controller bound to its own tree instead
+// of always falling back to the module-level default singletons. The
+// default singleton instance below preserves every existing
 // `import * as newMouse from "./newMouse.js"` call site unchanged.
-export function createMouseController() {
+export function createMouseController({
+  currentItem = defaultCurrentItem,
+  selectedItems = defaultSelectedItems,
+  selectItem = defaultSelectItem,
+  addToSelection = defaultAddToSelection,
+  editing = defaultEditing,
+  setEditing = defaultSetEditing,
+  startEditing = defaultStartEditing,
+  commitEditing = defaultCommitEditing,
+  action = defaultAction,
+  MoveItem = DefaultMoveItem,
+  Multi = DefaultMulti,
+  navigateTo = defaultNavigateTo,
+  viewport = defaultViewport,
+} = {}) {
+  // Bundled once so finishNewDragDrop() (a top-level pure function, see
+  // above) dispatches through this controller's own action/MoveItem/
+  // Multi instead of newAction.js's module-level default singleton.
+  const actionDeps = { action, MoveItem, Multi };
+
+  // All currently selected items (currentItem plus any multi-selection),
+  // mirroring my-mind.js's getAllSelected() -- bound to this
+  // controller's own currentItem/selectedItems rather than the
+  // module-level default.
+  function getAllSelectedItems() {
+    const all = [currentItem()];
+    selectedItems().forEach((item) => all.push(item));
+    return all;
+  }
+
   let current = {
     mode: "",
     cursor: [],
@@ -544,7 +581,7 @@ export function createMouseController() {
           current.items,
           previousDragState?.target ?? null,
         );
-        finishNewDragDrop(state, current.items);
+        finishNewDragDrop(state, current.items, actionDeps);
       }
       visualizeNewDragState(domRefsRef, previousDragState?.target ?? null, null);
       ghost.remove();

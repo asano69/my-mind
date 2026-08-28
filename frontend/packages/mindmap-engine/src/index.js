@@ -78,10 +78,11 @@ export { historyVersion, reset, push, back, forward, canBack, canForward } from 
 export { registerNavigate, navigateTo } from "./navigation.js";
 
 // -- instance.js: createMindMap() bundles the already-factory-ready
-// modules (history/itemSelection/viewport/navigation/actions/edit)
-// into one object per instance, per docs/mind-map-core-engine-library/
-// 01-plan.md's Step 5. See instance.js's own header comment for what
-// is and isn't wired up yet (clipboard/mouse/keyboard are not). --
+// modules (history/itemSelection/viewport/navigation/actions/edit/
+// clipboard/mouse) into one object per instance, per
+// docs/mind-map-core-engine-library/01-plan.md's Step 5. See
+// instance.js's own header comment for what is and isn't wired up yet
+// (newKeyboard.js/engineCommands.js are not). --
 export { createMindMap } from "./instance.js";
 
 // -- newEdit.js --

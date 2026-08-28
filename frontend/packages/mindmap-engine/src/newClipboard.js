@@ -25,8 +25,17 @@
 // here instead, passed in via init(domRefs).
 import ItemNode from "./itemStore.js";
 import { isCanvasActive } from "./scope.js";
-import { currentItem, selectedItems, editing } from "./itemSelection.js";
-import { action, MoveItem, AppendItem, Multi } from "./newAction.js";
+import {
+  currentItem as defaultCurrentItem,
+  selectedItems as defaultSelectedItems,
+  editing as defaultEditing,
+} from "./itemSelection.js";
+import {
+  action as defaultAction,
+  MoveItem as DefaultMoveItem,
+  AppendItem as DefaultAppendItem,
+  Multi as DefaultMulti,
+} from "./newAction.js";
 import { repo as formatRepo } from "./format/format.js";
 // Side-effect import: registers the "plaintext" format into
 // format.js's repo (see format/plaintext.js's `new Plaintext()` call at
@@ -37,47 +46,57 @@ import { repo as formatRepo } from "./format/format.js";
 // paste throws a TypeError.
 import "./format/plaintext.js";
 
-// All currently selected items (currentItem plus any multi-selection),
-// mirroring my-mind.js's getAllSelected() -- itemSelection.js exposes
-// the underlying signals but no combined getter of its own. Stateless
-// (only reads itemSelection.js's own signals), so it stays a plain
-// top-level helper instead of living inside the controller below.
-function getAllSelectedItems() {
-  const all = [currentItem()];
-  selectedItems().forEach((item) => all.push(item));
-  return all;
-}
-
-// Builds and dispatches the action for pasting a plain-text (i.e. not
-// this file's own internal cut/copy) clipboard payload into targetItem,
-// via format/plaintext.js's converter. Stateless -- doesn't touch this
-// file's cut/copy bookkeeping, so it stays outside
-// createClipboardController() below, unlike pasteItems() (which needs
-// the controller's own `mode`).
-function pastePlaintext(plaintext, targetItem) {
-  const json = formatRepo.get("plaintext").from(plaintext);
-  const root = ItemNode.fromJSON(json.root);
-  if (root.text) {
-    action(new AppendItem(targetItem, root));
-  } else {
-    const subactions = root.children.map(
-      (item) => new AppendItem(targetItem, item),
-    );
-    action(new Multi(subactions));
-  }
-}
-
 // --- Stateful controller (Step 5, docs/mind-map-core-engine-library/01-plan.md) ---
 // createClipboardController() closes the per-instance mutable cut/copy
 // state (storedItems, mode, domRefsRef) that used to live as bare
 // module-level `let`s, so a future multi-instance host can create N
-// independent controllers. The default singleton instance below
-// preserves every existing `import * as newClipboard from
-// "./newClipboard.js"` call site unchanged.
-export function createClipboardController() {
+// independent controllers. It now also accepts the selection/action
+// dependencies it dispatches against, the same way newAction.js's
+// createActions()/newEdit.js's createEdit() already do -- so a mindmap
+// instance built by instance.js's createMindMap() gets a clipboard
+// bound to its own tree/selection/history instead of always falling
+// back to the module-level default singletons. The default singleton
+// instance below preserves every existing `import * as newClipboard
+// from "./newClipboard.js"` call site unchanged.
+export function createClipboardController({
+  currentItem = defaultCurrentItem,
+  selectedItems = defaultSelectedItems,
+  editing = defaultEditing,
+  action = defaultAction,
+  MoveItem = DefaultMoveItem,
+  AppendItem = DefaultAppendItem,
+  Multi = DefaultMulti,
+} = {}) {
   let storedItems = [];
   let mode = "";
   let domRefsRef = null;
+
+  // All currently selected items (currentItem plus any multi-selection),
+  // mirroring my-mind.js's getAllSelected() -- bound to this
+  // controller's own currentItem/selectedItems rather than the
+  // module-level default, so an instance created with its own selection
+  // (see instance.js's createMindMap()) reports its own selection here.
+  function getAllSelectedItems() {
+    const all = [currentItem()];
+    selectedItems().forEach((item) => all.push(item));
+    return all;
+  }
+
+  // Builds and dispatches the action for pasting a plain-text (i.e. not
+  // this file's own internal cut/copy) clipboard payload into
+  // targetItem, via format/plaintext.js's converter.
+  function pastePlaintext(plaintext, targetItem) {
+    const json = formatRepo.get("plaintext").from(plaintext);
+    const root = ItemNode.fromJSON(json.root);
+    if (root.text) {
+      action(new AppendItem(targetItem, root));
+    } else {
+      const subactions = root.children.map(
+        (item) => new AppendItem(targetItem, item),
+      );
+      action(new Multi(subactions));
+    }
+  }
 
   // See this file's header comment (and docs/d01-clipboard-event-targeting.md)
   // for why this listens on `document`'s capture phase instead of a
