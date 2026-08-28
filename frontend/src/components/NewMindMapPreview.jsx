@@ -350,6 +350,11 @@ function ItemNodeView(props) {
           <Show when={props.item.icon}>
             <span class={`icon fa ${props.item.icon}`} />
           </Show>
+          {/* eslint-disable-next-line solid/no-innerhtml -- item.text
+              deliberately contains HTML (bold/italic/underline/strike
+              tags applied by engineCommands.js's runStyleCommand), not
+              arbitrary external input, so this is not a sanitization
+              gap. */}
           <div
             class="text"
             style={textStyleFor(props.item)}
@@ -690,26 +695,33 @@ export default function NewMindMapPreview(props) {
       >
         <style>{mapCss}</style>
         <Show when={effectiveRoot()}>
-          {(loadedRoot) => (
-            // No wrapping <g> here: map.css's `svg > .item > foreignObject
-            // > .content` rule (root-only bold/140% font-size) requires
-            // the root's own <g class="item"> to be a direct child of
-            // <svg>, matching the old engine's map.js (`this.node.append
-            // (root.dom.node, ...)`).
-            //
-            // No transform on the root itself either -- matching the old
-            // engine, where root.dom.node never gets a `position` (only
-            // its children do, via layoutChildren()) and on-screen
-            // placement is handled entirely by the <svg>'s own style.left/
-            // top (see newViewport.js's moveTo()). An earlier version
-            // passed a fixed "translate(40,40)" here as a stand-in initial
-            // screen offset, but that baked an offset into the exported
-            // SVG's own content coordinates (serializeCurrentMap() clones
-            // this tree as-is), throwing off saved-map thumbnails relative
-            // to the old engine's output, which always starts content at
-            // (0,0) local to the <svg>.
-            <ItemNodeView item={loadedRoot()} domRefs={domRefs} />
-          )}
+          {
+            // eslint-disable-next-line solid/reactivity -- Show's
+            // children-as-function is the standard idiomatic Solid API
+            // for narrowing a signal to a non-null value inside this
+            // block; it is a render prop, not a signal read escaping its
+            // tracked scope.
+            (loadedRoot) => (
+              // No wrapping <g> here: map.css's `svg > .item > foreignObject
+              // > .content` rule (root-only bold/140% font-size) requires
+              // the root's own <g class="item"> to be a direct child of
+              // <svg>, matching the old engine's map.js (`this.node.append
+              // (root.dom.node, ...)`).
+              //
+              // No transform on the root itself either -- matching the old
+              // engine, where root.dom.node never gets a `position` (only
+              // its children do, via layoutChildren()) and on-screen
+              // placement is handled entirely by the <svg>'s own style.left/
+              // top (see newViewport.js's moveTo()). An earlier version
+              // passed a fixed "translate(40,40)" here as a stand-in initial
+              // screen offset, but that baked an offset into the exported
+              // SVG's own content coordinates (serializeCurrentMap() clones
+              // this tree as-is), throwing off saved-map thumbnails relative
+              // to the old engine's output, which always starts content at
+              // (0,0) local to the <svg>.
+              <ItemNodeView item={loadedRoot()} domRefs={domRefs} />
+            )
+          }
         </Show>
       </svg>
     </>

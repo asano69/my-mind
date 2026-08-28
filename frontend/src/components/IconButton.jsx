@@ -15,7 +15,7 @@ export default function IconButton(props) {
   return (
     <button
       type="button"
-      onClick={props.onClick}
+      onClick={(e) => props.onClick(e)}
       title={props.title}
       disabled={props.disabled}
       class={iconButtonClass}

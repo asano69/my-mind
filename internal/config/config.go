@@ -75,17 +75,3 @@ func envInt(key string, fallback int) (int, error) {
 	}
 	return n, nil
 }
-
-// envFloat returns the float64 value of the environment variable key, or
-// fallback if it is unset.
-func envFloat(key string, fallback float64) (float64, error) {
-	v, ok := os.LookupEnv(key)
-	if !ok || v == "" {
-		return fallback, nil
-	}
-	f, err := strconv.ParseFloat(v, 64)
-	if err != nil {
-		return 0, errs.Newf("invalid %s: %v", key, err)
-	}
-	return f, nil
-}

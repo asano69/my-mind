@@ -367,6 +367,16 @@ function handleEvent(e) {
       return;
     }
   }
+  for (const extraCommand of extraCommandRepo?.values() ?? []) {
+    if (!extraCommand.keys?.length || !extraCommand.isValid) {
+      continue;
+    }
+    if (extraCommand.keys.find((key) => keyOK(key, e))) {
+      e.preventDefault();
+      extraCommand.execute(e);
+      return;
+    }
+  }
 }
 
 export function init(containerEl) {

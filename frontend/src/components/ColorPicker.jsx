@@ -24,7 +24,7 @@ export default function ColorPicker(props) {
 
         <span
           class="mt-1 flex flex-row flex-wrap gap-1"
-          onClick={props.onClick}
+          onClick={(e) => props.onClick(e)}
         >
           <For each={COLOR_SWATCHES}>
             {(c) => (

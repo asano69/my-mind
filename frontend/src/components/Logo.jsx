@@ -1,5 +1,15 @@
 import { A } from "@solidjs/router";
 
+// This component is always invoked with plain, static prop values
+// across the codebase (see Login.jsx, RightPanel.jsx, Catalog.jsx,
+// LeftPanel.jsx) -- none of its callers ever pass a signal or change
+// these props after mount. The early return below and the direct
+// props.showTitle/props.centerTitle reads therefore never need to
+// react to a later prop change, so eslint-plugin-solid's reactivity
+// and single-return warnings are disabled here rather than restructured
+// into a <Show>-based render, which would add real complexity for no
+// behavioral benefit.
+/* eslint-disable solid/reactivity, solid/components-return-once */
 // size: overall pixel size of the icon (width == height). Defaults to
 // 40px (the old fixed "w-10 h-10" Tailwind size).
 // showTitle: whether to render "Solid Mind" next to the icon.

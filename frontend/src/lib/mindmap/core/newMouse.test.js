@@ -673,7 +673,7 @@ describe("mousedown/mousemove/mouseup wiring (Stage 4.7.3)", () => {
   });
 
   it("suppresses the synthetic post-drag click", () => {
-    const { root, dragged, domRefs } = buildTree();
+    const { root, domRefs } = buildTree();
     const port = eventTarget();
     port.append = vi.fn();
     port.getBoundingClientRect = () => ({ left: 0, top: 0 });

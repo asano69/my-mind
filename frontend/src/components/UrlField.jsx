@@ -13,8 +13,8 @@ export default function UrlField(props) {
           type="text"
           value={props.value}
           onInput={(e) => props.onInput(e.target.value)}
-          onBlur={props.onBlur}
-          onKeyDown={props.onKeyDown}
+          onBlur={(e) => props.onBlur(e)}
+          onKeyDown={(e) => props.onKeyDown(e)}
           placeholder="http://"
           disabled={props.disabled}
           aria-invalid={props.invalid}

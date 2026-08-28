@@ -1,6 +1,6 @@
 import { For, Show, createResource } from "solid-js";
 import { listMaps } from "../lib/mindmap/backend/pocketbase";
-import { A, useNavigate } from "@solidjs/router";
+import { useNavigate } from "@solidjs/router";
 import { catalogListVersion } from "../lib/mindmap/store";
 import Spinner from "./Spinner";
 import Pin from "lucide-solid/icons/pin";

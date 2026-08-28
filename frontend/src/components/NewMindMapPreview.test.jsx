@@ -91,7 +91,7 @@ describe("ItemNode.layoutResult (Phase 3.5)", () => {
   });
 
   it("omits descendant layout snapshots when a node is collapsed", () => {
-    const { root, right, grandchild } = previewTree();
+    const { root, right } = previewTree();
     right.collapsed = true;
 
     const result = root.layoutResult();
@@ -129,7 +129,7 @@ describe("ItemNode.layoutResult (Phase 3.5)", () => {
   });
 
   it("recomputes the changed child and its ancestors, but not an untouched sibling (Phase 3.5 locality)", () => {
-    const { root, left, right, grandchild } = previewTree();
+    const { root, left, right } = previewTree();
     root.layoutResult(); // warm up
 
     const leftBefore = left.layoutResult();
