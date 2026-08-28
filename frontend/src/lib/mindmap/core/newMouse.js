@@ -304,50 +304,18 @@ function getAllSelectedItems() {
   return all;
 }
 
-let current = {
-  mode: "",
-  cursor: [],
-  items: [],
-  ghost: null,
-  ghostPosition: [],
-  ctrlHeld: false,
-  previousDragState: null,
-  suppressNextClick: false,
-};
-let port = null;
-let container = null;
-let domRefsRef = null;
-let getRootFn = null;
-
-// Registers node-drag listeners on `port_` (the SVG root element).
-// `getRoot` is a function returning the currently loaded root ItemNode
-// (or null/undefined before it has loaded), since the tree can change
-// out from under a long-lived listener (e.g. switching maps).
-export function init(domRefs, port_, container_, getRoot) {
-  domRefsRef = domRefs;
-  port = port_;
-  container = container_;
-  getRootFn = getRoot;
-  port.addEventListener("mousedown", onDragStart);
-  port.addEventListener("click", onClick);
-  port.addEventListener("wheel", onWheel);
-}
-
-// Called on unmount. Removes every listener registered by init(),
-// force-ends any drag in progress, and resets module state -- mirrors
-// mouse.js's own dispose().
-export function dispose() {
-  if (port) {
-    port.removeEventListener("mousedown", onDragStart);
-    port.removeEventListener("mousemove", onDragMove);
-    port.removeEventListener("mouseup", onDragEnd);
-    port.removeEventListener("click", onClick);
-    port.removeEventListener("wheel", onWheel);
-  }
-  if (current.ghost) {
-    current.ghost.remove();
-  }
-  current = {
+// --- Stateful controller (Step 5, docs/mind-map-core-engine-library/01-plan.md) ---
+// createMouseController() closes the per-instance mutable state (drag
+// state, and the registered port/container/domRefs/getRoot) that used
+// to live as bare module-level `let`s, so a future multi-instance host
+// can create N independent controllers. Every function above this
+// point is already stateless (it only ever reads its own arguments),
+// so it stays a plain top-level export, unchanged -- only the
+// event-driven drag/pan controller needs an owner. The default
+// singleton instance below preserves every existing
+// `import * as newMouse from "./newMouse.js"` call site unchanged.
+export function createMouseController() {
+  let current = {
     mode: "",
     cursor: [],
     items: [],
@@ -357,265 +325,333 @@ export function dispose() {
     previousDragState: null,
     suppressNextClick: false,
   };
-  port = null;
-  container = null;
-  domRefsRef = null;
-  getRootFn = null;
-}
+  let port = null;
+  let container = null;
+  let domRefsRef = null;
+  let getRootFn = null;
 
-function onClick(e) {
-  if (current.suppressNextClick) {
-    current.suppressNextClick = false;
-    e.preventDefault?.();
+  // Registers node-drag listeners on `port_` (the SVG root element).
+  // `getRoot` is a function returning the currently loaded root ItemNode
+  // (or null/undefined before it has loaded), since the tree can change
+  // out from under a long-lived listener (e.g. switching maps).
+  function init(domRefs, port_, container_, getRoot) {
+    domRefsRef = domRefs;
+    port = port_;
+    container = container_;
+    getRootFn = getRoot;
+    port.addEventListener("mousedown", onDragStart);
+    port.addEventListener("click", onClick);
+    port.addEventListener("wheel", onWheel);
   }
-}
 
-// Mirrors mouse.js's onWheel(): zooms around the wheel cursor position.
-function onWheel(e) {
-  if (!isCanvasActive()) {
-    return;
-  }
-  const { deltaY } = e;
-  if (!deltaY) {
-    return;
-  }
-  e.preventDefault();
-  const dir = deltaY > 0 ? -1 : 1;
-  viewport.adjustZoom(dir, [e.clientX, e.clientY]);
-}
-
-function eventToPoint(e) {
-  return [e.clientX, e.clientY];
-}
-
-function onDragStart(e) {
-  if (!isCanvasActive()) {
-    return;
-  }
-  // Ignore mousedown events that originate inside the side panels
-  // (#ui / #left-panel). Both panels are DOM descendants of
-  // #mindmap-container (see MindMapCanvas.jsx's containerRef, which is
-  // also the "port" this listener is registered on -- see
-  // NewMindMapPreview.jsx's onMount), so a click on an ordinary form
-  // field there (e.g. RightPanelProperties.jsx's UrlField) still
-  // bubbles up to this listener. Without this guard, getItemForElement()
-  // finds no matching item for that click, falls into the "pan" branch
-  // below, and steals focus onto the container via container.focus() +
-  // e.preventDefault() -- before scope.js's own focusin-based
-  // "form-field" scope guard even has a chance to push (mousedown fires
-  // before focusin), leaving the field visually a text input but never
-  // actually focusable by click.
-  if (e.target.closest?.("#ui, #left-panel")) {
-    return;
-  }
-  const root = getRootFn?.();
-  if (!root) {
-    return;
-  }
-  const item = getItemForElement(root, domRefsRef, e.target);
-  if (editing()) {
-    const editedItem = currentItem();
-    if (item === editedItem) {
-      return; // ignore dnd on the item currently being edited
+  // Called on unmount. Removes every listener registered by init(),
+  // force-ends any drag in progress, and resets this controller's own
+  // state -- mirrors mouse.js's own dispose().
+  function dispose() {
+    if (port) {
+      port.removeEventListener("mousedown", onDragStart);
+      port.removeEventListener("mousemove", onDragMove);
+      port.removeEventListener("mouseup", onDragEnd);
+      port.removeEventListener("click", onClick);
+      port.removeEventListener("wheel", onWheel);
     }
-    // Clicked elsewhere while editing: finalize the edit first, same as
-    // mouse.js's onDragStart calling commandRepo.get("finish").execute().
-    commitEditing(editedItem);
-    setEditing(false);
-  }
-  // Move focus back into the canvas so subsequent keyboard shortcuts
-  // reach newKeyboard.js's scoped listener, mirroring mouse.js's own
-  // container.focus() call here.
-  container?.focus();
-  current.cursor = eventToPoint(e);
-  if (item && !item.isRoot) {
-    current.mode = "drag";
-    const isSelected = item === currentItem() || selectedItems().has(item);
-    if (isSelected) {
-      current.items = getAllSelectedItems().filter((i) => i && !i.isRoot);
-    } else {
-      // Selection itself is deferred to the first real move (see
-      // onDragMove) so a plain click's Ctrl+click multi-selection isn't
-      // clobbered before the click event has a chance to run -- same
-      // reasoning as mouse.js's own onDragStart.
-      current.items = [item];
-      current.ctrlHeld = e.ctrlKey || e.metaKey;
+    if (current.ghost) {
+      current.ghost.remove();
     }
-  } else {
-    // No item under the pointer (or the root itself, which never
-    // participates in drag-and-drop) -- pan the viewport instead,
-    // mirroring mouse.js's own else-branch.
-    current.mode = "pan";
-    port.style.cursor = "move";
+    current = {
+      mode: "",
+      cursor: [],
+      items: [],
+      ghost: null,
+      ghostPosition: [],
+      ctrlHeld: false,
+      previousDragState: null,
+      suppressNextClick: false,
+    };
+    port = null;
+    container = null;
+    domRefsRef = null;
+    getRootFn = null;
   }
-  e.preventDefault();
-  port.addEventListener("mousemove", onDragMove);
-  port.addEventListener("mouseup", onDragEnd);
-}
 
-function onDragMove(e) {
-  const point = eventToPoint(e);
-  const delta = [point[0] - current.cursor[0], point[1] - current.cursor[1]];
-  current.cursor = point;
-  if (current.mode === "pan") {
-    e.preventDefault();
-    viewport.moveBy(delta);
-    return;
-  }
-  if (current.mode !== "drag") {
-    return;
-  }
-  e.preventDefault();
-  if (!current.ghost) {
-    const draggedItem = current.items[0];
-    if (
-      !current.ctrlHeld &&
-      current.items.length === 1 &&
-      draggedItem !== currentItem() &&
-      !selectedItems().has(draggedItem)
-    ) {
-      selectItem(draggedItem);
+  function onClick(e) {
+    if (current.suppressNextClick) {
+      current.suppressNextClick = false;
+      e.preventDefault?.();
     }
-    const built = buildDragGhost(
-      domRefsRef,
-      port,
-      current.items,
-      current.cursor,
-    );
-    if (!built) {
+  }
+
+  // Mirrors mouse.js's onWheel(): zooms around the wheel cursor position.
+  function onWheel(e) {
+    if (!isCanvasActive()) {
       return;
     }
-    current.ghost = built.ghost;
-    current.ghostPosition = built.position;
-  } else {
-    moveDragGhost(current.ghost, current.ghostPosition, delta);
+    const { deltaY } = e;
+    if (!deltaY) {
+      return;
+    }
+    e.preventDefault();
+    const dir = deltaY > 0 ? -1 : 1;
+    viewport.adjustZoom(dir, [e.clientX, e.clientY]);
   }
-  const root = getRootFn?.();
-  if (!root) {
-    return;
-  }
-  const previousTarget = current.previousDragState?.target ?? null;
-  const state = computeNewDragState(
-    root,
-    domRefsRef,
-    current.cursor,
-    current.items,
-    previousTarget,
-  );
-  visualizeNewDragState(
-    domRefsRef,
-    previousTarget,
-    state.result ? state : null,
-  );
-  current.previousDragState = state.result ? state : null;
-}
 
-function onDragEnd(_e) {
-  port.style.cursor = "";
-  port.removeEventListener("mousemove", onDragMove);
-  port.removeEventListener("mouseup", onDragEnd);
-  const { mode, ghost, previousDragState } = current;
-  if (mode === "pan") {
-    current.mode = "";
-    return;
+  function eventToPoint(e) {
+    return [e.clientX, e.clientY];
   }
-  if (mode !== "drag") {
-    current.mode = "";
-    return;
-  }
-  if (ghost) {
+
+  function onDragStart(e) {
+    if (!isCanvasActive()) {
+      return;
+    }
+    // Ignore mousedown events that originate inside the side panels
+    // (#ui / #left-panel). Both panels are DOM descendants of
+    // #mindmap-container (see MindMapCanvas.jsx's containerRef, which is
+    // also the "port" this listener is registered on -- see
+    // NewMindMapPreview.jsx's onMount), so a click on an ordinary form
+    // field there (e.g. RightPanelProperties.jsx's UrlField) still
+    // bubbles up to this listener. Without this guard, getItemForElement()
+    // finds no matching item for that click, falls into the "pan" branch
+    // below, and steals focus onto the container via container.focus() +
+    // e.preventDefault() -- before scope.js's own focusin-based
+    // "form-field" scope guard even has a chance to push (mousedown fires
+    // before focusin), leaving the field visually a text input but never
+    // actually focusable by click.
+    if (e.target.closest?.("#ui, #left-panel")) {
+      return;
+    }
     const root = getRootFn?.();
-    if (root) {
-      const state = computeNewDragState(
-        root,
+    if (!root) {
+      return;
+    }
+    const item = getItemForElement(root, domRefsRef, e.target);
+    if (editing()) {
+      const editedItem = currentItem();
+      if (item === editedItem) {
+        return; // ignore dnd on the item currently being edited
+      }
+      // Clicked elsewhere while editing: finalize the edit first, same as
+      // mouse.js's onDragStart calling commandRepo.get("finish").execute().
+      commitEditing(editedItem);
+      setEditing(false);
+    }
+    // Move focus back into the canvas so subsequent keyboard shortcuts
+    // reach newKeyboard.js's scoped listener, mirroring mouse.js's own
+    // container.focus() call here.
+    container?.focus();
+    current.cursor = eventToPoint(e);
+    if (item && !item.isRoot) {
+      current.mode = "drag";
+      const isSelected = item === currentItem() || selectedItems().has(item);
+      if (isSelected) {
+        current.items = getAllSelectedItems().filter((i) => i && !i.isRoot);
+      } else {
+        // Selection itself is deferred to the first real move (see
+        // onDragMove) so a plain click's Ctrl+click multi-selection isn't
+        // clobbered before the click event has a chance to run -- same
+        // reasoning as mouse.js's own onDragStart.
+        current.items = [item];
+        current.ctrlHeld = e.ctrlKey || e.metaKey;
+      }
+    } else {
+      // No item under the pointer (or the root itself, which never
+      // participates in drag-and-drop) -- pan the viewport instead,
+      // mirroring mouse.js's own else-branch.
+      current.mode = "pan";
+      port.style.cursor = "move";
+    }
+    e.preventDefault();
+    port.addEventListener("mousemove", onDragMove);
+    port.addEventListener("mouseup", onDragEnd);
+  }
+
+  function onDragMove(e) {
+    const point = eventToPoint(e);
+    const delta = [point[0] - current.cursor[0], point[1] - current.cursor[1]];
+    current.cursor = point;
+    if (current.mode === "pan") {
+      e.preventDefault();
+      viewport.moveBy(delta);
+      return;
+    }
+    if (current.mode !== "drag") {
+      return;
+    }
+    e.preventDefault();
+    if (!current.ghost) {
+      const draggedItem = current.items[0];
+      if (
+        !current.ctrlHeld &&
+        current.items.length === 1 &&
+        draggedItem !== currentItem() &&
+        !selectedItems().has(draggedItem)
+      ) {
+        selectItem(draggedItem);
+      }
+      const built = buildDragGhost(
         domRefsRef,
-        current.cursor,
+        port,
         current.items,
-        previousDragState?.target ?? null,
+        current.cursor,
       );
-      finishNewDragDrop(state, current.items);
+      if (!built) {
+        return;
+      }
+      current.ghost = built.ghost;
+      current.ghostPosition = built.position;
+    } else {
+      moveDragGhost(current.ghost, current.ghostPosition, delta);
     }
-    visualizeNewDragState(domRefsRef, previousDragState?.target ?? null, null);
-    ghost.remove();
-    current.ghost = null;
-    // A browser-dispatched click after mouseup would otherwise move
-    // selection/focus to whatever node is under the pointer at the drop
-    // position -- suppress just that synthetic post-drag click, same as
-    // mouse.js's own current.suppressNextClick.
-    current.suppressNextClick = true;
-  }
-  current.items = [];
-  current.mode = "";
-  current.previousDragState = null;
-}
-
-export function handleItemClick(item, e) {
-  if (!isCanvasActive()) {
-    return;
-  }
-  if (e.ctrlKey || e.metaKey) {
-    addToSelection(item);
-  } else {
-    selectItem(item);
-  }
-}
-
-// Double-click starts live text editing, mirroring the old engine's
-// mouse.js onDblClick -> commandRepo.get("edit").execute(). See
-// newEdit.js for the actual contentEditable toggle.
-export function handleItemDblClick(item, _e) {
-  if (!isCanvasActive()) {
-    return;
-  }
-  if (startEditing(item)) {
-    setEditing(true);
-  }
-}
-
-// Opens an item's link (see itemStore.js's `url` field), mirroring the
-// old engine's item.js dom.link click handler -- same-origin links use
-// the shared navigation.js bridge for a client-side transition, external
-// links open in a new tab. Unlike item.js's version (an imperative
-// addEventListener call inside a vanilla constructor), this is wired as
-// a plain JSX onClick prop (see NewMindMapPreview.jsx's ItemNodeView).
-// Deliberately does not stop propagation: the click still bubbles up to
-// the item's own onClick (handleItemClick above), so clicking the link
-// icon both opens the link and selects the node, matching item.js's own
-// spec.
-export function handleItemLinkClick(item) {
-  if (!isCanvasActive()) {
-    return;
-  }
-  const url = item.url;
-  if (!url) {
-    return;
-  }
-  if (isSameOrigin(url)) {
-    const target = new URL(url, window.location.href);
-    if (!navigateTo(target.pathname + target.search + target.hash)) {
-      window.location.href = url;
+    const root = getRootFn?.();
+    if (!root) {
+      return;
     }
-  } else {
-    window.open(url, "_blank", "noopener,noreferrer");
+    const previousTarget = current.previousDragState?.target ?? null;
+    const state = computeNewDragState(
+      root,
+      domRefsRef,
+      current.cursor,
+      current.items,
+      previousTarget,
+    );
+    visualizeNewDragState(
+      domRefsRef,
+      previousTarget,
+      state.result ? state : null,
+    );
+    current.previousDragState = state.result ? state : null;
   }
+
+  function onDragEnd(_e) {
+    port.style.cursor = "";
+    port.removeEventListener("mousemove", onDragMove);
+    port.removeEventListener("mouseup", onDragEnd);
+    const { mode, ghost, previousDragState } = current;
+    if (mode === "pan") {
+      current.mode = "";
+      return;
+    }
+    if (mode !== "drag") {
+      current.mode = "";
+      return;
+    }
+    if (ghost) {
+      const root = getRootFn?.();
+      if (root) {
+        const state = computeNewDragState(
+          root,
+          domRefsRef,
+          current.cursor,
+          current.items,
+          previousDragState?.target ?? null,
+        );
+        finishNewDragDrop(state, current.items);
+      }
+      visualizeNewDragState(domRefsRef, previousDragState?.target ?? null, null);
+      ghost.remove();
+      current.ghost = null;
+      // A browser-dispatched click after mouseup would otherwise move
+      // selection/focus to whatever node is under the pointer at the drop
+      // position -- suppress just that synthetic post-drag click, same as
+      // mouse.js's own current.suppressNextClick.
+      current.suppressNextClick = true;
+    }
+    current.items = [];
+    current.mode = "";
+    current.previousDragState = null;
+  }
+
+  function handleItemClick(item, e) {
+    if (!isCanvasActive()) {
+      return;
+    }
+    if (e.ctrlKey || e.metaKey) {
+      addToSelection(item);
+    } else {
+      selectItem(item);
+    }
+  }
+
+  // Double-click starts live text editing, mirroring the old engine's
+  // mouse.js onDblClick -> commandRepo.get("edit").execute(). See
+  // newEdit.js for the actual contentEditable toggle.
+  function handleItemDblClick(item, _e) {
+    if (!isCanvasActive()) {
+      return;
+    }
+    if (startEditing(item)) {
+      setEditing(true);
+    }
+  }
+
+  // Opens an item's link (see itemStore.js's `url` field), mirroring the
+  // old engine's item.js dom.link click handler -- same-origin links use
+  // the shared navigation.js bridge for a client-side transition, external
+  // links open in a new tab. Unlike item.js's version (an imperative
+  // addEventListener call inside a vanilla constructor), this is wired as
+  // a plain JSX onClick prop (see NewMindMapPreview.jsx's ItemNodeView).
+  // Deliberately does not stop propagation: the click still bubbles up to
+  // the item's own onClick (handleItemClick above), so clicking the link
+  // icon both opens the link and selects the node, matching item.js's own
+  // spec.
+  function handleItemLinkClick(item) {
+    if (!isCanvasActive()) {
+      return;
+    }
+    const url = item.url;
+    if (!url) {
+      return;
+    }
+    if (isSameOrigin(url)) {
+      const target = new URL(url, window.location.href);
+      if (!navigateTo(target.pathname + target.search + target.hash)) {
+        window.location.href = url;
+      }
+    } else {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  }
+
+  // Selects the right-clicked item and cancels any in-progress drag,
+  // mirroring the old engine's mouse.js handleContextMenu(). Kobalte's
+  // ContextMenu.Trigger (see MindMapCanvas.jsx) owns opening/positioning
+  // the menu itself; this only handles the item-selection/drag-cancel
+  // side effect the engine needs regardless of how the menu opens.
+  function handleContextMenu(e) {
+    if (!isCanvasActive()) {
+      return;
+    }
+    const root = getRootFn?.();
+    if (!root) {
+      return;
+    }
+    onDragEnd(e);
+    const item = getItemForElement(root, domRefsRef, e.target);
+    if (item) {
+      selectItem(item);
+    }
+  }
+
+  return {
+    init,
+    dispose,
+    handleItemClick,
+    handleItemDblClick,
+    handleItemLinkClick,
+    handleContextMenu,
+  };
 }
 
-// Selects the right-clicked item and cancels any in-progress drag,
-// mirroring the old engine's mouse.js handleContextMenu(). Kobalte's
-// ContextMenu.Trigger (see MindMapCanvas.jsx) owns opening/positioning
-// the menu itself; this only handles the item-selection/drag-cancel
-// side effect the engine needs regardless of how the menu opens.
-export function handleContextMenu(e) {
-  if (!isCanvasActive()) {
-    return;
-  }
-  const root = getRootFn?.();
-  if (!root) {
-    return;
-  }
-  onDragEnd(e);
-  const item = getItemForElement(root, domRefsRef, e.target);
-  if (item) {
-    selectItem(item);
-  }
-}
+// Default singleton instance, preserving the current module-level API
+// during the migration -- every existing `import * as newMouse from
+// "./newMouse.js"` call site keeps working unchanged. Once callers
+// (NewMindMapPreview.jsx, MindMapCanvas.jsx, ...) are threaded through
+// an explicit instance instead, this default export can be dropped.
+const defaultInstance = createMouseController();
+export const {
+  init,
+  dispose,
+  handleItemClick,
+  handleItemDblClick,
+  handleItemLinkClick,
+  handleContextMenu,
+} = defaultInstance;

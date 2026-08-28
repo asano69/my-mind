@@ -5,19 +5,37 @@
 // this bridge itself. Workspace.jsx (the nearest ancestor rendered
 // inside <Router>) registers the real navigate() function once on
 // mount; everything else just calls navigateTo().
-let navigateFn = null;
+//
+// createNavigation() closes the single `navigateFn` slot into a
+// per-instance factory, per docs/mind-map-core-engine-library/01-plan.md's
+// Step 5 -- the module-level default instance further down preserves
+// every existing call site unchanged during the migration.
+export function createNavigation() {
+  let navigateFn = null;
 
-export function registerNavigate(fn) {
-  navigateFn = fn;
-}
-
-// Returns true if a navigate() function was available and was called;
-// false if nothing is registered yet (e.g. router not mounted), so the
-// caller can fall back to a normal same-tab navigation.
-export function navigateTo(path) {
-  if (!navigateFn) {
-    return false;
+  function registerNavigate(fn) {
+    navigateFn = fn;
   }
-  navigateFn(path);
-  return true;
+
+  // Returns true if a navigate() function was available and was called;
+  // false if nothing is registered yet (e.g. router not mounted), so the
+  // caller can fall back to a normal same-tab navigation.
+  function navigateTo(path) {
+    if (!navigateFn) {
+      return false;
+    }
+    navigateFn(path);
+    return true;
+  }
+
+  return { registerNavigate, navigateTo };
 }
+
+// Default singleton instance, preserving the current module-level API
+// during the migration -- every existing `import { registerNavigate,
+// navigateTo } from "./navigation.js"` call site keeps working
+// unchanged. Once callers (Workspace.jsx, newMouse.js, item.js, ...)
+// are threaded through an explicit instance instead, this default
+// export can be dropped.
+const defaultInstance = createNavigation();
+export const { registerNavigate, navigateTo } = defaultInstance;
