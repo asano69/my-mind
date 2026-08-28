@@ -29,7 +29,18 @@ import {
   repo as sharedCommandRepo,
   setPanKeyboardScope,
   disposePan,
-} from "../newContextMenuCommands.js";
+} from "./engineCommands.js";
+
+// Commands registered by the host app (save, notes, file-switcher, ...),
+// kept out of core/** itself so this module never has to import
+// store.js/ui/* directly -- see docs/mind-map-core-engine-library.md's
+// Step 3 and navigation.js's registerNavigate() for the same "host
+// registers, vanilla module reads" bridge pattern. Only ever consulted
+// as a fallback, same as sharedCommandRepo below.
+let extraCommandRepo = null;
+export function registerExtraCommands(repo) {
+  extraCommandRepo = repo;
+}
 
 function isMac() {
   return !!(globalThis.navigator?.platform ?? "").match(/mac/i);
