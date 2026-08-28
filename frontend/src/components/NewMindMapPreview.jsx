@@ -1,14 +1,12 @@
 import {
   createSignal,
   createEffect,
-  createResource,
   For,
   Show,
   onCleanup,
   onMount,
 } from "solid-js";
 import ItemNode, { measureContentSize } from "../lib/mindmap/core/itemStore.js";
-import Spinner from "./Spinner.jsx";
 import Paperclip from "lucide-solid/icons/paperclip";
 import {
   itemStateClassList,
@@ -30,7 +28,6 @@ import {
 } from "../lib/mindmap/core/layout/constants.js";
 import { repo as layoutRepo } from "../lib/mindmap/core/layout/layout.js";
 import { repo as shapeRepo } from "../lib/mindmap/core/shape/shape.js";
-import { loadByUuid } from "../lib/mindmap/backend/pocketbase.js";
 import "../lib/mindmap/core/layout/map.js";
 // Named imports also run each module's own registration side effect
 // (new Box()/new Ellipse()/new Underline()), so the old blank
@@ -458,39 +455,27 @@ export function rootFromMapData(data) {
 }
 
 export default function NewMindMapPreview(props) {
-  // Set by loadPreviewRoot() below whenever a real saved map was loaded
-  // (stays null for a brand-new, unsaved map) -- read by the
-  // root-loaded effect further down to restore io.js's currentMapId/
-  // currentMapUuid/title bookkeeping via newIo.applyLoadedRecord(), the
-  // same bookkeeping the old engine's io.restore() applies internally.
-  let lastLoadedRecord = null;
-  async function loadPreviewRoot(uuid, fallbackTitle) {
-    if (!uuid) {
-      lastLoadedRecord = null;
-      return createPreviewRoot(fallbackTitle);
-    }
-
-    const record = await loadByUuid(uuid);
-    lastLoadedRecord = record;
-    return rootFromMapData(record.mymind) ?? createPreviewRoot(fallbackTitle);
-  }
-  const [root] = createResource(
-    () => ({ uuid: props.uuid ?? null, title: props.title }),
-    ({ uuid, title }) => loadPreviewRoot(uuid, title),
-  );
+  // root is computed synchronously from props.initialData -- the host
+  // (MindMapCanvas.jsx) fetches the map record via backend/pocketbase.js's
+  // loadByUuid() *before* this component ever mounts, so this renderer
+  // never touches the persistence layer directly (see
+  // docs/mind-map-core-engine-library/01-plan.md's Step 4a). A uuid-less
+  // map (a brand-new, unsaved one) always gets a fresh root instead.
+  const root = props.uuid
+    ? (rootFromMapData(props.initialData) ?? createPreviewRoot(props.title))
+    : createPreviewRoot(props.title);
 
   // Local, per-instance state (not a shared store.js signal, see
   // docs/mind-map-core-engine-library/01-plan.md's Step 4e) holding a
-  // root that should override the loaded resource's root -- set via
-  // restoreRoot() below, exposed to the host as part of this engine
-  // instance's own public API instead of a bridge signal the host
-  // writes to directly. Takes priority over the loaded resource's root,
-  // mirroring the old engine's restoreSnapshot() replacing
-  // app.currentMap's root without touching the map's saved identity.
-  // Every other read of "the current root" in this component goes
-  // through effectiveRoot() below instead of root() directly, so a
-  // restored root is picked up everywhere (viewport, mouse, the layout
-  // effect, and the render itself).
+  // root that should override the loaded root -- set via restoreRoot()
+  // below, exposed to the host as part of this engine instance's own
+  // public API instead of a bridge signal the host writes to directly.
+  // Takes priority over the loaded root, mirroring the old engine's
+  // restoreSnapshot() replacing app.currentMap's root without touching
+  // the map's saved identity. Every other read of "the current root" in
+  // this component goes through effectiveRoot() below instead of root
+  // directly, so a restored root is picked up everywhere (viewport,
+  // mouse, the layout effect, and the render itself).
   const [overrideRoot, setOverrideRoot] = createSignal(null);
 
   // Public engine API for this mounted instance -- currently just
@@ -504,7 +489,7 @@ export default function NewMindMapPreview(props) {
     setOverrideRoot(newRoot);
   }
 
-  const effectiveRoot = () => overrideRoot() ?? root();
+  const effectiveRoot = () => overrideRoot() ?? root;
 
   // Plain (non-reactive) Map, not a signal: this registry is an
   // imperative side-table for later phases (see registerDomRef's
@@ -628,12 +613,15 @@ export default function NewMindMapPreview(props) {
       // Registers this root/svg as the source ui/io.js's save/autosave
       // logic reads from, via a host callback rather than importing
       // ui/io.js directly (see docs/mind-map-core-engine-library/
-      // 01-plan.md's Step 4b). loadedRecord is only non-null when a
-      // real saved map was actually loaded -- MindMapCanvas.jsx only
-      // runs its own io.setCurrentMap() bookkeeping (which rewrites the
-      // URL) in that case, matching the old engine's io.restore(),
-      // which only did the same when a record was actually found.
-      const loadedRecord = props.uuid ? props.mapRecord?.() : null;
+      // 01-plan.md's Step 4b). props.mapRecord is the record
+      // MindMapCanvas.jsx already fetched before mounting this
+      // component (see this file's own header comment on `root`) --
+      // only non-null when a real saved map was actually loaded, so
+      // MindMapCanvas.jsx only runs its own io.setCurrentMap()
+      // bookkeeping (which rewrites the URL) in that case, matching the
+      // old engine's io.restore(), which only did the same when a
+      // record was actually found.
+      const loadedRecord = props.uuid ? props.mapRecord : null;
       props.onRootReady?.(loadedRoot, svgRef, loadedRecord);
     }
     // Reading layoutResult() here (rather than only contentPosition/size
@@ -688,18 +676,6 @@ export default function NewMindMapPreview(props) {
 
   return (
     <>
-      {/* Fallback while the map is still loading (or before a real root
-          exists). A CSS spinner instead of an SVG <text> label, matching
-          the loading indicator used elsewhere in the app (see
-          Catalog.jsx/CatalogList.jsx). Rendered as a sibling of the
-          <svg>, not inside it -- Spinner renders a plain HTML <div>,
-          which isn't valid as a direct child of an SVG element. */}
-      <Show when={!effectiveRoot()}>
-        <Spinner
-          visible={true}
-          class="fixed top-1/2 left-1/2 z-[9999] h-10 w-10 -translate-x-1/2 -translate-y-1/2"
-        />
-      </Show>
       <svg
         ref={svgRef}
         data-engine="solid-item-node-preview"

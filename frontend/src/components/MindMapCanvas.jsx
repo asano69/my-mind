@@ -14,6 +14,7 @@ import {
   bumpDirty,
   titleAuto,
   setCurrentTitle,
+  setErrorDialogMessage,
 } from "../lib/mindmap/store";
 import NewMindMapPreview from "./NewMindMapPreview.jsx";
 import * as newKeyboard from "../lib/mindmap/core/newKeyboard.js";
@@ -21,6 +22,7 @@ import * as newMouse from "../lib/mindmap/core/newMouse.js";
 import * as title from "../lib/mindmap/title.js";
 import * as scope from "../lib/mindmap/core/scope.js";
 import * as io from "../lib/mindmap/ui/io.js";
+import { loadByUuid } from "../lib/mindmap/backend/pocketbase.js";
 
 export default function MindMapCanvas(props) {
   let mainRef;
@@ -33,6 +35,12 @@ export default function MindMapCanvas(props) {
   // for shortcuts to work when nothing else is focused.
   let containerRef;
   let disposeEngine;
+  // Guards against the map-load fetch in onMount below resolving after
+  // this component has already been torn down (e.g. rapid map
+  // switching via the catalog/file-switcher) -- without this, render()
+  // could mount a fresh Solid tree into a mainRef that has already
+  // detached from the DOM.
+  let cancelled = false;
 
   // Syncs core/scope.js's base input scope with the host's canvas/notes
   // mode. Required per docs/mind-map-core-engine-library.md's Step 2:
@@ -46,16 +54,37 @@ export default function MindMapCanvas(props) {
     scope.setBaseScope(activeMode());
   });
 
-  onMount(() => {
+  onMount(async () => {
     console.log("[MindMapCanvas] onMount, uuid =", props.uuid);
 
     containerRef.focus();
+
+    // Fetches the map record here, before the renderer ever mounts, so
+    // NewMindMapPreview.jsx no longer needs to import backend/pocketbase.js
+    // itself -- see docs/mind-map-core-engine-library/01-plan.md's Step
+    // 4a. A load failure (e.g. an unknown uuid) surfaces the same error
+    // dialog io.js's old restore() used to show, instead of leaving the
+    // canvas with nothing ever rendered.
+    let record = null;
+    if (props.uuid) {
+      try {
+        record = await loadByUuid(props.uuid);
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        setErrorDialogMessage(`Failed to load map: ${message}`);
+      }
+    }
+    if (cancelled) {
+      return;
+    }
 
     disposeEngine = render(
       () => (
         <NewMindMapPreview
           uuid={props.uuid}
           title={new Date().toISOString().slice(0, 10)}
+          initialData={record?.mymind}
+          mapRecord={record}
           containerEl={containerRef}
           // Owns the actual ui/io.js calls on the renderer's behalf --
           // see docs/mind-map-core-engine-library/01-plan.md's Step 4b.
@@ -68,10 +97,10 @@ export default function MindMapCanvas(props) {
             io.detach();
             io.registerRestoreRoot(null);
           }}
-          onRootReady={(root, svgNode, record) => {
+          onRootReady={(root, svgNode, loadedRecord) => {
             io.attach(root, svgNode);
-            if (record) {
-              io.setCurrentMap(record);
+            if (loadedRecord) {
+              io.setCurrentMap(loadedRecord);
             }
           }}
           onDirty={() => bumpDirty()}
@@ -104,6 +133,7 @@ export default function MindMapCanvas(props) {
   onCleanup(() => {
     console.log("[MindMapCanvas] onCleanup, uuid =", props.uuid);
 
+    cancelled = true;
     newKeyboard.dispose(containerRef);
     title.dispose();
 
