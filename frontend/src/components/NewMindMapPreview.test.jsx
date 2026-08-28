@@ -9,7 +9,6 @@ import { describe, expect, it, vi } from "vitest";
 // this file's synchronous assertions can't observe.
 vi.mock("solid-js", async () => await import("solid-js/dist/solid.js"));
 import { ItemNode, layoutRepo, shapeRepo } from "mindmap-engine";
-import "mindmap-engine/shape/underline.js";
 import {
   measureContentSize,
   registerDomRef,
