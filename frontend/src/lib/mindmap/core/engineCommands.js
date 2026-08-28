@@ -334,9 +334,7 @@ export const repo = new Map([
         const subactions = getAllSelectedItems().map(
           (item) => new SetStatus(item, newStatus),
         );
-        action(
-          subactions.length === 1 ? subactions[0] : new Multi(subactions),
-        );
+        action(subactions.length === 1 ? subactions[0] : new Multi(subactions));
       },
     },
   ],
@@ -355,9 +353,7 @@ export const repo = new Map([
         const subactions = getAllSelectedItems().map(
           (item) => new SetStatus(item, newStatus),
         );
-        action(
-          subactions.length === 1 ? subactions[0] : new Multi(subactions),
-        );
+        action(subactions.length === 1 ? subactions[0] : new Multi(subactions));
       },
     },
   ],

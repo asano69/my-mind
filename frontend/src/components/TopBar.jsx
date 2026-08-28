@@ -84,7 +84,7 @@ export default function TopBar() {
     document.getElementById("mindmap-container")?.focus();
   }
 
-// Guarded against re-entrancy: without this, cancelEditingTitle()
+  // Guarded against re-entrancy: without this, cancelEditingTitle()
   // below could call this a second time from inside the title
   // <input>'s own onBlur, while the first call is still unwinding.
   // Calling container.focus() synchronously here (from inside the
@@ -108,7 +108,7 @@ export default function TopBar() {
     titleInputRef?.blur();
     returnFocusToCanvas();
   }
-   function handleTitleKeyDown(e) {
+  function handleTitleKeyDown(e) {
     if (e.key === "Enter") {
       e.currentTarget.blur(); // triggers commitTitle via onBlur
     } else if (e.key === "Escape") {

@@ -7,11 +7,7 @@ import LeaveConfirmDialog from "./LeaveConfirmDialog";
 
 import ContextMenuContent from "./ContextMenu";
 import { ContextMenu } from "@kobalte/core/context-menu";
-import {
-  createEffect,
-  onMount,
-  onCleanup,
-} from "solid-js";
+import { createEffect, onMount, onCleanup } from "solid-js";
 import { render } from "solid-js/web";
 import {
   activeMode,
@@ -156,4 +152,3 @@ export default function MindMapCanvas(props) {
     </div>
   );
 }
-

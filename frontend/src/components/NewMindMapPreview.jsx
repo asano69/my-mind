@@ -343,7 +343,7 @@ function ItemNodeView(props) {
           <Show when={props.item.icon}>
             <span class={`icon fa ${props.item.icon}`} />
           </Show>
-          { }
+          {}
           <div
             class="text"
             style={textStyleFor(props.item)}
@@ -458,26 +458,26 @@ export function rootFromMapData(data) {
 }
 
 export default function NewMindMapPreview(props) {
-// Set by loadPreviewRoot() below whenever a real saved map was loaded
+  // Set by loadPreviewRoot() below whenever a real saved map was loaded
   // (stays null for a brand-new, unsaved map) -- read by the
   // root-loaded effect further down to restore io.js's currentMapId/
   // currentMapUuid/title bookkeeping via newIo.applyLoadedRecord(), the
   // same bookkeeping the old engine's io.restore() applies internally.
-let lastLoadedRecord = null;
-   async function loadPreviewRoot(uuid, fallbackTitle) {
-      if (!uuid) {
-        lastLoadedRecord = null;
-         return createPreviewRoot(fallbackTitle);
+  let lastLoadedRecord = null;
+  async function loadPreviewRoot(uuid, fallbackTitle) {
+    if (!uuid) {
+      lastLoadedRecord = null;
+      return createPreviewRoot(fallbackTitle);
     }
 
-const record = await loadByUuid(uuid);
-     lastLoadedRecord = record;
-      return rootFromMapData(record.mymind) ?? createPreviewRoot(fallbackTitle);
-   }
+    const record = await loadByUuid(uuid);
+    lastLoadedRecord = record;
+    return rootFromMapData(record.mymind) ?? createPreviewRoot(fallbackTitle);
+  }
   const [root] = createResource(
-     () => ({ uuid: props.uuid ?? null, title: props.title }),
+    () => ({ uuid: props.uuid ?? null, title: props.title }),
     ({ uuid, title }) => loadPreviewRoot(uuid, title),
-    );
+  );
 
   // Local, per-instance state (not a shared store.js signal, see
   // docs/mind-map-core-engine-library/01-plan.md's Step 4e) holding a
@@ -710,7 +710,6 @@ const record = await loadByUuid(uuid);
         <style>{mapCss}</style>
         <Show when={effectiveRoot()}>
           {
-             
             // children-as-function is the standard idiomatic Solid API
             // for narrowing a signal to a non-null value inside this
             // block; it is a render prop, not a signal read escaping its

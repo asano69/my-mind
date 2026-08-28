@@ -76,9 +76,8 @@ import "./layout/map.js";
 import ItemNode from "./itemStore.js";
 
 const newClipboard = await import("./newClipboard.js");
-const { setCurrentItem, setSelectedItems, setEditing } = await import(
-  "./itemSelection.js"
-);
+const { setCurrentItem, setSelectedItems, setEditing } =
+  await import("./itemSelection.js");
 const {
   action: actionFn,
   MoveItem,
