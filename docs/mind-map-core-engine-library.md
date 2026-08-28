@@ -1,4 +1,4 @@
-# 前提の組み替え：マルチインスタンスは目的ではなく結果
+# マインドマップコアエンジンのライブラリ化
 
 前回の案は「今の singleton モジュール群にインスタンス概念を後付けする」発想でしたが、それだと結局 `store.js`/`itemSelection.js`/`newMouse.js`/`io.js` といった **アプリ固有の関心事とエンジンの関心事が混ざったまま** インスタンス化することになり、複雑さが増すわりに「ライブラリとして持ち出せる」形にはなりません。
 
@@ -238,3 +238,97 @@ module-scope の `let`/モジュールレベル signal を持ち、`init()/dispo
 4. 🟡グループ（history/itemSelection/newViewport/newMouse/newClipboard/newEdit）は上記1〜3が終わった後、まとめてファクトリ化すれば良い（依存先が綺麗になっているほど、ファクトリ化自体は機械的な作業になるはず）。
 
 この並び、つまり「🔴を先に潰してから🟡をファクトリ化する」の順番で次のフェーズ（フェーズ1）に進むのが良さそうです。
+
+
+---
+
+リファクタリングのたびに成果があがるように、コア部分をライブラリとしてしっかり線引きしながら、すこしずつ、ライブラリの部分を広げていく戦略が良いと思う。
+# 戦略：境界線を「実体」として先に引き、内側を少しずつ広げる
+
+とても良い方針だと思います。ここで一点、フェーズ0の分類を見返すと重要な気づきがあります。
+
+**「🟡（要ファクトリ化）」と「🔴（アプリ混入）」は、実は別の軸の問題です。**
+
+- 🔴 = **import の向きの違反**（エンジンがアプリを参照している）→ これは「境界線」の問題
+- 🟡 = **module-scope singleton である**（アプリへの依存はない）→ これは「複数生成できない」という別の問題
+
+境界線（import方向のルール）だけで言えば、🟡グループ（`history.js`, `itemSelection.js`, `newViewport.js`, `newMouse.js`, `newClipboard.js`, `newEdit.js`）はすでに合格しています。singleton であることは「ライブラリとして未完成」ではありますが、「アプリに汚染されている」わけではない。
+
+これは好都合です。**境界線を「今すぐ」広く引ける**ということだからです。ファクトリ化（🟡→🟢化）は境界線の内側に取り込んだ後で、好きなタイミングで着手すれば良い。境界線を守ることと、singleton を解消することを、別々のマイルストーンとして進められます。
+
+## ステップ1（最初の一手）：境界線を「機械的にチェックされるルール」として実体化する
+
+まずやるべきは、コード変更ではなく **「侵犯したら検知できる仕組み」を作ること**です。これ自体が最初の目に見える成果になります。
+
+具体的には ESLint の `no-restricted-imports`（あるいは `eslint-plugin-boundaries`）で、こういうルールを敷きます。
+
+- `frontend/src/lib/mindmap/core/**` からは、`../store.js`, `../ui/*`, `../backend/*`, `../title.js` を import 禁止
+- 例外を許すファイルは無し（今は0個であるべき）
+
+この時点で `core/scope.js` の `import { activeMode } from "../store.js"` が **即座にlintエラーとして可視化**されます。これが「境界線の実在化」です。CIに組み込めば、以後誰かがうっかり逆方向依存を増やしても即座に赤くなる。
+
+この一手だけで：
+- 🟢 + 🟡 グループ（`itemStore.js`〜`newClipboard.js`まで）が「ルールで保護された領域」になる
+- 唯一の違反者が `core/scope.js` だと機械的に確定する
+- 次にやるべき作業が自動的に1点に絞られる
+
+という成果が得られます。コードは1行も変えていないのに、境界線が「口約束」から「検証可能な制約」に変わる。これが「毎回成果が上がる」戦略の第一歩として理想的だと思います。
+
+## ステップ2：`core/scope.js` の依存を反転させる（最初の🔴の解消）
+
+これが実質的な最初のリファクタです。`isCanvasActive()` を「外から `activeMode` 相当の値を注入してもらう」形に変えます。
+
+- 今：`scope.js` が `store.js` の `activeMode()` を能動的に import して読みに行く
+- 変更後：`scope.js` は「現在のベーススコープ」を保持する signal を自前で持ち、それを `setBaseScope(value)` のような形で外から書き込んでもらう
+- ホスト側（`MindMapCanvas.jsx` あたり）が `createEffect(() => scope.setBaseScope(activeMode()))` のように橋渡しする1行を追加するだけ
+
+この変更のポイントは、**scope.js自身のロジック（pushScope/topScope/isCanvasActiveの中身）は一切変えなくて良い**ことです。変わるのは「値をどこから取得するか」という入力経路だけ。挙動は完全に不変のはずなので、リグレッションテストのコストも低い。
+
+この一手が終わると：
+- lintの違反者が0件になる
+- 境界線チェックが「グリーン」になったこと自体が2つ目の成果
+- `newMouse.js`/`newKeyboard.js`/`newClipboard.js` は `scope.js` 経由で間接的に持っていた🔴要素も同時に消える（連鎖的な効果）
+
+## ステップ3：`newContextMenuCommands.js` を engine repo / app repo に分割する
+
+これも「分割するだけ」で新しいロジックは書きません。今の1つの `Map` を2つに分けます。
+
+- `core/engineCommands.js`（仮）：`bold`/`italic`/`underline`/`strikethrough`/`insert-child`/`insert-sibling`/`delete`/`edit`/`yes`/`no`/`computed`/`undo`/`redo`/`center`/`zoom-in`/`zoom-out`/`fold`/`swap`/`side`/`pan`/`notes`（notesの中身は後述）
+- `app/commands.js`（仮、hostアプリ側）：`save`/`help`/`ui`/`recover`/`catalog-list`/`file-switcher`/`go-to-catalog`/`new`
+
+`newKeyboard.js`（🟡グループ）が参照する `sharedCommandRepo` を `engineCommands.js` だけに絞れば、キーボード処理から app 側コマンドへの依存が切れます。`ContextMenu.jsx` 側は両方の repo をマージして表示すれば見た目は変わりません。
+
+ここで唯一悩ましいのが `notes` コマンド（`notes.toggle()` を呼ぶもの）です。これは「ノートは重要だがライブラリのスコープ外」という前回の合意と直結する箇所なので、この機会に **engine repo からも外し、app repo 側に置く**のが筋が通ります。エンジンのキーボードショートカット一覧には現れなくなりますが、ホストが自分のショートカット層で `Ctrl+M` をbindし直せば良いだけです。
+
+## ステップ4：`NewMindMapPreview.jsx` の依存を props/callback に置き換える
+
+これが一番大きい作業なので、最後に回すのが正しいです。ただし一気にやらず、依存を1本ずつ剥がしていくのが「成果が積み上がる」進め方に合います。
+
+現状の直接依存とその剥がし方の対応：
+
+| 現状の直接依存 | 剥がし方 |
+|---|---|
+| `backend/pocketbase.js` の `loadByUuid` | `props.initialData`（すでにロード済みの `mymind` JSON）を受け取る形に変更。ロード自体はホスト（`MindMapCanvas.jsx`）の責務にする |
+| `ui/io.js` の `attach`/`setCurrentMap`/`init`/`detach` | `props.onRootReady(root, svgNode)` のようなコールバックに置き換え。呼ぶタイミング（root確定時、unmount時）は今と同じで良い |
+| `store.js` の `bumpDirty` | `props.onDirty()` コールバック |
+| `store.js` の `titleAuto`/`setCurrentTitle` | `props.onTitleChange(name)` コールバック（root.nameが変わるたびに呼ぶ） |
+| `store.js` の `overrideRoot`/`setOverrideRoot` | これは「エンジンのpublic API」として正式に用意すべきもの。`instance.restoreRoot(newRoot)` のような明示的なメソッドにする |
+
+この表の1行ずつを独立したステップとして片付けられます。全部一度にやる必要はなく、「1本剥がす→テスト→lintグリーン確認」のサイクルを5回繰り返すイメージです。
+
+## 全体の順序と「毎回成果が出る」ことの確認
+
+```
+Step 1: lintルール導入          → 違反箇所が可視化される（成果：検証可能な境界線）
+Step 2: scope.js の反転         → 違反が1件消える、newMouse/newKeyboard/newClipboardも連鎖的にクリーンに
+Step 3: commands repo 分割      → 違反が1件消える、キーボード層がエンジン純度を獲得
+Step 4a〜4e: NewMindMapPreview  → 依存を1本ずつ剥がす。5ステップに分割できる
+Step 5（任意、後回し可）: 🟡グループのファクトリ化
+Step 6（任意）: packages/ への物理分離
+```
+
+Step 1〜4が終わった時点で、**「境界線の内側＝ライブラリ本体」がすでに95%完成している**状態になります。singleton（🟡）が残っていても、それは「まだマルチインスタンスに対応していないライブラリ」であって「アプリに汚染されたライブラリ」ではない。この違いは大きく、Step 5（ファクトリ化）は純粋に内部実装の話になるので、境界線を壊すリスクなしに進められます。
+
+## 次にやること
+
+Step 1（lintルールの設計）から始めるのが良いと思います。ESLintの `no-restricted-imports` を使うか `eslint-plugin-boundaries` を導入するかは、プロジェクトの規模的には前者で十分そうです。具体的なルール文面と、`eslint.config.js` へどう追記するかを詰めましょうか。それとも先に Step 2（`scope.js` の反転）の具体的な差分設計に進みますか？
