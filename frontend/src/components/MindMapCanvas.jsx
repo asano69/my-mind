@@ -14,7 +14,12 @@ import {
   onCleanup,
 } from "solid-js";
 import { render } from "solid-js/web";
-import { activeMode } from "../lib/mindmap/store";
+import {
+  activeMode,
+  bumpDirty,
+  titleAuto,
+  setCurrentTitle,
+} from "../lib/mindmap/store";
 import NewMindMapPreview from "./NewMindMapPreview.jsx";
 import * as newKeyboard from "../lib/mindmap/core/newKeyboard.js";
 import * as newMouse from "../lib/mindmap/core/newMouse.js";
@@ -85,6 +90,12 @@ export default function MindMapCanvas(props) {
             io.attach(root, svgNode);
             if (record) {
               io.setCurrentMap(record);
+            }
+          }}
+          onDirty={() => bumpDirty()}
+          onTitleChange={(name) => {
+            if (titleAuto()) {
+              setCurrentTitle(name);
             }
           }}
         />

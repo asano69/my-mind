@@ -22,13 +22,7 @@ import { registerDomRefs } from "../lib/mindmap/core/newEdit.js";
 import * as newMouse from "../lib/mindmap/core/newMouse.js";
 import * as newClipboard from "../lib/mindmap/core/newClipboard.js";
 import * as newViewport from "../lib/mindmap/core/newViewport.js";
-import {
-  bumpDirty,
-  titleAuto,
-  setCurrentTitle,
-  overrideRoot,
-  setOverrideRoot,
-} from "../lib/mindmap/store.js";
+import { overrideRoot, setOverrideRoot } from "../lib/mindmap/store.js";
 import {
   TOGGLE_SIZE,
   D_MINUS,
@@ -650,14 +644,23 @@ export default function NewMindMapPreview(props) {
       newViewport.center(loadedRoot.size, containerSize);
       centered = true;
     }
-    // Keeps the map's title synced to the root node's label whenever
-    // titleAuto is on, mirroring map.js's own layout computed for the
-    // old engine.
-    if (titleAuto()) {
-      setCurrentTitle(loadedRoot.name);
-    }
+    // Reports the root node's current label to the host on every layout
+    // pass, mirroring map.js's own layout computed for the old engine.
+    // Routed through a host callback instead of importing store.js's
+    // titleAuto/setCurrentTitle directly -- see
+    // docs/mind-map-core-engine-library/01-plan.md's Step 4d -- so this
+    // renderer stays free of any app-state dependency. Whether this
+    // actually updates the displayed title (i.e. whether titleAuto is
+    // on) is entirely the host's decision now; this call just reports
+    // the current name unconditionally, every pass.
+    props.onTitleChange?.(loadedRoot.name);
+    // Routed through a host callback instead of importing store.js's
+    // bumpDirty directly -- see docs/mind-map-core-engine-library/
+    // 01-plan.md's Step 4c -- so this renderer stays free of any
+    // app-state dependency. MindMapCanvas.jsx supplies the actual
+    // bumpDirty() call.
     if (dirtyArmed) {
-      bumpDirty();
+      props.onDirty?.();
     } else {
       dirtyArmed = true;
     }
