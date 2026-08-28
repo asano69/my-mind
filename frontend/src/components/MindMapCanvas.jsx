@@ -122,6 +122,16 @@ export default function MindMapCanvas(props) {
 
     newKeyboard.init(containerRef);
 
+    // Registers appCommands.js's repo (save/notes/file-switcher/
+    // go-to-catalog/new) as newKeyboard.js's fallback command source --
+    // see docs/mind-map-core-engine-library/01-plan.md's Step 3. Without
+    // this, newKeyboard.js only ever falls back to engineCommands.js
+    // (core/**-only), so every app-level keyboard shortcut (Ctrl+Shift+S,
+    // Ctrl+M, Ctrl+K, Ctrl+P, Ctrl+Shift+O) silently stopped firing once
+    // the merged repo was split.
+    const { repo: appCommandRepo } = await import("../lib/mindmap/appCommands.js");
+    newKeyboard.registerExtraCommands(appCommandRepo);
+
     // Was previously started by the old engine's my-mind.js mount() --
     // that's gone, so this is now the sole engine-lifecycle owner of
     // document.title syncing.
@@ -134,6 +144,7 @@ export default function MindMapCanvas(props) {
     console.log("[MindMapCanvas] onCleanup, uuid =", props.uuid);
 
     cancelled = true;
+    newKeyboard.registerExtraCommands(null);
     newKeyboard.dispose(containerRef);
     title.dispose();
 
