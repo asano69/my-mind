@@ -25,8 +25,8 @@
 // always the only difference from action.js's own versions; the
 // tree-shape logic itself (pickBalancedSide/pickInheritedShape below) is
 // unchanged from action.js's original implementation.
-import * as history from "./history.js";
-import { selectItem } from "./itemSelection.js";
+import * as defaultHistory from "./history.js";
+import { selectItem as defaultSelectItem } from "./itemSelection.js";
 import ItemNode from "./itemStore.js";
 
 // Base class every action extends: a do()/undo() pair pushed onto
@@ -234,115 +234,139 @@ export class SetSide extends Action {
   }
 }
 
-// Mirrors my-mind.js's app.action(): pushes the action onto history.js's
-// shared undo stack, then runs it. Every new-engine command that wants
-// an undoable step (e.g. newEdit.js's commitEditing()) goes through
-// this instead of mutating an ItemNode directly.
-export function action(action) {
-  history.push(action);
-  action.do();
-}
+// Builds the four tree-mutation actions (InsertNewItem/AppendItem/
+// RemoveItem/MoveItem) plus action() itself, bound to a specific
+// history/itemSelection pair -- see docs/mind-map-core-engine-library/
+// 01-plan.md's Step 5. Everything else in this file (Action, Multi, the
+// plain property-mutator Set* classes, Swap, and the pickBalancedSide/
+// pickInheritedShape helpers) needs neither dependency and stays at
+// module scope below, exported directly.
+export function createActions(
+  historyInstance = defaultHistory,
+  selectItem = defaultSelectItem,
+) {
+  // Mirrors my-mind.js's app.action(): pushes the action onto the given
+  // history instance's undo stack, then runs it. Every new-engine
+  // command that wants an undoable step (e.g. newEdit.js's
+  // commitEditing()) goes through this instead of mutating an ItemNode
+  // directly.
+  function action(action) {
+    historyInstance.push(action);
+    action.do();
+  }
 
-export class InsertNewItem extends Action {
-  // See action.js's InsertNewItem for the full rationale of the `item`
-  // parameter (reusing an already-constructed draft item so a
-  // create-then-edit sequence is a single undo step).
-  constructor(parent, index, item = null) {
-    super();
-    this.parent = parent;
-    this.index = index;
-    if (item) {
-      this.item = item;
-    } else {
-      this.item = new ItemNode();
-      this.item.isNew = true;
-      if (parent.isRoot) {
-        this.item.side = pickBalancedSide(parent);
-      }
-      if (parent.children.length >= 1) {
-        const inheritedShape = pickInheritedShape(parent);
-        if (inheritedShape) {
-          this.item.shape = inheritedShape;
+  class InsertNewItem extends Action {
+    // See action.js's InsertNewItem for the full rationale of the `item`
+    // parameter (reusing an already-constructed draft item so a
+    // create-then-edit sequence is a single undo step).
+    constructor(parent, index, item = null) {
+      super();
+      this.parent = parent;
+      this.index = index;
+      if (item) {
+        this.item = item;
+      } else {
+        this.item = new ItemNode();
+        this.item.isNew = true;
+        if (parent.isRoot) {
+          this.item.side = pickBalancedSide(parent);
+        }
+        if (parent.children.length >= 1) {
+          const inheritedShape = pickInheritedShape(parent);
+          if (inheritedShape) {
+            this.item.shape = inheritedShape;
+          }
         }
       }
     }
-  }
-  do() {
-    this.parent.collapsed = false;
-    this.parent.insertChild(this.item, this.index);
-    selectItem(this.item);
-  }
-  undo() {
-    this.parent.removeChild(this.item);
-    selectItem(this.parent);
-  }
-}
-
-export class AppendItem extends Action {
-  constructor(parent, item) {
-    super();
-    this.parent = parent;
-    this.item = item;
-  }
-  do() {
-    if (this.parent.isRoot && !this.item.side) {
-      this.item.side = pickBalancedSide(this.parent);
+    do() {
+      this.parent.collapsed = false;
+      this.parent.insertChild(this.item, this.index);
+      selectItem(this.item);
     }
-    this.parent.insertChild(this.item);
-    selectItem(this.item);
-  }
-  undo() {
-    this.parent.removeChild(this.item);
-    selectItem(this.parent);
-  }
-}
-
-export class RemoveItem extends Action {
-  constructor(item) {
-    super();
-    this.item = item;
-    this.parent = item.parent;
-    this.index = this.parent.children.indexOf(this.item);
-  }
-  do() {
-    this.parent.removeChild(this.item);
-    selectItem(this.parent);
-  }
-  undo() {
-    this.parent.insertChild(this.item, this.index);
-    selectItem(this.item);
-  }
-}
-
-export class MoveItem extends Action {
-  constructor(item, newParent, newIndex, newSide = null) {
-    super();
-    this.item = item;
-    this.newParent = newParent;
-    this.newIndex = newIndex;
-    this.newSide = newSide;
-    this.oldParent = item.parent;
-    this.oldIndex = this.oldParent.children.indexOf(item);
-    this.oldSide = item.side;
-  }
-  do() {
-    const { item, newParent, newIndex, newSide } = this;
-    item.side =
-      newSide ?? (newParent.isRoot ? pickBalancedSide(newParent) : null);
-    if (newIndex === undefined) {
-      newParent.insertChild(item);
-    } else {
-      newParent.insertChild(item, newIndex);
+    undo() {
+      this.parent.removeChild(this.item);
+      selectItem(this.parent);
     }
-    selectItem(item);
   }
-  undo() {
-    const { item, oldSide, oldIndex, oldParent, newParent } = this;
-    item.side = oldSide;
-    oldParent.insertChild(item, oldIndex);
-    selectItem(newParent);
+
+  class AppendItem extends Action {
+    constructor(parent, item) {
+      super();
+      this.parent = parent;
+      this.item = item;
+    }
+    do() {
+      if (this.parent.isRoot && !this.item.side) {
+        this.item.side = pickBalancedSide(this.parent);
+      }
+      this.parent.insertChild(this.item);
+      selectItem(this.item);
+    }
+    undo() {
+      this.parent.removeChild(this.item);
+      selectItem(this.parent);
+    }
   }
+
+  class RemoveItem extends Action {
+    constructor(item) {
+      super();
+      this.item = item;
+      this.parent = item.parent;
+      this.index = this.parent.children.indexOf(this.item);
+    }
+    do() {
+      this.parent.removeChild(this.item);
+      selectItem(this.parent);
+    }
+    undo() {
+      this.parent.insertChild(this.item, this.index);
+      selectItem(this.item);
+    }
+  }
+
+  class MoveItem extends Action {
+    constructor(item, newParent, newIndex, newSide = null) {
+      super();
+      this.item = item;
+      this.newParent = newParent;
+      this.newIndex = newIndex;
+      this.newSide = newSide;
+      this.oldParent = item.parent;
+      this.oldIndex = this.oldParent.children.indexOf(item);
+      this.oldSide = item.side;
+    }
+    do() {
+      const { item, newParent, newIndex, newSide } = this;
+      item.side =
+        newSide ?? (newParent.isRoot ? pickBalancedSide(newParent) : null);
+      if (newIndex === undefined) {
+        newParent.insertChild(item);
+      } else {
+        newParent.insertChild(item, newIndex);
+      }
+      selectItem(item);
+    }
+    undo() {
+      const { item, oldSide, oldIndex, oldParent, newParent } = this;
+      item.side = oldSide;
+      oldParent.insertChild(item, oldIndex);
+      selectItem(newParent);
+    }
+  }
+
+  return { action, InsertNewItem, AppendItem, RemoveItem, MoveItem };
 }
+
+// Default singleton instance, bound to history.js's/itemSelection.js's
+// own default singletons -- preserves every existing call site
+// unchanged during the migration (see createActions()'s own comment
+// above). Once callers are threaded through an explicit instance
+// instead, this default export can be dropped.
+const defaultActions = createActions();
+export const { action, InsertNewItem, AppendItem, RemoveItem, MoveItem } =
+  defaultActions;
 
 export class Swap extends Action {
   constructor(item, diff) {

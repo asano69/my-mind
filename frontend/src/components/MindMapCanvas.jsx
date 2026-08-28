@@ -129,7 +129,8 @@ export default function MindMapCanvas(props) {
     // (core/**-only), so every app-level keyboard shortcut (Ctrl+Shift+S,
     // Ctrl+M, Ctrl+K, Ctrl+P, Ctrl+Shift+O) silently stopped firing once
     // the merged repo was split.
-    const { repo: appCommandRepo } = await import("../lib/mindmap/appCommands.js");
+    const { repo: appCommandRepo } =
+      await import("../lib/mindmap/appCommands.js");
     newKeyboard.registerExtraCommands(appCommandRepo);
 
     // Was previously started by the old engine's my-mind.js mount() --
