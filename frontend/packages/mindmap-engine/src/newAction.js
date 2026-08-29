@@ -25,8 +25,6 @@
 // always the only difference from action.js's own versions; the
 // tree-shape logic itself (pickBalancedSide/pickInheritedShape below) is
 // unchanged from action.js's original implementation.
-import * as defaultHistory from "./history.js";
-import { selectItem as defaultSelectItem } from "./itemSelection.js";
 import ItemNode from "./itemStore.js";
 
 // Base class every action extends: a do()/undo() pair pushed onto
@@ -241,10 +239,7 @@ export class SetSide extends Action {
 // plain property-mutator Set* classes, Swap, and the pickBalancedSide/
 // pickInheritedShape helpers) needs neither dependency and stays at
 // module scope below, exported directly.
-export function createActions(
-  historyInstance = defaultHistory,
-  selectItem = defaultSelectItem,
-) {
+export function createActions(historyInstance, selectItem) {
   // Mirrors my-mind.js's app.action(): pushes the action onto the given
   // history instance's undo stack, then runs it. Every new-engine
   // command that wants an undoable step (e.g. newEdit.js's
@@ -358,15 +353,6 @@ export function createActions(
 
   return { action, InsertNewItem, AppendItem, RemoveItem, MoveItem };
 }
-
-// Default singleton instance, bound to history.js's/itemSelection.js's
-// own default singletons -- preserves every existing call site
-// unchanged during the migration (see createActions()'s own comment
-// above). Once callers are threaded through an explicit instance
-// instead, this default export can be dropped.
-const defaultActions = createActions();
-export const { action, InsertNewItem, AppendItem, RemoveItem, MoveItem } =
-  defaultActions;
 
 export class Swap extends Action {
   constructor(item, diff) {

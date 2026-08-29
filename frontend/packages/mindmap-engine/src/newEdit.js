@@ -16,13 +16,9 @@
 // registerNavigate() and notes.js's registerEditorAPI() already use.
 import { isUrlOnly } from "./urlUtils.js";
 import { measureContentSize } from "./itemStore.js";
-import {
-  action as defaultAction,
-  InsertNewItem as DefaultInsertNewItem,
-  SetText as DefaultSetText,
-} from "./newAction.js";
-import { selectItem as defaultSelectItem } from "./itemSelection.js";
-import * as defaultHistory from "./history.js";
+// SetText is a plain, state-independent action class (no singleton
+// dependency), so it's still fine to give it a real default value.
+import { SetText as DefaultSetText } from "./newAction.js";
 
 // createEdit() closes newEdit.js's per-instance state (domRefs,
 // activeSession) into a factory, per docs/mind-map-core-engine-library/
@@ -31,12 +27,12 @@ import * as defaultHistory from "./history.js";
 // createActions()); every existing call site keeps using the module-
 // level default instance further down.
 export function createEdit({
-  action = defaultAction,
-  InsertNewItem = DefaultInsertNewItem,
+  action,
+  InsertNewItem,
   SetText = DefaultSetText,
-  selectItem = defaultSelectItem,
-  historyInstance = defaultHistory,
-} = {}) {
+  selectItem,
+  historyInstance,
+}) {
   let domRefs = null;
   function registerDomRefs(refs) {
     domRefs = refs;
@@ -215,18 +211,3 @@ export function createEdit({
     discardEditing,
   };
 }
-
-// Default singleton instance, bound to newAction.js's/itemSelection.js's/
-// history.js's own default singletons -- preserves every existing call
-// site (newMouse.js, newKeyboard.js, engineCommands.js,
-// NewMindMapPreview.jsx) unchanged during the migration. Once callers
-// are threaded through an explicit instance instead, this default
-// export can be dropped.
-const defaultEdit = createEdit();
-export const {
-  registerDomRefs,
-  isEditing,
-  startEditing,
-  commitEditing,
-  discardEditing,
-} = defaultEdit;

@@ -52,20 +52,3 @@ export function createHistory() {
 
   return { historyVersion, reset, push, back, forward, canBack, canForward };
 }
-
-// Default singleton instance, preserving the current module-level API
-// during the migration -- every existing `import * as history from
-// "./history.js"` call site keeps working unchanged. Once callers
-// (newAction.js, newEdit.js, newKeyboard.js, engineCommands.js, ...)
-// are threaded through an explicit instance instead, this default
-// export can be dropped.
-const defaultInstance = createHistory();
-export const {
-  historyVersion,
-  reset,
-  push,
-  back,
-  forward,
-  canBack,
-  canForward,
-} = defaultInstance;

@@ -181,22 +181,3 @@ export function createViewport() {
     adjustZoom,
   };
 }
-
-// Default singleton instance, preserving the current module-level API
-// during the migration -- every existing `import * as newViewport from
-// "./newViewport.js"` call site keeps working unchanged. Once callers
-// (NewMindMapPreview.jsx, newMouse.js, engineCommands.js, ...) are
-// threaded through an explicit instance instead, this default export
-// can be dropped.
-const defaultInstance = createViewport();
-export const {
-  registerCenterSource,
-  recenter,
-  init,
-  dispose,
-  resetAnchor,
-  moveBy,
-  center,
-  anchorRootPosition,
-  adjustZoom,
-} = defaultInstance;

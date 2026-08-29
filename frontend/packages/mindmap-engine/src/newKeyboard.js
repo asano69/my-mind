@@ -23,32 +23,9 @@
 // tree, so the logic is duplicated here rather than shared, avoiding a
 // dependency on the old engine's command/command.js module graph.
 import { isCanvasActive } from "./scope.js";
-import {
-  currentItem as defaultCurrentItem,
-  selectedItems as defaultSelectedItems,
-  selectionCursor as defaultSelectionCursor,
-  selectItem as defaultSelectItem,
-  extendSelection as defaultExtendSelection,
-  editing as defaultEditing,
-  setEditing as defaultSetEditing,
-} from "./itemSelection.js";
-import {
-  startEditing as defaultStartEditing,
-  commitEditing as defaultCommitEditing,
-  discardEditing as defaultDiscardEditing,
-} from "./newEdit.js";
-import * as defaultHistory from "./history.js";
-import {
-  action as defaultAction,
-  InsertNewItem as DefaultInsertNewItem,
-  RemoveItem as DefaultRemoveItem,
-  Multi as DefaultMulti,
-} from "./newAction.js";
-import {
-  repo as defaultSharedCommandRepo,
-  setPanKeyboardScope as defaultSetPanKeyboardScope,
-  disposePan as defaultDisposePan,
-} from "./engineCommands.js";
+// Multi is a plain, state-independent action class (no singleton
+// dependency), so it's still fine to give it a real default value.
+import { Multi as DefaultMulti } from "./newAction.js";
 
 function isMac() {
   return !!(globalThis.navigator?.platform ?? "").match(/mac/i);
@@ -70,25 +47,25 @@ function hasDocument() {
 }
 
 export function createKeyboardController({
-  currentItem = defaultCurrentItem,
-  selectedItems = defaultSelectedItems,
-  selectionCursor = defaultSelectionCursor,
-  selectItem = defaultSelectItem,
-  extendSelection = defaultExtendSelection,
-  editing = defaultEditing,
-  setEditing = defaultSetEditing,
-  startEditing = defaultStartEditing,
-  commitEditing = defaultCommitEditing,
-  discardEditing = defaultDiscardEditing,
-  history = defaultHistory,
-  action = defaultAction,
-  InsertNewItem = DefaultInsertNewItem,
-  RemoveItem = DefaultRemoveItem,
+  currentItem,
+  selectedItems,
+  selectionCursor,
+  selectItem,
+  extendSelection,
+  editing,
+  setEditing,
+  startEditing,
+  commitEditing,
+  discardEditing,
+  history,
+  action,
+  InsertNewItem,
+  RemoveItem,
   Multi = DefaultMulti,
-  sharedCommandRepo = defaultSharedCommandRepo,
-  setPanKeyboardScope = defaultSetPanKeyboardScope,
-  disposePan = defaultDisposePan,
-} = {}) {
+  sharedCommandRepo,
+  setPanKeyboardScope,
+  disposePan,
+}) {
   // Commands registered by the host app (save, notes, file-switcher, ...),
   // kept out of core/** itself so this module never has to import
   // store.js/ui/* directly -- see docs/mind-map-core-engine-library.md's
@@ -475,11 +452,3 @@ export function createKeyboardController({
 
   return { init, dispose, registerExtraCommands };
 }
-
-// Default singleton instance, preserving the current module-level API
-// during the migration -- every existing `import * as newKeyboard from
-// "./newKeyboard.js"` call site keeps working unchanged. Once callers
-// (MindMapCanvas.jsx, index.js, ...) are threaded through an explicit
-// instance instead, this default export can be dropped.
-const defaultInstance = createKeyboardController();
-export const { init, dispose, registerExtraCommands } = defaultInstance;

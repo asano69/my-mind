@@ -25,17 +25,9 @@
 // here instead, passed in via init(domRefs).
 import ItemNode from "./itemStore.js";
 import { isCanvasActive } from "./scope.js";
-import {
-  currentItem as defaultCurrentItem,
-  selectedItems as defaultSelectedItems,
-  editing as defaultEditing,
-} from "./itemSelection.js";
-import {
-  action as defaultAction,
-  MoveItem as DefaultMoveItem,
-  AppendItem as DefaultAppendItem,
-  Multi as DefaultMulti,
-} from "./newAction.js";
+// Multi is a plain, state-independent action class (no singleton
+// dependency), so it's still fine to give it a real default value.
+import { Multi as DefaultMulti } from "./newAction.js";
 import { repo as formatRepo } from "./format/format.js";
 // Side-effect import: registers the "plaintext" format into
 // format.js's repo (see format/plaintext.js's `new Plaintext()` call at
@@ -59,14 +51,14 @@ import "./format/plaintext.js";
 // instance below preserves every existing `import * as newClipboard
 // from "./newClipboard.js"` call site unchanged.
 export function createClipboardController({
-  currentItem = defaultCurrentItem,
-  selectedItems = defaultSelectedItems,
-  editing = defaultEditing,
-  action = defaultAction,
-  MoveItem = DefaultMoveItem,
-  AppendItem = DefaultAppendItem,
+  currentItem,
+  selectedItems,
+  editing,
+  action,
+  MoveItem,
+  AppendItem,
   Multi = DefaultMulti,
-} = {}) {
+}) {
   let storedItems = [];
   let mode = "";
   let domRefsRef = null;
@@ -230,11 +222,3 @@ export function createClipboardController({
 
   return { init, dispose };
 }
-
-// Default singleton instance, preserving the current module-level API
-// during the migration -- every existing `import * as newClipboard from
-// "./newClipboard.js"` call site keeps working unchanged. Once callers
-// (NewMindMapPreview.jsx, ...) are threaded through an explicit
-// instance instead, this default export can be dropped.
-const defaultInstance = createClipboardController();
-export const { init, dispose } = defaultInstance;

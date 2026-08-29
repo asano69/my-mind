@@ -139,28 +139,3 @@ export function createItemSelection() {
     itemStateClassList,
   };
 }
-
-// Default singleton instance, preserving the current module-level API
-// during the migration -- every existing `import { currentItem, ... }
-// from "./itemSelection.js"` call site keeps working unchanged. Once
-// callers (newMouse.js, newKeyboard.js, newEdit.js, newAction.js,
-// engineCommands.js, NewMindMapPreview.jsx, ...) are threaded through an
-// explicit instance instead, this default export can be dropped.
-const defaultInstance = createItemSelection();
-export const {
-  currentItem,
-  setCurrentItem,
-  selectedItems,
-  setSelectedItems,
-  selectionCursor,
-  setSelectionCursor,
-  editing,
-  setEditing,
-  clearMultiSelection,
-  extendSelection,
-  selectItem,
-  addToSelection,
-  isCurrent,
-  isSelected,
-  itemStateClassList,
-} = defaultInstance;

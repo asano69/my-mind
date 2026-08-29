@@ -30,12 +30,3 @@ export function createNavigation() {
 
   return { registerNavigate, navigateTo };
 }
-
-// Default singleton instance, preserving the current module-level API
-// during the migration -- every existing `import { registerNavigate,
-// navigateTo } from "./navigation.js"` call site keeps working
-// unchanged. Once callers (Workspace.jsx, newMouse.js, item.js, ...)
-// are threaded through an explicit instance instead, this default
-// export can be dropped.
-const defaultInstance = createNavigation();
-export const { registerNavigate, navigateTo } = defaultInstance;

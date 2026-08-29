@@ -23,28 +23,16 @@
 // bottom of this file preserves every existing `import { repo,
 // setPanKeyboardScope, disposePan } from "./engineCommands.js"` call
 // site unchanged during the migration.
+// Swap/SetSide/SetText/SetStatus/Multi are plain, state-independent
+// action classes (no singleton dependency), so they're still fine to
+// give real default values.
 import {
-  currentItem as defaultCurrentItem,
-  editing as defaultEditing,
-  setEditing as defaultSetEditing,
-  selectedItems as defaultSelectedItems,
-} from "./itemSelection.js";
-import {
-  startEditing as defaultStartEditing,
-  commitEditing as defaultCommitEditing,
-} from "./newEdit.js";
-import {
-  action as defaultAction,
-  InsertNewItem as DefaultInsertNewItem,
-  RemoveItem as DefaultRemoveItem,
   Swap as DefaultSwap,
   SetSide as DefaultSetSide,
   SetText as DefaultSetText,
   SetStatus as DefaultSetStatus,
   Multi as DefaultMulti,
 } from "./newAction.js";
-import * as defaultHistory from "./history.js";
-import * as defaultViewport from "./newViewport.js";
 import { isCanvasActive } from "./scope.js";
 
 const PAN_AMOUNT = 15;
@@ -87,23 +75,23 @@ function toggleStyleTag(html, tags, primaryTag) {
 }
 
 export function createEngineCommands({
-  currentItem = defaultCurrentItem,
-  editing = defaultEditing,
-  setEditing = defaultSetEditing,
-  selectedItems = defaultSelectedItems,
-  startEditing = defaultStartEditing,
-  commitEditing = defaultCommitEditing,
-  action = defaultAction,
-  InsertNewItem = DefaultInsertNewItem,
-  RemoveItem = DefaultRemoveItem,
+  currentItem,
+  editing,
+  setEditing,
+  selectedItems,
+  startEditing,
+  commitEditing,
+  action,
+  InsertNewItem,
+  RemoveItem,
   Swap = DefaultSwap,
   SetSide = DefaultSetSide,
   SetText = DefaultSetText,
   SetStatus = DefaultSetStatus,
   Multi = DefaultMulti,
-  history = defaultHistory,
-  viewport = defaultViewport,
-} = {}) {
+  history,
+  viewport,
+}) {
   // Pan (WASD, held down): mirrors command/command.js's Pan command
   // (state machine + setInterval + keyup listener), adapted to call
   // viewport.moveBy() instead of app.currentMap.moveBy(). Kept as a
@@ -534,12 +522,3 @@ export function createEngineCommands({
 
   return { repo, setPanKeyboardScope, disposePan };
 }
-
-// Default singleton instance, preserving the current module-level API
-// during the migration -- every existing `import { repo,
-// setPanKeyboardScope, disposePan } from "./engineCommands.js"` call
-// site keeps working unchanged. Once callers (newKeyboard.js, index.js,
-// ...) are threaded through an explicit instance instead, this default
-// export can be dropped.
-const defaultInstance = createEngineCommands();
-export const { repo, setPanKeyboardScope, disposePan } = defaultInstance;

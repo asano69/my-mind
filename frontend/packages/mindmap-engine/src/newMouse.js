@@ -12,27 +12,11 @@
 // click toggles multi-selection) and double-click (starts text editing,
 // added in Phase 4.5 -- see newEdit.js).
 import { isCanvasActive } from "./scope.js";
-import {
-  currentItem as defaultCurrentItem,
-  selectedItems as defaultSelectedItems,
-  selectItem as defaultSelectItem,
-  addToSelection as defaultAddToSelection,
-  editing as defaultEditing,
-  setEditing as defaultSetEditing,
-} from "./itemSelection.js";
-import {
-  startEditing as defaultStartEditing,
-  commitEditing as defaultCommitEditing,
-} from "./newEdit.js";
-import {
-  action as defaultAction,
-  MoveItem as DefaultMoveItem,
-  Multi as DefaultMulti,
-} from "./newAction.js";
+// Multi is a plain, state-independent action class (no singleton
+// dependency), so it's still fine to give it a real default value.
+import { Multi as DefaultMulti } from "./newAction.js";
 import { decideDropPlacement, isDraggedAncestor } from "./dragPlacement.js";
 import { isSameOrigin } from "./urlUtils.js";
-import { navigateTo as defaultNavigateTo } from "./navigation.js";
-import * as defaultViewport from "./newViewport.js";
 
 // --- Stage 4.7.2 (see docs/08-phase4.7-drag-and-drop-refactor.md) ---
 // domRefs-based rect resolution and ghost construction for drag-and-
@@ -269,7 +253,7 @@ export function computeNewDragState(
 export function finishNewDragDrop(
   state,
   items,
-  { action = defaultAction, MoveItem = DefaultMoveItem, Multi = DefaultMulti } = {},
+  { action, MoveItem, Multi = DefaultMulti },
 ) {
   const { target, result, direction } = state;
   if (isDraggedAncestor(target, items)) {
@@ -323,20 +307,20 @@ export function finishNewDragDrop(
 // default singleton instance below preserves every existing
 // `import * as newMouse from "./newMouse.js"` call site unchanged.
 export function createMouseController({
-  currentItem = defaultCurrentItem,
-  selectedItems = defaultSelectedItems,
-  selectItem = defaultSelectItem,
-  addToSelection = defaultAddToSelection,
-  editing = defaultEditing,
-  setEditing = defaultSetEditing,
-  startEditing = defaultStartEditing,
-  commitEditing = defaultCommitEditing,
-  action = defaultAction,
-  MoveItem = DefaultMoveItem,
+  currentItem,
+  selectedItems,
+  selectItem,
+  addToSelection,
+  editing,
+  setEditing,
+  startEditing,
+  commitEditing,
+  action,
+  MoveItem,
   Multi = DefaultMulti,
-  navigateTo = defaultNavigateTo,
-  viewport = defaultViewport,
-} = {}) {
+  navigateTo,
+  viewport,
+}) {
   // Bundled once so finishNewDragDrop() (a top-level pure function, see
   // above) dispatches through this controller's own action/MoveItem/
   // Multi instead of newAction.js's module-level default singleton.
@@ -677,18 +661,3 @@ export function createMouseController({
     handleContextMenu,
   };
 }
-
-// Default singleton instance, preserving the current module-level API
-// during the migration -- every existing `import * as newMouse from
-// "./newMouse.js"` call site keeps working unchanged. Once callers
-// (NewMindMapPreview.jsx, MindMapCanvas.jsx, ...) are threaded through
-// an explicit instance instead, this default export can be dropped.
-const defaultInstance = createMouseController();
-export const {
-  init,
-  dispose,
-  handleItemClick,
-  handleItemDblClick,
-  handleItemLinkClick,
-  handleContextMenu,
-} = defaultInstance;
