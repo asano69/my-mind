@@ -21,17 +21,25 @@ import Paperclip from "lucide-solid/icons/paperclip";
 // Stateless engine exports (pure functions/classes, no instance
 // dependency) still come straight from the library.
 import {
-  ItemNode,
   measureContentSize,
   TOGGLE_SIZE,
   D_MINUS,
   D_PLUS,
-  layoutRepo,
-  shapeRepo,
   computeBoxStyle,
   computeEllipseStyle,
   computeUnderlinePath,
 } from "mindmap-engine";
+// Pure, JSX-free helpers moved to previewHelpers.js so importing them
+// (e.g. from NewMindMapPreview.test.jsx) never pulls in this file's own
+// lucide-solid import -- see that file's own header comment.
+import {
+  registerDomRef,
+  unregisterDomRef,
+  togglePositionFor,
+  visiblePreviewChildren,
+  createPreviewRoot,
+  rootFromMapData,
+} from "./previewHelpers.js";
 // mindmap-engine no longer exports a module-level default singleton
 // (see docs/mind-map-core-engine-library/01-plan.md) -- everything
 // below is bound to this app's one createMindMap() instance, held by
@@ -403,66 +411,6 @@ function ItemNodeView(props) {
   );
 }
 
-// Single place both layoutResult()'s computation (see itemStore.js) and
-// the JSX recursion above read to decide which children are part of the
-// visible tree -- mirrors item.js's `!item.collapsed && item.children
-// .forEach(...)` guard, kept here rather than inlined so the "what
-// counts as visible" definition can't drift between the two.
-export function visiblePreviewChildren(item) {
-  return item.collapsed ? [] : item.childItems;
-}
-
-// Indirect DOM reference registry: Map<item.id, HTMLElement>. Lets a
-// vanilla module (mouse.js's drag math in Phase 4.7, clipboard.js's
-// cut-visual toggling in Phase 4.8) locate an item's rendered content
-// element without touching item.dom directly, since ItemNode (the
-// Phase 1 data store) never holds a DOM reference itself -- see
-// docs/08-phase4.0-dependency-inventory.md, section 9. Kept as two
-// tiny pure functions (rather than inlined in ItemNodeView's
-// onMount/onCleanup) so registration/cleanup can be unit-tested
-// without rendering an actual Solid component tree.
-export function registerDomRef(domRefs, item, el) {
-  domRefs.set(item.id, el);
-}
-export function unregisterDomRef(domRefs, item) {
-  domRefs.delete(item.id);
-}
-
-// Extracts the connector layout's togglePosition, shared by every
-// layout kind (graph/tree/map, see layout/*.js's writeConnectorPaths).
-// A collapsed item's connector descriptors carry only togglePosition
-// (no `d`), so this still resolves correctly while collapsed -- the
-// toggle glyph must stay addressable so the node can be re-expanded.
-export function togglePositionFor(connectorPaths) {
-  const withToggle = connectorPaths.find((path) => path.togglePosition);
-  return withToggle ? withToggle.togglePosition : null;
-}
-
-// Re-exported here since NewMindMapPreview.test.jsx imports it from this
-// file -- the implementation itself now lives in itemStore.js (see
-// measureContentSize's own comment there), since newEdit.js's
-// commitEditing() also needs it (Phase 4.5).
-export { measureContentSize };
-
-// Creates a fresh, empty map: just a root node labeled with `title`
-// (today's date, see Workspace.jsx's uuid-less case). No demo children --
-// those were only ever meant for local development and were leaking into
-// every real new map.
-export function createPreviewRoot(title) {
-  const root = new ItemNode();
-  root.text = title;
-  root.layout = layoutRepo.get("map");
-  root.shape = shapeRepo.get("ellipse");
-  return root;
-}
-
-export function rootFromMapData(data) {
-  const rootData = data?.root;
-  if (!rootData) {
-    return null;
-  }
-  return ItemNode.fromJSON(rootData);
-}
 
 export default function NewMindMapPreview(props) {
   // The tree to render lives on the shared mindmap-engine instance

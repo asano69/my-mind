@@ -16,7 +16,7 @@ import {
   togglePositionFor,
   unregisterDomRef,
   visiblePreviewChildren,
-} from "./NewMindMapPreview.jsx";
+} from "./previewHelpers.js";
 
 function previewTree() {
   const root = new ItemNode();
