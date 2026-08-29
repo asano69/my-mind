@@ -13,14 +13,10 @@ import "./layout/map.js";
 
 import ItemNode from "./itemStore.js";
 import { repo as layoutRepo } from "./layout/layout.js";
-import * as history from "./history.js";
-import { currentItem, setCurrentItem } from "./itemSelection.js";
+import { createHistory } from "./history.js";
+import { createItemSelection } from "./itemSelection.js";
 import {
-  action,
-  InsertNewItem,
-  AppendItem,
-  RemoveItem,
-  MoveItem,
+  createActions,
   Swap,
   SetText,
   SetColor,
@@ -28,6 +24,17 @@ import {
   SetValue,
   SetUrl,
 } from "./newAction.js";
+
+// Local, independent instance -- see docs/mind-map-core-engine-library/
+// 01-plan.md's Step 5: newAction.js no longer has a module-level
+// default singleton to fall back to, so this file builds its own
+// history/selection and wires createActions() to them explicitly, the
+// same way instance.js's createMindMap() does.
+const history = createHistory();
+const selection = createItemSelection();
+const { currentItem, setCurrentItem } = selection;
+const { action, InsertNewItem, AppendItem, RemoveItem, MoveItem } =
+  createActions(history, selection.selectItem);
 
 function buildRoot() {
   const root = new ItemNode();

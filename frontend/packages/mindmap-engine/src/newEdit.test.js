@@ -1,13 +1,30 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-import {
+import { createHistory } from "./history.js";
+import { createItemSelection } from "./itemSelection.js";
+import { createActions } from "./newAction.js";
+import { createEdit } from "./newEdit.js";
+
+// Local, independent instance -- see docs/mind-map-core-engine-library/
+// 01-plan.md's Step 5: newEdit.js no longer has a module-level default
+// singleton to fall back to, so this file builds its own history/
+// selection/actions and wires them into an edit controller explicitly,
+// the same way instance.js's createMindMap() does.
+const history = createHistory();
+const selection = createItemSelection();
+const actions = createActions(history, selection.selectItem);
+const {
   registerDomRefs,
   startEditing,
   commitEditing,
   discardEditing,
   isEditing,
-} from "./newEdit.js";
-import * as history from "./history.js";
+} = createEdit({
+  action: actions.action,
+  InsertNewItem: actions.InsertNewItem,
+  selectItem: selection.selectItem,
+  historyInstance: history,
+});
 
 // Plain stub mimicking the DOM API newEdit.js touches on an item's
 // ".text" element -- no real DOM needed, matching the stub pattern used

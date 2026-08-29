@@ -17,8 +17,17 @@ import "./layout/map.js";
 
 import ItemNode from "./itemStore.js";
 import { repo as layoutRepo } from "./layout/layout.js";
-import * as history from "./history.js";
-import { action, MoveItem } from "./newAction.js";
+import { createHistory } from "./history.js";
+import { createItemSelection } from "./itemSelection.js";
+import { createActions } from "./newAction.js";
+
+// Local, independent instance -- see docs/mind-map-core-engine-library/
+// 01-plan.md's Step 5: newAction.js no longer has a module-level
+// default singleton to fall back to, so this file builds its own
+// history/selection and wires createActions() to them explicitly.
+const history = createHistory();
+const selection = createItemSelection();
+const { action, MoveItem } = createActions(history, selection.selectItem);
 
 // Same WIDTH-ary tree builder as itemStore-layout-locality.test.js,
 // duplicated here (rather than imported) since that file does not

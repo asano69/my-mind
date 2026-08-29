@@ -12,12 +12,28 @@ const mockActiveMode = {
   },
 };
 vi.mock("./newEdit.js", () => ({
+vi.mock("./newEdit.js", () => ({
   startEditing: vi.fn(() => ({})),
   commitEditing: vi.fn(),
   discardEditing: vi.fn(),
 }));
 
-const newKeyboard = await import("./newKeyboard.js");
+const { createItemSelection } = await import("./itemSelection.js");
+const { createHistory } = await import("./history.js");
+const { createActions, Multi } = await import("./newAction.js");
+const { createKeyboardController } = await import("./newKeyboard.js");
+const { startEditing, commitEditing, discardEditing } =
+  await import("./newEdit.js");
+
+// Local, independent instance -- see docs/mind-map-core-engine-library/
+// 01-plan.md's Step 5: newKeyboard.js no longer has a module-level
+// default singleton to fall back to, so this file builds its own
+// selection/history/actions and wires them into a keyboard controller
+// explicitly, the same way instance.js's createMindMap() does. Neither
+// the shared command repo nor Pan's keyboard scope are exercised by
+// this file's tests, so an empty repo and no-op scope setters are
+// enough.
+const selection = createItemSelection();
 const {
   currentItem,
   setCurrentItem,
@@ -27,10 +43,33 @@ const {
   setSelectionCursor,
   editing,
   setEditing,
-} = await import("./itemSelection.js");
-const { startEditing, commitEditing, discardEditing } =
-  await import("./newEdit.js");
-const history = await import("./history.js");
+} = selection;
+const history = createHistory();
+const { action, InsertNewItem, RemoveItem } = createActions(
+  history,
+  selection.selectItem,
+);
+
+const newKeyboard = createKeyboardController({
+  currentItem: selection.currentItem,
+  selectedItems: selection.selectedItems,
+  selectionCursor: selection.selectionCursor,
+  selectItem: selection.selectItem,
+  extendSelection: selection.extendSelection,
+  editing: selection.editing,
+  setEditing: selection.setEditing,
+  startEditing,
+  commitEditing,
+  discardEditing,
+  history,
+  action,
+  InsertNewItem,
+  RemoveItem,
+  Multi,
+  sharedCommandRepo: new Map(),
+  setPanKeyboardScope: vi.fn(),
+  disposePan: vi.fn(),
+});
 
 function eventTarget() {
   const listeners = new Map();

@@ -40,9 +40,6 @@ vi.mock("./newAction.js", () => ({
 }));
 
 const {
-  handleItemClick,
-  handleItemDblClick,
-  handleItemLinkClick,
   getContentRectFor,
   buildDragGhost,
   moveDragGhost,
@@ -50,11 +47,20 @@ const {
   getItemForElement,
   getStableDropCollisionFor,
   finishNewDragDrop,
-  init: initMouse,
-  dispose: disposeMouse,
+  createMouseController,
 } = await import("./newMouse.js");
 const { isSameOrigin } = await import("./urlUtils.js");
 const { navigateTo } = await import("./navigation.js");
+const { createItemSelection } = await import("./itemSelection.js");
+const { startEditing, commitEditing } = await import("./newEdit.js");
+const { action: actionFn, MoveItem, Multi } = await import("./newAction.js");
+
+// Local, independent instance -- see docs/mind-map-core-engine-library/
+// 01-plan.md's Step 5: newMouse.js no longer has a module-level default
+// singleton to fall back to, so this file builds its own selection and
+// wires it (plus the mocked startEditing/commitEditing/action/MoveItem/
+// Multi/navigateTo above) into a mouse controller explicitly.
+const selection = createItemSelection();
 const {
   currentItem,
   setCurrentItem,
@@ -62,9 +68,28 @@ const {
   setSelectedItems,
   editing,
   setEditing,
-} = await import("./itemSelection.js");
-const { startEditing, commitEditing } = await import("./newEdit.js");
-const { action: actionFn, MoveItem, Multi } = await import("./newAction.js");
+} = selection;
+const {
+  handleItemClick,
+  handleItemDblClick,
+  handleItemLinkClick,
+  init: initMouse,
+  dispose: disposeMouse,
+} = createMouseController({
+  currentItem: selection.currentItem,
+  selectedItems: selection.selectedItems,
+  selectItem: selection.selectItem,
+  addToSelection: selection.addToSelection,
+  editing: selection.editing,
+  setEditing: selection.setEditing,
+  startEditing,
+  commitEditing,
+  action: actionFn,
+  MoveItem,
+  Multi,
+  navigateTo,
+  viewport: { adjustZoom: vi.fn(), moveBy: vi.fn() },
+});
 function resetSelectionState() {
   setCurrentItem(null);
   setSelectedItems(new Set());

@@ -75,9 +75,8 @@ import "./layout/tree.js";
 import "./layout/map.js";
 import ItemNode from "./itemStore.js";
 
-const newClipboard = await import("./newClipboard.js");
-const { setCurrentItem, setSelectedItems, setEditing } =
-  await import("./itemSelection.js");
+const { createClipboardController } = await import("./newClipboard.js");
+const { createItemSelection } = await import("./itemSelection.js");
 const {
   action: actionFn,
   MoveItem,
@@ -85,6 +84,23 @@ const {
   Multi,
 } = await import("./newAction.js");
 const { repo: formatRepo } = await import("./format/format.js");
+
+// Local, independent instance -- see docs/mind-map-core-engine-library/
+// 01-plan.md's Step 5: newClipboard.js no longer has a module-level
+// default singleton to fall back to, so this file builds its own
+// selection and wires it (plus the mocked action/MoveItem/AppendItem/
+// Multi above) into a clipboard controller explicitly.
+const selection = createItemSelection();
+const { setCurrentItem, setSelectedItems, setEditing } = selection;
+const newClipboard = createClipboardController({
+  currentItem: selection.currentItem,
+  selectedItems: selection.selectedItems,
+  editing: selection.editing,
+  action: actionFn,
+  MoveItem,
+  AppendItem,
+  Multi,
+});
 
 // documentTarget: same capture/bubble-keyed listener stub as
 // clipboard.test.js's own helper, since newClipboard.js listens on

@@ -1,5 +1,11 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import {
+import { createItemSelection } from "./itemSelection.js";
+
+// Local, independent instance -- see docs/mind-map-core-engine-library/
+// 01-plan.md's Step 5: itemSelection.js no longer has a module-level
+// default singleton to fall back to, so this file builds its own
+// instance instead.
+const {
   currentItem,
   setCurrentItem,
   selectedItems,
@@ -12,7 +18,7 @@ import {
   addToSelection,
   editing,
   setEditing,
-} from "./itemSelection.js";
+} = createItemSelection();
 
 // Phase 4.2 of docs/08-mindmap-engine-refactor.md: selection state only
 // -- no click/keyboard wiring exists yet (see Phase 4.3/4.4), so these
