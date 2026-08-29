@@ -556,7 +556,7 @@ export default function NewMindMapPreview(props) {
     // containerEl is a plain HTML element, so the ghost now has a valid
     // parent.
     const port = props.containerEl ?? svgRef;
-    // eslint-disable-next-line solid/reactivity -- a getter handed to
+     
     // newMouse.js to call on demand during a drag, not a reactive
     // computation evaluated here.
     newMouse.init(domRefs, port, port, () => effectiveRoot());
@@ -564,7 +564,7 @@ export default function NewMindMapPreview(props) {
     // (see newContextMenuCommands.js) reads from -- see newViewport.js's
     // registerCenterSource() for why this indirection is needed.
     newViewport.registerCenterSource(
-      // eslint-disable-next-line solid/reactivity -- same as above: a
+       
       // getter stored for later use, not read reactively right here.
       () => effectiveRoot()?.size,
       // eslint-disable-next-line solid/reactivity -- same as above.
