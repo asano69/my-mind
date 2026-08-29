@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import * as history from "./history.js";
+import { createHistory } from "./history.js";
 
 // Regression tests for history.js's push/back/forward/canBack/canForward.
 // Originally planned for Phase 0 of the Solid migration (see CLAUDE.md),
@@ -9,8 +9,12 @@ import * as history from "./history.js";
 // signal-backed (Phase 6) — only what each Action's do()/undo() touches
 // internally changed, not push()/back()/forward()'s mechanics.
 //
-// history.js keeps its state at module scope, so every test calls reset()
-// first to start from an empty stack.
+// history.js has no module-level default singleton (see
+// docs/mind-map-core-engine-library/01-plan.md's Step 5) -- this file
+// builds its own instance via createHistory() and calls reset() before
+// every test to start from an empty stack.
+
+const history = createHistory();
 
 function makeAction(name, log) {
   return {

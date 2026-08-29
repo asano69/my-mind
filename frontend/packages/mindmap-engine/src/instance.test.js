@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { createMindMap } from "./instance.js";
+import { createHistory } from "./history.js";
 
 // Regression coverage for docs/mind-map-core-engine-library/01-plan.md's
 // Step 5: createMindMap() bundles the already-factory-ready modules
@@ -23,7 +24,7 @@ describe("createMindMap", () => {
     expect(b.history.canBack()).toBe(false);
   });
 
-  it("wires actions/edit to this instance's own history and selection, not the default singleton", async () => {
+  it("wires actions/edit to this instance's own history and selection, not an unrelated instance's", async () => {
     // Same side-effect-registering imports every other newAction.js
     // test uses, so insertChild()/resolvedLayout resolve real
     // shape/layout instances.
@@ -35,10 +36,12 @@ describe("createMindMap", () => {
     await import("./layout/map.js");
     const { default: ItemNode } = await import("./itemStore.js");
     const { repo: layoutRepo } = await import("./layout/layout.js");
-    const defaultHistory = await import("./history.js");
+    // history.js has no module-level default singleton (see
+    // docs/mind-map-core-engine-library/01-plan.md's Step 5) -- an
+    // independent instance stands in for "some other history" here.
+    const otherHistory = createHistory();
 
     const { history, selection, actions } = createMindMap();
-    defaultHistory.reset(); // isolate this test from default-singleton state
 
     const root = new ItemNode();
     root.layout = layoutRepo.get("map");
@@ -50,8 +53,8 @@ describe("createMindMap", () => {
     expect(selection.currentItem()).toBe(insert.item);
     expect(history.canBack()).toBe(true);
     // The action was pushed to this instance's own history, not the
-    // module-level default singleton's.
-    expect(defaultHistory.canBack()).toBe(false);
+    // unrelated instance's.
+    expect(otherHistory.canBack()).toBe(false);
   });
 
   it("gives each instance its own clipboard and mouse controllers", () => {

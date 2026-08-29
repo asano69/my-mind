@@ -511,7 +511,11 @@ describe("finishNewDragDrop (Stage 4.7.3)", () => {
   it("dispatches a single MoveItem action for an append result", () => {
     const { target, dragged } = buildTree();
 
-    finishNewDragDrop({ result: "append", target }, [dragged]);
+    finishNewDragDrop({ result: "append", target }, [dragged], {
+      action: actionFn,
+      MoveItem,
+      Multi,
+    });
 
     expect(actionFn).toHaveBeenCalledOnce();
     expect(actionFn.mock.calls[0][0]).toBeInstanceOf(MoveItem);
@@ -521,9 +525,11 @@ describe("finishNewDragDrop (Stage 4.7.3)", () => {
   it("dispatches a MoveItem with a computed sibling index for a sibling result", () => {
     const { root, target, dragged } = buildTree();
 
-    finishNewDragDrop({ result: "sibling", direction: "bottom", target }, [
-      dragged,
-    ]);
+    finishNewDragDrop(
+      { result: "sibling", direction: "bottom", target },
+      [dragged],
+      { action: actionFn, MoveItem, Multi },
+    );
 
     const dispatched = actionFn.mock.calls[0][0];
     expect(dispatched.target).toBe(root);
@@ -542,9 +548,11 @@ describe("finishNewDragDrop (Stage 4.7.3)", () => {
     root.childItems = [a, b, c];
 
     // Drop `a` after `c` (direction "bottom" == insert after target).
-    finishNewDragDrop({ result: "sibling", direction: "bottom", target: c }, [
-      a,
-    ]);
+    finishNewDragDrop(
+      { result: "sibling", direction: "bottom", target: c },
+      [a],
+      { action: actionFn, MoveItem, Multi },
+    );
 
     const dispatched = actionFn.mock.calls[0][0];
     // Pre-move index of c is 2; without adjustment targetIndex would be
@@ -562,7 +570,11 @@ describe("finishNewDragDrop (Stage 4.7.3)", () => {
     root.childItems = [a, b, d];
 
     // Drop `d` before `b` (direction "top" == insert before target).
-    finishNewDragDrop({ result: "sibling", direction: "top", target: b }, [d]);
+    finishNewDragDrop(
+      { result: "sibling", direction: "top", target: b },
+      [d],
+      { action: actionFn, MoveItem, Multi },
+    );
 
     const dispatched = actionFn.mock.calls[0][0];
     expect(dispatched.targetIndex).toBe(1);
@@ -577,9 +589,11 @@ describe("finishNewDragDrop (Stage 4.7.3)", () => {
     const c = { id: "c", isRoot: false, parent: branchB, side: "right" };
     branchB.childItems = [b, c];
 
-    finishNewDragDrop({ result: "sibling", direction: "bottom", target: c }, [
-      leaf,
-    ]);
+    finishNewDragDrop(
+      { result: "sibling", direction: "bottom", target: c },
+      [leaf],
+      { action: actionFn, MoveItem, Multi },
+    );
 
     const dispatched = actionFn.mock.calls[0][0];
     expect(dispatched.targetIndex).toBe(2); // unadjusted: leaf.parent !== branchB
@@ -589,7 +603,11 @@ describe("finishNewDragDrop (Stage 4.7.3)", () => {
     const { target, dragged } = buildTree();
     const other = { id: "other", isRoot: false };
 
-    finishNewDragDrop({ result: "append", target }, [dragged, other]);
+    finishNewDragDrop({ result: "append", target }, [dragged, other], {
+      action: actionFn,
+      MoveItem,
+      Multi,
+    });
 
     expect(actionFn.mock.calls[0][0]).toBeInstanceOf(Multi);
     expect(actionFn.mock.calls[0][0].actions).toHaveLength(2);
@@ -598,7 +616,11 @@ describe("finishNewDragDrop (Stage 4.7.3)", () => {
   it("does nothing when the target is inside the dragged item's own subtree", () => {
     const { root, target } = buildTree();
     // target is being dragged itself
-    finishNewDragDrop({ result: "append", target }, [target]);
+    finishNewDragDrop({ result: "append", target }, [target], {
+      action: actionFn,
+      MoveItem,
+      Multi,
+    });
     expect(actionFn).not.toHaveBeenCalled();
     void root;
   });

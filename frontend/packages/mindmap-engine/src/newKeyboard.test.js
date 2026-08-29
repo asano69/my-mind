@@ -12,7 +12,6 @@ const mockActiveMode = {
   },
 };
 vi.mock("./newEdit.js", () => ({
-vi.mock("./newEdit.js", () => ({
   startEditing: vi.fn(() => ({})),
   commitEditing: vi.fn(),
   discardEditing: vi.fn(),
