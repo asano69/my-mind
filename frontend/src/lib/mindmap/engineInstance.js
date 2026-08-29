@@ -28,6 +28,12 @@ import {
 
 const instance = createMindMap();
 
+// The tree currently open in this instance -- see instance.js's own
+// comment. Read directly (root()) or replaced wholesale (setRoot()/
+// loadJSON()) by any app module that needs to; toJSON() mirrors
+// loadJSON()'s input shape for saving.
+export const { root, setRoot, loadJSON, toJSON } = instance;
+
 export const {
   history,
   selection,

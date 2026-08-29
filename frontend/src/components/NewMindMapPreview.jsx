@@ -1,5 +1,4 @@
 import {
-  createSignal,
   createEffect,
   For,
   Show,
@@ -38,6 +37,8 @@ import {
 // below is bound to this app's one createMindMap() instance, held by
 // engineInstance.js.
 import {
+  root as engineRoot,
+  setRoot as setEngineRoot,
   itemStateClassList,
   selectItem,
   handleItemClick,
@@ -464,49 +465,32 @@ export function rootFromMapData(data) {
 }
 
 export default function NewMindMapPreview(props) {
-  // root is computed synchronously from props.initialData -- the host
-  // (MindMapCanvas.jsx) fetches the map record via backend/pocketbase.js's
-  // loadByUuid() *before* this component ever mounts, so this renderer
-  // never touches the persistence layer directly (see
-  // docs/mind-map-core-engine-library/01-plan.md's Step 4a). A uuid-less
-  // map (a brand-new, unsaved one) always gets a fresh root instead.
+  // The tree to render lives on the shared mindmap-engine instance
+  // itself (see instance.js's root/setRoot,
+  // docs/mind-map-core-engine-library/02-plan.md's Step 1), not local
+  // component state -- this lets a host (e.g. ui/io.js's
+  // restoreSnapshot()) replace the current tree directly through the
+  // instance, with no bridge signal/callback needed. Set synchronously
+  // here: the host (MindMapCanvas.jsx) fetches the map record via
+  // backend/pocketbase.js's loadByUuid() *before* this component ever
+  // mounts, so this renderer never touches the persistence layer
+  // directly (see docs/mind-map-core-engine-library/01-plan.md's Step
+  // 4a). A uuid-less map (a brand-new, unsaved one) always gets a fresh
+  // root instead.
+  //
   // Wrapped in untrack(): this reads props.uuid/props.initialData/
   // props.title exactly once, at mount, to compute the initial root --
   // it is never meant to react to a later prop change (a new map is a
   // remount, see Workspace.jsx's canvasKey), so an explicit untrack()
   // documents that intent instead of leaving eslint-plugin-solid's
   // reactivity warning as an unexplained false positive.
-  const root = untrack(() =>
-    props.uuid
-      ? (rootFromMapData(props.initialData) ?? createPreviewRoot(props.title))
-      : createPreviewRoot(props.title),
-  );
-
-  // Local, per-instance state (not a shared store.js signal, see
-  // docs/mind-map-core-engine-library/01-plan.md's Step 4e) holding a
-  // root that should override the loaded root -- set via restoreRoot()
-  // below, exposed to the host as part of this engine instance's own
-  // public API instead of a bridge signal the host writes to directly.
-  // Takes priority over the loaded root, mirroring the old engine's
-  // restoreSnapshot() replacing app.currentMap's root without touching
-  // the map's saved identity. Every other read of "the current root" in
-  // this component goes through effectiveRoot() below instead of root
-  // directly, so a restored root is picked up everywhere (viewport,
-  // mouse, the layout effect, and the render itself).
-  const [overrideRoot, setOverrideRoot] = createSignal(null);
-
-  // Public engine API for this mounted instance -- currently just
-  // restoreRoot(), the explicit method
-  // docs/mind-map-core-engine-library/01-plan.md's own table calls for
-  // in place of the old overrideRoot/setOverrideRoot store.js signal.
-  // Handed to the host once on mount (see onMount below) so callers
-  // like ui/io.js's restoreSnapshot() can invoke it without this
-  // component importing store.js at all.
-  function restoreRoot(newRoot) {
-    setOverrideRoot(newRoot);
-  }
-
-  const effectiveRoot = () => overrideRoot() ?? root;
+  untrack(() => {
+    setEngineRoot(
+      props.uuid
+        ? (rootFromMapData(props.initialData) ?? createPreviewRoot(props.title))
+        : createPreviewRoot(props.title),
+    );
+  });
 
   // Plain (non-reactive) Map, not a signal: this registry is an
   // imperative side-table for later phases (see registerDomRef's
@@ -530,14 +514,6 @@ export default function NewMindMapPreview(props) {
   // loading, or the user can switch maps, after this component mounts.
   let svgRef;
   onMount(() => {
-    // overrideRoot is now local component state (see its own comment
-    // above), so it already resets itself just by this component
-    // remounting -- this call only guards against a same-mount reset
-    // being relied upon elsewhere.
-    setOverrideRoot(null);
-    // Hands this instance's public engine API to the host -- see
-    // restoreRoot()'s own comment above.
-    props.onEngineReady?.({ restoreRoot });
     // Initial position matches this <svg>'s own static left/top below
     // (40px, 40px), so wiring pan/zoom in doesn't cause a visible jump
     // on mount.
@@ -559,14 +535,14 @@ export default function NewMindMapPreview(props) {
      
     // newMouse.js to call on demand during a drag, not a reactive
     // computation evaluated here.
-    newMouse.init(domRefs, port, port, () => effectiveRoot());
+    newMouse.init(domRefs, port, port, () => engineRoot());
     // Registers this preview as the source the "center map" command
     // (see newContextMenuCommands.js) reads from -- see newViewport.js's
     // registerCenterSource() for why this indirection is needed.
     newViewport.registerCenterSource(
        
       // getter stored for later use, not read reactively right here.
-      () => effectiveRoot()?.size,
+      () => engineRoot()?.size,
       // eslint-disable-next-line solid/reactivity -- same as above.
       () => {
         const containerRect = (
@@ -598,7 +574,6 @@ export default function NewMindMapPreview(props) {
     // (MindMapCanvas.jsx calls io.dispose()/io.detach()) instead of
     // importing ui/io.js directly.
     props.onUnmount?.();
-    setOverrideRoot(null);
   });
 
   // Keeps the root node visually anchored across layout recomputes, and
@@ -619,7 +594,7 @@ export default function NewMindMapPreview(props) {
   // (see ui/io.js's dirtyVersion effect).
   let dirtyArmed = false;
   createEffect(() => {
-    const loadedRoot = effectiveRoot();
+    const loadedRoot = engineRoot();
     if (!loadedRoot || !svgRef) {
       return;
     }
@@ -707,7 +682,7 @@ export default function NewMindMapPreview(props) {
         style={{ "font-size": "15px", left: "40px", top: "40px" }}
       >
         <style>{mapCss}</style>
-        <Show when={effectiveRoot()}>
+        <Show when={engineRoot()}>
           {
             // children-as-function is the standard idiomatic Solid API
             // for narrowing a signal to a non-null value inside this

@@ -94,7 +94,6 @@ export default function MindMapCanvas(props) {
           onUnmount={() => {
             io.dispose();
             io.detach();
-            io.registerRestoreRoot(null);
           }}
           onRootReady={(root, svgNode, loadedRecord) => {
             io.attach(root, svgNode);
@@ -108,12 +107,6 @@ export default function MindMapCanvas(props) {
               setCurrentTitle(name);
             }
           }}
-          // Registers this mounted instance's restoreRoot() with io.js
-          // (see docs/mind-map-core-engine-library/01-plan.md's Step
-          // 4e), so ui/io.js's restoreSnapshot() can swap in a restored
-          // snapshot's root without this component (or io.js) touching
-          // store.js's old overrideRoot signal.
-          onEngineReady={(api) => io.registerRestoreRoot(api.restoreRoot)}
         />
       ),
       mainRef,

@@ -21,6 +21,8 @@
 // own note on a future per-instance scope broker. Parameterizing
 // newKeyboard.js the same way is the natural next step and is left for
 // a follow-up, rather than folded into this change.
+import { createSignal } from "solid-js";
+import ItemNode from "./itemStore.js";
 import { createHistory } from "./history.js";
 import { createItemSelection } from "./itemSelection.js";
 import { createViewport } from "./newViewport.js";
@@ -44,6 +46,29 @@ export function createMindMap() {
   const selection = createItemSelection();
   const viewport = createViewport();
   const navigation = createNavigation();
+
+  // The tree currently open in this instance, owned here instead of by
+  // whichever component happens to render it (see
+  // docs/mind-map-core-engine-library/02-plan.md's Step 1). This lets a
+  // host read/write "the current mindmap" through the instance alone --
+  // no bridge signal or callback needed (see ui/io.js's restoreSnapshot()
+  // for the callback this replaces). null until loadJSON()/setRoot() is
+  // called -- a brand-new instance has no tree yet.
+  const [root, setRoot] = createSignal(null);
+
+  // Replaces the whole tree from a saved "{ root: {...} }" document (the
+  // same shape toJSON() below produces), or clears it when passed a
+  // falsy value / a document with no root field.
+  function loadJSON(data) {
+    setRoot(data?.root ? ItemNode.fromJSON(data.root) : null);
+  }
+
+  // Serializes the current tree back to the same "{ root: {...} }" shape
+  // loadJSON() accepts, or null if nothing is loaded yet.
+  function toJSON() {
+    const current = root();
+    return current ? { root: current.toJSON() } : null;
+  }
 
   const actions = createActions(history, selection.selectItem);
   const edit = createEdit({
@@ -142,6 +167,10 @@ export function createMindMap() {
   });
 
   return {
+    root,
+    setRoot,
+    loadJSON,
+    toJSON,
     history,
     selection,
     viewport,

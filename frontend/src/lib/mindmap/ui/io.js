@@ -2,6 +2,7 @@ import { createRoot, createEffect, on } from "solid-js";
 import * as backend from "../backend/pocketbase.js";
 import { serializeCurrentMap } from "../backend/image.js";
 import { ItemNode } from "mindmap-engine";
+import { setRoot as setEngineRoot } from "../engineInstance.js";
 import {
   currentTitle,
   setCurrentTitle,
@@ -18,29 +19,18 @@ import {
   setThrobberVisible,
 } from "../store.js";
 
-// The tree/SVG root currently being edited, and the loader callback used
-// to swap in a freshly restored root. This used to live behind a
+// The SVG root node currently being edited. This used to live behind a
 // pluggable provider (setTreeProvider/setSvgNodeProvider/
 // setRestoreProvider, previously registered by a separate newIo.js
 // adapter module), so this file's save/autosave/delete bookkeeping could
 // be shared between two engine implementations. Only one engine
 // (ItemNode, see itemStore.js) exists now, so this module owns that
 // state directly instead of indirecting through a provider it only ever
-// has one implementation of.
+// has one implementation of. The tree itself is no longer mirrored here
+// -- it lives on the shared mindmap-engine instance (see instance.js's
+// root/setRoot), read via getRoot() below.
 let currentRoot = null;
 let currentSvgNode = null;
-
-// The currently mounted engine instance's restoreRoot() method (see
-// NewMindMapPreview.jsx's onEngineReady prop), registered by
-// MindMapCanvas.jsx once the engine is mounted -- see
-// docs/mind-map-core-engine-library/01-plan.md's Step 4e. Replaces the
-// old shared store.js overrideRoot/setOverrideRoot signal with an
-// explicit engine API call, so this module no longer needs to import
-// store.js just to swap in a restored snapshot's root.
-let restoreRootFn = null;
-export function registerRestoreRoot(fn) {
-  restoreRootFn = fn;
-}
 
 // Registers `root`/`svgNode` as the source save/autosave/SVG-snapshot
 // logic reads from. Called whenever the preview's root ItemNode
@@ -410,7 +400,7 @@ export function resetCurrentMap() {
 // the restored content instead of creating a new map. Does not save by
 // itself — the user must explicitly save afterwards.
 export function restoreSnapshot(snapshot) {
-  restoreRootFn?.(ItemNode.fromJSON(snapshot.mymind.root));
+  setEngineRoot(ItemNode.fromJSON(snapshot.mymind.root));
 }
 
 // Deletes the currently open map (if it has been saved at least once)
