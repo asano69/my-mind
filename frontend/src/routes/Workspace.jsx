@@ -30,17 +30,17 @@ export default function Workspace() {
   const params = useParams();
   const navigate = useNavigate();
 
-  // Registers this route's navigate() with the shared navigation.js
-  // bridge (see that module's own comment) so same-origin link clicks --
-  // the 🔗 icon rendered by both engines (item.js's click handler for
-  // the old engine, newMouse.js's handleItemLinkClick for the new one)
-  // -- can use Solid Router's client-side navigation instead of a full
-  // page reload.
+  // Sets this route's navigate() into navigation.js's shared signal (see
+  // that module's own comment) so same-origin link clicks -- the 🔗 icon
+  // rendered by both engines (item.js's click handler for the old
+  // engine, newMouse.js's handleItemLinkClick for the new one) -- can
+  // use Solid Router's client-side navigation instead of a full page
+  // reload.
   onMount(async () => {
-    const { registerNavigate } = await import(
+    const { setNavigate } = await import(
       "../lib/mindmap/engineInstance.js"
     );
-    registerNavigate(navigate);
+    setNavigate(navigate);
   });
 
   // "/maps/new" is not a real map id — treat it the same as no uuid at

@@ -69,7 +69,7 @@ export const {
   canForward,
 } = history;
 
-export const { registerNavigate, navigateTo } = navigation;
+export const { navigate, setNavigate, navigateTo } = navigation;
 
 export const {
   action,
