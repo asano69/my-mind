@@ -5,6 +5,7 @@ import {
   Show,
   onCleanup,
   onMount,
+  untrack,
 } from "solid-js";
 import Paperclip from "lucide-solid/icons/paperclip";
 // A single barrel import (mindmap-engine/index.js, see
@@ -469,9 +470,17 @@ export default function NewMindMapPreview(props) {
   // never touches the persistence layer directly (see
   // docs/mind-map-core-engine-library/01-plan.md's Step 4a). A uuid-less
   // map (a brand-new, unsaved one) always gets a fresh root instead.
-  const root = props.uuid
-    ? (rootFromMapData(props.initialData) ?? createPreviewRoot(props.title))
-    : createPreviewRoot(props.title);
+  // Wrapped in untrack(): this reads props.uuid/props.initialData/
+  // props.title exactly once, at mount, to compute the initial root --
+  // it is never meant to react to a later prop change (a new map is a
+  // remount, see Workspace.jsx's canvasKey), so an explicit untrack()
+  // documents that intent instead of leaving eslint-plugin-solid's
+  // reactivity warning as an unexplained false positive.
+  const root = untrack(() =>
+    props.uuid
+      ? (rootFromMapData(props.initialData) ?? createPreviewRoot(props.title))
+      : createPreviewRoot(props.title),
+  );
 
   // Local, per-instance state (not a shared store.js signal, see
   // docs/mind-map-core-engine-library/01-plan.md's Step 4e) holding a
@@ -547,12 +556,18 @@ export default function NewMindMapPreview(props) {
     // containerEl is a plain HTML element, so the ghost now has a valid
     // parent.
     const port = props.containerEl ?? svgRef;
+    // eslint-disable-next-line solid/reactivity -- a getter handed to
+    // newMouse.js to call on demand during a drag, not a reactive
+    // computation evaluated here.
     newMouse.init(domRefs, port, port, () => effectiveRoot());
     // Registers this preview as the source the "center map" command
     // (see newContextMenuCommands.js) reads from -- see newViewport.js's
     // registerCenterSource() for why this indirection is needed.
     newViewport.registerCenterSource(
+      // eslint-disable-next-line solid/reactivity -- same as above: a
+      // getter stored for later use, not read reactively right here.
       () => effectiveRoot()?.size,
+      // eslint-disable-next-line solid/reactivity -- same as above.
       () => {
         const containerRect = (
           props.containerEl ?? svgRef.parentNode

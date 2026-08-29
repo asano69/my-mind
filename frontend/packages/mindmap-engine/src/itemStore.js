@@ -205,6 +205,7 @@ export default class ItemNode {
     // the signal read below is a one-off equality check against the
     // value at call time, not something that needs to re-run when
     // measuredSize() changes.
+    // eslint-disable-next-line solid/reactivity
     this.setMeasuredSize = (size) => {
       const current = measuredSize();
       if (current && current[0] === size[0] && current[1] === size[1]) {
