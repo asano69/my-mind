@@ -1,0 +1,4 @@
+- https://www.svgrepo.com/svg/307413/neuron
+- https://www.svgrepo.com/svg/323655/wire-coil
+- https://www.svgrepo.com/svg/172224/naked-trees-branches
+- https://www.svgrepo.com/svg/50687/tree
